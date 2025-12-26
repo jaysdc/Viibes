@@ -6,7 +6,7 @@ import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG } from './config.js';
+import { UNIFIED_CONFIG } from './Config.js';
 // Détection automatique : vrai mobile/PWA vs desktop
 const isRealDevice = () => {
   if (typeof window === 'undefined') return false;
