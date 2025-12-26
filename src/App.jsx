@@ -4,7 +4,7 @@ import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, Ch
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
-import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './assets.jsx';
+import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG } from './config.js';
 // Détection automatique : vrai mobile/PWA vs desktop
@@ -2389,11 +2389,11 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         return (
             <div 
             className={`flex-1 h-10 rounded-full flex items-center justify-center border animate-appear overflow-hidden ${animClass}`}
-            style={{ '--neon-color': neonColor }} 
-                style={{ 
-                    backgroundColor: bgColor, 
-                    borderColor: borderColor, 
-                    boxShadow: `0 0 25px ${glowColor}, 0 0 50px ${glowColor2}` 
+                style={{
+                    '--neon-color': neonColor,
+                    backgroundColor: bgColor,
+                    borderColor: borderColor,
+                    boxShadow: `0 0 25px ${glowColor}, 0 0 50px ${glowColor2}`
                 }}
             >
                 <div className={`flex items-center gap-2 text-white font-black tracking-widest text-xs ${isAnimating ? 'animate-blink' : ''}`}>
