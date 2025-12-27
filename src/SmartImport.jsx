@@ -372,97 +372,16 @@ const SmartImport = ({
     const handleFileImport = (event) => {
         const allFiles = Array.from(event.target.files);
         const analysis = analyzeFiles(allFiles, event);
-        
+
         if (!analysis) return;
-        
+
         const { folders, allFiles: audioFiles, totalFiles, rootName } = analysis;
-        const folderCount = Object.keys(folders).length;
-        const hasSubfolders = folderCount > 1 || (folderCount === 1 && Object.keys(folders)[0] !== rootName);
-        const exceedsAutoThreshold = totalFiles > SMARTIMPORT_CONFIG.AUTO_THRESHOLD;
-        
-        // Import automatique si : pas de sous-dossiers ET pas trop de fichiers
-        if (!hasSubfolders && !exceedsAutoThreshold) {
-            const autoGradients = calculateGradients(folders);
-            onImportComplete(folders, 'vibes', autoGradients);
-            if (onMenuClose) onMenuClose(); // Fermer APRÈS l'import
-            event.target.value = '';
-            return;
-        }
-        
-        // Sinon, afficher le dialog de preview
-        const folderGradients = calculateGradients(folders);
-        
-        // Détecter les dossiers qui existent déjà
-        const existingFolders = Object.keys(folders).filter(name => 
-            playlists && playlists[name] !== undefined
-        );
-        
-        // Afficher la capsule jaune immédiatement
-        setShowMorphCapsule(true);
-        
-        // Capturer la position du bouton source ET les dimensions finales AVANT de fermer le menu
-        if (containerRef?.current) {
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const dialogMaxWidth = parseFloat(SMARTIMPORT_CONFIG.DIALOG_MAX_WIDTH) * 16;
-            const dialogHeight = containerRect.height * 0.65;
-            const finalLeft = (containerRect.width - dialogMaxWidth) / 2;
-            const finalTop = (containerRect.height - dialogHeight) / 2;
-            
-            setDialogDimensions({
-                finalLeft,
-                finalTop,
-                finalWidth: dialogMaxWidth,
-                finalHeight: dialogHeight
-            });
-            
-            if (folderButtonRef?.current) {
-                const btnRect = folderButtonRef.current.getBoundingClientRect();
-                // Récupérer la taille de la bordure du container
-                const containerStyle = getComputedStyle(containerRef.current);
-                const borderLeft = parseFloat(containerStyle.borderLeftWidth) || 0;
-                const borderTop = parseFloat(containerStyle.borderTopWidth) || 0;
-                setSourceRect({
-                    left: btnRect.left - containerRect.left - borderLeft,
-                    top: btnRect.top - containerRect.top - borderTop,
-                    width: btnRect.width,
-                    height: btnRect.height
-                });
-            }
-        }
-        
-        // NE PAS fermer le menu ici - il reste visible pendant le dialog
-        
-        setImportPreview({
-            folders: folders,
-            folderGradients: folderGradients,
-            allFiles: audioFiles,
-            totalFiles: totalFiles,
-            rootName: rootName,
-            existingFolders: existingFolders,
-            event: event
-        });
-        
-        // Déclencher le morph
-        requestAnimationFrame(() => {
-            setBackdropVisible(true);
-            // Animer le morph de 0 à 1
-            const startTime = performance.now();
-            const animate = (currentTime) => {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / SMARTIMPORT_CONFIG.MORPH_DURATION, 1);
-                // Easing: ease-in-out cubic (lent-rapide-lent)
-                const eased = progress < 0.5 
-                    ? 4 * progress * progress * progress 
-                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-                setMorphProgress(eased);
-                if (progress < 1) {
-                    animationRef.current = requestAnimationFrame(animate);
-                } else {
-                    animationRef.current = null;
-                }
-            };
-            animationRef.current = requestAnimationFrame(animate);
-        });
+
+        // Import automatique direct - plus de dialog de confirmation
+        const autoGradients = calculateGradients(folders);
+        onImportComplete(folders, 'vibes', autoGradients);
+        if (onMenuClose) onMenuClose();
+        event.target.value = '';
     };
 
     // ══════════════════════════════════════════════════════════════════════════
