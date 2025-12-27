@@ -4437,9 +4437,6 @@ const vibeSearchResults = () => {
       
       return needsUpdate ? updated : prev;
     });
-  
-    const folderNames = Object.keys(folders).join(', ');
-    alert(`Dossiers importés / mis à jour : ${folderNames}`);
   };
 
     const handleDashTouchStart = (e) => { 
