@@ -290,7 +290,7 @@ const SmartImport = ({
 
         const rootName = hasWebkitPath ? audioFiles[0].webkitRelativePath.split('/')[0] : fallbackName;
 
-        // Grouper par dossier parent immédiat (ou par artiste sur iOS)
+        // Grouper par dossier parent immédiat
         const folderStructure = audioFiles.reduce((acc, file) => {
             const hasPath = file.webkitRelativePath && file.webkitRelativePath.length > 0;
             let folderName;
@@ -299,13 +299,8 @@ const SmartImport = ({
                 const pathParts = file.webkitRelativePath.split('/');
                 folderName = pathParts.length > 2 ? pathParts[pathParts.length - 2] : pathParts[0];
             } else {
-                // iOS : pas de chemin, utiliser l'artiste du fichier comme nom de groupe
-                const fileName = file.name.replace(/\.[^/.]+$/, "");
-                if (fileName.includes(" - ")) {
-                    folderName = fileName.split(" - ")[0].trim();
-                } else {
-                    folderName = fallbackName;
-                }
+                // iOS : pas de chemin, tous les fichiers dans une seule vibe
+                folderName = fallbackName;
             }
 
             if (!acc[folderName]) {
