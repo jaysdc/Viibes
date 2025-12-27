@@ -1984,7 +1984,8 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                                 transition: 'box-shadow 0.1s ease-out',
                                 boxShadow: isCreatingVibe
                                     ? `0 0 20px ${futurePrimaryColor}, 0 0 40px ${futurePrimaryColor}99, 0 0 60px ${futurePrimaryColor}66`
-                                    : 'none'
+                                    : '0 10px 40px rgba(0,0,0,0.15)'
+
                             }}
                         >
                             {/* Indication swipe - EN HAUT AU CENTRE */}

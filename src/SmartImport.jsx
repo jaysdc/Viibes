@@ -222,7 +222,9 @@ const SmartImport = ({
     getGradientByIndex,
     getGradientName,
     onImportComplete,
-    onMenuClose,           // Callback pour fermer le menu radial
+    onMenuClose,
+    dropboxData,
+    onDropboxDataClear,           // Callback pour fermer le menu radial
     inputRef,
     folderButtonRef,       // Ref du bouton Folder
     slideOutDuration,      // Durée du slide out (synchro avec barre import)
@@ -500,10 +502,10 @@ const SmartImport = ({
                 const mergedFolders = { [importPreview.rootName]: importPreview.allFiles };
                 // Pour fusion, utiliser le premier gradient disponible ou en calculer un
                 const fusionGradients = { [importPreview.rootName]: importPreview.folderGradients?.[Object.keys(importPreview.folders)[0]] ?? 0 };
-                onImportComplete(mergedFolders, 'fusion', fusionGradients);
+                onImportComplete(mergedFolders, 'fusion', fusionGradients, importPreview.isDropbox);
                 if (importPreview.event) importPreview.event.target.value = '';
             } else if (action === 'vibes') {
-                onImportComplete(importPreview.folders, 'vibes', importPreview.folderGradients);
+                onImportComplete(importPreview.folders, 'vibes', importPreview.folderGradients, importPreview.isDropbox);
                 if (importPreview.event) importPreview.event.target.value = '';
             }
             
@@ -544,6 +546,7 @@ const SmartImport = ({
                     // Animation terminée, reset tout EN UNE SEULE FOIS
                     // importPreview à null fait disparaître le dialog, les autres resets sont sans effet visuel
                     setImportPreview(null);
+                    if (onDropboxDataClear) onDropboxDataClear();
                     // Reset différé pour éviter le flash
                     setTimeout(() => {
                         setDialogClosing(false);
@@ -588,6 +591,56 @@ const SmartImport = ({
             };
         }
     }, [inputRef, playlists, vibeColorIndices, onMenuClose]);
+
+    // Gérer l'arrivée de données Dropbox
+    useEffect(() => {
+        if (dropboxData && dropboxData.folders) {
+            const { folders, rootName } = dropboxData;
+            
+            const totalFiles = Object.values(folders).reduce((sum, arr) => sum + arr.length, 0);
+            const folderGradients = calculateGradients(folders);
+            
+            const existingFolders = Object.keys(folders).filter(name => 
+                playlists && playlists[name] !== undefined
+            );
+            
+            if (containerRef?.current) {
+                const containerRect = containerRef.current.getBoundingClientRect();
+                const dialogMaxWidth = parseFloat(SMARTIMPORT_CONFIG.DIALOG_MAX_WIDTH) * 16;
+                const dialogHeight = containerRect.height * 0.65;
+                const finalLeft = (containerRect.width - dialogMaxWidth) / 2;
+                const finalTop = (containerRect.height - dialogHeight) / 2;
+                
+                setDialogDimensions({
+                    finalLeft,
+                    finalTop,
+                    finalWidth: dialogMaxWidth,
+                    finalHeight: dialogHeight
+                });
+                
+                setSourceRect({
+                    left: finalLeft,
+                    top: finalTop,
+                    width: dialogMaxWidth,
+                    height: 48
+                });
+            }
+            
+            setImportPreview({
+                folders: folders,
+                folderGradients: folderGradients,
+                allFiles: Object.values(folders).flat(),
+                totalFiles: totalFiles,
+                rootName: rootName,
+                existingFolders: existingFolders,
+                event: null,
+                isDropbox: true
+            });
+            
+            setBackdropVisible(true);
+            setMorphProgress(1);
+        }
+    }, [dropboxData]);
 
     // Handlers pour le swipe de couleur
     const handleCardSwipeStart = (e, cardName) => {

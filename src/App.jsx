@@ -4,6 +4,7 @@ import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, Ch
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
+import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG } from './Config.js';
@@ -4068,6 +4069,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxPath, setDropboxPath] = useState('');
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);
+    const [pendingDropboxData, setPendingDropboxData] = useState(null);
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
     const [showTweaker, setShowTweaker] = useState(false);
     const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
@@ -4501,7 +4503,7 @@ const vibeSearchResults = () => {
     });
     
     setPlaylists(newPlaylists);
-    
+
     // Attribuer des couleurs uniques aux nouveaux dossiers
     const newFolderNames = Object.keys(folders);
     setVibeColorIndices(prev => {
@@ -4521,6 +4523,59 @@ const vibeSearchResults = () => {
       
       return needsUpdate ? updated : prev;
     });
+  };
+
+  // Traiter l'import de fichiers Dropbox
+  const processDropboxImport = (foldersToImport) => {
+    const newPlaylists = playlists ? { ...playlists } : {};
+
+    const allExistingSongsMap = new Map();
+    if (playlists) {
+        Object.values(playlists).forEach(playlist => {
+            playlist.forEach(song => {
+                if (song.fileSignature) {
+                    allExistingSongsMap.set(song.fileSignature, song);
+                }
+            });
+        });
+    }
+
+    Object.keys(foldersToImport).forEach(folderName => {
+        const filesInFolder = foldersToImport[folderName];
+
+        const newSongsForThisFolder = filesInFolder.map((file) => {
+            const extension = file.name.split('.').pop().toLowerCase();
+            const fileSignature = `${file.size}-${extension}`;
+
+            let title = file.name.replace(/\.[^/.]+$/, "");
+            let artist = "Artiste Inconnu";
+            if (title.includes(" - ")) {
+                const parts = title.split(" - ");
+                artist = parts[0].trim();
+                title = parts[1].trim();
+            }
+
+            const existingSong = allExistingSongsMap.get(fileSignature);
+            const playCount = existingSong ? existingSong.playCount : 0;
+            const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            return {
+                id: id,
+                title: title,
+                artist: artist,
+                playCount: playCount,
+                file: null,
+                dropboxPath: file.path_lower,
+                fileSignature: fileSignature,
+                type: 'dropbox'
+            };
+        });
+
+        newPlaylists[folderName] = newSongsForThisFolder;
+    });
+
+    setPlaylists(newPlaylists);
+    setFeedback({ text: `Import Dropbox terminé`, type: 'confirm', triggerValidation: Date.now() });
   };
 
     const handleDashTouchStart = (e) => { 
@@ -6217,121 +6272,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         )}
 
         {/* DROPBOX BROWSER */}
-        {showDropboxBrowser && (
-            <div className="absolute inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
-                    {/* Header */}
-                    <div className="bg-[#0061FE] text-white px-4 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <DropboxLogoVector size={24} color="white" />
-                            <span className="font-bold">Dropbox</span>
-                        </div>
-                        <button 
-                            onClick={() => setShowDropboxBrowser(false)}
-                            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-                        >
-                            <X size={18} />
-                        </button>
-                    </div>
-                    
-                    {/* Chemin actuel */}
-                    <div className="px-4 py-2 bg-gray-100 text-sm text-gray-600 flex items-center gap-2">
-                        <button 
-                            onClick={() => {
-                                if (dropboxPath) {
-                                    const parentPath = dropboxPath.split('/').slice(0, -1).join('/');
-                                    setDropboxPath(parentPath);
-                                    loadDropboxFolder(parentPath, dropboxToken);
-                                }
-                            }}
-                            className={`p-1 rounded ${dropboxPath ? 'hover:bg-gray-200' : 'opacity-30'}`}
-                            disabled={!dropboxPath}
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-                        <span className="truncate">/{dropboxPath || 'Racine'}</span>
-                    </div>
-                    
-                    {/* Liste des fichiers */}
-                    <div className="flex-1 overflow-y-auto">
-                        {dropboxLoading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <Disc3 size={32} className="animate-spin text-[#0061FE]" />
-                            </div>
-                        ) : dropboxFiles.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400">
-                                Dossier vide
-                            </div>
-                        ) : (
-                            dropboxFiles.map((file, index) => {
-                                const isFolder = file['.tag'] === 'folder';
-                                const isMp3 = file.name.toLowerCase().endsWith('.mp3');
-                                
-                                if (!isFolder && !isMp3) return null;
-                                
-                                return (
-                                    <div
-                                        key={index}
-                                        onClick={() => {
-                                            if (isFolder) {
-                                                setDropboxPath(file.path_lower);
-                                                loadDropboxFolder(file.path_lower, dropboxToken);
-                                            }
-                                        }}
-                                        className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 ${isFolder ? 'cursor-pointer hover:bg-gray-50 active:bg-gray-100' : 'opacity-60'}`}
-                                    >
-                                        {isFolder ? (
-                                            <Folder size={20} className="text-[#0061FE]" />
-                                        ) : (
-                                            <Music size={20} className="text-pink-500" />
-                                        )}
-                                        <span className="flex-1 truncate text-sm">{file.name}</span>
-                                        {isFolder && <ChevronRight size={16} className="text-gray-300" />}
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                    
-                    {/* Bouton Import */}
-                    {dropboxPath && (
-                        <div className="p-4 border-t border-gray-200">
-                            <button
-                                onClick={() => {
-                                    const folderName = dropboxPath.split('/').pop() || 'Dropbox Import';
-                                    importDropboxFolder(dropboxPath, folderName);
-                                }}
-                                disabled={dropboxLoading}
-                                className="w-full py-3 bg-[#0061FE] text-white font-bold rounded-full flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                {dropboxLoading ? (
-                                    <Disc3 size={20} className="animate-spin" />
-                                ) : (
-                                    <>
-                                        <FolderDown size={20} />
-                                        <span>Importer ce dossier</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    )}
-                    
-                    {/* Bouton Déconnexion */}
-                    <div className="px-4 pb-4">
-                        <button
-                            onClick={() => {
-                                localStorage.removeItem('dropbox_token');
-                                setDropboxToken(null);
-                                setShowDropboxBrowser(false);
-                            }}
-                            className="w-full py-2 text-sm text-gray-400 hover:text-red-500"
-                        >
-                            Déconnecter Dropbox
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
+        <DropboxBrowser
+    isVisible={showDropboxBrowser}
+    onClose={() => setShowDropboxBrowser(false)}
+    onDisconnect={() => {
+        clearDropboxTokens();
+        setDropboxToken(null);
+    }}
+    onImport={(scannedFolders, rootName) => {
+        setShowDropboxBrowser(false);
+        setPendingDropboxData({ folders: scannedFolders, rootName });
+    }}
+    dropboxToken={dropboxToken}
+    getValidDropboxToken={getValidDropboxToken}
+    refreshDropboxToken={refreshDropboxToken}
+    clearDropboxTokens={clearDropboxTokens}
+/>
 
         {/* KILL VIBE CONFIRMATION */}
         {(pendingVibe || (isFadingOutConfirm && feedback?.type === 'kill')) && (
@@ -6591,8 +6547,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         vibeColorIndices={vibeColorIndices}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}
-                        onImportComplete={(folders, mode, folderGradients) => {
-                          processFileImport(folders);
+                        dropboxData={pendingDropboxData}
+                        onDropboxDataClear={() => setPendingDropboxData(null)}
+                        onImportComplete={(folders, mode, folderGradients, isDropbox) => {
+                          if (isDropbox) {
+                              processDropboxImport(folders);
+                          } else {
+                              processFileImport(folders);
+                          }
                           // Appliquer les couleurs choisies dans SmartImport
                           if (folderGradients) {
                               setVibeColorIndices(prev => ({
