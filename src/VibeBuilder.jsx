@@ -1965,7 +1965,7 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                 
                 return (
                     <div 
-    className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 z-30"
+    className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-4 animate-in slide-in-from-bottom-4 z-30"
     style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
 >
                         
@@ -1977,14 +1977,14 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                             onMouseDown={handleCardSwipeStart}
                             onMouseMove={handleCardSwipeMove}
                             onMouseUp={handleCardSwipeEnd}
-                            className={`w-full rounded-xl shadow-lg cursor-pointer relative ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
-                            style={{ 
+                            className={`w-full rounded-xl cursor-pointer relative ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
+                            style={{
                                 height: vibeCardConfig?.height || 96,
                                 background: futureGradient,
                                 transition: 'box-shadow 0.1s ease-out',
-                                boxShadow: isCreatingVibe 
+                                boxShadow: isCreatingVibe
                                     ? `0 0 20px ${futurePrimaryColor}, 0 0 40px ${futurePrimaryColor}99, 0 0 60px ${futurePrimaryColor}66`
-                                    : '0 10px 40px rgba(0,0,0,0.15)'
+                                    : 'none'
                             }}
                         >
                             {/* Indication swipe - EN HAUT AU CENTRE */}
