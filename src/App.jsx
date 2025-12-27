@@ -4738,9 +4738,26 @@ const vibeSearchResults = () => {
             if (newSrc) {
                 audio.src = newSrc;
                 audio.dataset.songId = currentSong.id;
+                // Attendre que l'audio soit prêt avant de jouer
+                await new Promise((resolve) => {
+                    const onCanPlay = () => {
+                        audio.removeEventListener('canplay', onCanPlay);
+                        audio.removeEventListener('error', onError);
+                        resolve();
+                    };
+                    const onError = () => {
+                        audio.removeEventListener('canplay', onCanPlay);
+                        audio.removeEventListener('error', onError);
+                        console.error('Erreur chargement audio');
+                        resolve();
+                    };
+                    audio.addEventListener('canplay', onCanPlay);
+                    audio.addEventListener('error', onError);
+                    audio.load();
+                });
             }
           }
-        
+
           // Initialiser Web Audio API au premier play (nécessaire pour iOS)
           if (isPlaying && !audioContextRef.current && audioRef.current) {
               initAudioContext();
@@ -4748,8 +4765,8 @@ const vibeSearchResults = () => {
           if (isPlaying && audioContextRef.current?.state === 'suspended') {
               audioContextRef.current.resume();
           }
-          
-          if (isPlaying) {
+
+          if (isPlaying && currentSong) {
               const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -5654,7 +5671,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         >
           
           {/* Logo centré */}
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center" style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}>
              <VibesLogo size={36} />
              <span className="text-[10px] text-gray-300 ml-1 font-bold">v72</span>
           </div>
@@ -6391,7 +6408,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 style={{
                     paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                     paddingBottom: CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM,
-                    gap: CONFIG.PLAYER_HEADER_TITLE_MARGIN_BOTTOM
+                    gap: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM
                 }}
                 onTouchStart={handlePlayerTouchStart}
                 onTouchMove={handlePlayerTouchMove}

@@ -1698,28 +1698,29 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                     paddingBottom: showAddAll ? CONFIG.HEADER_PADDING_BOTTOM_ADDALL : CONFIG.HEADER_PADDING_BOTTOM
                 }}
             >
-            <div 
-                className="flex justify-between items-center mb-1 cursor-grab active:cursor-grabbing select-none"
+            <div
+                className="flex justify-between items-center cursor-grab active:cursor-grabbing select-none"
+                style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}
                 onTouchStart={handleTitleTouchStart}
                 onTouchMove={handleTitleTouchMove}
                 onTouchEnd={handleTitleTouchEnd}
-            > 
+            >
                 {/* Indicateur gauche - chevrons seuls */}
                 <div className="flex items-center gap-0.5 swipe-hint-left">
                     <ChevronLeft size={14} className="text-gray-300" strokeWidth={2} />
                     <ChevronLeft size={14} className="text-gray-200 -ml-2.5" strokeWidth={2} />
                 </div>
-                
+
                 {/* Titre central */}
                 <div className="text-center"><VibeBuilderTitle size={16} /></div>
-                
+
                 {/* Indicateur droite - chevrons seuls */}
                 <div className="flex items-center gap-0.5 swipe-hint-right">
                     <ChevronRight size={14} className="text-gray-200 -mr-2.5" strokeWidth={2} />
                     <ChevronRight size={14} className="text-gray-300" strokeWidth={2} />
                 </div>
                 </div>
-                <div className="flex items-center gap-2 relative z-20" style={{ marginTop: CONFIG.HEADER_TITLE_GAP }}>
+                <div className="flex items-center gap-2 relative z-20">
                     <div className="flex-1 relative" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
                     {dragState ? (
                             <div 

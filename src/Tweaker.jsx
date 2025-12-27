@@ -670,7 +670,7 @@ const Tweaker = ({
                     </div>
 
                     {/* Boutons capsule mode */}
-                    <div className="px-4" style={{ paddingTop: `${TWEAKER_CONFIG.HEADER_GAP}rem`, paddingBottom: `${TWEAKER_CONFIG.HEADER_MARGIN_BOTTOM}rem` }}>
+                    <div className="px-4" style={{ paddingTop: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM, paddingBottom: `${TWEAKER_CONFIG.HEADER_MARGIN_BOTTOM}rem` }}>
                         <div className="flex gap-2 relative">
                             {/* FeedbackOverlay pour UNDO */}
                             <TweakerFeedbackOverlay

@@ -9,6 +9,7 @@ export const UNIFIED_CONFIG = {
 
     // Titres (espace entre safe area iOS et le titre)
     TITLE_MARGIN_TOP: '1rem',           // Marge au-dessus du titre (après la safe area)
+    TITLE_MARGIN_BOTTOM: '0.5rem',      // Marge sous le titre (avant les boutons/contenu)
     TITLE_FONT_SIZE: '1.125rem',        // Taille police des titres (18px)
     TITLE_ICON_SIZE: 20,                // Taille icône à côté du titre (px)
     TITLE_ICON_GAP: '0.5rem',           // Espace entre icône et texte
