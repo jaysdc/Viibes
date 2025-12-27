@@ -596,36 +596,36 @@ const SmartImport = ({
     useEffect(() => {
         if (dropboxData && dropboxData.folders) {
             const { folders, rootName } = dropboxData;
-            
+
             const totalFiles = Object.values(folders).reduce((sum, arr) => sum + arr.length, 0);
             const folderGradients = calculateGradients(folders);
-            
-            const existingFolders = Object.keys(folders).filter(name => 
+
+            const existingFolders = Object.keys(folders).filter(name =>
                 playlists && playlists[name] !== undefined
             );
-            
-            if (containerRef?.current) {
-                const containerRect = containerRef.current.getBoundingClientRect();
-                const dialogMaxWidth = parseFloat(SMARTIMPORT_CONFIG.DIALOG_MAX_WIDTH) * 16;
-                const dialogHeight = containerRect.height * 0.65;
-                const finalLeft = (containerRect.width - dialogMaxWidth) / 2;
-                const finalTop = (containerRect.height - dialogHeight) / 2;
-                
-                setDialogDimensions({
-                    finalLeft,
-                    finalTop,
-                    finalWidth: dialogMaxWidth,
-                    finalHeight: dialogHeight
-                });
-                
-                setSourceRect({
-                    left: finalLeft,
-                    top: finalTop,
-                    width: dialogMaxWidth,
-                    height: 48
-                });
-            }
-            
+
+            // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const dialogMaxWidth = Math.min(320, screenWidth * 0.9);
+            const dialogHeight = Math.min(500, screenHeight * 0.7);
+            const finalLeft = (screenWidth - dialogMaxWidth) / 2;
+            const finalTop = (screenHeight - dialogHeight) / 2;
+
+            setDialogDimensions({
+                finalLeft,
+                finalTop,
+                finalWidth: dialogMaxWidth,
+                finalHeight: dialogHeight
+            });
+
+            setSourceRect({
+                left: finalLeft,
+                top: finalTop,
+                width: dialogMaxWidth,
+                height: 48
+            });
+
             setImportPreview({
                 folders: folders,
                 folderGradients: folderGradients,
@@ -636,7 +636,7 @@ const SmartImport = ({
                 event: null,
                 isDropbox: true
             });
-            
+
             setBackdropVisible(true);
             setMorphProgress(1);
         }
