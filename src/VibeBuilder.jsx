@@ -1965,7 +1965,7 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                 
                 return (
                     <div 
-    className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-4 animate-in slide-in-from-bottom-4 z-30"
+    className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 z-30"
     style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
 >
                         
