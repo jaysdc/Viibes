@@ -7,6 +7,87 @@ import SmartImport from './SmartImport.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG } from './Config.js';
+
+// ══════════════════════════════════════════════════════════════════════════
+// DROPBOX PKCE HELPERS
+// ══════════════════════════════════════════════════════════════════════════
+
+// Génère une chaîne aléatoire pour le code_verifier (43-128 caractères)
+const generateCodeVerifier = () => {
+    const array = new Uint8Array(64);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 128);
+};
+
+// Génère le code_challenge à partir du code_verifier (SHA-256 + base64url)
+const generateCodeChallenge = async (verifier) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    // Convertir en base64url (remplacer + par -, / par _, supprimer =)
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+// Stockage des tokens Dropbox
+const DROPBOX_STORAGE_KEYS = {
+    ACCESS_TOKEN: 'dropbox_access_token',
+    REFRESH_TOKEN: 'dropbox_refresh_token',
+    EXPIRES_AT: 'dropbox_expires_at',
+    CODE_VERIFIER: 'dropbox_code_verifier'
+};
+
+// Sauvegarder les tokens
+const saveDropboxTokens = (accessToken, refreshToken, expiresIn) => {
+    const expiresAt = Date.now() + (expiresIn * 1000) - 60000; // 1 minute de marge
+    localStorage.setItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+    localStorage.setItem(DROPBOX_STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+    localStorage.setItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT, expiresAt.toString());
+    // Nettoyer l'ancien token (migration)
+    localStorage.removeItem('dropbox_token');
+};
+
+// Récupérer le token d'accès (ou null si expiré/absent)
+const getDropboxAccessToken = () => {
+    const accessToken = localStorage.getItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN);
+    const expiresAt = localStorage.getItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT);
+
+    if (!accessToken || !expiresAt) {
+        // Migration : vérifier l'ancien format
+        const oldToken = localStorage.getItem('dropbox_token');
+        if (oldToken) return oldToken; // Ancien token (expirera dans 4h max)
+        return null;
+    }
+
+    // Vérifier si expiré
+    if (Date.now() >= parseInt(expiresAt)) {
+        return null; // Expiré, besoin de refresh
+    }
+
+    return accessToken;
+};
+
+// Vérifier si un refresh est nécessaire
+const needsTokenRefresh = () => {
+    const expiresAt = localStorage.getItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT);
+    if (!expiresAt) return false;
+    return Date.now() >= parseInt(expiresAt);
+};
+
+// Récupérer le refresh token
+const getRefreshToken = () => {
+    return localStorage.getItem(DROPBOX_STORAGE_KEYS.REFRESH_TOKEN);
+};
+
+// Nettoyer tous les tokens Dropbox
+const clearDropboxTokens = () => {
+    localStorage.removeItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(DROPBOX_STORAGE_KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT);
+    localStorage.removeItem(DROPBOX_STORAGE_KEYS.CODE_VERIFIER);
+    localStorage.removeItem('dropbox_token'); // Ancien format
+};
+
 // Détection automatique : vrai mobile/PWA vs desktop
 const isRealDevice = () => {
   if (typeof window === 'undefined') return false;
@@ -388,7 +469,7 @@ const CONFIG = {
     IMPORT_NUKE_GLOW: 'rgba(255, 0, 0, 0.6)',
     IMPORT_DROPBOX_COLOR: '#0061FE',            // Bleu Dropbox
     DROPBOX_APP_KEY: '8iszj93vaacb78g',         // App Key Dropbox
-    DROPBOX_REDIRECT_URI: 'https://viibes-music-player-jay-347.web.app', // Redirect URI
+    DROPBOX_REDIRECT_URI: 'https://jaysdc.github.io/Viibes/', // Redirect URI
     IMPORT_DROPBOX_GLOW: 'rgba(0, 97, 254, 0.6)',
     IMPORT_FOLDER_COLOR: '#F0F8FF',             // Bleu glacial
     IMPORT_NUKE_GLOW_RGB: '255, 0, 0',          // RGB pour glow rouge
@@ -4902,21 +4983,143 @@ const cancelKillVibe = () => {
       setNukeConfirmMode(true);
   };
 
-  const handleDropboxAuth = () => {
+  const handleDropboxAuth = async () => {
     console.log('handleDropboxAuth appelé !'); // DEBUG
-    const token = localStorage.getItem('dropbox_token');
+    const token = getDropboxAccessToken();
     console.log('Token:', token); // DEBUG
+
     if (token) {
         // Déjà connecté, ouvrir le browser
         setDropboxToken(token);
         setDropboxPath('');
         setShowDropboxBrowser(true);
         loadDropboxFolder('', token);
+    } else if (getRefreshToken()) {
+        // Token expiré mais refresh token disponible
+        const refreshed = await refreshDropboxToken();
+        if (refreshed) {
+            const newToken = getDropboxAccessToken();
+            setDropboxToken(newToken);
+            setDropboxPath('');
+            setShowDropboxBrowser(true);
+            loadDropboxFolder('', newToken);
+        } else {
+            // Refresh échoué, relancer OAuth
+            startDropboxOAuth();
+        }
     } else {
-        // Lancer OAuth
-        const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${CONFIG.DROPBOX_APP_KEY}&response_type=token&redirect_uri=${encodeURIComponent(CONFIG.DROPBOX_REDIRECT_URI)}`;
-        window.location.href = authUrl;
+        // Pas de token, lancer OAuth PKCE
+        startDropboxOAuth();
     }
+  };
+
+  // Lancer le flux OAuth PKCE
+  const startDropboxOAuth = async () => {
+    const codeVerifier = generateCodeVerifier();
+    localStorage.setItem(DROPBOX_STORAGE_KEYS.CODE_VERIFIER, codeVerifier);
+
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+    const authUrl = `https://www.dropbox.com/oauth2/authorize?` +
+        `client_id=${CONFIG.DROPBOX_APP_KEY}` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(CONFIG.DROPBOX_REDIRECT_URI)}` +
+        `&code_challenge=${codeChallenge}` +
+        `&code_challenge_method=S256` +
+        `&token_access_type=offline`; // Important: demande un refresh_token
+
+    window.location.href = authUrl;
+  };
+
+  // Échanger le code contre des tokens
+  const exchangeCodeForTokens = async (code) => {
+    const codeVerifier = localStorage.getItem(DROPBOX_STORAGE_KEYS.CODE_VERIFIER);
+    if (!codeVerifier) {
+        console.error('Code verifier manquant');
+        return false;
+    }
+
+    try {
+        const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                code: code,
+                grant_type: 'authorization_code',
+                client_id: CONFIG.DROPBOX_APP_KEY,
+                redirect_uri: CONFIG.DROPBOX_REDIRECT_URI,
+                code_verifier: codeVerifier,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.access_token && data.refresh_token) {
+            saveDropboxTokens(data.access_token, data.refresh_token, data.expires_in);
+            localStorage.removeItem(DROPBOX_STORAGE_KEYS.CODE_VERIFIER);
+            return data.access_token;
+        } else {
+            console.error('Erreur échange tokens:', data);
+            return false;
+        }
+    } catch (error) {
+        console.error('Erreur échange tokens:', error);
+        return false;
+    }
+  };
+
+  // Rafraîchir le token d'accès
+  const refreshDropboxToken = async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+
+    try {
+        const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+                client_id: CONFIG.DROPBOX_APP_KEY,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.access_token) {
+            // Le refresh_token reste le même, on met juste à jour access_token et expires_at
+            const expiresAt = Date.now() + (data.expires_in * 1000) - 60000;
+            localStorage.setItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN, data.access_token);
+            localStorage.setItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT, expiresAt.toString());
+            return true;
+        } else {
+            console.error('Erreur refresh token:', data);
+            clearDropboxTokens();
+            return false;
+        }
+    } catch (error) {
+        console.error('Erreur refresh token:', error);
+        return false;
+    }
+  };
+
+  // Obtenir un token valide (avec refresh automatique si nécessaire)
+  const getValidDropboxToken = async () => {
+    let token = getDropboxAccessToken();
+
+    if (!token && getRefreshToken()) {
+        // Token expiré, essayer de rafraîchir
+        const refreshed = await refreshDropboxToken();
+        if (refreshed) {
+            token = getDropboxAccessToken();
+        }
+    }
+
+    return token;
   };
 
   // Charger le contenu d'un dossier Dropbox
@@ -4943,11 +5146,22 @@ const cancelKillVibe = () => {
         });
         
         if (firstResponse.status === 401) {
-            localStorage.removeItem('dropbox_token');
-            setDropboxToken(null);
-            alert('Session Dropbox expirée. Veuillez vous reconnecter.');
-            setShowDropboxBrowser(false);
-            return;
+            // Essayer de rafraîchir le token
+            const refreshed = await refreshDropboxToken();
+            if (refreshed) {
+                const newToken = getDropboxAccessToken();
+                setDropboxToken(newToken);
+                // Réessayer avec le nouveau token
+                setDropboxLoading(false);
+                return loadDropboxFolder(path, newToken);
+            } else {
+                // Refresh échoué, forcer reconnexion
+                clearDropboxTokens();
+                setDropboxToken(null);
+                alert('Session Dropbox expirée. Veuillez vous reconnecter.');
+                setShowDropboxBrowser(false);
+                return;
+            }
         }
         
         let data = await firstResponse.json();
@@ -5001,15 +5215,35 @@ const cancelKillVibe = () => {
 const importDropboxFolder = async (folderPath, folderName) => {
   setDropboxLoading(true);
   try {
+      // Obtenir un token valide (avec refresh si nécessaire)
+      let token = await getValidDropboxToken();
+      if (!token) token = dropboxToken;
+
       const listResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
           method: 'POST',
           headers: {
-              'Authorization': `Bearer ${dropboxToken}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
           },
           body: JSON.stringify({ path: folderPath }),
       });
-      
+
+      // Si 401, essayer de rafraîchir et réessayer
+      if (listResponse.status === 401) {
+          const refreshed = await refreshDropboxToken();
+          if (refreshed) {
+              setDropboxLoading(false);
+              return importDropboxFolder(folderPath, folderName);
+          } else {
+              clearDropboxTokens();
+              setDropboxToken(null);
+              alert('Session Dropbox expirée. Veuillez vous reconnecter.');
+              setShowDropboxBrowser(false);
+              setDropboxLoading(false);
+              return;
+          }
+      }
+
       const listData = await listResponse.json();
       const mp3Files = listData.entries.filter(f => 
           f['.tag'] === 'file' && f.name.toLowerCase().endsWith('.mp3')
@@ -5060,10 +5294,15 @@ const importDropboxFolder = async (folderPath, folderName) => {
 };
 
 // Obtenir un lien temporaire Dropbox pour une chanson
-const getDropboxTemporaryLink = async (dropboxPath) => {
-  const token = dropboxToken || localStorage.getItem('dropbox_token');
+const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
+  // Utiliser getValidDropboxToken pour refresh automatique
+  let token = await getValidDropboxToken();
+  if (!token) {
+      // Fallback sur l'ancien token si présent
+      token = dropboxToken || localStorage.getItem('dropbox_token');
+  }
   if (!token) return null;
-  
+
   try {
       const response = await fetch('https://api.dropboxapi.com/2/files/get_temporary_link', {
           method: 'POST',
@@ -5073,7 +5312,15 @@ const getDropboxTemporaryLink = async (dropboxPath) => {
           },
           body: JSON.stringify({ path: dropboxPath }),
       });
-      
+
+      // Si 401 et pas encore réessayé, tenter un refresh
+      if (response.status === 401 && retryCount === 0) {
+          const refreshed = await refreshDropboxToken();
+          if (refreshed) {
+              return getDropboxTemporaryLink(dropboxPath, 1);
+          }
+      }
+
       const data = await response.json();
       return data.link || null;
   } catch (error) {
@@ -5082,23 +5329,49 @@ const getDropboxTemporaryLink = async (dropboxPath) => {
   }
 };
 
-  // Gestion du retour Dropbox OAuth
+  // Gestion du retour Dropbox OAuth (PKCE)
   useEffect(() => {
-      const hash = window.location.hash;
-      if (hash && hash.includes('access_token')) {
-          const params = new URLSearchParams(hash.substring(1));
-          const accessToken = params.get('access_token');
-          if (accessToken) {
-              // Stocker le token
-              localStorage.setItem('dropbox_token', accessToken);
-              setDropboxToken(accessToken);
-              // Nettoyer l'URL
-              window.history.replaceState(null, '', window.location.pathname);
-              // Ouvrir le browser automatiquement
-              setShowDropboxBrowser(true);
-              loadDropboxFolder('', accessToken);
+      const handleOAuthReturn = async () => {
+          // Nouveau flux PKCE : le code est dans les query params
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get('code');
+
+          if (code) {
+              // Échanger le code contre des tokens
+              const accessToken = await exchangeCodeForTokens(code);
+              if (accessToken) {
+                  setDropboxToken(accessToken);
+                  // Nettoyer l'URL
+                  window.history.replaceState(null, '', window.location.pathname);
+                  // Ouvrir le browser automatiquement
+                  setShowDropboxBrowser(true);
+                  loadDropboxFolder('', accessToken);
+              } else {
+                  alert('Erreur de connexion à Dropbox. Veuillez réessayer.');
+                  window.history.replaceState(null, '', window.location.pathname);
+              }
+              return;
           }
-      }
+
+          // Ancien flux (migration) : le token est dans le hash
+          const hash = window.location.hash;
+          if (hash && hash.includes('access_token')) {
+              const params = new URLSearchParams(hash.substring(1));
+              const accessToken = params.get('access_token');
+              if (accessToken) {
+                  // Stocker le token (ancien format, expirera dans 4h)
+                  localStorage.setItem('dropbox_token', accessToken);
+                  setDropboxToken(accessToken);
+                  // Nettoyer l'URL
+                  window.history.replaceState(null, '', window.location.pathname);
+                  // Ouvrir le browser automatiquement
+                  setShowDropboxBrowser(true);
+                  loadDropboxFolder('', accessToken);
+              }
+          }
+      };
+
+      handleOAuthReturn();
   }, []);
     
     const confirmNuke = () => {
