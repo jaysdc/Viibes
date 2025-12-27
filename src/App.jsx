@@ -5560,7 +5560,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
-      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} />
+      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
       {!isOnRealDevice && (
