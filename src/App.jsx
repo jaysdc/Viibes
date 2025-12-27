@@ -1966,19 +1966,21 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
 };
 
   const SkipButton = ({ direction, onClick }) => (
-    <button 
-        onClick={onClick} 
-        className="relative flex items-center justify-center text-gray-400 hover:text-gray-800 hover:bg-white/80 rounded-full transition-all group"
+    <button
+        onClick={onClick}
+        className="flex items-center justify-center text-gray-400 hover:text-gray-800 hover:bg-white/80 rounded-full transition-all group"
         style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem` }}
     >
-        {direction === 'back' 
-            ? <RotateCcw style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }} strokeWidth={1.5} className="group-hover:text-gray-900"/> 
-            : <RotateCw style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
-        }
-        <span
-            className="absolute font-bold top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
-        >10</span>
+        <div className="relative flex items-center justify-center" style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }}>
+            {direction === 'back'
+                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
+                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
+            }
+            <span
+                className="absolute font-bold top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
+            >10</span>
+        </div>
     </button>
 );
 
