@@ -1577,9 +1577,11 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
 
     return (
         <>
-        <div 
-            className="absolute inset-0 bg-white z-50 flex flex-col"
+        <div
+            className="absolute top-0 left-0 right-0 bg-white z-50 flex flex-col"
             style={{
+                bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
