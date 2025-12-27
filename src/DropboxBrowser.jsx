@@ -517,7 +517,7 @@ const DropboxBrowser = ({
                             )}
                         </div>
 
-                        {/* Scrollbar rose custom */}
+                        {/* Scrollbar rose custom - POINT (pas barre) */}
                         {showScrollbar && files.length > 0 && (
                             <div
                                 className="absolute right-0 top-0 bottom-0"
@@ -528,11 +528,10 @@ const DropboxBrowser = ({
                                         position: 'absolute',
                                         right: 2,
                                         width: CONFIG.SCROLLBAR_WIDTH,
-                                        height: '20%',
-                                        minHeight: 30,
-                                        top: `${scrollPercent * 80}%`,
+                                        height: CONFIG.SCROLLBAR_WIDTH,
+                                        top: `${scrollPercent * (100 - 4)}%`,
                                         background: CONFIG.SCROLLBAR_COLOR,
-                                        borderRadius: CONFIG.SCROLLBAR_WIDTH / 2,
+                                        borderRadius: '50%',
                                         boxShadow: CONFIG.SCROLLBAR_GLOW,
                                         transition: 'top 0.05s ease-out',
                                     }}
@@ -550,15 +549,23 @@ const DropboxBrowser = ({
                         <button
                             onClick={handleClose}
                             disabled={!!closingButton}
-                            className="flex-1 flex items-center justify-center rounded-full relative overflow-hidden"
+                            className="flex items-center justify-center rounded-full relative"
                             style={{
+                                width: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                minWidth: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 background: 'white',
                                 border: '1px solid rgba(0,0,0,0.1)',
                             }}
                         >
                             {closingButton === 'close' && (
-                                <div className="absolute inset-0 rounded-full dropbox-ignite-gray" />
+                                <div
+                                    className="absolute rounded-full dropbox-ignite-gray"
+                                    style={{
+                                        inset: -4,
+                                        background: 'rgba(156, 163, 175, 0.15)',
+                                    }}
+                                />
                             )}
                             <X size={18} className="text-gray-400 relative z-10" />
                         </button>
@@ -567,15 +574,23 @@ const DropboxBrowser = ({
                         <button
                             onClick={handleDisconnect}
                             disabled={!!closingButton}
-                            className="flex-1 flex items-center justify-center rounded-full relative overflow-hidden"
+                            className="flex items-center justify-center rounded-full relative"
                             style={{
+                                width: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                minWidth: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 background: 'white',
                                 border: '1px solid rgba(0,0,0,0.1)',
                             }}
                         >
                             {closingButton === 'disconnect' && (
-                                <div className="absolute inset-0 rounded-full dropbox-ignite-red" />
+                                <div
+                                    className="absolute rounded-full dropbox-ignite-red"
+                                    style={{
+                                        inset: -4,
+                                        background: 'rgba(239, 68, 68, 0.15)',
+                                    }}
+                                />
                             )}
                             <LogOut size={18} className="text-red-500 relative z-10" />
                         </button>

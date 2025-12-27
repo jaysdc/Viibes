@@ -82,11 +82,19 @@ const getRefreshToken = () => {
 
 // Nettoyer tous les tokens Dropbox
 const clearDropboxTokens = () => {
+    console.log('=== CLEARING ALL DROPBOX TOKENS ===');
+    console.log('Before clear - ACCESS_TOKEN:', localStorage.getItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN));
+    console.log('Before clear - dropbox_token:', localStorage.getItem('dropbox_token'));
+
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT);
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.CODE_VERIFIER);
     localStorage.removeItem('dropbox_token'); // Ancien format
+
+    console.log('After clear - ACCESS_TOKEN:', localStorage.getItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN));
+    console.log('After clear - dropbox_token:', localStorage.getItem('dropbox_token'));
+    console.log('=== TOKENS CLEARED ===');
 };
 
 // Détection automatique : vrai mobile/PWA vs desktop
@@ -5043,8 +5051,10 @@ const cancelKillVibe = () => {
 
   const handleDropboxAuth = async () => {
     console.log('handleDropboxAuth appelé !'); // DEBUG
+    // Toujours relire depuis localStorage pour avoir la valeur à jour
     const token = getDropboxAccessToken();
-    console.log('Token:', token); // DEBUG
+    console.log('Token from localStorage:', token); // DEBUG
+    console.log('dropboxToken state:', dropboxToken); // DEBUG
 
     if (token) {
         // Déjà connecté, ouvrir le browser
