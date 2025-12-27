@@ -444,7 +444,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // BARRE DE CONTRÔLE (TimeCapsule + Recenter + Volume)
     // ══════════════════════════════════════════════════════════════════════════
-    CONTROL_BAR_Y: 100,                  // Position verticale dans le footer (0=bas, 100=haut)
+    CONTROL_BAR_Y: 50,                  // Position verticale dans le footer (0=bas, 100=haut)
     CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
     CONTROL_BAR_SPACING_PERCENT: 15,     // Espacement total (% largeur écran)
 
@@ -4065,7 +4065,7 @@ const handlePlayerTouchEnd = () => {
     const [pendingImportAction, setPendingImportAction] = useState(null);
     const [importBtnIgniting, setImportBtnIgniting] = useState(null); // 'nuke' | 'dropbox' | 'folder' | null
     const [showDropboxBrowser, setShowDropboxBrowser] = useState(false);
-    const [dropboxToken, setDropboxToken] = useState(() => localStorage.getItem('dropbox_token'));
+    const [dropboxToken, setDropboxToken] = useState(() => localStorage.getItem('dropbox_access_token') || localStorage.getItem('dropbox_token'));
     const [dropboxPath, setDropboxPath] = useState('');
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);

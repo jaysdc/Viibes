@@ -11,12 +11,18 @@ const CONFIG = {
     // Couleurs
     DROPBOX_BLUE: '#0061FE',
 
-    // Cartes - plus petites, plus compactes
-    CARD_HEIGHT: '2.5rem',
+    // Cartes dossiers
+    CARD_HEIGHT: '2.25rem',
     CARD_RADIUS: '0.5rem',
     CARD_GAP: '0.25rem',
     CARD_FONT_SIZE: '0.75rem',
     CARD_ICON_SIZE: 16,
+
+    // Fichiers MP3 (sans carte)
+    FILE_HEIGHT: '1.5rem',
+    FILE_GAP: '0.125rem',
+    FILE_FONT_SIZE: '0.65rem',
+    FILE_ICON_SIZE: 12,
 
     // Dialog - plus grand
     DIALOG_WIDTH: '92vw',
@@ -24,6 +30,9 @@ const CONFIG = {
     DIALOG_HEIGHT: '80vh',
     DIALOG_MAX_HEIGHT: '600px',
 };
+
+// Première lettre en majuscule
+const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
@@ -196,18 +205,18 @@ const DropboxBrowser = ({
                     f['.tag'] === 'file' && f.name.toLowerCase().endsWith('.mp3')
                 );
 
-                // Ajouter les MP3 de ce dossier
+                // Ajouter les MP3 de ce dossier (nom avec majuscule)
                 if (mp3Files.length > 0) {
-                    result[folderName] = mp3Files.map(f => ({
+                    result[capitalize(folderName)] = mp3Files.map(f => ({
                         name: f.name,
                         size: f.size,
                         path_lower: f.path_lower,
                     }));
                 }
 
-                // Scanner récursivement les sous-dossiers
+                // Scanner récursivement les sous-dossiers (nom avec majuscule)
                 for (const subfolder of subfolders) {
-                    await scanFolder(subfolder.path_lower, subfolder.name);
+                    await scanFolder(subfolder.path_lower, capitalize(subfolder.name));
                 }
 
             } catch (error) {
@@ -249,9 +258,8 @@ const DropboxBrowser = ({
         setScanning(false);
     };
 
-    // Handler déconnexion
+    // Handler déconnexion - onDisconnect appelle déjà clearDropboxTokens côté App.jsx
     const handleDisconnect = () => {
-        clearDropboxTokens();
         onDisconnect();
         onClose();
     };
@@ -368,43 +376,57 @@ const DropboxBrowser = ({
                             Dossier vide
                         </div>
                     ) : (
-                        <div
-                            className="flex flex-col"
-                            style={{ gap: CONFIG.CARD_GAP }}
-                        >
+                        <div className="flex flex-col">
                             {files.map((file, index) => {
                                 const isFolder = file['.tag'] === 'folder';
-                                const isMp3 = file.name.toLowerCase().endsWith('.mp3');
 
-                                return (
-                                    <div
-                                        key={file.path_lower || index}
-                                        onClick={() => isFolder && navigateToFolder(file.path_lower)}
-                                        className={`flex items-center gap-2 px-3 ${isFolder ? 'cursor-pointer' : ''}`}
-                                        style={{
-                                            height: CONFIG.CARD_HEIGHT,
-                                            background: 'white',
-                                            borderRadius: CONFIG.CARD_RADIUS,
-                                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                                            opacity: isMp3 && !isFolder ? 0.5 : 1,
-                                        }}
-                                    >
-                                        {isFolder ? (
-                                            <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
-                                        ) : (
-                                            <Music size={CONFIG.CARD_ICON_SIZE} className="text-pink-500" style={{ flexShrink: 0 }} />
-                                        )}
-                                        <span
-                                            className="flex-1 truncate font-medium text-gray-700"
-                                            style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
+                                if (isFolder) {
+                                    // Dossier : carte avec fond blanc
+                                    return (
+                                        <div
+                                            key={file.path_lower || index}
+                                            onClick={() => navigateToFolder(file.path_lower)}
+                                            className="flex items-center gap-2 px-3 cursor-pointer"
+                                            style={{
+                                                height: CONFIG.CARD_HEIGHT,
+                                                background: 'white',
+                                                borderRadius: CONFIG.CARD_RADIUS,
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                                marginBottom: CONFIG.CARD_GAP,
+                                            }}
                                         >
-                                            {file.name}
-                                        </span>
-                                        {isFolder && (
+                                            <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
+                                            <span
+                                                className="flex-1 truncate font-medium text-gray-700"
+                                                style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
+                                            >
+                                                {file.name}
+                                            </span>
                                             <ChevronRight size={14} className="text-gray-300" style={{ flexShrink: 0 }} />
-                                        )}
-                                    </div>
-                                );
+                                        </div>
+                                    );
+                                } else {
+                                    // Fichier MP3 : pas de carte, juste texte compact
+                                    return (
+                                        <div
+                                            key={file.path_lower || index}
+                                            className="flex items-center gap-1 px-2"
+                                            style={{
+                                                height: CONFIG.FILE_HEIGHT,
+                                                marginBottom: CONFIG.FILE_GAP,
+                                                opacity: 0.6,
+                                            }}
+                                        >
+                                            <Music size={CONFIG.FILE_ICON_SIZE} className="text-pink-400" style={{ flexShrink: 0 }} />
+                                            <span
+                                                className="flex-1 truncate text-gray-500"
+                                                style={{ fontSize: CONFIG.FILE_FONT_SIZE }}
+                                            >
+                                                {file.name.replace(/\.mp3$/i, '')}
+                                            </span>
+                                        </div>
+                                    );
+                                }
                             })}
                         </div>
                     )}
