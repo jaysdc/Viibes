@@ -1963,7 +1963,7 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                 const isNameLong = vibeName.length > (vibeCardConfig?.marqueeThreshold || 12);
                 
                 return (
-                    <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 z-30">
+                    <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 z-30" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>
                         
                         {/* Future VibeCard - Swipable pour changer couleur */}
                         <div 

@@ -668,6 +668,7 @@ const CONFIG = {
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 0.5,              // Hauteur progress bar (rem)
+    TC_PROGRESS_THUMB_SIZE: 16,           // Taille du thumb rose (px)
     TC_PROGRESS_TOP_PERCENT: 40,          // Position Y en % (50 = centré verticalement)
     TC_PROGRESS_LEFT_PERCENT: 20,         // Distance depuis la gauche en %
     TC_PROGRESS_RIGHT_PERCENT: 20,        // Distance depuis la droite en %
@@ -1974,8 +1975,8 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
             ? <RotateCcw style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }} strokeWidth={1.5} className="group-hover:text-gray-900"/> 
             : <RotateCw style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
         }
-        <span 
-            className="absolute font-bold top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-[1px] bg-gray-50/80 px-0.5 rounded-full"
+        <span
+            className="absolute font-bold top-0 right-0 bg-gray-50/80 px-0.5 rounded-full"
             style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
         >10</span>
     </button>
@@ -2533,8 +2534,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
-                        className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500 transition-all" 
-                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem` }}
+                        className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
+                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
                     />
                     {/* Temps - positionnés en % par rapport à la progress bar */}
                     <div 
@@ -5749,7 +5750,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               }} 
                               className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                           >
-                              <Plus style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} strokeWidth={2.5} />
+                              <Plus style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} strokeWidth={2.5} className="text-white" />
                           </button>
                       </div>
                   </div>

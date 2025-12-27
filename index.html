@@ -51,6 +51,25 @@
         overflow: hidden;
         touch-action: pan-x pan-y;
       }
+
+      /* Slider rose pour iOS Safari */
+      input[type="range"].slider-rose::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: var(--slider-thumb-size, 16px);
+        height: var(--slider-thumb-size, 16px);
+        background: #ec4899;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      input[type="range"].slider-rose::-moz-range-thumb {
+        width: var(--slider-thumb-size, 16px);
+        height: var(--slider-thumb-size, 16px);
+        background: #ec4899;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
     </style>
     
     <!-- Tailwind -->
