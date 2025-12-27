@@ -437,14 +437,14 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // FOOTER
     // ══════════════════════════════════════════════════════════════════════════
-    FOOTER_HEIGHT_PERCENT: 15,           // Hauteur du footer (% de l'écran)
+    FOOTER_HEIGHT_PERCENT: 10,           // Hauteur du footer (% de l'écran)
     FOOTER_SLIDE_DURATION: 400,          // Durée de l'animation slide du footer (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
     // BARRE DE CONTRÔLE (TimeCapsule + Recenter + Volume)
     // ══════════════════════════════════════════════════════════════════════════
-    CONTROL_BAR_Y: 60,                  // Position verticale dans le footer (0=bas, 100=haut)
-    CONTROL_BAR_HEIGHT_PERCENT: 50,     // Hauteur des éléments (% du footer)
+    CONTROL_BAR_Y: 100,                  // Position verticale dans le footer (0=bas, 100=haut)
+    CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
     CONTROL_BAR_SPACING_PERCENT: 15,     // Espacement total (% largeur écran)
 
     // ══════════════════════════════════════════════════════════════════════════
