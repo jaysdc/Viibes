@@ -5298,8 +5298,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
   // Utiliser getValidDropboxToken pour refresh automatique
   let token = await getValidDropboxToken();
   if (!token) {
-      // Fallback sur l'ancien token si présent
-      token = dropboxToken || localStorage.getItem('dropbox_token');
+      // Fallback sur l'ancien token si présent (localStorage uniquement, pas de state)
+      token = localStorage.getItem('dropbox_token');
   }
   if (!token) return null;
 
