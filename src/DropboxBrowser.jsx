@@ -312,24 +312,25 @@ const DropboxBrowser = ({
     return (
         <>
             <style>{dropboxBrowserStyles}</style>
-            <div 
-                className="absolute inset-0 z-[200] transition-all"
-                style={{ 
-                    backgroundColor: `rgba(0, 0, 0, ${SMARTIMPORT_CONFIG.BACKDROP_OPACITY})`,
+            <div
+                className="fixed inset-0 z-[9999] flex items-center justify-center"
+                style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     backdropFilter: 'blur(8px)',
-                    animation: 'dropbox-fade-in 0.3s ease-out'
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
                 {/* Dialog principal */}
-                <div 
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col overflow-hidden"
+                <div
+                    className="flex flex-col overflow-hidden"
                     style={{
-                        width: SMARTIMPORT_CONFIG.DIALOG_MAX_WIDTH,
-                        maxHeight: SMARTIMPORT_CONFIG.DIALOG_HEIGHT,
-                        padding: SMARTIMPORT_CONFIG.DIALOG_PADDING,
+                        width: '90vw',
+                        maxWidth: '320px',
+                        height: '70vh',
+                        maxHeight: '500px',
+                        padding: '1rem',
                         background: folderBg,
-                        borderRadius: SMARTIMPORT_CONFIG.DIALOG_RADIUS,
+                        borderRadius: '1.5rem',
                         boxShadow: folderShadow,
                     }}
                 >
