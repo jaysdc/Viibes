@@ -1976,7 +1976,7 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
             : <RotateCw style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
         }
         <span
-            className="absolute font-bold top-0 right-0 bg-gray-50/80 px-0.5 rounded-full"
+            className="absolute font-bold top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
             style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
         >10</span>
     </button>
