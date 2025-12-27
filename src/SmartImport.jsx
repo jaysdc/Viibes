@@ -277,12 +277,37 @@ const SmartImport = ({
         }
         
         // Scanner la structure des dossiers
-        const rootName = audioFiles[0]?.webkitRelativePath?.split('/')[0] || "Musique Importée";
-        
-        // Grouper par dossier parent immédiat
+        const hasWebkitPath = audioFiles[0]?.webkitRelativePath && audioFiles[0].webkitRelativePath.length > 0;
+
+        // Fallback iOS : extraire l'artiste du nom du premier fichier (format "Artiste - Titre.mp3")
+        let fallbackName = "Musique Importée";
+        if (!hasWebkitPath && audioFiles[0]) {
+            const fileName = audioFiles[0].name.replace(/\.[^/.]+$/, "");
+            if (fileName.includes(" - ")) {
+                fallbackName = fileName.split(" - ")[0].trim();
+            }
+        }
+
+        const rootName = hasWebkitPath ? audioFiles[0].webkitRelativePath.split('/')[0] : fallbackName;
+
+        // Grouper par dossier parent immédiat (ou par artiste sur iOS)
         const folderStructure = audioFiles.reduce((acc, file) => {
-            const pathParts = file.webkitRelativePath?.split('/') || [rootName, file.name];
-            const folderName = pathParts.length > 2 ? pathParts[pathParts.length - 2] : pathParts[0];
+            const hasPath = file.webkitRelativePath && file.webkitRelativePath.length > 0;
+            let folderName;
+
+            if (hasPath) {
+                const pathParts = file.webkitRelativePath.split('/');
+                folderName = pathParts.length > 2 ? pathParts[pathParts.length - 2] : pathParts[0];
+            } else {
+                // iOS : pas de chemin, utiliser l'artiste du fichier comme nom de groupe
+                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                if (fileName.includes(" - ")) {
+                    folderName = fileName.split(" - ")[0].trim();
+                } else {
+                    folderName = fallbackName;
+                }
+            }
+
             if (!acc[folderName]) {
                 acc[folderName] = [];
             }
