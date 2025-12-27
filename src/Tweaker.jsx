@@ -6,8 +6,6 @@ import { UNIFIED_CONFIG } from './Config.js';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
-    TITLE_MARGIN_TOP: 0,          // Espacement au-dessus du header (rem)
-    HEADER_MARGIN_TOP: UNIFIED_CONFIG.HEADER_PADDING_AFTER_SAFE_AREA,       // Espacement entre l'encoche et le titre (unifié)
     HEADER_GAP: 0.5,              // Espacement entre le titre et les boutons (rem)
     HEADER_MARGIN_BOTTOM: 0.75,   // Espacement entre les boutons et le bas (rem)
     HEADER_BTN_HEIGHT: UNIFIED_CONFIG.CAPSULE_HEIGHT, // Hauteur des boutons (depuis config.js)
@@ -247,9 +245,7 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
 };
 
 // Composant principal Tweaker
-const Tweaker = ({ 
-    isOnRealDevice = false,
-    iosSafeAreaTop = 3,
+const Tweaker = ({
     playlists, 
     vibeColorIndices, 
     setVibeColorIndices, 
@@ -629,45 +625,42 @@ const Tweaker = ({
         >
             <style>{TweakerStyles}</style>
             
-            {/* Header swipeable (statut + titre + boutons) */}
-            <div 
+            {/* Header swipeable (titre + boutons) */}
+            <div
                 className="cursor-grab active:cursor-grabbing select-none relative"
-                style={{ marginTop: `${TWEAKER_CONFIG.TITLE_MARGIN_TOP}rem`, marginBottom: `${TWEAKER_CONFIG.TITLE_MARGIN_BOTTOM}rem` }}
+                style={{
+                    paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
+                }}
                 onTouchStart={handleTitleTouchStart}
                 onTouchMove={handleTitleTouchMove}
                 onTouchEnd={handleTitleTouchEnd}
             >
-                {/* Barre de statut - masquée sur vrai appareil */}
-                {!isOnRealDevice && (
-                  <div className="h-8 w-full bg-white/90 backdrop-blur-md flex justify-between items-center px-4 text-[10px] font-medium z-20">
-                      <div className="w-1/3"></div>
-                      <div className="w-1/3 flex justify-center">
-                          <div className="h-7 w-32 bg-black rounded-b-2xl absolute top-0"></div>
-                      </div>
-                      <div className="w-1/3"></div>
-                  </div>
-                )}
-                {isOnRealDevice && (
-                  <div className="w-full bg-white/90 backdrop-blur-md" style={{ height: `${iosSafeAreaTop}rem` }} />
-                )}
-                
                 {/* Contenu swipeable (titre + boutons) */}
                 <div>
                     {/* Titre avec indicateurs de swipe */}
-                    <div className="px-4 flex items-center justify-between" style={{ paddingTop: `${TWEAKER_CONFIG.HEADER_MARGIN_TOP}rem` }}>
+                    <div className="px-4 flex items-center justify-between">
                         {/* Indicateur gauche - Annuler */}
                         <div className="flex items-center gap-0.5 swipe-hint-left">
                             <X size={14} className="text-red-400" strokeWidth={2.5} />
                             <ChevronLeft size={14} className="text-gray-300 -ml-1" strokeWidth={2} />
                             <ChevronLeft size={14} className="text-gray-200 -ml-2.5" strokeWidth={2} />
                         </div>
-                        
+
                         {/* Titre central */}
-                        <div className="flex items-center gap-2">
-                            <Wrench size={20} className="text-pink-500" />
-                            <span className="font-black text-lg text-gray-900">Tweaker</span>
+                        <div className="flex items-center" style={{ gap: UNIFIED_CONFIG.TITLE_ICON_GAP }}>
+                            <Wrench size={UNIFIED_CONFIG.TITLE_ICON_SIZE} className="text-pink-500" />
+                            <span
+                                className="font-black text-gray-900"
+                                style={{
+                                    fontSize: UNIFIED_CONFIG.TITLE_FONT_SIZE,
+                                    fontVariant: 'small-caps',
+                                    textTransform: 'lowercase'
+                                }}
+                            >
+                                Tweaker
+                            </span>
                         </div>
-                        
+
                         {/* Indicateur droite - Valider */}
                         <div className="flex items-center gap-0.5 swipe-hint-right">
                             <ChevronRight size={14} className="text-gray-200 -mr-2.5" strokeWidth={2} />

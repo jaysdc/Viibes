@@ -119,7 +119,6 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     UNIFIED_CAPSULE_HEIGHT: UNIFIED_CONFIG.CAPSULE_HEIGHT,
     UNIFIED_ICON_SIZE_PERCENT: UNIFIED_CONFIG.ICON_SIZE_PERCENT,
-    UNIFIED_HEADER_PADDING_AFTER_SAFE_AREA: UNIFIED_CONFIG.HEADER_PADDING_AFTER_SAFE_AREA,
 
     // ══════════════════════════════════════════════════════════════════════════
     // DÉGRADÉS & COULEURS
@@ -487,9 +486,7 @@ const CONFIG = {
     IMPORT_FOLDER_ICON_COLOR: '#4b5563',        // Couleur de l'icône dossier (gray-600)
     IMPORT_FOLDER_GLOW: 'rgba(173, 216, 230, 0.8)',
     IMPORT_HANDLE_WIDTH_PERCENT: 15,            // % de la largeur du header
-    IMPORT_HANDLE_HEIGHT: 6,                    // px
-    IMPORT_BUTTONS_HANDLE_GAP: '2rem',               // espace entre les boutons et le handle
-    IMPORT_BOTTOM_MARGIN: '1rem',             // marge entre le bas du handle et le bas du header
+    // IMPORT_HANDLE_HEIGHT -> utilise UNIFIED_CONFIG.HANDLE_HEIGHT
     
     // CONTRÔLES - Couleur de fond commune
     CONTROL_BG_COLOR: '249, 250, 251',          // RGB - gris très clair (TimeCapsule, Volume, Recenter, Import OFF)
@@ -537,7 +534,6 @@ const CONFIG = {
     // HEADER DASHBOARD (Logo + icônes + Search bar)
     // ══════════════════════════════════════════════════════════════════════════
     HEADER_STATUS_HEIGHT: '2rem',         // Hauteur zone encoche/heure/batterie
-    IOS_SAFE_AREA_TOP: 3,                 // Padding haut sur vrai iPhone (rem) - compense l'encoche/Dynamic Island
     HEADER_BASIC_HEIGHT: '5rem',       // Hauteur du contenu du header (logo + boutons)
     HEADER_PADDING_TOP: 3,                // Padding entre l'encoche et le header (rem)
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
@@ -580,7 +576,6 @@ const CONFIG = {
     PLAYER_HEADER_TITLE_MARGIN_BOTTOM: '0.5rem',     // Marge sous le titre (px)
     PLAYER_HEADER_CONTROLS_MARGIN_BOTTOM: '0.5rem',  // Marge sous la barre de contrôle (px)
     PLAYER_HEADER_HANDLE_WIDTH: 48,           // Largeur du handle (px)
-    PLAYER_HEADER_HANDLE_HEIGHT: 4,           // Hauteur du handle (px)
     PLAYER_HEADER_HANDLE_MARGIN_BOTTOM: '0.5rem',   // Marge sous le handle (px)
     PLAYER_WHEEL_OFFSET_PERCENT: 5,              // Décalage vertical de la roue vers le bas (% de l'espace disponible)
 
@@ -694,6 +689,11 @@ const CONFIG = {
 
 // --- 1. STYLE CSS ---
 const styles = `
+  /* Safe area iOS - utilise la vraie valeur de l'encoche */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -3053,9 +3053,9 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const WHEEL_TITLE_SIZE_MAIN_OTHER = CONFIG.WHEEL_TITLE_SIZE_MAIN_OTHER;
     const WHEEL_TITLE_SIZE_MINI_CENTER = CONFIG.WHEEL_TITLE_SIZE_MINI_CENTER;
     const WHEEL_TITLE_SIZE_MINI_OTHER = CONFIG.WHEEL_TITLE_SIZE_MINI_OTHER;
-    const WHEEL_ARTIST_SIZE_MAIN_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MAIN_CENTER;
+    const WHEEL_ARTIST_SIZE_MAIN_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MAIN;
     const WHEEL_ARTIST_SIZE_MAIN_OTHER = CONFIG.WHEEL_ARTIST_SIZE_MAIN_OTHER;
-    const WHEEL_ARTIST_SIZE_MINI_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MINI_CENTER;
+    const WHEEL_ARTIST_SIZE_MINI_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MINI;
     const WHEEL_ARTIST_SIZE_MINI_OTHER = CONFIG.WHEEL_ARTIST_SIZE_MINI_OTHER;
     const WHEEL_TITLE_LINEHEIGHT_MAIN = CONFIG.WHEEL_TITLE_LINEHEIGHT_MAIN;
     const WHEEL_TITLE_LINEHEIGHT_MINI = CONFIG.WHEEL_TITLE_LINEHEIGHT_MINI;
@@ -3188,7 +3188,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     const HEIGHT = CONFIG.VOLUME_HEIGHT;
     const TRACK_HEIGHT = CONFIG.VOLUME_TRACK_HEIGHT;
     const THUMB_SIZE = CONFIG.VOLUME_THUMB_SIZE;
-    const BORDER_RADIUS = CONFIG.VOLUME_BORDER_RADIUS;
+    const BORDER_RADIUS = CONFIG.VOLUME_BAR_BORDER_RADIUS;
     const ITEM_HEIGHT_MAIN_VH = CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH;
     const ITEM_HEIGHT_MINI_VH = CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH;
     const LINE_WIDTH_PERCENT = CONFIG.WHEEL_SELECTION_SEPARATOR;
@@ -4383,7 +4383,7 @@ useEffect(() => {
           setShowImportMenu(false);
           setImportOverlayAnim('none');
           setImportButtonsReady(false);
-      }, CONFIG.IMPORT_HEADER_SLIDE_DURATION);
+      }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
   }
 }, [importButtonsReady, pendingImportAction]);
 
@@ -5640,24 +5640,21 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div className="w-1/3 flex justify-end gap-1">5G <span className="ml-1">100%</span></div>
           </div>
         )}
-        {isOnRealDevice && (
-          <div style={{ height: `${CONFIG.IOS_SAFE_AREA_TOP}rem` }} />
-        )}
 
         <style>{styles}</style>
-        
+
         {/* HEADER - Indépendant */}
-        <div 
-            className="px-6 bg-white border-b border-gray-200"
+        <div
+            className="px-6 bg-white border-b border-gray-200 safe-area-top"
             style={{
                 zIndex: CONFIG.HEADER_Z_INDEX,
-                paddingTop: `${CONFIG.HEADER_PADDING_TOP}rem`,
+                paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                 paddingBottom: `${CONFIG.HEADER_PADDING_BOTTOM}rem`,
             }}
         >
           
           {/* Logo centré */}
-          <div className="flex justify-center items-center mb-3 pt-0">
+          <div className="flex justify-center items-center">
              <VibesLogo size={36} />
              <span className="text-[10px] text-gray-300 ml-1 font-bold">v72</span>
           </div>
@@ -5675,7 +5672,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           />
           
           {/* 3 boutons capsules OU barre de recherche OU barre d'import */}
-          <div ref={headerButtonsRef} className="flex flex-col items-center mb-2">
+          <div ref={headerButtonsRef} className="flex flex-col items-center">
           {(isLibrarySearching || searchOverlayAnim !== 'none') ? (
                 <div 
                     className="w-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible"
@@ -5929,12 +5926,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 : `import-handle-slide-in ${CONFIG.IMPORT_HEADER_FADE_IN_DURATION}ms ease-out forwards`
                         }}
                     >
-                        <div 
+                        <div
                             className="bg-gray-300 rounded-full handle-pulse cursor-pointer"
                             style={{
                                 width: `${CONFIG.IMPORT_HANDLE_WIDTH_PERCENT}%`,
-                                height: CONFIG.IMPORT_HANDLE_HEIGHT,
-                                marginTop: CONFIG.IMPORT_BUTTONS_HANDLE_GAP
+                                height: UNIFIED_CONFIG.HANDLE_HEIGHT
                             }}
                             onClick={() => {
                                 setImportMenuVisible(false);
@@ -6078,9 +6074,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         {/* TWEAKER MODE */}
         {showTweaker && (
-            <Tweaker 
-            isOnRealDevice={isOnRealDevice}
-            iosSafeAreaTop={CONFIG.IOS_SAFE_AREA_TOP}
+            <Tweaker
             playlists={playlists} 
             vibeColorIndices={vibeColorIndices}
             cardAnimConfig={{
@@ -6141,11 +6135,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             style={{ height: `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}px` }}
                         >
                             {currentSong && (
-                                <div 
+                                <div
                                     className="bg-gray-300 rounded-full handle-pulse"
                                     style={{
                                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                                        height: CONFIG.PLAYER_HEADER_HANDLE_HEIGHT
+                                        height: UNIFIED_CONFIG.HANDLE_HEIGHT
                                     }}
                                 />
                             )}
@@ -6389,16 +6383,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                   <div className="w-1/3 flex justify-end gap-1">5G <span className="ml-1">100%</span></div>
               </div>
             )}
-            {isOnRealDevice && (
-              <div className="w-full bg-white" style={{ height: `${CONFIG.IOS_SAFE_AREA_TOP}rem` }} />
-            )}
-            
+
             {/* ZONE DRAGGABLE - TOUT LE HEADER */}
-            <div 
+            <div
                 ref={playerHeaderRef}
                 className="w-full flex flex-col items-center cursor-grab active:cursor-grabbing select-none border-b border-gray-200"
-                style={{ 
-                    paddingTop: CONFIG.PLAYER_HEADER_TITLE_MARGIN_TOP,
+                style={{
+                    paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                     paddingBottom: CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM,
                     gap: CONFIG.PLAYER_HEADER_TITLE_MARGIN_BOTTOM
                 }}
@@ -6535,11 +6526,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
 
                 {/* Poignée */}
-                <div 
+                <div
                     className="bg-gray-300 rounded-full handle-pulse"
                     style={{
                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                        height: CONFIG.PLAYER_HEADER_HANDLE_HEIGHT
+                        height: UNIFIED_CONFIG.HANDLE_HEIGHT
                     }}
                 />
             </div>
@@ -6603,9 +6594,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 
                 return (
                   <div className="absolute inset-0 z-[200]">
-                  <VibeBuilder 
-                      isOnRealDevice={isOnRealDevice}
-                      iosSafeAreaTop={CONFIG.IOS_SAFE_AREA_TOP}
+                  <VibeBuilder
                       sourcePlaylists={playlists}
                         onClose={() => setShowBuilder(false)}
                         cardAnimConfig={{
@@ -6639,8 +6628,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onPlayNext={addToPlayNext}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
-                            height: CONFIG.VIBECARD_HEIGHT,
-                            gap: CONFIG.VIBECARD_GAP,
+                            height: CONFIG.VIBECARD_HEIGHT_VH,
+                            gap: CONFIG.VIBECARD_GAP_VH,
                             liquidGlassBlur: CONFIG.LIQUID_GLASS_BLUR,
                             marqueeSpeed: CONFIG.MARQUEE_SPEED,
                             marqueeThreshold: CONFIG.VIBECARD_CAPSULE_MARQUEE_THRESHOLD,
