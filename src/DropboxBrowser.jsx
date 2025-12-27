@@ -29,10 +29,57 @@ const CONFIG = {
     DIALOG_MAX_WIDTH: '360px',
     DIALOG_HEIGHT: '80vh',
     DIALOG_MAX_HEIGHT: '600px',
+
+    // Scrollbar rose (comme neon beacon)
+    SCROLLBAR_WIDTH: 6,
+    SCROLLBAR_COLOR: 'rgba(236, 72, 153, 0.8)',
+    SCROLLBAR_GLOW: '0 0 8px rgba(236, 72, 153, 0.6)',
+
+    // Animation
+    BUTTON_ANIM_DURATION: 400,
 };
 
 // Première lettre en majuscule
 const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
+
+// Styles CSS pour les animations (réutilise le style SmartImport)
+const dropboxStyles = `
+  @keyframes dropbox-neon-ignite-blue {
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(0, 97, 254, 0.2); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(0, 97, 254, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(0, 97, 254, 0.3); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(0, 97, 254, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(0, 97, 254, 0.5); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(0, 97, 254, 0.7); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(0, 97, 254, 0.5); }
+  }
+  @keyframes dropbox-neon-ignite-red {
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(239, 68, 68, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(239, 68, 68, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(239, 68, 68, 0.7); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+  }
+  @keyframes dropbox-neon-ignite-gray {
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(156, 163, 175, 0.2); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(156, 163, 175, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(156, 163, 175, 0.3); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(156, 163, 175, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(156, 163, 175, 0.5); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(156, 163, 175, 0.7); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(156, 163, 175, 0.5); }
+  }
+  @keyframes dropbox-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  .dropbox-ignite-blue { animation: dropbox-neon-ignite-blue 0.4s ease-out forwards; }
+  .dropbox-ignite-red { animation: dropbox-neon-ignite-red 0.4s ease-out forwards; }
+  .dropbox-ignite-gray { animation: dropbox-neon-ignite-gray 0.4s ease-out forwards; }
+  .dropbox-fade-out { animation: dropbox-fade-out 0.15s ease-out forwards; }
+`;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
@@ -52,8 +99,25 @@ const DropboxBrowser = ({
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
+    const [scrollPercent, setScrollPercent] = useState(0);
+    const [showScrollbar, setShowScrollbar] = useState(false);
+    const [closingButton, setClosingButton] = useState(null); // 'close' | 'disconnect' | null
+    const [isFadingOut, setIsFadingOut] = useState(false);
 
     const listRef = useRef(null);
+
+    // Gérer le scroll pour la scrollbar rose
+    const handleScroll = () => {
+        if (!listRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+        const maxScroll = scrollHeight - clientHeight;
+        if (maxScroll > 0) {
+            setScrollPercent(scrollTop / maxScroll);
+            setShowScrollbar(true);
+        } else {
+            setShowScrollbar(false);
+        }
+    };
 
     // Charger le contenu d'un dossier
     const loadFolder = async (path) => {
@@ -239,7 +303,7 @@ const DropboxBrowser = ({
 
         try {
             const folderName = currentPath.split('/').pop() || 'Dropbox Import';
-            const scannedFolders = await scanDropboxRecursive(currentPath, folderName);
+            const scannedFolders = await scanDropboxRecursive(currentPath, capitalize(folderName));
 
             if (Object.keys(scannedFolders).length === 0) {
                 alert('Aucun fichier MP3 trouvé dans ce dossier ou ses sous-dossiers.');
@@ -248,7 +312,7 @@ const DropboxBrowser = ({
             }
 
             // Passer les données à SmartImport via onImport
-            onImport(scannedFolders, folderName);
+            onImport(scannedFolders, capitalize(folderName));
 
         } catch (error) {
             console.error('Erreur import:', error);
@@ -258,10 +322,27 @@ const DropboxBrowser = ({
         setScanning(false);
     };
 
-    // Handler déconnexion - onDisconnect appelle déjà clearDropboxTokens côté App.jsx
+    // Handler fermeture avec animation
+    const handleClose = () => {
+        setClosingButton('close');
+        setTimeout(() => {
+            setIsFadingOut(true);
+            setTimeout(() => {
+                onClose();
+            }, 150);
+        }, CONFIG.BUTTON_ANIM_DURATION);
+    };
+
+    // Handler déconnexion avec animation
     const handleDisconnect = () => {
-        onDisconnect();
-        onClose();
+        setClosingButton('disconnect');
+        setTimeout(() => {
+            setIsFadingOut(true);
+            setTimeout(() => {
+                onDisconnect();
+                onClose();
+            }, 150);
+        }, CONFIG.BUTTON_ANIM_DURATION);
     };
 
     // Naviguer vers un dossier
@@ -283,6 +364,8 @@ const DropboxBrowser = ({
         if (isVisible) {
             loadFolder('');
             setCurrentPath('');
+            setClosingButton(null);
+            setIsFadingOut(false);
         }
     }, [isVisible]);
 
@@ -297,194 +380,229 @@ const DropboxBrowser = ({
     const mp3Count = files.filter(f => f['.tag'] === 'file').length;
 
     return (
-        <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center"
-            style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(8px)',
-            }}
-            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        >
-            {/* Dialog principal */}
+        <>
+            <style>{dropboxStyles}</style>
             <div
-                className="flex flex-col overflow-hidden"
+                className={`fixed inset-0 z-[9999] flex items-center justify-center ${isFadingOut ? 'dropbox-fade-out' : ''}`}
                 style={{
-                    width: CONFIG.DIALOG_WIDTH,
-                    maxWidth: CONFIG.DIALOG_MAX_WIDTH,
-                    height: CONFIG.DIALOG_HEIGHT,
-                    maxHeight: CONFIG.DIALOG_MAX_HEIGHT,
-                    padding: '0.75rem',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
-                    borderRadius: '1rem',
-                    boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    backdropFilter: 'blur(8px)',
                 }}
+                onClick={(e) => { if (e.target === e.currentTarget && !closingButton) handleClose(); }}
             >
-                {/* Header */}
+                {/* Dialog principal */}
                 <div
-                    className="flex items-center rounded-full px-3 mb-2 border border-gray-200"
+                    className="flex flex-col overflow-hidden relative"
                     style={{
-                        background: 'white',
-                        height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                        minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                        flexShrink: 0,
+                        width: CONFIG.DIALOG_WIDTH,
+                        maxWidth: CONFIG.DIALOG_MAX_WIDTH,
+                        height: CONFIG.DIALOG_HEIGHT,
+                        maxHeight: CONFIG.DIALOG_MAX_HEIGHT,
+                        padding: '0.75rem',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
+                        borderRadius: '1rem',
+                        boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
                     }}
                 >
-                    {/* Bouton retour ou logo Dropbox */}
-                    {isAtRoot ? (
-                        <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
-                    ) : (
-                        <button
-                            onClick={navigateBack}
-                            className="flex items-center justify-center -ml-1 mr-1"
-                            style={{ color: CONFIG.DROPBOX_BLUE }}
-                        >
-                            <ChevronLeft size={18} strokeWidth={2.5} />
-                        </button>
-                    )}
+                    {/* Header */}
+                    <div
+                        className="flex items-center rounded-full px-3 mb-2 border border-gray-200"
+                        style={{
+                            background: 'white',
+                            height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                            minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                            flexShrink: 0,
+                        }}
+                    >
+                        {/* Bouton retour ou logo Dropbox */}
+                        {isAtRoot ? (
+                            <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
+                        ) : (
+                            <button
+                                onClick={navigateBack}
+                                className="flex items-center justify-center -ml-1 mr-1"
+                                style={{ color: CONFIG.DROPBOX_BLUE }}
+                            >
+                                <ChevronLeft size={18} strokeWidth={2.5} />
+                            </button>
+                        )}
 
-                    {/* Nom du dossier + compteurs */}
-                    <div className="flex-1 overflow-hidden ml-2 flex items-center gap-2">
-                        <span
-                            className="font-bold text-gray-700 truncate"
-                            style={{ fontSize: '0.8rem' }}
+                        {/* Nom du dossier + compteurs */}
+                        <div className="flex-1 overflow-hidden ml-2 flex items-center gap-2">
+                            <span
+                                className="font-bold text-gray-700 truncate"
+                                style={{ fontSize: '0.8rem' }}
+                            >
+                                {currentFolderName}
+                            </span>
+                            <span className="text-gray-400 text-xs whitespace-nowrap">
+                                {folderCount > 0 && `${folderCount} dossiers`}
+                                {folderCount > 0 && mp3Count > 0 && ' · '}
+                                {mp3Count > 0 && `${mp3Count} mp3`}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Liste des fichiers avec scrollbar custom */}
+                    <div className="flex-1 relative mb-2">
+                        <div
+                            ref={listRef}
+                            className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+                            style={{
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none',
+                            }}
+                            onScroll={handleScroll}
                         >
-                            {currentFolderName}
-                        </span>
-                        <span className="text-gray-400 text-xs whitespace-nowrap">
-                            {folderCount > 0 && `${folderCount} dossiers`}
-                            {folderCount > 0 && mp3Count > 0 && ' · '}
-                            {mp3Count > 0 && `${mp3Count} mp3`}
-                        </span>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <Disc3 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
+                                </div>
+                            ) : files.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400 text-sm">
+                                    Dossier vide
+                                </div>
+                            ) : (
+                                <div className="flex flex-col pr-3">
+                                    {files.map((file, index) => {
+                                        const isFolder = file['.tag'] === 'folder';
+
+                                        if (isFolder) {
+                                            return (
+                                                <div
+                                                    key={file.path_lower || index}
+                                                    onClick={() => navigateToFolder(file.path_lower)}
+                                                    className="flex items-center gap-2 px-3 cursor-pointer"
+                                                    style={{
+                                                        height: CONFIG.CARD_HEIGHT,
+                                                        background: 'white',
+                                                        borderRadius: CONFIG.CARD_RADIUS,
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                                        marginBottom: CONFIG.CARD_GAP,
+                                                    }}
+                                                >
+                                                    <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
+                                                    <span
+                                                        className="flex-1 truncate font-medium text-gray-700"
+                                                        style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
+                                                    >
+                                                        {file.name}
+                                                    </span>
+                                                    <ChevronRight size={14} className="text-gray-300" style={{ flexShrink: 0 }} />
+                                                </div>
+                                            );
+                                        } else {
+                                            return (
+                                                <div
+                                                    key={file.path_lower || index}
+                                                    className="flex items-center gap-1 px-2"
+                                                    style={{
+                                                        height: CONFIG.FILE_HEIGHT,
+                                                        marginBottom: CONFIG.FILE_GAP,
+                                                        opacity: 0.6,
+                                                    }}
+                                                >
+                                                    <Music size={CONFIG.FILE_ICON_SIZE} className="text-pink-400" style={{ flexShrink: 0 }} />
+                                                    <span
+                                                        className="flex-1 truncate text-gray-500"
+                                                        style={{ fontSize: CONFIG.FILE_FONT_SIZE }}
+                                                    >
+                                                        {file.name.replace(/\.mp3$/i, '')}
+                                                    </span>
+                                                </div>
+                                            );
+                                        }
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Scrollbar rose custom */}
+                        {showScrollbar && files.length > 0 && (
+                            <div
+                                className="absolute right-0 top-0 bottom-0"
+                                style={{ width: CONFIG.SCROLLBAR_WIDTH + 4 }}
+                            >
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        right: 2,
+                                        width: CONFIG.SCROLLBAR_WIDTH,
+                                        height: '20%',
+                                        minHeight: 30,
+                                        top: `${scrollPercent * 80}%`,
+                                        background: CONFIG.SCROLLBAR_COLOR,
+                                        borderRadius: CONFIG.SCROLLBAR_WIDTH / 2,
+                                        boxShadow: CONFIG.SCROLLBAR_GLOW,
+                                        transition: 'top 0.05s ease-out',
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3 boutons en bas */}
+                    <div
+                        className="flex items-center justify-center"
+                        style={{ gap: '0.5rem', flexShrink: 0 }}
+                    >
+                        {/* Bouton FERMER */}
+                        <button
+                            onClick={handleClose}
+                            disabled={!!closingButton}
+                            className="flex-1 flex items-center justify-center rounded-full relative overflow-hidden"
+                            style={{
+                                height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                background: 'white',
+                                border: '1px solid rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            {closingButton === 'close' && (
+                                <div className="absolute inset-0 rounded-full dropbox-ignite-gray" />
+                            )}
+                            <X size={18} className="text-gray-400 relative z-10" />
+                        </button>
+
+                        {/* Bouton DÉCONNECTER */}
+                        <button
+                            onClick={handleDisconnect}
+                            disabled={!!closingButton}
+                            className="flex-1 flex items-center justify-center rounded-full relative overflow-hidden"
+                            style={{
+                                height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                background: 'white',
+                                border: '1px solid rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            {closingButton === 'disconnect' && (
+                                <div className="absolute inset-0 rounded-full dropbox-ignite-red" />
+                            )}
+                            <LogOut size={18} className="text-red-500 relative z-10" />
+                        </button>
+
+                        {/* Bouton IMPORTER */}
+                        <button
+                            onClick={handleImport}
+                            disabled={!canImport || !!closingButton}
+                            className="flex-1 flex items-center justify-center rounded-full"
+                            style={{
+                                height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                background: canImport ? CONFIG.DROPBOX_BLUE : 'white',
+                                border: canImport ? 'none' : '1px solid rgba(0,0,0,0.1)',
+                                opacity: canImport ? 1 : 0.4,
+                                boxShadow: canImport ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
+                            }}
+                        >
+                            {scanning ? (
+                                <Disc3 size={18} className="animate-spin text-white" />
+                            ) : (
+                                <FolderDown size={18} style={{ color: canImport ? 'white' : '#9CA3AF' }} />
+                            )}
+                        </button>
                     </div>
                 </div>
-
-                {/* Liste des fichiers */}
-                <div
-                    ref={listRef}
-                    className="flex-1 overflow-y-auto overflow-x-hidden mb-2"
-                    style={{
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none',
-                    }}
-                >
-                    {loading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <Disc3 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
-                        </div>
-                    ) : files.length === 0 ? (
-                        <div className="text-center py-8 text-gray-400 text-sm">
-                            Dossier vide
-                        </div>
-                    ) : (
-                        <div className="flex flex-col">
-                            {files.map((file, index) => {
-                                const isFolder = file['.tag'] === 'folder';
-
-                                if (isFolder) {
-                                    // Dossier : carte avec fond blanc
-                                    return (
-                                        <div
-                                            key={file.path_lower || index}
-                                            onClick={() => navigateToFolder(file.path_lower)}
-                                            className="flex items-center gap-2 px-3 cursor-pointer"
-                                            style={{
-                                                height: CONFIG.CARD_HEIGHT,
-                                                background: 'white',
-                                                borderRadius: CONFIG.CARD_RADIUS,
-                                                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                                                marginBottom: CONFIG.CARD_GAP,
-                                            }}
-                                        >
-                                            <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
-                                            <span
-                                                className="flex-1 truncate font-medium text-gray-700"
-                                                style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
-                                            >
-                                                {file.name}
-                                            </span>
-                                            <ChevronRight size={14} className="text-gray-300" style={{ flexShrink: 0 }} />
-                                        </div>
-                                    );
-                                } else {
-                                    // Fichier MP3 : pas de carte, juste texte compact
-                                    return (
-                                        <div
-                                            key={file.path_lower || index}
-                                            className="flex items-center gap-1 px-2"
-                                            style={{
-                                                height: CONFIG.FILE_HEIGHT,
-                                                marginBottom: CONFIG.FILE_GAP,
-                                                opacity: 0.6,
-                                            }}
-                                        >
-                                            <Music size={CONFIG.FILE_ICON_SIZE} className="text-pink-400" style={{ flexShrink: 0 }} />
-                                            <span
-                                                className="flex-1 truncate text-gray-500"
-                                                style={{ fontSize: CONFIG.FILE_FONT_SIZE }}
-                                            >
-                                                {file.name.replace(/\.mp3$/i, '')}
-                                            </span>
-                                        </div>
-                                    );
-                                }
-                            })}
-                        </div>
-                    )}
-                </div>
-
-                {/* 3 boutons en bas */}
-                <div
-                    className="flex items-center justify-center"
-                    style={{ gap: '0.5rem', flexShrink: 0 }}
-                >
-                    {/* Bouton FERMER */}
-                    <button
-                        onClick={onClose}
-                        className="flex-1 flex items-center justify-center rounded-full"
-                        style={{
-                            height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                            background: 'white',
-                            border: '1px solid rgba(0,0,0,0.1)',
-                        }}
-                    >
-                        <X size={18} className="text-gray-400" />
-                    </button>
-
-                    {/* Bouton DÉCONNECTER */}
-                    <button
-                        onClick={handleDisconnect}
-                        className="flex-1 flex items-center justify-center rounded-full"
-                        style={{
-                            height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                            background: 'white',
-                            border: '1px solid rgba(0,0,0,0.1)',
-                        }}
-                    >
-                        <LogOut size={18} className="text-red-500" />
-                    </button>
-
-                    {/* Bouton IMPORTER */}
-                    <button
-                        onClick={handleImport}
-                        disabled={!canImport}
-                        className="flex-1 flex items-center justify-center rounded-full"
-                        style={{
-                            height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                            background: canImport ? CONFIG.DROPBOX_BLUE : 'white',
-                            border: canImport ? 'none' : '1px solid rgba(0,0,0,0.1)',
-                            opacity: canImport ? 1 : 0.4,
-                            boxShadow: canImport ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
-                        }}
-                    >
-                        {scanning ? (
-                            <Disc3 size={18} className="animate-spin text-white" />
-                        ) : (
-                            <FolderDown size={18} style={{ color: canImport ? 'white' : '#9CA3AF' }} />
-                        )}
-                    </button>
-                </div>
             </div>
-        </div>
+        </>
     );
 };
 
