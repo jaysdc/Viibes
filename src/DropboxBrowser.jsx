@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Folder, Music, ChevronRight, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
+import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
 import { UNIFIED_CONFIG } from './Config.js';
 
@@ -11,18 +11,18 @@ const CONFIG = {
     // Couleurs
     DROPBOX_BLUE: '#0061FE',
 
-    // Cartes dossiers
-    CARD_HEIGHT: '2.25rem',
+    // Cartes dossiers (représentent des vibes)
+    CARD_HEIGHT: '2.0rem',              // Comme ROW_HEIGHT du VibeBuilder
     CARD_RADIUS: '0.5rem',
     CARD_GAP: '0.25rem',
-    CARD_FONT_SIZE: '0.75rem',
-    CARD_ICON_SIZE: 16,
 
-    // Fichiers MP3 (sans carte)
-    FILE_HEIGHT: '1.5rem',
-    FILE_GAP: '0.125rem',
-    FILE_FONT_SIZE: '0.65rem',
-    FILE_ICON_SIZE: 12,
+    // Fichiers MP3 - mêmes styles que VibeBuilder
+    FILE_HEIGHT: '2.0rem',              // Comme ROW_HEIGHT du VibeBuilder
+    FILE_GAP: '0',                      // Pas de gap, juste border-b
+
+    // Tailles de police (comme VibeBuilder)
+    ROW_TITLE_SIZE: '0.75rem',          // 12px
+    ROW_SUBTITLE_SIZE: '0.625rem',      // 10px
 
     // Dialog - plus grand
     DIALOG_WIDTH: '92vw',
@@ -383,6 +383,25 @@ const DropboxBrowser = ({
         }
     }, [isVisible]);
 
+    // Détecter automatiquement si le contenu déborde (pour afficher le point rose)
+    useEffect(() => {
+        if (!listRef.current || loading) return;
+
+        // Petit délai pour laisser le DOM se mettre à jour
+        const timer = setTimeout(() => {
+            if (listRef.current) {
+                const { scrollHeight, clientHeight } = listRef.current;
+                if (scrollHeight > clientHeight) {
+                    setShowScrollbar(true);
+                } else {
+                    setShowScrollbar(false);
+                }
+            }
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [files, loading]);
+
     if (!isVisible) return null;
 
     const isAtRoot = !currentPath;
@@ -412,54 +431,65 @@ const DropboxBrowser = ({
                         maxWidth: CONFIG.DIALOG_MAX_WIDTH,
                         height: CONFIG.DIALOG_HEIGHT,
                         maxHeight: CONFIG.DIALOG_MAX_HEIGHT,
-                        padding: '0.75rem',
+                        paddingTop: '0.75rem',
+                        paddingBottom: '0.75rem',
+                        paddingLeft: 0,
+                        paddingRight: 0,
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
                         borderRadius: '1rem',
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
                     }}
                 >
-                    {/* Header */}
-                    <div
-                        className="flex items-center rounded-full px-3 mb-2 border border-gray-200"
-                        style={{
-                            background: 'white',
-                            height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                            minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                            flexShrink: 0,
-                        }}
-                    >
-                        {/* Bouton retour ou logo Dropbox */}
-                        {isAtRoot ? (
-                            <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
-                        ) : (
-                            <button
-                                onClick={navigateBack}
-                                className="flex items-center justify-center -ml-1 mr-1"
-                                style={{ color: CONFIG.DROPBOX_BLUE }}
-                            >
-                                <ChevronLeft size={18} strokeWidth={2.5} />
-                            </button>
-                        )}
+                    {/* Header - capsule centrée */}
+                    <div className="flex justify-center mb-2" style={{ flexShrink: 0 }}>
+                        <div
+                            className="flex items-center rounded-full px-3 border border-gray-200"
+                            style={{
+                                background: 'white',
+                                height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                            }}
+                        >
+                            {/* Bouton retour ou logo Dropbox */}
+                            {isAtRoot ? (
+                                <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
+                            ) : (
+                                <button
+                                    onClick={navigateBack}
+                                    className="flex items-center justify-center -ml-1 mr-1"
+                                    style={{ color: CONFIG.DROPBOX_BLUE }}
+                                >
+                                    <ChevronLeft size={18} strokeWidth={2.5} />
+                                </button>
+                            )}
 
-                        {/* Nom du dossier + compteurs */}
-                        <div className="flex-1 overflow-hidden ml-2 flex items-center gap-2">
-                            <span
-                                className="font-bold text-gray-700 truncate"
-                                style={{ fontSize: '0.8rem' }}
-                            >
-                                {currentFolderName}
-                            </span>
-                            <span className="text-gray-400 text-xs whitespace-nowrap">
-                                {folderCount > 0 && `${folderCount} dossiers`}
-                                {folderCount > 0 && mp3Count > 0 && ' · '}
-                                {mp3Count > 0 && `${mp3Count} mp3`}
-                            </span>
+                            {/* Nom du dossier + icône Folder au lieu de "dossiers" */}
+                            <div className="flex items-center gap-2 ml-2">
+                                <span
+                                    className="font-bold text-gray-700 truncate"
+                                    style={{ fontSize: '0.8rem' }}
+                                >
+                                    {currentFolderName}
+                                </span>
+                                {folderCount > 0 && (
+                                    <span className="flex items-center gap-0.5 text-gray-400">
+                                        <span className="text-xs">{folderCount}</span>
+                                        <Folder size={12} />
+                                    </span>
+                                )}
+                                {mp3Count > 0 && (
+                                    <span className="flex items-center gap-0.5 text-gray-400">
+                                        <span className="text-xs">{mp3Count}</span>
+                                        <Music size={12} />
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Liste des fichiers avec zone scrubbing à droite */}
-                    <div className="flex-1 flex mb-2">
-                        {/* Zone liste */}
+                    {/* Liste des fichiers avec zone scrubbing à droite - pas de gap entre liste et scrub zone */}
+                    <div className="flex-1 flex mb-2" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                        {/* Zone liste - padding gauche inclus, pas de padding droit */}
                         <div className="flex-1 relative">
                             <div
                                 ref={listRef}
@@ -467,6 +497,8 @@ const DropboxBrowser = ({
                                 style={{
                                     scrollbarWidth: 'none',
                                     msOverflowStyle: 'none',
+                                    paddingLeft: '0.75rem',
+                                    paddingRight: 0,
                                 }}
                                 onScroll={handleScroll}
                             >
@@ -479,16 +511,17 @@ const DropboxBrowser = ({
                                         Dossier vide
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col pl-3">
+                                    <div className="flex flex-col">
                                         {files.map((file, index) => {
                                             const isFolder = file['.tag'] === 'folder';
 
                                             if (isFolder) {
+                                                // Dossiers = cartes blanches (représentent des vibes)
                                                 return (
                                                     <div
                                                         key={file.path_lower || index}
                                                         onClick={() => navigateToFolder(file.path_lower, file.name)}
-                                                        className="flex items-center gap-2 pl-3 pr-2 cursor-pointer"
+                                                        className="flex items-center pl-3 pr-2 cursor-pointer"
                                                         style={{
                                                             height: CONFIG.CARD_HEIGHT,
                                                             background: 'white',
@@ -497,34 +530,47 @@ const DropboxBrowser = ({
                                                             marginBottom: CONFIG.CARD_GAP,
                                                         }}
                                                     >
-                                                        <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
+                                                        {/* Pas d'icône folder à gauche - on sait que ce sont des dossiers */}
                                                         <span
-                                                            className="flex-1 truncate font-medium text-gray-700"
-                                                            style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
+                                                            className="flex-1 truncate font-bold text-gray-900"
+                                                            style={{ fontSize: CONFIG.ROW_TITLE_SIZE }}
                                                         >
                                                             {file.name}
                                                         </span>
-                                                        <ChevronRight size={14} className="text-gray-300" style={{ flexShrink: 0 }} />
                                                     </div>
                                                 );
                                             } else {
+                                                // Fichiers audio - style VibeBuilder (titre + artiste sur deux lignes)
+                                                const fileName = file.name.replace(/\.mp3$/i, '');
+                                                // Essayer d'extraire artiste - titre si format "Artiste - Titre"
+                                                const parts = fileName.split(' - ');
+                                                const title = parts.length > 1 ? parts.slice(1).join(' - ') : fileName;
+                                                const artist = parts.length > 1 ? parts[0] : '';
+
                                                 return (
                                                     <div
                                                         key={file.path_lower || index}
-                                                        className="flex items-center gap-1 pl-2"
+                                                        className="flex items-center pl-3 border-b border-gray-100"
                                                         style={{
                                                             height: CONFIG.FILE_HEIGHT,
-                                                            marginBottom: CONFIG.FILE_GAP,
-                                                            opacity: 0.6,
                                                         }}
                                                     >
-                                                        <Music size={CONFIG.FILE_ICON_SIZE} className="text-pink-400" style={{ flexShrink: 0 }} />
-                                                        <span
-                                                            className="flex-1 truncate text-gray-500"
-                                                            style={{ fontSize: CONFIG.FILE_FONT_SIZE }}
-                                                        >
-                                                            {file.name.replace(/\.mp3$/i, '')}
-                                                        </span>
+                                                        <div className="flex-1 flex flex-col justify-center overflow-hidden">
+                                                            <span
+                                                                className="font-bold truncate text-gray-900"
+                                                                style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: 1.2 }}
+                                                            >
+                                                                {title}
+                                                            </span>
+                                                            {artist && (
+                                                                <span
+                                                                    className="truncate font-medium text-gray-500"
+                                                                    style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: 1.2 }}
+                                                                >
+                                                                    {artist}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 );
                                             }
@@ -534,9 +580,9 @@ const DropboxBrowser = ({
                             </div>
                         </div>
 
-                        {/* Zone scrubbing à droite avec point rose centré */}
+                        {/* Zone scrubbing à droite - touche le bord droit de la fenêtre */}
                         <div
-                            className="relative flex items-center justify-center"
+                            className="relative"
                             style={{ width: CONFIG.SCRUB_ZONE_WIDTH, flexShrink: 0 }}
                         >
                             {showScrollbar && files.length > 0 && (
@@ -558,10 +604,10 @@ const DropboxBrowser = ({
                         </div>
                     </div>
 
-                    {/* 3 boutons en bas */}
+                    {/* 3 boutons en bas - centrés, pas de padding externe */}
                     <div
                         className="flex items-center justify-center"
-                        style={{ gap: '0.5rem', flexShrink: 0 }}
+                        style={{ gap: '0.5rem', flexShrink: 0, paddingLeft: 0, paddingRight: 0 }}
                     >
                         {/* Bouton FERMER */}
                         <button
