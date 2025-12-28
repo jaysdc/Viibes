@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Flame, Layers, Check, AlertTriangle, Music2, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
+import { UNIFIED_CONFIG } from './Config.js';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    SMARTIMPORT - PARAMÈTRES TWEAKABLES                    ║
@@ -1122,9 +1123,9 @@ const SmartImport = ({
                         {folderCount === 1 ? (
                             /* Cas 1 dossier : 2 boutons - X cercle + Vibe flex */
                             <div className="flex gap-2 items-center">
-                                <div className="h-11 w-11 relative overflow-visible rounded-full flex-shrink-0">
+                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'cancel' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-red"
                                             style={{ background: '#ef4444', zIndex: 0 }}
                                         />
@@ -1133,17 +1134,17 @@ const SmartImport = ({
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
-                                        style={{ 
-                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)', 
-                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af' 
+                                        style={{
+                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
                                         }}
                                     >
                                         <X size={18} />
                                     </button>
                                 </div>
-                                <div className="flex-1 h-11 relative overflow-visible rounded-full">
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-pink"
                                             style={{ background: '#ec4899', zIndex: 0 }}
                                         />
@@ -1162,9 +1163,9 @@ const SmartImport = ({
                         ) : (
                             /* Cas plusieurs dossiers : 3 boutons - X cercle + Fusion/Vibes flex égaux */
                             <div className="flex gap-2 items-center">
-                                <div className="h-11 w-11 relative overflow-visible rounded-full flex-shrink-0">
+                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'cancel' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-red"
                                             style={{ background: '#ef4444', zIndex: 0 }}
                                         />
@@ -1173,22 +1174,22 @@ const SmartImport = ({
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
-                                        style={{ 
-                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)', 
-                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af' 
+                                        style={{
+                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
                                         }}
                                     >
                                         <X size={18} />
                                     </button>
                                 </div>
-                                <div className="flex-1 h-11 relative overflow-visible rounded-full">
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'fusion' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-orange"
-                                            style={{ 
-                                                background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', 
+                                            style={{
+                                                background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)',
                                                 border: '1px solid #FF6B00',
-                                                zIndex: 0 
+                                                zIndex: 0
                                             }}
                                         />
                                     )}
@@ -1196,16 +1197,16 @@ const SmartImport = ({
                                         onClick={() => handleButtonClick('fusion')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
-                                        style={{ 
-                                            background: btnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)', 
-                                            color: btnIgniting === 'fusion' ? 'white' : '#6b7280' 
+                                        style={{
+                                            background: btnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            color: btnIgniting === 'fusion' ? 'white' : '#6b7280'
                                         }}
                                     >
                                         <Layers size={14} />
                                         FUSION
                                     </button>
                                 </div>
-                                <div className="flex-1 h-11 relative overflow-visible rounded-full">
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
                                         <div 
                                             className="absolute inset-0 rounded-full smartimport-ignite-pink"

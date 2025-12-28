@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Folder, Music, ChevronRight, ChevronLeft, FolderDown, LogOut, Disc3 } from 'lucide-react';
+import { X, Folder, Music, ChevronRight, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
 import { UNIFIED_CONFIG } from './Config.js';
 
@@ -34,6 +34,9 @@ const CONFIG = {
     SCROLLBAR_WIDTH: 6,
     SCROLLBAR_COLOR: 'rgba(236, 72, 153, 0.8)',
     SCROLLBAR_GLOW: '0 0 8px rgba(236, 72, 153, 0.6)',
+
+    // Zone de scrubbing à droite (comme VibeBuilder sidebar)
+    SCRUB_ZONE_WIDTH: '3.75rem',
 
     // Animation
     BUTTON_ANIM_DURATION: 400,
@@ -454,101 +457,105 @@ const DropboxBrowser = ({
                         </div>
                     </div>
 
-                    {/* Liste des fichiers avec scrollbar custom */}
-                    <div className="flex-1 relative mb-2">
-                        <div
-                            ref={listRef}
-                            className="absolute inset-0 overflow-y-auto overflow-x-hidden"
-                            style={{
-                                scrollbarWidth: 'none',
-                                msOverflowStyle: 'none',
-                            }}
-                            onScroll={handleScroll}
-                        >
-                            {loading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <Disc3 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
-                                </div>
-                            ) : files.length === 0 ? (
-                                <div className="text-center py-8 text-gray-400 text-sm">
-                                    Dossier vide
-                                </div>
-                            ) : (
-                                <div className="flex flex-col pr-3">
-                                    {files.map((file, index) => {
-                                        const isFolder = file['.tag'] === 'folder';
+                    {/* Liste des fichiers avec zone scrubbing à droite */}
+                    <div className="flex-1 flex mb-2">
+                        {/* Zone liste */}
+                        <div className="flex-1 relative">
+                            <div
+                                ref={listRef}
+                                className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+                                style={{
+                                    scrollbarWidth: 'none',
+                                    msOverflowStyle: 'none',
+                                }}
+                                onScroll={handleScroll}
+                            >
+                                {loading ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <Loader2 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
+                                    </div>
+                                ) : files.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-400 text-sm">
+                                        Dossier vide
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col pl-3">
+                                        {files.map((file, index) => {
+                                            const isFolder = file['.tag'] === 'folder';
 
-                                        if (isFolder) {
-                                            return (
-                                                <div
-                                                    key={file.path_lower || index}
-                                                    onClick={() => navigateToFolder(file.path_lower, file.name)}
-                                                    className="flex items-center gap-2 px-3 cursor-pointer"
-                                                    style={{
-                                                        height: CONFIG.CARD_HEIGHT,
-                                                        background: 'white',
-                                                        borderRadius: CONFIG.CARD_RADIUS,
-                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                                                        marginBottom: CONFIG.CARD_GAP,
-                                                    }}
-                                                >
-                                                    <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
-                                                    <span
-                                                        className="flex-1 truncate font-medium text-gray-700"
-                                                        style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
+                                            if (isFolder) {
+                                                return (
+                                                    <div
+                                                        key={file.path_lower || index}
+                                                        onClick={() => navigateToFolder(file.path_lower, file.name)}
+                                                        className="flex items-center gap-2 pl-3 pr-2 cursor-pointer"
+                                                        style={{
+                                                            height: CONFIG.CARD_HEIGHT,
+                                                            background: 'white',
+                                                            borderRadius: CONFIG.CARD_RADIUS,
+                                                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                                            marginBottom: CONFIG.CARD_GAP,
+                                                        }}
                                                     >
-                                                        {file.name}
-                                                    </span>
-                                                    <ChevronRight size={14} className="text-gray-300" style={{ flexShrink: 0 }} />
-                                                </div>
-                                            );
-                                        } else {
-                                            return (
-                                                <div
-                                                    key={file.path_lower || index}
-                                                    className="flex items-center gap-1 px-2"
-                                                    style={{
-                                                        height: CONFIG.FILE_HEIGHT,
-                                                        marginBottom: CONFIG.FILE_GAP,
-                                                        opacity: 0.6,
-                                                    }}
-                                                >
-                                                    <Music size={CONFIG.FILE_ICON_SIZE} className="text-pink-400" style={{ flexShrink: 0 }} />
-                                                    <span
-                                                        className="flex-1 truncate text-gray-500"
-                                                        style={{ fontSize: CONFIG.FILE_FONT_SIZE }}
+                                                        <Folder size={CONFIG.CARD_ICON_SIZE} style={{ color: CONFIG.DROPBOX_BLUE, flexShrink: 0 }} />
+                                                        <span
+                                                            className="flex-1 truncate font-medium text-gray-700"
+                                                            style={{ fontSize: CONFIG.CARD_FONT_SIZE }}
+                                                        >
+                                                            {file.name}
+                                                        </span>
+                                                        <ChevronRight size={14} className="text-gray-300" style={{ flexShrink: 0 }} />
+                                                    </div>
+                                                );
+                                            } else {
+                                                return (
+                                                    <div
+                                                        key={file.path_lower || index}
+                                                        className="flex items-center gap-1 pl-2"
+                                                        style={{
+                                                            height: CONFIG.FILE_HEIGHT,
+                                                            marginBottom: CONFIG.FILE_GAP,
+                                                            opacity: 0.6,
+                                                        }}
                                                     >
-                                                        {file.name.replace(/\.mp3$/i, '')}
-                                                    </span>
-                                                </div>
-                                            );
-                                        }
-                                    })}
-                                </div>
-                            )}
+                                                        <Music size={CONFIG.FILE_ICON_SIZE} className="text-pink-400" style={{ flexShrink: 0 }} />
+                                                        <span
+                                                            className="flex-1 truncate text-gray-500"
+                                                            style={{ fontSize: CONFIG.FILE_FONT_SIZE }}
+                                                        >
+                                                            {file.name.replace(/\.mp3$/i, '')}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            }
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Scrollbar rose custom - POINT (pas barre) */}
-                        {showScrollbar && files.length > 0 && (
-                            <div
-                                className="absolute right-0 top-0 bottom-0"
-                                style={{ width: CONFIG.SCROLLBAR_WIDTH + 4 }}
-                            >
+                        {/* Zone scrubbing à droite avec point rose centré */}
+                        <div
+                            className="relative flex items-center justify-center"
+                            style={{ width: CONFIG.SCRUB_ZONE_WIDTH, flexShrink: 0 }}
+                        >
+                            {showScrollbar && files.length > 0 && (
                                 <div
+                                    className="absolute"
                                     style={{
-                                        position: 'absolute',
-                                        right: 2,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
                                         width: CONFIG.SCROLLBAR_WIDTH,
                                         height: CONFIG.SCROLLBAR_WIDTH,
-                                        top: `${scrollPercent * (100 - 4)}%`,
+                                        top: `${scrollPercent * 100}%`,
                                         background: CONFIG.SCROLLBAR_COLOR,
                                         borderRadius: '50%',
                                         boxShadow: CONFIG.SCROLLBAR_GLOW,
                                         transition: 'top 0.05s ease-out',
                                     }}
                                 />
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
 
                     {/* 3 boutons en bas */}
@@ -571,7 +578,7 @@ const DropboxBrowser = ({
                                 <div
                                     className="absolute rounded-full dropbox-ignite-pink"
                                     style={{
-                                        inset: -4,
+                                        inset: 0,
                                         background: '#ec4899',
                                     }}
                                 />
@@ -594,7 +601,7 @@ const DropboxBrowser = ({
                                 <div
                                     className="absolute rounded-full dropbox-ignite-red"
                                     style={{
-                                        inset: -4,
+                                        inset: 0,
                                         background: '#ef4444',
                                     }}
                                 />
@@ -619,13 +626,13 @@ const DropboxBrowser = ({
                                 <div
                                     className="absolute rounded-full dropbox-ignite-blue"
                                     style={{
-                                        inset: -4,
+                                        inset: 0,
                                         background: CONFIG.DROPBOX_BLUE,
                                     }}
                                 />
                             )}
                             {scanning ? (
-                                <Disc3 size={18} className="animate-spin text-white relative z-10" />
+                                <Loader2 size={18} className="animate-spin text-white relative z-10" />
                             ) : (
                                 <FolderDown size={18} className="relative z-10" style={{ color: canImport ? 'white' : '#9CA3AF' }} />
                             )}
