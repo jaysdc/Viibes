@@ -39,9 +39,6 @@ const CONFIG = {
     BUTTON_ANIM_DURATION: 400,
 };
 
-// Première lettre en majuscule
-const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
-
 // Styles CSS pour les animations (réutilise le style SmartImport)
 const dropboxStyles = `
   @keyframes dropbox-neon-ignite-blue {
@@ -62,14 +59,14 @@ const dropboxStyles = `
     70% { opacity: 1; box-shadow: 0 0 14px rgba(239, 68, 68, 0.7); }
     100% { opacity: 1; box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
   }
-  @keyframes dropbox-neon-ignite-gray {
-    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(156, 163, 175, 0.2); }
-    15% { opacity: 1; box-shadow: 0 0 15px rgba(156, 163, 175, 0.8); }
-    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(156, 163, 175, 0.3); }
-    40% { opacity: 1; box-shadow: 0 0 18px rgba(156, 163, 175, 0.9); }
-    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(156, 163, 175, 0.5); }
-    70% { opacity: 1; box-shadow: 0 0 14px rgba(156, 163, 175, 0.7); }
-    100% { opacity: 1; box-shadow: 0 0 12px rgba(156, 163, 175, 0.5); }
+  @keyframes dropbox-neon-ignite-pink {
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(236, 72, 153, 0.2); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(236, 72, 153, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(236, 72, 153, 0.3); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(236, 72, 153, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(236, 72, 153, 0.7); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5); }
   }
   @keyframes dropbox-fade-out {
     from { opacity: 1; }
@@ -77,7 +74,7 @@ const dropboxStyles = `
   }
   .dropbox-ignite-blue { animation: dropbox-neon-ignite-blue 0.4s ease-out forwards; }
   .dropbox-ignite-red { animation: dropbox-neon-ignite-red 0.4s ease-out forwards; }
-  .dropbox-ignite-gray { animation: dropbox-neon-ignite-gray 0.4s ease-out forwards; }
+  .dropbox-ignite-pink { animation: dropbox-neon-ignite-pink 0.4s ease-out forwards; }
   .dropbox-fade-out { animation: dropbox-fade-out 0.15s ease-out forwards; }
 `;
 
@@ -96,6 +93,8 @@ const DropboxBrowser = ({
 }) => {
     // États
     const [currentPath, setCurrentPath] = useState('');
+    const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
+    const [folderNameHistory, setFolderNameHistory] = useState([]); // Historique des noms pour le retour
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
@@ -269,18 +268,18 @@ const DropboxBrowser = ({
                     f['.tag'] === 'file' && f.name.toLowerCase().endsWith('.mp3')
                 );
 
-                // Ajouter les MP3 de ce dossier (nom avec majuscule)
+                // Ajouter les MP3 de ce dossier
                 if (mp3Files.length > 0) {
-                    result[capitalize(folderName)] = mp3Files.map(f => ({
+                    result[folderName] = mp3Files.map(f => ({
                         name: f.name,
                         size: f.size,
                         path_lower: f.path_lower,
                     }));
                 }
 
-                // Scanner récursivement les sous-dossiers (nom avec majuscule)
+                // Scanner récursivement les sous-dossiers
                 for (const subfolder of subfolders) {
-                    await scanFolder(subfolder.path_lower, capitalize(subfolder.name));
+                    await scanFolder(subfolder.path_lower, subfolder.name);
                 }
 
             } catch (error) {
@@ -302,8 +301,8 @@ const DropboxBrowser = ({
         setScanning(true);
 
         try {
-            const folderName = currentPath.split('/').pop() || 'Dropbox Import';
-            const scannedFolders = await scanDropboxRecursive(currentPath, capitalize(folderName));
+            const folderName = currentFolderDisplayName || currentPath.split('/').pop() || 'Dropbox Import';
+            const scannedFolders = await scanDropboxRecursive(currentPath, folderName);
 
             if (Object.keys(scannedFolders).length === 0) {
                 alert('Aucun fichier MP3 trouvé dans ce dossier ou ses sous-dossiers.');
@@ -312,7 +311,7 @@ const DropboxBrowser = ({
             }
 
             // Passer les données à SmartImport via onImport
-            onImport(scannedFolders, capitalize(folderName));
+            onImport(scannedFolders, folderName);
 
         } catch (error) {
             console.error('Erreur import:', error);
@@ -346,8 +345,13 @@ const DropboxBrowser = ({
     };
 
     // Naviguer vers un dossier
-    const navigateToFolder = (path) => {
+    const navigateToFolder = (path, displayName) => {
+        // Sauvegarder le nom actuel dans l'historique avant de naviguer
+        if (currentFolderDisplayName) {
+            setFolderNameHistory(prev => [...prev, currentFolderDisplayName]);
+        }
         setCurrentPath(path);
+        setCurrentFolderDisplayName(displayName);
         loadFolder(path);
     };
 
@@ -355,7 +359,11 @@ const DropboxBrowser = ({
     const navigateBack = () => {
         if (!currentPath) return;
         const parentPath = currentPath.split('/').slice(0, -1).join('/');
+        // Récupérer le nom du dossier parent depuis l'historique
+        const previousName = folderNameHistory[folderNameHistory.length - 1] || '';
+        setFolderNameHistory(prev => prev.slice(0, -1));
         setCurrentPath(parentPath);
+        setCurrentFolderDisplayName(previousName);
         loadFolder(parentPath);
     };
 
@@ -364,8 +372,11 @@ const DropboxBrowser = ({
         if (isVisible) {
             loadFolder('');
             setCurrentPath('');
+            setCurrentFolderDisplayName('');
+            setFolderNameHistory([]);
             setClosingButton(null);
             setIsFadingOut(false);
+            setScanning(false);
         }
     }, [isVisible]);
 
@@ -373,7 +384,7 @@ const DropboxBrowser = ({
 
     const isAtRoot = !currentPath;
     const canImport = !isAtRoot && !loading && !scanning;
-    const currentFolderName = currentPath ? currentPath.split('/').pop() : 'Dropbox';
+    const currentFolderName = currentFolderDisplayName || 'Dropbox';
 
     // Compter les éléments
     const folderCount = files.filter(f => f['.tag'] === 'folder').length;
@@ -471,7 +482,7 @@ const DropboxBrowser = ({
                                             return (
                                                 <div
                                                     key={file.path_lower || index}
-                                                    onClick={() => navigateToFolder(file.path_lower)}
+                                                    onClick={() => navigateToFolder(file.path_lower, file.name)}
                                                     className="flex items-center gap-2 px-3 cursor-pointer"
                                                     style={{
                                                         height: CONFIG.CARD_HEIGHT,
@@ -558,10 +569,10 @@ const DropboxBrowser = ({
                         >
                             {closingButton === 'close' && (
                                 <div
-                                    className="absolute rounded-full dropbox-ignite-gray"
+                                    className="absolute rounded-full dropbox-ignite-pink"
                                     style={{
                                         inset: -4,
-                                        background: 'rgba(156, 163, 175, 0.15)',
+                                        background: '#ec4899',
                                     }}
                                 />
                             )}
@@ -584,7 +595,7 @@ const DropboxBrowser = ({
                                     className="absolute rounded-full dropbox-ignite-red"
                                     style={{
                                         inset: -4,
-                                        background: 'rgba(239, 68, 68, 0.15)',
+                                        background: '#ef4444',
                                     }}
                                 />
                             )}
