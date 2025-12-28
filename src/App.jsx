@@ -6191,14 +6191,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                 {/* FOOTER - BARRE DU BAS FIXE (au-dessus de tout sauf VibeBuilder/SmartImport) */}
                 <div
-                    className={`absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'}`}
+                    className={`absolute left-0 right-0 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'}`}
                     style={{
-                      height: `calc(${CONFIG.FOOTER_HEIGHT_PERCENT}vh + env(safe-area-inset-bottom, 0px))`,
-                      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                      transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
+                      bottom: 'env(safe-area-inset-bottom, 0px)',
+                      height: `${CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+                      transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px)))`,
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
                 >
+                    {/* Fond avec blur - ne couvre PAS le safe-area */}
+                    <div className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 rounded-b-none"></div>
                     {/* BARRE DE CONTRÔLE */}
                     {!(pendingVibe || nukeConfirmMode) && (
                         <ControlBar
