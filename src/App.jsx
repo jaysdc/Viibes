@@ -536,7 +536,7 @@ const CONFIG = {
     HEADER_STATUS_HEIGHT: '2rem',         // Hauteur zone encoche/heure/batterie
     HEADER_BASIC_HEIGHT: '5rem',       // Hauteur du contenu du header (logo + boutons)
     HEADER_PADDING_TOP: 3,                // Padding entre l'encoche et le header (rem)
-    HEADER_PADDING_BOTTOM: 3,           // Padding sous le header (rem) = 8px
+    HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
@@ -5947,7 +5947,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             className="bg-gray-300 rounded-full handle-pulse cursor-pointer"
                             style={{
                                 width: `${CONFIG.IMPORT_HANDLE_WIDTH_PERCENT}%`,
-                                height: UNIFIED_CONFIG.HANDLE_HEIGHT
+                                height: UNIFIED_CONFIG.HANDLE_HEIGHT,
+                                marginTop: `${CONFIG.HEADER_PADDING_BOTTOM}rem`
                             }}
                             onClick={() => {
                                 setImportMenuVisible(false);
