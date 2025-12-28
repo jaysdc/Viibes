@@ -559,11 +559,11 @@ const DropboxBrowser = ({
                         {/* Bouton FERMER */}
                         <button
                             onClick={handleClose}
-                            disabled={!!closingButton}
+                            disabled={!!closingButton || scanning}
                             className="flex-1 flex items-center justify-center rounded-full relative"
                             style={{
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                background: 'white',
+                                background: closingButton === 'close' ? 'transparent' : 'white',
                                 border: '1px solid rgba(0,0,0,0.1)',
                             }}
                         >
@@ -576,17 +576,17 @@ const DropboxBrowser = ({
                                     }}
                                 />
                             )}
-                            <X size={18} className="text-gray-400 relative z-10" />
+                            <X size={18} className="relative z-10" style={{ color: closingButton === 'close' ? 'white' : '#9ca3af' }} />
                         </button>
 
                         {/* Bouton DÉCONNECTER */}
                         <button
                             onClick={handleDisconnect}
-                            disabled={!!closingButton}
+                            disabled={!!closingButton || scanning}
                             className="flex-1 flex items-center justify-center rounded-full relative"
                             style={{
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                background: 'white',
+                                background: closingButton === 'disconnect' ? 'transparent' : 'white',
                                 border: '1px solid rgba(0,0,0,0.1)',
                             }}
                         >
@@ -599,26 +599,35 @@ const DropboxBrowser = ({
                                     }}
                                 />
                             )}
-                            <LogOut size={18} className="text-red-500 relative z-10" />
+                            <LogOut size={18} className="relative z-10" style={{ color: closingButton === 'disconnect' ? 'white' : '#ef4444' }} />
                         </button>
 
                         {/* Bouton IMPORTER */}
                         <button
                             onClick={handleImport}
                             disabled={!canImport || !!closingButton}
-                            className="flex-1 flex items-center justify-center rounded-full"
+                            className="flex-1 flex items-center justify-center rounded-full relative"
                             style={{
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                background: canImport ? CONFIG.DROPBOX_BLUE : 'white',
+                                background: scanning ? 'transparent' : (canImport ? CONFIG.DROPBOX_BLUE : 'white'),
                                 border: canImport ? 'none' : '1px solid rgba(0,0,0,0.1)',
                                 opacity: canImport ? 1 : 0.4,
-                                boxShadow: canImport ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
+                                boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
                             }}
                         >
+                            {scanning && (
+                                <div
+                                    className="absolute rounded-full dropbox-ignite-blue"
+                                    style={{
+                                        inset: -4,
+                                        background: CONFIG.DROPBOX_BLUE,
+                                    }}
+                                />
+                            )}
                             {scanning ? (
-                                <Disc3 size={18} className="animate-spin text-white" />
+                                <Disc3 size={18} className="animate-spin text-white relative z-10" />
                             ) : (
-                                <FolderDown size={18} style={{ color: canImport ? 'white' : '#9CA3AF' }} />
+                                <FolderDown size={18} className="relative z-10" style={{ color: canImport ? 'white' : '#9CA3AF' }} />
                             )}
                         </button>
                     </div>
