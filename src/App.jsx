@@ -536,7 +536,7 @@ const CONFIG = {
     HEADER_STATUS_HEIGHT: '2rem',         // Hauteur zone encoche/heure/batterie
     HEADER_BASIC_HEIGHT: '5rem',       // Hauteur du contenu du header (logo + boutons)
     HEADER_PADDING_TOP: 3,                // Padding entre l'encoche et le header (rem)
-    HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
+    HEADER_PADDING_BOTTOM: 3,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
@@ -988,11 +988,11 @@ const styles = `
   /* Animation slide du handle */
  @keyframes import-handle-slide-in {
     0% { max-height: 0; }
-    100% { max-height: 1rem; }
+    100% { max-height: ${UNIFIED_CONFIG.HANDLE_HEIGHT}px; }
   }
 
   @keyframes import-handle-slide-out {
-    0% { max-height: 1rem; }
+    0% { max-height: ${UNIFIED_CONFIG.HANDLE_HEIGHT}px; }
     100% { max-height: 0; }
   }
 
