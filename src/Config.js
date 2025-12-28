@@ -15,6 +15,6 @@ export const UNIFIED_CONFIG = {
     TITLE_ICON_GAP: '0.5rem',           // Espace entre icône et texte
 
     // Handles (barres grises de drag)
-    HANDLE_HEIGHT: 6,                   // Hauteur en VRAIS pixels CSS
+    HANDLE_HEIGHT_REAL_PX: 18,           // Hauteur en VRAIS pixels physiques (divisé par devicePixelRatio dans le code)
     HANDLE_COLOR: '#d1d5db',            // gray-300
 };

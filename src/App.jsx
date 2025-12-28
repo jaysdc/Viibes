@@ -486,7 +486,7 @@ const CONFIG = {
     IMPORT_FOLDER_ICON_COLOR: '#4b5563',        // Couleur de l'icône dossier (gray-600)
     IMPORT_FOLDER_GLOW: 'rgba(173, 216, 230, 0.8)',
     IMPORT_HANDLE_WIDTH_PERCENT: 15,            // % de la largeur du header
-    // IMPORT_HANDLE_HEIGHT -> utilise UNIFIED_CONFIG.HANDLE_HEIGHT
+    // IMPORT_HANDLE_HEIGHT -> utilise UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
     
     // CONTRÔLES - Couleur de fond commune
     CONTROL_BG_COLOR: '249, 250, 251',          // RGB - gris très clair (TimeCapsule, Volume, Recenter, Import OFF)
@@ -988,11 +988,11 @@ const styles = `
   /* Animation slide du handle */
  @keyframes import-handle-slide-in {
     0% { max-height: 0; }
-    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
   }
 
   @keyframes import-handle-slide-out {
-    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
     100% { max-height: 0; }
   }
 
@@ -5947,7 +5947,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             className="bg-gray-300 rounded-full handle-pulse cursor-pointer"
                             style={{
                                 width: `${CONFIG.IMPORT_HANDLE_WIDTH_PERCENT}%`,
-                                height: UNIFIED_CONFIG.HANDLE_HEIGHT,
+                                height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
                                 marginTop: `${CONFIG.HEADER_PADDING_BOTTOM}rem`
                             }}
                             onClick={() => {
@@ -6157,7 +6157,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="bg-gray-300 rounded-full handle-pulse"
                                     style={{
                                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                                        height: UNIFIED_CONFIG.HANDLE_HEIGHT
+                                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
                                     }}
                                 />
                             )}
@@ -6549,7 +6549,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="bg-gray-300 rounded-full handle-pulse"
                     style={{
                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                        height: UNIFIED_CONFIG.HANDLE_HEIGHT
+                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
                     }}
                 />
             </div>
