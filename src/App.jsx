@@ -663,7 +663,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
-    TC_SKIP_LABEL_SIZE: 0.6,              // Taille du "10" (rem)
+    TC_SKIP_LABEL_SIZE: 0.51,             // Taille du "10" (rem)
     TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
     TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
     TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
@@ -6004,9 +6004,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* LIBRARY */}
         <div 
             className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
-            style={{ paddingBottom: currentSong 
-              ? `${dashboardHeight + (window.innerHeight * CONFIG.FOOTER_HEIGHT_PERCENT / 100) + CONFIG.DRAWER_TOP_SPACING}px` 
-              : `calc(${CONFIG.FOOTER_HEIGHT_PERCENT}% + ${CONFIG.FOOTER_TOP_SPACING}px)` 
+            style={{ paddingBottom: currentSong
+              ? `${dashboardHeight + (window.innerHeight * CONFIG.FOOTER_HEIGHT_PERCENT / 100) + CONFIG.DRAWER_TOP_SPACING}px`
+              : `calc(${CONFIG.FOOTER_HEIGHT_PERCENT}vh + ${CONFIG.FOOTER_TOP_SPACING}px)` 
           }}
             onTouchStart={(e) => {
                 // Long press pour entrer en mode Tweaker

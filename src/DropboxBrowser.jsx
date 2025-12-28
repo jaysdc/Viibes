@@ -549,11 +549,9 @@ const DropboxBrowser = ({
                         <button
                             onClick={handleClose}
                             disabled={!!closingButton}
-                            className="flex items-center justify-center rounded-full relative"
+                            className="flex-1 flex items-center justify-center rounded-full relative"
                             style={{
-                                width: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                minWidth: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 background: 'white',
                                 border: '1px solid rgba(0,0,0,0.1)',
                             }}
@@ -574,11 +572,9 @@ const DropboxBrowser = ({
                         <button
                             onClick={handleDisconnect}
                             disabled={!!closingButton}
-                            className="flex items-center justify-center rounded-full relative"
+                            className="flex-1 flex items-center justify-center rounded-full relative"
                             style={{
-                                width: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                minWidth: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 background: 'white',
                                 border: '1px solid rgba(0,0,0,0.1)',
                             }}
