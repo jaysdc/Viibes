@@ -38,8 +38,17 @@ const CONFIG = {
     // Zone de scrubbing à droite (comme VibeBuilder sidebar)
     SCRUB_ZONE_WIDTH: '3.75rem',
 
+    // Padding horizontal unifié (header + boutons)
+    HORIZONTAL_PADDING: '0.75rem',
+
+    // Scroll fade indicators (comme SmartImport)
+    FADE_HEIGHT: '3rem',
+    FADE_OPACITY: 0.75,
+    FADE_DISTANCE: 30,                   // Distance en px où le fade commence à disparaître
+
     // Animation
     BUTTON_ANIM_DURATION: 400,
+    MORPH_DURATION: 400,
 };
 
 // Styles CSS pour les animations (réutilise le style SmartImport)
@@ -93,6 +102,7 @@ const DropboxBrowser = ({
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
+    sourceRect, // Position du bouton source pour l'animation morph
 }) => {
     // États
     const [currentPath, setCurrentPath] = useState('');
@@ -106,18 +116,44 @@ const DropboxBrowser = ({
     const [closingButton, setClosingButton] = useState(null); // 'close' | 'disconnect' | null
     const [isFadingOut, setIsFadingOut] = useState(false);
 
-    const listRef = useRef(null);
+    // États pour les fades bidirectionnels
+    const [listNeedsScroll, setListNeedsScroll] = useState(false);
+    const [fadeTopOpacity, setFadeTopOpacity] = useState(0);     // Fade en haut
+    const [fadeBottomOpacity, setFadeBottomOpacity] = useState(1); // Fade en bas
 
-    // Gérer le scroll pour la scrollbar rose
+    // États pour l'animation morph
+    const [morphProgress, setMorphProgress] = useState(0); // 0 = bouton, 1 = dialog
+    const [backdropVisible, setBackdropVisible] = useState(false);
+    const [dialogDimensions, setDialogDimensions] = useState(null);
+
+    const listRef = useRef(null);
+    const dialogRef = useRef(null);
+    const animationRef = useRef(null);
+
+    // Gérer le scroll pour la scrollbar rose et les fades bidirectionnels
     const handleScroll = () => {
         if (!listRef.current) return;
         const { scrollTop, scrollHeight, clientHeight } = listRef.current;
         const maxScroll = scrollHeight - clientHeight;
+
         if (maxScroll > 0) {
             setScrollPercent(scrollTop / maxScroll);
             setShowScrollbar(true);
+            setListNeedsScroll(true);
+
+            // Fade en haut : apparaît quand on scroll vers le bas
+            const topOpacity = Math.min(1, scrollTop / CONFIG.FADE_DISTANCE);
+            setFadeTopOpacity(topOpacity);
+
+            // Fade en bas : disparaît quand on approche du bas
+            const distanceFromBottom = maxScroll - scrollTop;
+            const bottomOpacity = Math.min(1, distanceFromBottom / CONFIG.FADE_DISTANCE);
+            setFadeBottomOpacity(bottomOpacity);
         } else {
             setShowScrollbar(false);
+            setListNeedsScroll(false);
+            setFadeTopOpacity(0);
+            setFadeBottomOpacity(0);
         }
     };
 
@@ -370,7 +406,7 @@ const DropboxBrowser = ({
         loadFolder(parentPath);
     };
 
-    // Charger la racine au montage
+    // Charger la racine au montage et lancer l'animation morph
     useEffect(() => {
         if (isVisible) {
             loadFolder('');
@@ -380,21 +416,88 @@ const DropboxBrowser = ({
             setClosingButton(null);
             setIsFadingOut(false);
             setScanning(false);
+
+            // Calculer les dimensions finales du dialog
+            const dialogMaxWidth = parseFloat(CONFIG.DIALOG_MAX_WIDTH);
+            const dialogMaxHeight = parseFloat(CONFIG.DIALOG_MAX_HEIGHT);
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Calculer la taille réelle du dialog (prend en compte vw/vh et max)
+            const dialogWidth = Math.min(viewportWidth * 0.92, dialogMaxWidth);
+            const dialogHeight = Math.min(viewportHeight * 0.8, dialogMaxHeight);
+
+            // Position centrée
+            const finalLeft = (viewportWidth - dialogWidth) / 2;
+            const finalTop = (viewportHeight - dialogHeight) / 2;
+
+            setDialogDimensions({
+                finalLeft,
+                finalTop,
+                finalWidth: dialogWidth,
+                finalHeight: dialogHeight
+            });
+
+            // Lancer l'animation morph si on a un sourceRect
+            if (sourceRect) {
+                setMorphProgress(0);
+                setBackdropVisible(true);
+
+                requestAnimationFrame(() => {
+                    const startTime = performance.now();
+                    const animate = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
+                        // Easing cubic ease-in-out
+                        const eased = progress < 0.5
+                            ? 4 * progress * progress * progress
+                            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                        setMorphProgress(eased);
+                        if (progress < 1) {
+                            animationRef.current = requestAnimationFrame(animate);
+                        } else {
+                            animationRef.current = null;
+                        }
+                    };
+                    animationRef.current = requestAnimationFrame(animate);
+                });
+            } else {
+                // Pas de sourceRect, affichage direct
+                setMorphProgress(1);
+                setBackdropVisible(true);
+            }
+        } else {
+            // Reset quand on ferme
+            setMorphProgress(0);
+            setBackdropVisible(false);
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+                animationRef.current = null;
+            }
         }
     }, [isVisible]);
 
-    // Détecter automatiquement si le contenu déborde (pour afficher le point rose)
+    // Détecter automatiquement si le contenu déborde (pour afficher le point rose et les fades)
     useEffect(() => {
         if (!listRef.current || loading) return;
 
         // Petit délai pour laisser le DOM se mettre à jour
         const timer = setTimeout(() => {
             if (listRef.current) {
-                const { scrollHeight, clientHeight } = listRef.current;
-                if (scrollHeight > clientHeight) {
+                const { scrollHeight, clientHeight, scrollTop } = listRef.current;
+                const maxScroll = scrollHeight - clientHeight;
+
+                if (maxScroll > 0) {
                     setShowScrollbar(true);
+                    setListNeedsScroll(true);
+                    // Initialiser les fades : au départ on est en haut, donc fade top = 0, fade bottom = 1
+                    setFadeTopOpacity(Math.min(1, scrollTop / CONFIG.FADE_DISTANCE));
+                    setFadeBottomOpacity(Math.min(1, (maxScroll - scrollTop) / CONFIG.FADE_DISTANCE));
                 } else {
                     setShowScrollbar(false);
+                    setListNeedsScroll(false);
+                    setFadeTopOpacity(0);
+                    setFadeBottomOpacity(0);
                 }
             }
         }, 50);
@@ -412,38 +515,93 @@ const DropboxBrowser = ({
     const folderCount = files.filter(f => f['.tag'] === 'folder').length;
     const mp3Count = files.filter(f => f['.tag'] === 'file').length;
 
+    // Calculer les dimensions interpolées pour le morph
+    const getMorphStyles = () => {
+        if (!sourceRect || !dialogDimensions) {
+            // Pas d'animation morph, retourner les styles normaux
+            return {
+                position: 'relative',
+                width: CONFIG.DIALOG_WIDTH,
+                maxWidth: CONFIG.DIALOG_MAX_WIDTH,
+                height: CONFIG.DIALOG_HEIGHT,
+                maxHeight: CONFIG.DIALOG_MAX_HEIGHT,
+                borderRadius: '1rem',
+            };
+        }
+
+        const p = morphProgress;
+
+        // Position et taille de départ (bouton)
+        const startLeft = sourceRect.left;
+        const startTop = sourceRect.top;
+        const startWidth = sourceRect.width;
+        const startHeight = sourceRect.height;
+
+        // Position et taille finale (dialog centré)
+        const { finalLeft, finalTop, finalWidth, finalHeight } = dialogDimensions;
+
+        // Interpolation
+        const currentLeft = startLeft + (finalLeft - startLeft) * p;
+        const currentTop = startTop + (finalTop - startTop) * p;
+        const currentWidth = startWidth + (finalWidth - startWidth) * p;
+        const currentHeight = startHeight + (finalHeight - startHeight) * p;
+
+        // BorderRadius: de capsule (height/2) vers dialog radius (16px)
+        const startRadius = startHeight / 2;
+        const finalRadius = 16;
+        const currentRadius = startRadius + (finalRadius - startRadius) * p;
+
+        return {
+            position: 'fixed',
+            left: currentLeft,
+            top: currentTop,
+            width: currentWidth,
+            height: currentHeight,
+            borderRadius: currentRadius,
+        };
+    };
+
+    const morphStyles = getMorphStyles();
+
     return (
         <>
             <style>{dropboxStyles}</style>
             <div
-                className={`fixed inset-0 z-[9999] flex items-center justify-center ${isFadingOut ? 'dropbox-fade-out' : ''}`}
+                className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
                 style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    backdropFilter: 'blur(8px)',
+                    backgroundColor: backdropVisible ? 'rgba(0, 0, 0, 0.85)' : 'transparent',
+                    backdropFilter: backdropVisible ? 'blur(8px)' : 'none',
+                    transition: `background-color ${CONFIG.MORPH_DURATION}ms, backdrop-filter ${CONFIG.MORPH_DURATION}ms`,
                 }}
-                onClick={(e) => { if (e.target === e.currentTarget && !closingButton) handleClose(); }}
+                onClick={(e) => { if (e.target === e.currentTarget && !closingButton && morphProgress === 1) handleClose(); }}
             >
-                {/* Dialog principal */}
+                {/* Dialog principal avec animation morph */}
                 <div
-                    className="flex flex-col overflow-hidden relative"
+                    ref={dialogRef}
+                    className="flex flex-col overflow-hidden"
                     style={{
-                        width: CONFIG.DIALOG_WIDTH,
-                        maxWidth: CONFIG.DIALOG_MAX_WIDTH,
-                        height: CONFIG.DIALOG_HEIGHT,
-                        maxHeight: CONFIG.DIALOG_MAX_HEIGHT,
+                        ...morphStyles,
                         paddingTop: '0.75rem',
                         paddingBottom: '0.75rem',
                         paddingLeft: 0,
                         paddingRight: 0,
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
-                        borderRadius: '1rem',
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+                        // Cacher le contenu pendant l'animation initiale
+                        opacity: morphProgress > 0.3 ? 1 : morphProgress / 0.3,
                     }}
                 >
-                    {/* Header - capsule centrée */}
-                    <div className="flex justify-center mb-2" style={{ flexShrink: 0 }}>
+                    {/* Header - capsule pleine largeur avec padding horizontal */}
+                    <div
+                        className="mb-2"
+                        style={{
+                            flexShrink: 0,
+                            paddingLeft: CONFIG.HORIZONTAL_PADDING,
+                            paddingRight: CONFIG.HORIZONTAL_PADDING
+                        }}
+                    >
                         <div
-                            className="flex items-center rounded-full px-3 border border-gray-200"
+                            className="flex items-center rounded-full px-3 border border-gray-200 w-full"
                             style={{
                                 background: 'white',
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
@@ -578,6 +736,30 @@ const DropboxBrowser = ({
                                     </div>
                                 )}
                             </div>
+
+                            {/* Fade indicator en HAUT - visible quand on a scrollé vers le bas */}
+                            {listNeedsScroll && fadeTopOpacity > 0 && (
+                                <div
+                                    className="absolute left-0 right-0 top-0 pointer-events-none"
+                                    style={{
+                                        height: CONFIG.FADE_HEIGHT,
+                                        background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
+                                        opacity: fadeTopOpacity
+                                    }}
+                                />
+                            )}
+
+                            {/* Fade indicator en BAS - visible quand il y a du contenu en dessous */}
+                            {listNeedsScroll && fadeBottomOpacity > 0 && (
+                                <div
+                                    className="absolute left-0 right-0 bottom-0 pointer-events-none"
+                                    style={{
+                                        height: CONFIG.FADE_HEIGHT,
+                                        background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
+                                        opacity: fadeBottomOpacity
+                                    }}
+                                />
+                            )}
                         </div>
 
                         {/* Zone scrubbing à droite - touche le bord droit de la fenêtre */}
@@ -604,10 +786,15 @@ const DropboxBrowser = ({
                         </div>
                     </div>
 
-                    {/* 3 boutons en bas - centrés, pas de padding externe */}
+                    {/* 3 boutons en bas - avec padding horizontal identique au header */}
                     <div
-                        className="flex items-center justify-center"
-                        style={{ gap: '0.5rem', flexShrink: 0, paddingLeft: 0, paddingRight: 0 }}
+                        className="flex items-center"
+                        style={{
+                            gap: '0.5rem',
+                            flexShrink: 0,
+                            paddingLeft: CONFIG.HORIZONTAL_PADDING,
+                            paddingRight: CONFIG.HORIZONTAL_PADDING
+                        }}
                     >
                         {/* Bouton FERMER */}
                         <button

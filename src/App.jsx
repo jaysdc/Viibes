@@ -4052,6 +4052,7 @@ const handlePlayerTouchEnd = () => {
     };
 
     const dropboxButtonRef = useRef(null);
+    const [dropboxSourceRect, setDropboxSourceRect] = useState(null);
     const [showVolumeOverlay, setShowVolumeOverlay] = useState(false);
     const [dashboardHeight, setDashboardHeight] = useState(0);
     const [showMainPlayerTrigger, setShowMainPlayerTrigger] = useState(false);
@@ -5073,8 +5074,22 @@ const cancelKillVibe = () => {
     console.log('Token from localStorage:', token); // DEBUG
     console.log('dropboxToken state:', dropboxToken); // DEBUG
 
+    // Capturer la position du bouton pour l'animation morph (seulement si token existe)
+    const captureButtonRect = () => {
+        if (dropboxButtonRef.current) {
+            const rect = dropboxButtonRef.current.getBoundingClientRect();
+            setDropboxSourceRect({
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            });
+        }
+    };
+
     if (token) {
-        // Déjà connecté, ouvrir le browser
+        // Déjà connecté, capturer le rect et ouvrir le browser avec animation morph
+        captureButtonRect();
         setDropboxToken(token);
         setDropboxPath('');
         setShowDropboxBrowser(true);
@@ -5083,17 +5098,21 @@ const cancelKillVibe = () => {
         // Token expiré mais refresh token disponible
         const refreshed = await refreshDropboxToken();
         if (refreshed) {
+            // Après refresh réussi, capturer le rect et ouvrir avec morph
+            captureButtonRect();
             const newToken = getDropboxAccessToken();
             setDropboxToken(newToken);
             setDropboxPath('');
             setShowDropboxBrowser(true);
             loadDropboxFolder('', newToken);
         } else {
-            // Refresh échoué, relancer OAuth
+            // Refresh échoué, relancer OAuth (pas de morph car on quitte l'app)
+            setDropboxSourceRect(null);
             startDropboxOAuth();
         }
     } else {
-        // Pas de token, lancer OAuth PKCE
+        // Pas de token, lancer OAuth PKCE (pas de morph car on quitte l'app)
+        setDropboxSourceRect(null);
         startDropboxOAuth();
     }
   };
@@ -6299,19 +6318,25 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* DROPBOX BROWSER */}
         <DropboxBrowser
     isVisible={showDropboxBrowser}
-    onClose={() => setShowDropboxBrowser(false)}
+    onClose={() => {
+        setShowDropboxBrowser(false);
+        setDropboxSourceRect(null);
+    }}
     onDisconnect={() => {
         clearDropboxTokens();
         setDropboxToken(null);
+        setDropboxSourceRect(null);
     }}
     onImport={(scannedFolders, rootName) => {
         setShowDropboxBrowser(false);
+        setDropboxSourceRect(null);
         setPendingDropboxData({ folders: scannedFolders, rootName });
     }}
     dropboxToken={dropboxToken}
     getValidDropboxToken={getValidDropboxToken}
     refreshDropboxToken={refreshDropboxToken}
     clearDropboxTokens={clearDropboxTokens}
+    sourceRect={dropboxSourceRect}
 />
 
         {/* KILL VIBE CONFIRMATION */}
