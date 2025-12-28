@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Flame, Layers, Check, AlertTriangle, Music2, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
+import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
 import { UNIFIED_CONFIG } from './Config.js';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -426,8 +426,9 @@ const SmartImport = ({
         // Capturer la position du bouton source ET les dimensions finales AVANT de fermer le menu
         if (containerRef?.current) {
             const containerRect = containerRef.current.getBoundingClientRect();
-            const dialogMaxWidth = parseFloat(SMARTIMPORT_CONFIG.DIALOG_MAX_WIDTH) * 16;
-            const dialogHeight = containerRect.height * 0.65;
+            // Utiliser les dimensions depuis UNIFIED_CONFIG (en % de l'écran)
+            const dialogMaxWidth = containerRect.width * (UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH / 100);
+            const dialogHeight = containerRect.height * (UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT / 100);
             const finalLeft = (containerRect.width - dialogMaxWidth) / 2;
             const finalTop = (containerRect.height - dialogHeight) / 2;
             
@@ -608,8 +609,9 @@ const SmartImport = ({
             // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
-            const dialogMaxWidth = Math.min(320, screenWidth * 0.9);
-            const dialogHeight = Math.min(500, screenHeight * 0.7);
+            // Utiliser les dimensions depuis UNIFIED_CONFIG (en % de l'écran)
+            const dialogMaxWidth = screenWidth * (UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH / 100);
+            const dialogHeight = screenHeight * (UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT / 100);
             const finalLeft = (screenWidth - dialogMaxWidth) / 2;
             const finalTop = (screenHeight - dialogHeight) / 2;
 
@@ -928,8 +930,8 @@ const SmartImport = ({
                                 >
                                     {importPreview.totalFiles}
                                 </span>
-                                <Music2 
-                                    className="text-gray-400" 
+                                <Music
+                                    className="text-gray-400"
                                     style={{ width: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE, height: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}
                                 />
                             </div>

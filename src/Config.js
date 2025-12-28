@@ -17,4 +17,8 @@ export const UNIFIED_CONFIG = {
     // Handles (barres grises de drag)
     HANDLE_HEIGHT_REAL_PX: 18,           // Hauteur en VRAIS pixels physiques (divisé par devicePixelRatio dans le code)
     HANDLE_COLOR: '#d1d5db',            // gray-300
+
+    // Écrans d'import (SmartImport + DropboxBrowser)
+    IMPORT_SCREEN_WIDTH: 92,             // % de la largeur totale de l'écran
+    IMPORT_SCREEN_HEIGHT: 80,            // % de la hauteur totale de l'écran
 };

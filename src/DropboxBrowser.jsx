@@ -24,11 +24,8 @@ const CONFIG = {
     ROW_TITLE_SIZE: '0.75rem',          // 12px
     ROW_SUBTITLE_SIZE: '0.625rem',      // 10px
 
-    // Dialog - plus grand
-    DIALOG_WIDTH: '92vw',
-    DIALOG_MAX_WIDTH: '360px',
-    DIALOG_HEIGHT: '80vh',
-    DIALOG_MAX_HEIGHT: '600px',
+    // Dialog - dimensions depuis UNIFIED_CONFIG (en %)
+    // Note: les valeurs vw/vh sont calculées depuis UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH/HEIGHT
 
     // Scrollbar rose (comme neon beacon)
     SCROLLBAR_WIDTH: 6,
@@ -417,15 +414,13 @@ const DropboxBrowser = ({
             setIsFadingOut(false);
             setScanning(false);
 
-            // Calculer les dimensions finales du dialog
-            const dialogMaxWidth = parseFloat(CONFIG.DIALOG_MAX_WIDTH);
-            const dialogMaxHeight = parseFloat(CONFIG.DIALOG_MAX_HEIGHT);
+            // Calculer les dimensions finales du dialog (en % de l'écran)
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
 
-            // Calculer la taille réelle du dialog (prend en compte vw/vh et max)
-            const dialogWidth = Math.min(viewportWidth * 0.92, dialogMaxWidth);
-            const dialogHeight = Math.min(viewportHeight * 0.8, dialogMaxHeight);
+            // Calculer la taille réelle du dialog depuis UNIFIED_CONFIG
+            const dialogWidth = viewportWidth * (UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH / 100);
+            const dialogHeight = viewportHeight * (UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT / 100);
 
             // Position centrée
             const finalLeft = (viewportWidth - dialogWidth) / 2;
@@ -518,13 +513,11 @@ const DropboxBrowser = ({
     // Calculer les dimensions interpolées pour le morph
     const getMorphStyles = () => {
         if (!sourceRect || !dialogDimensions) {
-            // Pas d'animation morph, retourner les styles normaux
+            // Pas d'animation morph, retourner les styles normaux (en % de l'écran)
             return {
                 position: 'relative',
-                width: CONFIG.DIALOG_WIDTH,
-                maxWidth: CONFIG.DIALOG_MAX_WIDTH,
-                height: CONFIG.DIALOG_HEIGHT,
-                maxHeight: CONFIG.DIALOG_MAX_HEIGHT,
+                width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
+                height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
                 borderRadius: '1rem',
             };
         }
@@ -621,7 +614,7 @@ const DropboxBrowser = ({
                                 </button>
                             )}
 
-                            {/* Nom du dossier + icône Folder au lieu de "dossiers" */}
+                            {/* Nom du dossier + compteurs (MP3 d'abord, puis dossiers) */}
                             <div className="flex items-center gap-2 ml-2">
                                 <span
                                     className="font-bold text-gray-700 truncate"
@@ -629,16 +622,16 @@ const DropboxBrowser = ({
                                 >
                                     {currentFolderName}
                                 </span>
-                                {folderCount > 0 && (
-                                    <span className="flex items-center gap-0.5 text-gray-400">
-                                        <span className="text-xs">{folderCount}</span>
-                                        <Folder size={12} />
-                                    </span>
-                                )}
                                 {mp3Count > 0 && (
                                     <span className="flex items-center gap-0.5 text-gray-400">
                                         <span className="text-xs">{mp3Count}</span>
                                         <Music size={12} />
+                                    </span>
+                                )}
+                                {folderCount > 0 && (
+                                    <span className="flex items-center gap-0.5 text-gray-400">
+                                        <span className="text-xs">{folderCount}</span>
+                                        <Folder size={12} />
                                     </span>
                                 )}
                             </div>
@@ -713,6 +706,8 @@ const DropboxBrowser = ({
                                                             height: CONFIG.FILE_HEIGHT,
                                                         }}
                                                     >
+                                                        {/* Icône note de musique à gauche */}
+                                                        <Music size={12} className="text-gray-300 mr-2 flex-shrink-0" />
                                                         <div className="flex-1 flex flex-col justify-center overflow-hidden">
                                                             <span
                                                                 className="font-bold truncate text-gray-900"
