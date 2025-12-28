@@ -988,11 +988,11 @@ const styles = `
   /* Animation slide du handle */
  @keyframes import-handle-slide-in {
     0% { max-height: 0; }
-    100% { max-height: ${UNIFIED_CONFIG.HANDLE_HEIGHT}px; }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
   }
 
   @keyframes import-handle-slide-out {
-    0% { max-height: ${UNIFIED_CONFIG.HANDLE_HEIGHT}px; }
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
     100% { max-height: 0; }
   }
 
