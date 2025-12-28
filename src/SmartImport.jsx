@@ -22,7 +22,7 @@ export const SMARTIMPORT_CONFIG = {
     DIALOG_MAX_WIDTH: '20rem',           // Largeur max du dialog
     DIALOG_HEIGHT: '65vh',               // Hauteur max du dialog
     DIALOG_PADDING: '1.25rem',           // Padding interne du dialog
-    DIALOG_RADIUS: '2rem',               // Border radius général du dialog
+    DIALOG_RADIUS: '1rem',               // Border radius général du dialog (unifié avec DropboxBrowser)
     DIALOG_BG_COLOR: '#FAFAFA',          // Couleur de fond du dossier (violet très pâle)
     
     // ══════════════════════════════════════════════════════════════════════════

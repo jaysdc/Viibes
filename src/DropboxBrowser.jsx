@@ -38,10 +38,10 @@ const CONFIG = {
     // Padding horizontal unifié (header + boutons)
     HORIZONTAL_PADDING: '0.75rem',
 
-    // Scroll fade indicators (comme SmartImport)
-    FADE_HEIGHT: '3rem',
-    FADE_OPACITY: 0.75,
-    FADE_DISTANCE: 30,                   // Distance en px où le fade commence à disparaître
+    // Scroll fade indicators - plus prononcé que SmartImport
+    FADE_HEIGHT: '5rem',
+    FADE_OPACITY: 0.95,
+    FADE_DISTANCE: 50,                   // Distance en px où le fade commence à disparaître
 
     // Animation
     BUTTON_ANIM_DURATION: 400,

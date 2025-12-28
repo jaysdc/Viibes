@@ -663,7 +663,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
-    TC_SKIP_LABEL_SIZE: 0.4,             // Taille du "10" (rem)
+    TC_SKIP_LABEL_SIZE: 0.47,             // Taille du "10" (rem)
     TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
     TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
     TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
@@ -4785,6 +4785,72 @@ const vibeSearchResults = () => {
   // Ref pour tracker isPlaying sans closure stale
   const isPlayingRef = useRef(isPlaying);
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // MEDIA SESSION API - Contrôles écran de verrouillage iOS/Android
+  // ══════════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    if (currentSong && isPlaying) {
+      // Mettre à jour les métadonnées
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title || 'Unknown Title',
+        artist: currentSong.artist || 'Unknown Artist',
+        album: currentSong.vibeId || 'Vibes',
+        artwork: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+
+      // Handlers pour les contrôles
+      navigator.mediaSession.setActionHandler('play', () => {
+        setIsPlaying(true);
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        setIsPlaying(false);
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        if (audioRef.current && audioRef.current.currentTime > 3) {
+          audioRef.current.currentTime = 0;
+        } else {
+          const currentIndex = queue.findIndex(s => s === currentSong);
+          if (currentIndex > 0) {
+            setCurrentSong(queue[currentIndex - 1]);
+          } else if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+          }
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const currentIndex = queue.findIndex(s => s === currentSong);
+        if (currentIndex < queue.length - 1) {
+          setCurrentSong(queue[currentIndex + 1]);
+        } else {
+          setIsPlaying(false);
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = Math.min(
+            audioRef.current.duration || 0,
+            audioRef.current.currentTime + (details.seekOffset || 10)
+          );
+        }
+      });
+    }
+  }, [currentSong, isPlaying, queue]);
 
   // Refs pour le préchargement du fichier Dropbox du morceau suivant
   const preloadedRef = useRef({ songId: null, link: null, audio: null });
