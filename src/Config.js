@@ -23,6 +23,6 @@ export const UNIFIED_CONFIG = {
     IMPORT_SCREEN_HEIGHT: 80,            // % de la hauteur totale de l'écran
 
     // Footer
-    FOOTER_HEIGHT_PERCENT: 10,           // Hauteur du footer (% de l'écran, SANS safe area iOS)
+    FOOTER_HEIGHT_PERCENT: 13,           // Hauteur du footer (% de l'écran, SANS safe area iOS)
     FOOTER_PADDING_TOP: '0.5rem',        // Padding entre le haut du footer et les éléments
 };
