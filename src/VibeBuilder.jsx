@@ -1959,11 +1959,9 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                 
                 return (
                     <div
-    className="absolute left-0 right-0 bg-white border-t border-gray-200 px-4 animate-in slide-in-from-bottom-4 z-30"
+    className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-3 animate-in slide-in-from-bottom-4 z-30"
     style={{
-        bottom: `${UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
-        paddingTop: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
-        paddingBottom: '1rem'
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
     }}
 >
                         

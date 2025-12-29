@@ -17,7 +17,9 @@
       "Bash(dir /b *ropbox*)",
       "Bash(powershell -Command \"Get-ChildItem -Filter ''*ropbox*'' | Select-Object Name\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nUnify safe-area, titles and handles across all components\n\n- Replace hardcoded IOS_SAFE_AREA_TOP with env\\(safe-area-inset-top\\)\n- Add UNIFIED_CONFIG with shared title/handle parameters\n- Tweaker: Wrench icon + TWEAKER smallcaps title\n- VibeBuilder: AudioLines icon + BUILDER smallcaps title\n- Unify all handles to HANDLE_HEIGHT: 6px\n- Fix 6 undefined CONFIG properties \\(typos\\)\n- Remove unused isOnRealDevice/iosSafeAreaTop props\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
