@@ -1960,8 +1960,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                 
                 return (
                     <div
-    className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-3 animate-in slide-in-from-bottom-4 z-30"
-    style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 150, background: 'magenta', zIndex: 99999 }}
 >
                         
                         {/* Future VibeCard - Swipable pour changer couleur */}
