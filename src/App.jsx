@@ -2027,9 +2027,8 @@ const ControlBar = ({
 }) => {
     return (
         <div
-            className="absolute left-0 right-0 flex items-center"
+            className="absolute left-0 right-0 flex items-start"
             style={{
-                height: `calc(100% - ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`,
                 top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
                 padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
                 gap: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
@@ -6399,9 +6398,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     {/* OVERLAY DE CONFIRMATION - RECOUVRE LA BARRE DE CONTRÔLE */}
                     {(pendingVibe || nukeConfirmMode) && (
                         <div
-                            className="absolute left-0 right-0 flex items-center z-50"
+                            className="absolute left-0 right-0 flex items-start z-50"
                             style={{
-                                height: `calc(100% - ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`,
                                 top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
                                 padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
                             }}
