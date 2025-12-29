@@ -6358,17 +6358,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             </div>
                         )}
 
-                {/* FOOTER - BARRE DU BAS FIXE (au-dessus de tout sauf VibeBuilder/SmartImport) */}
+                {/* FOOTER - BARRE DU BAS FIXE (s'étend dans la safe area iOS) */}
                 <div
                     className={`absolute left-0 right-0 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'}`}
                     style={{
-                      bottom: 'env(safe-area-inset-bottom, 0px)',
+                      bottom: 0,
                       height: `${CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
-                      transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px)))`,
+                      transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
                 >
-                    {/* Fond avec blur - ne couvre PAS le safe-area */}
+                    {/* Fond avec blur - couvre TOUTE la zone y compris safe-area */}
                     <div className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 rounded-b-none"></div>
                     {/* BARRE DE CONTRÔLE */}
                     {!(pendingVibe || nukeConfirmMode) && (
