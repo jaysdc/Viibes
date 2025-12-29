@@ -5817,11 +5817,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
 
-      {/* TEST - Zone rose dans la safe area */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 150, background: 'magenta', zIndex: 99999 }}>
-        <div style={{ color: 'white', fontWeight: 'bold', textAlign: 'center', paddingTop: 20 }}>TEST SAFE AREA</div>
-      </div>
-
       {!isOnRealDevice && (
           <div className="h-8 w-full bg-white/90 backdrop-blur-md flex justify-between items-center px-4 text-[10px] font-medium z-50 absolute top-0 left-0 right-0">
             <div className="w-1/3">{currentTime}</div>
