@@ -4782,18 +4782,148 @@ const vibeSearchResults = () => {
     setupAndPlay();
   }, [isPlaying, currentSong]);
 
-  // Ref pour tracker isPlaying sans closure stale
+  // Refs pour tracker les états sans closure stale (Media Session API)
   const isPlayingRef = useRef(isPlaying);
+  const currentSongRef = useRef(currentSong);
+  const queueRef = useRef(queue);
+  const wakeLockRef = useRef(null);
+
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN WAKE LOCK - Empêcher l'écran de s'éteindre pendant la lecture
+  // ══════════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      if (!('wakeLock' in navigator)) return;
+
+      if (isPlaying) {
+        try {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+          console.log('[WakeLock] Screen wake lock acquired');
+        } catch (e) {
+          console.log('[WakeLock] Failed to acquire:', e.message);
+        }
+      } else {
+        if (wakeLockRef.current) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+          console.log('[WakeLock] Screen wake lock released');
+        }
+      }
+    };
+
+    requestWakeLock();
+
+    // Re-acquire wake lock when page becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isPlaying) {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    };
+  }, [isPlaying]);
 
   // ══════════════════════════════════════════════════════════════════════════════
   // MEDIA SESSION API - Contrôles écran de verrouillage iOS/Android
   // ══════════════════════════════════════════════════════════════════════════════
+
+  // Enregistrer les handlers UNE SEULE FOIS au montage
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
 
-    if (currentSong && isPlaying) {
-      // Mettre à jour les métadonnées
+    // Play: appeler directement .play() sur l'audio
+    navigator.mediaSession.setActionHandler('play', async () => {
+      console.log('[MediaSession] play handler called');
+      if (audioRef.current) {
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (e) {
+          console.error('[MediaSession] play error:', e);
+        }
+      }
+    });
+
+    // Pause: appeler directement .pause() sur l'audio
+    navigator.mediaSession.setActionHandler('pause', () => {
+      console.log('[MediaSession] pause handler called');
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      console.log('[MediaSession] previoustrack handler called');
+      if (audioRef.current && audioRef.current.currentTime > 3) {
+        audioRef.current.currentTime = 0;
+      } else {
+        const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+        if (currentIndex > 0) {
+          setCurrentSong(queueRef.current[currentIndex - 1]);
+        } else if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+        }
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      console.log('[MediaSession] nexttrack handler called');
+      const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+      if (currentIndex < queueRef.current.length - 1) {
+        setCurrentSong(queueRef.current[currentIndex + 1]);
+      } else {
+        if (audioRef.current) audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      console.log('[MediaSession] seekbackward handler called');
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      console.log('[MediaSession] seekforward handler called');
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.min(
+          audioRef.current.duration || 0,
+          audioRef.current.currentTime + (details.seekOffset || 10)
+        );
+      }
+    });
+
+    // Cleanup: retirer les handlers au démontage
+    return () => {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+      }
+    };
+  }, []); // Dépendances vides = une seule fois
+
+  // Mettre à jour les métadonnées quand la chanson change
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    if (currentSong) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentSong.title || 'Unknown Title',
         artist: currentSong.artist || 'Unknown Artist',
@@ -4803,54 +4933,8 @@ const vibeSearchResults = () => {
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
         ]
       });
-
-      // Handlers pour les contrôles
-      navigator.mediaSession.setActionHandler('play', () => {
-        setIsPlaying(true);
-      });
-
-      navigator.mediaSession.setActionHandler('pause', () => {
-        setIsPlaying(false);
-      });
-
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        if (audioRef.current && audioRef.current.currentTime > 3) {
-          audioRef.current.currentTime = 0;
-        } else {
-          const currentIndex = queue.findIndex(s => s === currentSong);
-          if (currentIndex > 0) {
-            setCurrentSong(queue[currentIndex - 1]);
-          } else if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-          }
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        const currentIndex = queue.findIndex(s => s === currentSong);
-        if (currentIndex < queue.length - 1) {
-          setCurrentSong(queue[currentIndex + 1]);
-        } else {
-          setIsPlaying(false);
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = Math.min(
-            audioRef.current.duration || 0,
-            audioRef.current.currentTime + (details.seekOffset || 10)
-          );
-        }
-      });
     }
-  }, [currentSong, isPlaying, queue]);
+  }, [currentSong]);
 
   // Refs pour le préchargement du fichier Dropbox du morceau suivant
   const preloadedRef = useRef({ songId: null, link: null, audio: null });
