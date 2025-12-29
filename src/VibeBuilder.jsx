@@ -1905,9 +1905,10 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                     ></div>
                 )}
 
-<div 
-                    ref={listRef} 
-                    className={`absolute inset-0 pb-48 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
+<div
+                    ref={listRef}
+                    className={`absolute inset-0 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
+                    style={{ paddingBottom: selectedSongs.length > 0 ? `calc(${vibeCardConfig?.height || '96px'} + 0.75rem + 0.75rem + env(safe-area-inset-bottom, 0px))` : 0 }}
                     onScroll={(e) => setListScrollTop(e.target.scrollTop)}
                 >
                     {/* Conteneur avec hauteur totale pour le scroll */}
