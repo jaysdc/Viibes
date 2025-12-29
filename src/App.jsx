@@ -663,7 +663,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
-    TC_SKIP_LABEL_SIZE: 0.47,             // Taille du "10" (rem)
+    TC_SKIP_LABEL_SIZE: 0.55,             // Taille du "10" (rem)
     TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
     TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
     TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)

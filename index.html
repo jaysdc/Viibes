@@ -43,6 +43,15 @@
         height: 100%;
         overscroll-behavior: none;
         touch-action: none;
+        /* Ignorer la safe area iOS - l'app gère elle-même les marges */
+        padding: 0;
+        margin: 0;
+      }
+
+      /* Étendre l'app jusqu'en bas de l'écran (sous le home indicator iOS) */
+      html {
+        min-height: calc(100% + env(safe-area-inset-top));
+        background: #000;
       }
       
       #root {
