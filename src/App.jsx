@@ -6822,7 +6822,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onPlayNext={addToPlayNext}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
-                            height: CONFIG.VIBECARD_HEIGHT_VH,
+                            height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
                             gap: CONFIG.VIBECARD_GAP_VH,
                             liquidGlassBlur: CONFIG.LIQUID_GLASS_BLUR,
                             marqueeSpeed: CONFIG.MARQUEE_SPEED,
