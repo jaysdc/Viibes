@@ -25,5 +25,5 @@ export const UNIFIED_CONFIG = {
     // Footer
     FOOTER_HEIGHT_PERCENT: 35,           // Hauteur du footer (% de l'écran, SANS safe area iOS)
     FOOTER_PADDING_TOP: '0.5rem',        // Padding entre le haut du footer et les éléments
-    FOOTER_BTN_HEIGHT: 40,               // Hauteur des boutons du footer (px)
+    FOOTER_BTN_HEIGHT: 60,               // Hauteur des boutons du footer (px)
 };
