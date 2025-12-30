@@ -105,6 +105,29 @@ const isRealDevice = () => {
   return isStandalone || isMobile;
 };
 
+// Obtenir la safe area bottom en pixels (pour les calculs JS)
+const getSafeAreaBottom = () => {
+  if (typeof window === 'undefined') return 0;
+  const div = document.createElement('div');
+  div.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
+  div.style.position = 'absolute';
+  div.style.visibility = 'hidden';
+  document.body.appendChild(div);
+  const safeArea = parseInt(getComputedStyle(div).paddingBottom) || 0;
+  document.body.removeChild(div);
+  return safeArea;
+};
+
+// Calculer la hauteur totale du footer (safe area + boutons + padding)
+const getFooterHeight = () => {
+  const safeArea = getSafeAreaBottom();
+  const paddingTop = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16; // rem to px
+  return safeArea + UNIFIED_CONFIG.FOOTER_BTN_HEIGHT + paddingTop;
+};
+
+// Hauteur du footer en CSS (pour les styles)
+const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
+
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                        TOUS LES PARAMÈTRES TWEAKABLES                     ║
@@ -445,7 +468,6 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // FOOTER
     // ══════════════════════════════════════════════════════════════════════════
-    // FOOTER_HEIGHT_PERCENT -> déplacé dans Config.js (UNIFIED_CONFIG)
     FOOTER_SLIDE_DURATION: 400,          // Durée de l'animation slide du footer (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -3983,7 +4005,7 @@ export default function App() {
   const closeFullPlayer = useCallback(() => {
     // Calculer la position Y finale (là où le tiroir va apparaître)
     const containerHeight = mainContainerRef.current?.offsetHeight || window.innerHeight;
-    const footerHeight = containerHeight * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100;
+    const footerHeight = getFooterHeight();
     const drawerHeight = containerHeight * CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100;
     const targetY = containerHeight - footerHeight - drawerHeight;
     
@@ -4625,7 +4647,7 @@ const vibeSearchResults = () => {
         }
         
         // Calcul position (une seule fois getBoundingClientRect car on a déjà newHeight)
-        const bottomBarHeight = containerHeight * (UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100);
+        const bottomBarHeight = getFooterHeight();
         const drawerTop = containerHeight - newHeight - bottomBarHeight;
         const topPositionPercent = (drawerTop / containerHeight) * 100;
         drawerTopPercentRef.current = topPositionPercent;
@@ -4656,10 +4678,10 @@ const vibeSearchResults = () => {
         
         isDraggingDrawer.current = false;
         
-        if (showMainPlayerTrigger && drawerTopPercentRef.current <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) { 
+        if (showMainPlayerTrigger && drawerTopPercentRef.current <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) {
           // Calculer la position Y du haut du tiroir (là où le player doit commencer)
           const containerHeight = mainContainerRef.current.offsetHeight;
-          const footerHeight = containerHeight * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100;
+          const footerHeight = getFooterHeight();
           const currentDrawerHeight = dashboardRef.current?.offsetHeight || dashboardHeight;
           const drawerTopY = containerHeight - footerHeight - currentDrawerHeight;
           
@@ -6176,11 +6198,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* FIN HEADER */}
 
         {/* LIBRARY */}
-        <div 
+        <div
             className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
             style={{ paddingBottom: currentSong
-              ? `${dashboardHeight + (window.innerHeight * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100) + CONFIG.DRAWER_TOP_SPACING}px`
-              : `calc(${UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT}vh + ${CONFIG.FOOTER_TOP_SPACING}px)` 
+              ? `${dashboardHeight + getFooterHeight() + CONFIG.DRAWER_TOP_SPACING}px`
+              : `calc(${FOOTER_HEIGHT_CSS} + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {
                 // Long press pour entrer en mode Tweaker
@@ -6293,8 +6315,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             getInitialGradientIndex={getInitialGradientIndex}
             getGradientName={getGradientName}
             getGradientByIndex={getGradientByIndex}
-            dashboardHeight={dashboardHeight}
-            footerHeight={(mainContainerRef.current?.offsetHeight || window.innerHeight) * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100}
+            footerHeight={getFooterHeight()}
             hasSong={!!currentSong}
             capsuleHeightVh={CONFIG.CAPSULE_HEIGHT_MINI_VH}
             onSwipeProgress={setVibeSwipePreview}
@@ -6311,7 +6332,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           ? (typeof dashboardHeight === 'number' ? `${dashboardHeight}px` : dashboardHeight)
                           : `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}px`,
                       minHeight: `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100 - CONFIG.DRAWER_SEPARATOR_HEIGHT}px`,
-                      bottom: `${UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+                      bottom: FOOTER_HEIGHT_CSS,
                       transition: isDrawerAnimating 
                           ? `height ${CONFIG.DRAWER_TWEAKER_ANIMATION_DURATION}ms cubic-bezier(0, ${CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, ${1 - CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, 1)` 
                           : 'none'
@@ -6368,7 +6389,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className={`absolute left-0 right-0 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'}`}
                     style={{
                       bottom: 0,
-                      height: `${UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+                      height: FOOTER_HEIGHT_CSS,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
@@ -6556,7 +6577,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             style={{
               top: 0,
               bottom: 0,
-              paddingBottom: `${UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+              paddingBottom: FOOTER_HEIGHT_CSS,
               opacity: playerFadeOpacity,
               transition: CONFIG.PLAYER_FADE_OUT_ENABLED 
                   ? `opacity ${CONFIG.PLAYER_FADE_OUT_DURATION}ms ease-out, transform ${CONFIG.PLAYER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
@@ -6738,7 +6759,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{playerHeaderHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={(() => { const screenHeight = mainContainerRef.current?.offsetHeight || window.innerHeight; const statusBarHeight = 32; const footerHeight = screenHeight * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100; return screenHeight - statusBarHeight - playerHeaderHeight - footerHeight; })()} />}</div>
+            >{playerHeaderHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={(() => { const screenHeight = mainContainerRef.current?.offsetHeight || window.innerHeight; const statusBarHeight = 32; const footerHeight = getFooterHeight(); return screenHeight - statusBarHeight - playerHeaderHeight - footerHeight; })()} />}</div>
                   </div>
                 )}
         
@@ -6839,7 +6860,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             capsulePX: CONFIG.VIBECARD_CAPSULE_PX,
                             capsulePY: CONFIG.VIBECARD_CAPSULE_PY
                         }}
-                        footerHeight={(mainContainerRef.current?.offsetHeight || window.innerHeight) * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100}
                         initialGradientIndex={initialIdx}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}

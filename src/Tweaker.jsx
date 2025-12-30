@@ -256,7 +256,6 @@ const Tweaker = ({
     getInitialGradientIndex,
     getGradientName,
     getGradientByIndex,
-    dashboardHeight = 0,
     footerHeight = 0,
     hasSong = false,
     capsuleHeightVh = 5.8,
@@ -607,7 +606,7 @@ const Tweaker = ({
         <div 
             className="absolute inset-0 bg-white z-[55] flex flex-col"
             style={{ 
-                paddingBottom: hasSong ? `${dashboardHeight + footerHeight}px` : 0,
+                paddingBottom: hasSong ? `${footerHeight}px` : 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
