@@ -5840,31 +5840,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
 
-      {/* TEST OVERLAY - Affiche safe area en vrais pixels */}
-      <div style={{
-        position: 'fixed',
-        top: 100,
-        left: 10,
-        background: 'black',
-        color: 'lime',
-        padding: 10,
-        zIndex: 9999,
-        fontSize: 14,
-        fontFamily: 'monospace'
-      }}>
-        {(() => {
-          const div = document.createElement('div');
-          div.style.height = 'env(safe-area-inset-bottom, 0px)';
-          div.style.position = 'absolute';
-          div.style.visibility = 'hidden';
-          document.body.appendChild(div);
-          const cssPx = parseFloat(getComputedStyle(div).height) || 0;
-          document.body.removeChild(div);
-          const realPx = cssPx * window.devicePixelRatio;
-          return `Safe area: ${realPx} vrais px (${cssPx}px CSS × ${window.devicePixelRatio})`;
-        })()}
-      </div>
-
       {!isOnRealDevice && (
           <div className="h-8 w-full bg-white/90 backdrop-blur-md flex justify-between items-center px-4 text-[10px] font-medium z-50 absolute top-0 left-0 right-0">
             <div className="w-1/3">{currentTime}</div>
