@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS, SafeAreaSpacer } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS, FOOTER_CONTENT_HEIGHT_CSS, SafeAreaSpacer } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -5840,31 +5840,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
 
-      {/* TEST OVERLAY - Affiche safe area en vrais pixels */}
-      <div style={{
-        position: 'fixed',
-        top: 100,
-        left: 10,
-        background: 'black',
-        color: 'lime',
-        padding: 10,
-        zIndex: 9999,
-        fontSize: 14,
-        fontFamily: 'monospace'
-      }}>
-        {(() => {
-          const div = document.createElement('div');
-          div.style.height = 'env(safe-area-inset-bottom, 0px)';
-          div.style.position = 'absolute';
-          div.style.visibility = 'hidden';
-          document.body.appendChild(div);
-          const cssPx = parseFloat(getComputedStyle(div).height) || 0;
-          document.body.removeChild(div);
-          const realPx = cssPx * window.devicePixelRatio;
-          return `Safe area: ${realPx} vrais px (${cssPx}px CSS × ${window.devicePixelRatio})`;
-        })()}
-      </div>
-
       {!isOnRealDevice && (
           <div className="h-8 w-full bg-white/90 backdrop-blur-md flex justify-between items-center px-4 text-[10px] font-medium z-50 absolute top-0 left-0 right-0">
             <div className="w-1/3">{currentTime}</div>
@@ -6223,7 +6198,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
             style={{ paddingBottom: currentSong
               ? `${dashboardHeight + getFooterHeight() + CONFIG.DRAWER_TOP_SPACING}px`
-              : `calc(${FOOTER_HEIGHT_CSS} + ${CONFIG.FOOTER_TOP_SPACING}px)`
+              : `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {
                 // Long press pour entrer en mode Tweaker
@@ -6409,13 +6384,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className={`absolute left-0 right-0 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'} flex flex-col`}
                     style={{
                       bottom: 0,
-                      height: FOOTER_HEIGHT_CSS,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
                 >
                     {/* Fond avec blur - couvre TOUTE la zone y compris safe-area */}
                     <div className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 rounded-b-none"></div>
+                    {/* Padding top */}
+                    <div style={{ height: UNIFIED_CONFIG.FOOTER_PADDING_TOP, flexShrink: 0 }} />
                     {/* BARRE DE CONTRÔLE */}
                     {!(pendingVibe || nukeConfirmMode) && (
                         <ControlBar
@@ -6598,7 +6574,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             style={{
               top: 0,
               bottom: 0,
-              paddingBottom: FOOTER_HEIGHT_CSS,
+              paddingBottom: FOOTER_CONTENT_HEIGHT_CSS,
               opacity: playerFadeOpacity,
               transition: CONFIG.PLAYER_FADE_OUT_ENABLED 
                   ? `opacity ${CONFIG.PLAYER_FADE_OUT_DURATION}ms ease-out, transform ${CONFIG.PLAYER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
