@@ -6834,7 +6834,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             capsulePX: CONFIG.VIBECARD_CAPSULE_PX,
                             capsulePY: CONFIG.VIBECARD_CAPSULE_PY
                         }}
-                        safeAreaBottom={34}
+                        footerHeight={(mainContainerRef.current?.offsetHeight || window.innerHeight) * UNIFIED_CONFIG.FOOTER_HEIGHT_PERCENT / 100}
                         initialGradientIndex={initialIdx}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}
