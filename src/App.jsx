@@ -1994,11 +1994,13 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
 );
 
 const RecenterCapsule = ({ onClick }) => (
-  <button 
+  <button
       onClick={onClick}
-      className={`w-16 h-10 bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm transition-all hover:bg-gray-100 overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm transition-all hover:bg-gray-100 overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
       style={{
-        border: CONFIG.RECENTER_NEON_ENABLED 
+        height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+        width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
+        border: CONFIG.RECENTER_NEON_ENABLED
             ? `${CONFIG.RECENTER_NEON_WIDTH}px solid ${CONFIG.RECENTER_NEON_COLOR}`
             : '1px solid rgb(229, 231, 235)'
     }}
@@ -2049,10 +2051,12 @@ const ControlBar = ({
             {!vibeSwipePreview && (
                 <>
                     <RecenterCapsule onClick={onRecenter} />
-                    <div 
-                        className={`w-10 h-10 bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-all hover:bg-gray-100 ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
+                    <div
+                        className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-all hover:bg-gray-100 ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
                         style={{
-                          border: CONFIG.VOLUME_NEON_ENABLED 
+                          height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                          width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                          border: CONFIG.VOLUME_NEON_ENABLED
                               ? `${CONFIG.VOLUME_NEON_WIDTH}px solid ${CONFIG.VOLUME_NEON_COLOR}`
                               : '1px solid rgb(229, 231, 235)'
                       }}
@@ -2442,9 +2446,10 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         const gradientBg = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
         
         return (
-            <div 
-                className="flex-1 h-10 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
-                style={{ 
+            <div
+                className="flex-1 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
+                style={{
+                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     background: gradientBg,
                     opacity: 0.3 + (progress * 0.7),
                     boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
@@ -2479,9 +2484,10 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         const neonColor = isKill ? '255, 103, 0' : '255, 7, 58';
         
         return (
-            <div 
-            className={`flex-1 h-10 rounded-full flex items-center justify-center border animate-appear overflow-hidden ${animClass}`}
+            <div
+            className={`flex-1 rounded-full flex items-center justify-center border animate-appear overflow-hidden ${animClass}`}
                 style={{
+                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     '--neon-color': neonColor,
                     backgroundColor: bgColor,
                     borderColor: borderColor,
@@ -2499,14 +2505,13 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     const feedbackStyle = "bg-gray-50 border-gray-200";
     const glowStyle = {};
 
-    const heightClass = isMini ? 'h-10' : 'h-10';
-
     return (
-      <div 
-          className={`flex-1 ${heightClass} rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`} 
+      <div
+          className={`flex-1 rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
+            height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             ...glowStyle,
-            border: CONFIG.TIMECAPSULE_NEON_ENABLED 
+            border: CONFIG.TIMECAPSULE_NEON_ENABLED
                 ? `${CONFIG.TIMECAPSULE_NEON_WIDTH}px solid ${CONFIG.TIMECAPSULE_NEON_COLOR}`
                 : '1px solid rgb(229, 231, 235)'
         }}
