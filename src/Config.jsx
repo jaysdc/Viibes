@@ -40,12 +40,14 @@ export const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIF
 // ║  Ajoute un espace vide de la hauteur de la safe-area iOS en bas            ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
+// TEST: 600 vrais pixels = 200px CSS sur iPhone (devicePixelRatio = 3)
 export const SafeAreaSpacer = () => (
-    <div 
-        style={{ 
-            height: 'env(safe-area-inset-bottom, 0px)', 
+    <div
+        style={{
+            height: `${600 / (typeof window !== 'undefined' ? window.devicePixelRatio : 3)}px`,
             flexShrink: 0,
-            width: '100%'
-        }} 
+            width: '100%',
+            background: 'magenta'
+        }}
     />
 );
