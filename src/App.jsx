@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS } from './Config.js';
+import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS, SafeAreaSpacer } from './Config.js';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -6381,7 +6381,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                 {/* FOOTER - BARRE DU BAS FIXE (s'étend dans la safe area iOS) */}
                 <div
-                    className={`absolute left-0 right-0 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'}`}
+                    className={`absolute left-0 right-0 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'} flex flex-col`}
                     style={{
                       bottom: 0,
                       height: FOOTER_HEIGHT_CSS,
@@ -6461,6 +6461,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             </div>
                         </div>
                     )}
+                    <SafeAreaSpacer />
                 </div>
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
@@ -6755,6 +6756,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
             >{playerHeaderHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={(() => { const screenHeight = mainContainerRef.current?.offsetHeight || window.innerHeight; const statusBarHeight = 32; const footerHeight = getFooterHeight(); return screenHeight - statusBarHeight - playerHeaderHeight - footerHeight; })()} />}</div>
+                  <SafeAreaSpacer />
                   </div>
                 )}
         

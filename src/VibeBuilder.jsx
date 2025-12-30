@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.js';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    VIBEBUILDER - PARAMÈTRES TWEAKABLES                    ║
@@ -1585,7 +1585,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
         <div
             className="absolute inset-0 bg-white z-50 flex flex-col"
             style={{
-                paddingBottom: selectedSongs.length > 0 ? `calc(env(safe-area-inset-bottom, 0px) + ${vibeCardConfig?.height || '9vh'} + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP} + 12px)` : 0,
+                paddingBottom: 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
@@ -1967,13 +1967,20 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                             zIndex: 30,
                             background: 'white',
                             borderTop: '1px solid #e5e7eb',
-                            paddingTop: 12,
-                            paddingLeft: 16,
-                            paddingRight: 16,
-                            paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+                            display: 'flex',
+                            flexDirection: 'column',
                         }}
                     >
+                        {/* Padding au-dessus de la carte */}
+                        <div style={{ height: 12, flexShrink: 0 }} />
+                        
                         {/* Future VibeCard - Swipable pour changer couleur */}
+                        <div
+                            style={{
+                                marginLeft: 16,
+                                marginRight: 16,
+                            }}
+                        >
                         <div
                                 onTouchStart={handleCardSwipeStart}
                                 onTouchMove={handleCardSwipeMove}
@@ -2108,6 +2115,8 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                 </span>
                             </div>
                         </div>
+                        </div>
+                        <SafeAreaSpacer />
                     </div>
                 );
             })()}
