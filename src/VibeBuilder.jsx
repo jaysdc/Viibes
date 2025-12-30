@@ -1602,7 +1602,10 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
             }}
         >
             <style>{styles}</style>
-            
+
+            {/* TEST OVERLAY - 9vh au centre de l'écran */}
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '9vh', background: 'magenta', zIndex: 9999 }}></div>
+
             {/* OVERLAY PRÉ-ÉCOUTE */}
             {vibingSong && (
                 <div 
