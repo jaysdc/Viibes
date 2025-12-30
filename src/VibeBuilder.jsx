@@ -1690,20 +1690,20 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
 
             {/* HEADER */}
             <div
-                className="bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm z-20 sticky top-0 transition-all duration-200 ease-out"
+                className="bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm z-20 sticky top-0 transition-all duration-200 ease-out cursor-grab active:cursor-grabbing select-none"
                 style={{
                     paddingLeft: CONFIG.HEADER_PADDING_X,
                     paddingRight: CONFIG.HEADER_PADDING_X,
                     paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                     paddingBottom: showAddAll ? CONFIG.HEADER_PADDING_BOTTOM_ADDALL : CONFIG.HEADER_PADDING_BOTTOM
                 }}
-            >
-            <div
-                className="flex justify-between items-center cursor-grab active:cursor-grabbing select-none"
-                style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}
                 onTouchStart={handleTitleTouchStart}
                 onTouchMove={handleTitleTouchMove}
                 onTouchEnd={handleTitleTouchEnd}
+            >
+            <div
+                className="flex justify-between items-center"
+                style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}
             >
                 {/* Indicateur gauche - chevrons seuls */}
                 <div className="flex items-center gap-0.5 swipe-hint-left">
@@ -1966,22 +1966,16 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                             left: 0,
                             right: 0,
                             zIndex: 99999,
-                            display: 'flex',
-                            flexDirection: 'column'
+                            background: 'white',
+                            borderTop: '1px solid #e5e7eb',
+                            paddingTop: 12,
+                            paddingLeft: 16,
+                            paddingRight: 16,
+                            paddingBottom: 'env(safe-area-inset-bottom, 0px)'
                         }}
                     >
-                        {/* Zone carte + padding */}
+                        {/* Future VibeCard - Swipable pour changer couleur */}
                         <div
-                            style={{
-                                background: 'white',
-                                borderTop: '1px solid #e5e7eb',
-                                paddingTop: 12,
-                                paddingLeft: 16,
-                                paddingRight: 16
-                            }}
-                        >
-                            {/* Future VibeCard - Swipable pour changer couleur */}
-                            <div
                                 onTouchStart={handleCardSwipeStart}
                                 onTouchMove={handleCardSwipeMove}
                                 onTouchEnd={handleCardSwipeEnd}
@@ -2115,9 +2109,6 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                 </span>
                             </div>
                         </div>
-                        </div>
-                        {/* Zone safe area iOS */}
-                        <div style={{ height: 'env(safe-area-inset-bottom, 0px)', background: 'white' }}></div>
                     </div>
                 );
             })()}
