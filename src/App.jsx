@@ -6824,6 +6824,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
                             height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
+                            heightPx: (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.VIBECARD_HEIGHT_VH / 100,
                             gap: CONFIG.VIBECARD_GAP_VH,
                             liquidGlassBlur: CONFIG.LIQUID_GLASS_BLUR,
                             marqueeSpeed: CONFIG.MARQUEE_SPEED,
@@ -6833,6 +6834,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             capsulePX: CONFIG.VIBECARD_CAPSULE_PX,
                             capsulePY: CONFIG.VIBECARD_CAPSULE_PY
                         }}
+                        safeAreaBottom={34}
                         initialGradientIndex={initialIdx}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}

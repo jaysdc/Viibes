@@ -1031,7 +1031,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 } }) => {
+const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, safeAreaBottom = 34, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 } }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -1585,7 +1585,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
         <div
             className="absolute inset-0 bg-white z-50 flex flex-col"
             style={{
-                paddingBottom: selectedSongs.length > 0 ? `calc(${vibeCardConfig?.height || '9vh'} + 12px + env(safe-area-inset-bottom, 0px))` : 0,
+                paddingBottom: selectedSongs.length > 0 ? `${(vibeCardConfig?.heightPx || 70) + 12 + safeAreaBottom}px` : 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
@@ -1970,7 +1970,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                             paddingTop: 12,
                             paddingLeft: 16,
                             paddingRight: 16,
-                            paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+                            paddingBottom: safeAreaBottom
                         }}
                     >
                         {/* Future VibeCard - Swipable pour changer couleur */}
