@@ -30,13 +30,9 @@ export const UNIFIED_CONFIG = {
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║              HAUTEUR DU FOOTER                                             ║
+// ║              HAUTEUR DU FOOTER (CSS avec safe-area)                        ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
-// Hauteur du footer SANS safe area (pour paddingBottom des contenus)
-export const FOOTER_CONTENT_HEIGHT_CSS = `calc(${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
-
-// Hauteur du footer AVEC safe area (pour la hauteur totale du footer lui-même)
 export const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -44,12 +40,14 @@ export const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIF
 // ║  Ajoute un espace vide de la hauteur de la safe-area iOS en bas            ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
+// TEST: 150 vrais pixels = 50px CSS sur iPhone (devicePixelRatio = 3)
 export const SafeAreaSpacer = () => (
     <div
         style={{
-            height: 'env(safe-area-inset-bottom, 0px)',
+            height: `${150 / (typeof window !== 'undefined' ? window.devicePixelRatio : 3)}px`,
             flexShrink: 0,
-            width: '100%'
+            width: '100%',
+            background: 'magenta'
         }}
     />
 );
