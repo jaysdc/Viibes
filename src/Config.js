@@ -1,3 +1,5 @@
+import React from 'react';
+
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)       ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -26,3 +28,24 @@ export const UNIFIED_CONFIG = {
     FOOTER_PADDING_TOP: '0.5rem',        // Padding entre le haut du footer et les éléments
     FOOTER_BTN_HEIGHT: 40,               // Hauteur des boutons du footer (px)
 };
+
+// ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║              HAUTEUR DU FOOTER (CSS avec safe-area)                        ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+export const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
+
+// ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║              COMPOSANT SAFE AREA SPACER                                    ║
+// ║  Ajoute un espace vide de la hauteur de la safe-area iOS en bas            ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+export const SafeAreaSpacer = () => (
+    <div 
+        style={{ 
+            height: 'env(safe-area-inset-bottom, 0px)', 
+            flexShrink: 0,
+            width: '100%'
+        }} 
+    />
+);

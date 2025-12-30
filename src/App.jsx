@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS } from './Config.js';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -124,10 +124,6 @@ const getFooterHeight = () => {
   const paddingTop = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16; // rem to px
   return safeArea + UNIFIED_CONFIG.FOOTER_BTN_HEIGHT + paddingTop;
 };
-
-// Hauteur du footer en CSS (pour les styles)
-const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
-
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                        TOUS LES PARAMÈTRES TWEAKABLES                     ║
@@ -6315,7 +6311,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             getInitialGradientIndex={getInitialGradientIndex}
             getGradientName={getGradientName}
             getGradientByIndex={getGradientByIndex}
-            footerHeight={getFooterHeight()}
             hasSong={!!currentSong}
             capsuleHeightVh={CONFIG.CAPSULE_HEIGHT_MINI_VH}
             onSwipeProgress={setVibeSwipePreview}
@@ -6860,6 +6855,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             capsulePX: CONFIG.VIBECARD_CAPSULE_PX,
                             capsulePY: CONFIG.VIBECARD_CAPSULE_PY
                         }}
+                        footerHeight={getFooterHeight()}
                         initialGradientIndex={initialIdx}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}

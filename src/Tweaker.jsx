@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS } from './Config.js';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -256,7 +256,6 @@ const Tweaker = ({
     getInitialGradientIndex,
     getGradientName,
     getGradientByIndex,
-    footerHeight = 0,
     hasSong = false,
     capsuleHeightVh = 5.8,
     onSwipeProgress = () => {},
@@ -606,7 +605,7 @@ const Tweaker = ({
         <div 
             className="absolute inset-0 bg-white z-[55] flex flex-col"
             style={{ 
-                paddingBottom: hasSong ? `${footerHeight}px` : 0,
+                paddingBottom: hasSong ? FOOTER_HEIGHT_CSS : 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
