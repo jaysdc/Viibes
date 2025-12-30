@@ -1583,9 +1583,9 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
     return (
         <>
         <div
-            className="absolute top-0 left-0 right-0 bg-white z-50 flex flex-col"
+            className="absolute inset-0 bg-white z-50 flex flex-col"
             style={{
-                bottom: 0,
+                paddingBottom: selectedSongs.length > 0 ? `calc(${vibeCardConfig?.height || '9vh'} + 12px + env(safe-area-inset-bottom, 0px))` : 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
@@ -1908,7 +1908,6 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
 <div
                     ref={listRef}
                     className={`absolute inset-0 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
-                    style={{ paddingBottom: selectedSongs.length > 0 ? `calc(${vibeCardConfig?.height || '96px'} + 0.75rem + env(safe-area-inset-bottom, 0px))` : 0 }}
                     onScroll={(e) => setListScrollTop(e.target.scrollTop)}
                 >
                     {/* Conteneur avec hauteur totale pour le scroll */}
@@ -1961,11 +1960,11 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                 return (
                     <div
                         style={{
-                            position: 'fixed',
+                            position: 'absolute',
                             bottom: 0,
                             left: 0,
                             right: 0,
-                            zIndex: 99999,
+                            zIndex: 30,
                             background: 'white',
                             borderTop: '1px solid #e5e7eb',
                             paddingTop: 12,
