@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS, SafeAreaSpacer } from './Config.js';
+import { UNIFIED_CONFIG, FOOTER_HEIGHT_CSS, SafeAreaSpacer } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS

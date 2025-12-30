@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.js';
+import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    VIBEBUILDER - PARAMÈTRES TWEAKABLES                    ║

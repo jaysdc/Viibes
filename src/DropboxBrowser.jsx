@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    DROPBOX BROWSER - PARAMÈTRES                           ║

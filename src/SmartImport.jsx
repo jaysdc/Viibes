@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    SMARTIMPORT - PARAMÈTRES TWEAKABLES                    ║
