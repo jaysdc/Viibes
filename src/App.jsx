@@ -118,11 +118,12 @@ const getSafeAreaBottom = () => {
   return safeArea;
 };
 
-// Calculer la hauteur totale du footer (safe area + boutons + padding)
+// Calculer la hauteur totale du footer (safe area + boutons + padding + 16px compensation iOS)
 const getFooterHeight = () => {
   const safeArea = getSafeAreaBottom();
   const paddingTop = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16; // rem to px
-  return safeArea + UNIFIED_CONFIG.FOOTER_BTN_HEIGHT + paddingTop;
+  const iosCompensation = 16; // Compensation pour la différence entre env() et la vraie safe area
+  return safeArea + UNIFIED_CONFIG.FOOTER_BTN_HEIGHT + paddingTop + iosCompensation;
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
