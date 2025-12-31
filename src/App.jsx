@@ -6384,6 +6384,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className={`${vibeSwipePreview ? 'z-[110]' : 'z-[90]'} flex flex-col relative`}
                     style={{
                       height: FOOTER_CONTENT_HEIGHT_CSS,
+                      flexShrink: 0,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
