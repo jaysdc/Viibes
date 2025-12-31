@@ -6196,9 +6196,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* LIBRARY */}
         <div
             className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
-            style={{ paddingBottom: currentSong
-              ? `${dashboardHeight + getFooterHeight() + CONFIG.DRAWER_TOP_SPACING}px`
-              : `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${CONFIG.FOOTER_TOP_SPACING}px)`
+            style={{ paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {
                 // Long press pour entrer en mode Tweaker
