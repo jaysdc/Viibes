@@ -30,21 +30,29 @@ export const UNIFIED_CONFIG = {
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║              HAUTEUR DU FOOTER (CSS avec safe-area)                        ║
+// ║              HAUTEUR DU FOOTER (CSS sans safe-area)                       ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
-export const FOOTER_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
+// Hauteur du footer SANS la safe area (boutons + padding seulement)
+export const FOOTER_CONTENT_HEIGHT_CSS = `calc(${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP})`;
+
+// Hauteur de la safe area corrigée (env + 16px de compensation)
+export const SAFE_AREA_HEIGHT_CSS = `calc(env(safe-area-inset-bottom, 0px) + 16px)`;
+
+// Hauteur totale du footer (contenu + safe area) - pour positionnement des éléments au-dessus
+export const FOOTER_TOTAL_HEIGHT_CSS = `calc(${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${UNIFIED_CONFIG.FOOTER_PADDING_TOP} + env(safe-area-inset-bottom, 0px) + 16px)`;
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║              COMPOSANT SAFE AREA SPACER                                    ║
-// ║  Ajoute un espace vide de la hauteur de la safe-area iOS en bas            ║
+// ║              COMPOSANT SAFE AREA SPACER                                   ║
+// ║  Ajoute un espace vide de la hauteur de la safe-area iOS en bas           ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
-// 150 vrais pixels = 50px CSS sur iPhone (devicePixelRatio = 3)
+// env(safe-area-inset-bottom) retourne 34px CSS (102 vrais pixels) mais la vraie zone fait 150 vrais pixels mais on n'a jamais reussi a trouver pourquoi, a voir avec les autres iphones que 13 mini...
+// Donc on ajoute 16px CSS manuellement pour compenser
 export const SafeAreaSpacer = () => (
     <div
         style={{
-            height: `${150 / (typeof window !== 'undefined' ? window.devicePixelRatio : 3)}px`,
+            height: SAFE_AREA_HEIGHT_CSS,
             flexShrink: 0,
             width: '100%'
         }}

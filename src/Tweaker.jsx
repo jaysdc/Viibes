@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_HEIGHT_CSS } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -605,7 +605,7 @@ const Tweaker = ({
         <div 
             className="absolute inset-0 bg-white z-[55] flex flex-col"
             style={{ 
-                paddingBottom: hasSong ? FOOTER_HEIGHT_CSS : 0,
+                paddingBottom: hasSong ? FOOTER_CONTENT_HEIGHT_CSS : 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
