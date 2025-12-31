@@ -6278,6 +6278,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
             )}
 
+            {/* Spacer dynamique pour éviter que le contenu soit caché par le drawer */}
+            {currentSong && (
+                <div style={{ height: `${dashboardHeight + getFooterHeight() + CONFIG.DRAWER_TOP_SPACING}px`, flexShrink: 0 }} />
+            )}
+
         </div>
 
         {/* TWEAKER MODE */}
