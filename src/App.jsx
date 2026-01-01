@@ -5880,7 +5880,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       {/* Orientation lock overlay */}
       <div className="orientation-lock-overlay">
         <div className="orientation-lock-icon">📱</div>
-        <span>Tourne ton téléphone</span>
       </div>
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 

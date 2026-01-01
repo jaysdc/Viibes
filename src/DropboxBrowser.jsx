@@ -108,6 +108,9 @@ const DropboxBrowser = ({
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
+    const [scanPhase, setScanPhase] = useState(null); // 'counting' | 'processing' | null
+    const [totalFilesToProcess, setTotalFilesToProcess] = useState(0);
+    const [processedFiles, setProcessedFiles] = useState(0);
     const [scrollPercent, setScrollPercent] = useState(0);
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [closingButton, setClosingButton] = useState(null); // 'close' | 'disconnect' | null
@@ -239,78 +242,114 @@ const DropboxBrowser = ({
         setLoading(false);
     };
 
-    // Scanner récursivement un dossier Dropbox
-    const scanDropboxRecursive = async (basePath, rootName) => {
+    // Helper: liste un dossier Dropbox (avec pagination)
+    const listDropboxFolder = async (path, token) => {
+        let allEntries = [];
+        let hasMore = true;
+        let cursor = null;
+
+        const firstResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                path: path || '',
+                include_media_info: false,
+                include_deleted: false,
+                limit: 2000,
+            }),
+        });
+
+        if (firstResponse.status === 401) {
+            throw new Error('Token expiré');
+        }
+
+        let data = await firstResponse.json();
+
+        if (data.entries) {
+            allEntries = [...data.entries];
+            hasMore = data.has_more;
+            cursor = data.cursor;
+        }
+
+        while (hasMore && cursor) {
+            const continueResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder/continue', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cursor }),
+            });
+
+            const continueData = await continueResponse.json();
+
+            if (continueData.entries) {
+                allEntries = [...allEntries, ...continueData.entries];
+                hasMore = continueData.has_more;
+                cursor = continueData.cursor;
+            } else {
+                hasMore = false;
+            }
+        }
+
+        return allEntries;
+    };
+
+    // Phase 1: Compter les fichiers MP3 récursivement
+    const countFilesRecursive = async (basePath) => {
+        let count = 0;
+        let token = await getValidDropboxToken();
+        if (!token) token = dropboxToken;
+
+        const countFolder = async (path) => {
+            try {
+                const allEntries = await listDropboxFolder(path, token);
+                const subfolders = allEntries.filter(f => f['.tag'] === 'folder');
+                const mp3Files = allEntries.filter(f =>
+                    f['.tag'] === 'file' && f.name.toLowerCase().endsWith('.mp3')
+                );
+
+                count += mp3Files.length;
+
+                for (const subfolder of subfolders) {
+                    await countFolder(subfolder.path_lower);
+                }
+            } catch (error) {
+                console.error('Erreur comptage:', error);
+            }
+        };
+
+        await countFolder(basePath);
+        return count;
+    };
+
+    // Phase 2: Scanner récursivement avec callback de progression
+    const scanDropboxRecursive = async (basePath, rootName, onFileProcessed) => {
         const result = {};
         let token = await getValidDropboxToken();
         if (!token) token = dropboxToken;
 
         const scanFolder = async (path, folderName) => {
             try {
-                let allEntries = [];
-                let hasMore = true;
-                let cursor = null;
-
-                const firstResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        path: path || '',
-                        include_media_info: false,
-                        include_deleted: false,
-                        limit: 2000,
-                    }),
-                });
-
-                if (firstResponse.status === 401) {
-                    throw new Error('Token expiré');
-                }
-
-                let data = await firstResponse.json();
-
-                if (data.entries) {
-                    allEntries = [...data.entries];
-                    hasMore = data.has_more;
-                    cursor = data.cursor;
-                }
-
-                while (hasMore && cursor) {
-                    const continueResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder/continue', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ cursor }),
-                    });
-
-                    const continueData = await continueResponse.json();
-
-                    if (continueData.entries) {
-                        allEntries = [...allEntries, ...continueData.entries];
-                        hasMore = continueData.has_more;
-                        cursor = continueData.cursor;
-                    } else {
-                        hasMore = false;
-                    }
-                }
-
-                // Séparer dossiers et fichiers MP3
+                const allEntries = await listDropboxFolder(path, token);
                 const subfolders = allEntries.filter(f => f['.tag'] === 'folder');
                 const mp3Files = allEntries.filter(f =>
                     f['.tag'] === 'file' && f.name.toLowerCase().endsWith('.mp3')
                 );
 
-                // Ajouter les MP3 de ce dossier
+                // Ajouter les MP3 de ce dossier avec progression
                 if (mp3Files.length > 0) {
-                    result[folderName] = mp3Files.map(f => ({
-                        name: f.name,
-                        size: f.size,
-                        path_lower: f.path_lower,
-                    }));
+                    result[folderName] = mp3Files.map(f => {
+                        if (onFileProcessed) onFileProcessed();
+                        return {
+                            name: f.name,
+                            size: f.size,
+                            path_lower: f.path_lower,
+                        };
+                    });
                 }
 
                 // Scanner récursivement les sous-dossiers
@@ -338,13 +377,31 @@ const DropboxBrowser = ({
 
         try {
             const folderName = currentFolderDisplayName || currentPath.split('/').pop() || 'Dropbox Import';
-            const scannedFolders = await scanDropboxRecursive(currentPath, folderName);
 
-            if (Object.keys(scannedFolders).length === 0) {
+            // Phase 1: Compter les fichiers (loader circulaire, fond blanc)
+            setScanPhase('counting');
+            setProcessedFiles(0);
+            setTotalFilesToProcess(0);
+
+            const totalFiles = await countFilesRecursive(currentPath);
+
+            if (totalFiles === 0) {
                 alert('Aucun fichier MP3 trouvé dans ce dossier ou ses sous-dossiers.');
                 setScanning(false);
+                setScanPhase(null);
                 return;
             }
+
+            // Phase 2: Scanner avec progression (barre de progression)
+            setScanPhase('processing');
+            setTotalFilesToProcess(totalFiles);
+            setProcessedFiles(0);
+
+            let processed = 0;
+            const scannedFolders = await scanDropboxRecursive(currentPath, folderName, () => {
+                processed++;
+                setProcessedFiles(processed);
+            });
 
             // Passer les données à SmartImport via onImport
             onImport(scannedFolders, folderName);
@@ -355,6 +412,9 @@ const DropboxBrowser = ({
         }
 
         setScanning(false);
+        setScanPhase(null);
+        setProcessedFiles(0);
+        setTotalFilesToProcess(0);
     };
 
     // Handler fermeture avec animation
@@ -833,12 +893,18 @@ const DropboxBrowser = ({
                             </button>
                         </div>
 
-                        {/* Bouton IMPORTER - capsule flex */}
-                        <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                            {scanning && (
+                        {/* Bouton IMPORTER - capsule flex avec barre de progression */}
+                        <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                            {/* Barre de progression (phase 2) */}
+                            {scanPhase === 'processing' && totalFilesToProcess > 0 && (
                                 <div
-                                    className="absolute inset-0 rounded-full dropbox-ignite-blue"
-                                    style={{ background: CONFIG.DROPBOX_BLUE, zIndex: 0 }}
+                                    className="absolute left-0 top-0 bottom-0 rounded-full"
+                                    style={{
+                                        width: `${(processedFiles / totalFilesToProcess) * 100}%`,
+                                        background: CONFIG.DROPBOX_BLUE,
+                                        transition: 'width 0.1s ease-out',
+                                        zIndex: 0
+                                    }}
                                 />
                             )}
                             <button
@@ -846,14 +912,27 @@ const DropboxBrowser = ({
                                 disabled={!canImport || !!closingButton}
                                 className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
                                 style={{
-                                    background: scanning ? 'transparent' : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
-                                    color: canImport ? 'white' : '#9CA3AF',
-                                    opacity: canImport ? 1 : 0.4,
+                                    // Phase 1 (counting): fond blanc, texte bleu
+                                    // Phase 2 (processing): fond transparent (barre visible), texte blanc
+                                    // Normal: fond bleu ou gris
+                                    background: scanPhase === 'counting'
+                                        ? 'white'
+                                        : scanPhase === 'processing'
+                                            ? 'transparent'
+                                            : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
+                                    color: scanPhase === 'counting'
+                                        ? CONFIG.DROPBOX_BLUE
+                                        : scanPhase === 'processing'
+                                            ? 'white'
+                                            : (canImport ? 'white' : '#9CA3AF'),
+                                    opacity: canImport || scanning ? 1 : 0.4,
                                     boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
                                 }}
                             >
-                                {scanning ? (
+                                {scanPhase === 'counting' ? (
                                     <Loader2 size={14} className="animate-spin" />
+                                ) : scanPhase === 'processing' ? (
+                                    <span>{processedFiles}/{totalFilesToProcess}</span>
                                 ) : (
                                     <>
                                         <FolderDown size={14} />
