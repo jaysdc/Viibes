@@ -42,6 +42,11 @@ input, textarea {
   touch-action: pan-x pan-y;
 }
 
+/* Footer avec safe-area padding */
+.footer-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Slider rose pour iOS Safari */
 input[type="range"].slider-rose::-webkit-slider-thumb {
   -webkit-appearance: none;
