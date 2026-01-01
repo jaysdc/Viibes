@@ -40,8 +40,7 @@
         position: fixed;
         overflow: hidden;
         width: 100%;
-        height: 100%;
-        height: -webkit-fill-available;
+        height: 812px !important; /* Force hauteur écran */
         overscroll-behavior: none;
         touch-action: none;
         padding: 0;
@@ -50,14 +49,12 @@
 
       /* Étendre l'app jusqu'en bas de l'écran (sous le home indicator iOS) */
       html {
-        min-height: calc(100% + env(safe-area-inset-top));
-        min-height: -webkit-fill-available;
         background: #ff00ff; /* ROSE VIF POUR TEST */
       }
 
       #root {
         width: 100%;
-        height: 812px; /* Force la hauteur totale de l'écran iPhone 13 mini */
+        height: 812px !important; /* Force hauteur écran */
         overflow: hidden;
         touch-action: pan-x pan-y;
       }
