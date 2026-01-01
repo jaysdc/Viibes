@@ -116,6 +116,8 @@ const DropboxBrowser = ({
     const [currentPath, setCurrentPath] = useState('');
     const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
     const [folderNameHistory, setFolderNameHistory] = useState([]); // Historique des noms pour le retour
+    const [scrollPositionHistory, setScrollPositionHistory] = useState([]); // Historique des positions de scroll
+    const [pendingScrollRestore, setPendingScrollRestore] = useState(null); // Position à restaurer après chargement
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
@@ -480,10 +482,12 @@ const DropboxBrowser = ({
 
     // Naviguer vers un dossier
     const navigateToFolder = (path, displayName) => {
-        // Sauvegarder le nom actuel dans l'historique avant de naviguer
+        // Sauvegarder le nom et la position de scroll actuels dans l'historique
         if (currentFolderDisplayName) {
             setFolderNameHistory(prev => [...prev, currentFolderDisplayName]);
         }
+        const currentScrollPos = listRef.current?.scrollTop || 0;
+        setScrollPositionHistory(prev => [...prev, currentScrollPos]);
         setCurrentPath(path);
         setCurrentFolderDisplayName(displayName);
         loadFolder(path);
@@ -495,7 +499,10 @@ const DropboxBrowser = ({
         const parentPath = currentPath.split('/').slice(0, -1).join('/');
         // Récupérer le nom du dossier parent depuis l'historique
         const previousName = folderNameHistory[folderNameHistory.length - 1] || '';
+        const previousScrollPos = scrollPositionHistory[scrollPositionHistory.length - 1] || 0;
         setFolderNameHistory(prev => prev.slice(0, -1));
+        setScrollPositionHistory(prev => prev.slice(0, -1));
+        setPendingScrollRestore(previousScrollPos);
         setCurrentPath(parentPath);
         setCurrentFolderDisplayName(previousName);
         loadFolder(parentPath);
@@ -514,6 +521,8 @@ const DropboxBrowser = ({
             setCurrentPath('');
             setCurrentFolderDisplayName('');
             setFolderNameHistory([]);
+            setScrollPositionHistory([]);
+            setPendingScrollRestore(null);
             loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
@@ -601,6 +610,19 @@ const DropboxBrowser = ({
 
         return () => clearTimeout(timer);
     }, [files, loading]);
+
+    // Restaurer la position de scroll après chargement
+    useEffect(() => {
+        if (!loading && pendingScrollRestore !== null && listRef.current) {
+            const timer = setTimeout(() => {
+                if (listRef.current) {
+                    listRef.current.scrollTop = pendingScrollRestore;
+                }
+                setPendingScrollRestore(null);
+            }, 60);
+            return () => clearTimeout(timer);
+        }
+    }, [loading, pendingScrollRestore]);
 
     if (!isVisible) return null;
 
@@ -760,9 +782,7 @@ const DropboxBrowser = ({
                                         <Loader2 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
                                     </div>
                                 ) : files.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400 text-sm">
-                                        Dossier vide
-                                    </div>
+                                    <div className="text-center py-12 text-gray-300 font-medium text-2xl">—</div>
                                 ) : (
                                     <div className="flex flex-col">
                                         {files.map((file, index) => {
@@ -964,9 +984,9 @@ const DropboxBrowser = ({
                                     background: scanPhase === 'counting'
                                         ? 'white'
                                         : scanPhase === 'processing'
-                                            ? 'transparent'
+                                            ? 'white'
                                             : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
-                                    border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none',
+                                    border: (scanPhase === 'counting' || scanPhase === 'processing') ? '1px solid rgba(0,0,0,0.05)' : 'none',
                                     color: scanPhase === 'counting'
                                         ? CONFIG.DROPBOX_BLUE
                                         : (canImport ? 'white' : '#9CA3AF'),
