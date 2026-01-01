@@ -704,8 +704,8 @@ const DropboxBrowser = ({
                         paddingRight: 0,
                         background: '#FAFAFA',
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-                        // Cacher le contenu pendant l'animation initiale
-                        opacity: morphProgress > 0.3 ? 1 : morphProgress / 0.3,
+                        // Cacher le contenu pendant l'animation initiale (seulement si sourceRect existe)
+                        opacity: !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3),
                     }}
                 >
                     {/* Header - capsule pleine largeur avec padding horizontal */}
