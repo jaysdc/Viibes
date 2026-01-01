@@ -1045,6 +1045,17 @@ const styles = `
     100% { max-height: 0; }
   }
 
+  /* Animation slide du handle player */
+  @keyframes player-handle-slide-in {
+    0% { max-height: 0; opacity: 0; }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
+  }
+
+  @keyframes player-handle-slide-out {
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
+    100% { max-height: 0; opacity: 0; }
+  }
+
   @keyframes blink-3 {
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0.3; }
@@ -4846,6 +4857,12 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
+              // S'assurer que le volume est correct avant de jouer
+              if (gainNodeRef.current) {
+                  gainNodeRef.current.gain.value = volume / 100;
+              } else {
+                  audio.volume = volume / 100;
+              }
               const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -4858,7 +4875,7 @@ const vibeSearchResults = () => {
     };
     
     setupAndPlay();
-  }, [isPlaying, currentSong]);
+  }, [isPlaying, currentSong, volume]);
 
   // Refs pour tracker les états sans closure stale (Media Session API)
   const isPlayingRef = useRef(isPlaying);
@@ -6864,14 +6881,25 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
                 </div>
 
-                {/* Poignée */}
+                {/* Poignée - slide vers le haut (masquée) quand recherche, slide vers le bas (visible) quand on ferme */}
                 <div
-                    className="bg-gray-300 rounded-full handle-pulse"
+                    className="flex justify-center items-end w-full overflow-hidden"
                     style={{
-                        width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
+                        animation: (isPlayerSearching || playerSearchOverlayAnim === 'opening')
+                            ? `player-handle-slide-out ${CONFIG.SEARCH_PLAYER_FADE_IN_DURATION}ms ease-out forwards`
+                            : playerSearchOverlayAnim === 'closing'
+                                ? `player-handle-slide-in ${CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION}ms ease-out forwards`
+                                : 'none'
                     }}
-                />
+                >
+                    <div
+                        className="bg-gray-300 rounded-full handle-pulse"
+                        style={{
+                            width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
+                            height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
+                        }}
+                    />
+                </div>
             </div>
 
             <div 
