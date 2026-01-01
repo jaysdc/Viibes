@@ -6923,23 +6923,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 );
             })()}
 
-      {/* TEST BUTTON - dans la safe area en bas */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 z-[9999] flex items-center justify-center"
-        style={{
-          bottom: 0,
-          width: 44,
-          height: 44,
-          marginBottom: 4,
-        }}
-      >
-        <div
-          className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center shadow-lg"
-        >
-          <Star size={20} className="text-white" />
-        </div>
-      </div>
-
       </div>
     </div>
   );
