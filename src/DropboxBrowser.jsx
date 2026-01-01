@@ -854,8 +854,8 @@ const DropboxBrowser = ({
                         <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                             {closingButton === 'close' && (
                                 <div
-                                    className="absolute inset-0 rounded-full dropbox-ignite-pink"
-                                    style={{ background: '#ec4899', zIndex: 0 }}
+                                    className="absolute inset-0 rounded-full dropbox-ignite-red"
+                                    style={{ background: '#ef4444', zIndex: 0 }}
                                 />
                             )}
                             <button
@@ -889,7 +889,6 @@ const DropboxBrowser = ({
                                 }}
                             >
                                 <LogOut size={14} />
-                                LOGOUT
                             </button>
                         </div>
 
@@ -912,19 +911,18 @@ const DropboxBrowser = ({
                                 disabled={!canImport || !!closingButton}
                                 className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
                                 style={{
-                                    // Phase 1 (counting): fond blanc, texte bleu
-                                    // Phase 2 (processing): fond transparent (barre visible), texte blanc
+                                    // Phase 1 (counting): fond blanc avec bordure grise
+                                    // Phase 2 (processing): fond transparent (barre visible)
                                     // Normal: fond bleu ou gris
                                     background: scanPhase === 'counting'
                                         ? 'white'
                                         : scanPhase === 'processing'
                                             ? 'transparent'
                                             : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
+                                    border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none',
                                     color: scanPhase === 'counting'
                                         ? CONFIG.DROPBOX_BLUE
-                                        : scanPhase === 'processing'
-                                            ? 'white'
-                                            : (canImport ? 'white' : '#9CA3AF'),
+                                        : (canImport ? 'white' : '#9CA3AF'),
                                     opacity: canImport || scanning ? 1 : 0.4,
                                     boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
                                 }}
@@ -934,10 +932,7 @@ const DropboxBrowser = ({
                                 ) : scanPhase === 'processing' ? (
                                     null
                                 ) : (
-                                    <>
-                                        <FolderDown size={14} />
-                                        IMPORT
-                                    </>
+                                    <FolderDown size={14} />
                                 )}
                             </button>
                         </div>
