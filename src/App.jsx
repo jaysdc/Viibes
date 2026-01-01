@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers } from 'lucide-react';
+import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -6924,6 +6924,23 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     </div>
                 );
             })()}
+
+      {/* TEST BUTTON - dans la safe area en bas */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 z-[9999] flex items-center justify-center"
+        style={{
+          bottom: 0,
+          width: 44,
+          height: 44,
+          marginBottom: 4,
+        }}
+      >
+        <div
+          className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center shadow-lg"
+        >
+          <Star size={20} className="text-white" />
+        </div>
+      </div>
       </div>
     </div>
   );

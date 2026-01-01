@@ -461,11 +461,11 @@ const DropboxBrowser = ({
     // Handler fermeture avec animation
     const handleClose = () => {
         setClosingButton('close');
-        if (onMenuClose) onMenuClose(); // Ranger la barre d'import
         setTimeout(() => {
             setIsFadingOut(true);
             setTimeout(() => {
                 onClose();
+                if (onMenuClose) onMenuClose(); // Ranger la barre d'import APRÈS fermeture
             }, 150);
         }, CONFIG.BUTTON_ANIM_DURATION);
     };
@@ -473,12 +473,12 @@ const DropboxBrowser = ({
     // Handler déconnexion avec animation
     const handleDisconnect = () => {
         setClosingButton('disconnect');
-        if (onMenuClose) onMenuClose(); // Ranger la barre d'import
         setTimeout(() => {
             setIsFadingOut(true);
             setTimeout(() => {
                 onDisconnect();
                 onClose();
+                if (onMenuClose) onMenuClose(); // Ranger la barre d'import APRÈS fermeture
             }, 150);
         }, CONFIG.BUTTON_ANIM_DURATION);
     };

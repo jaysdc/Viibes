@@ -524,13 +524,10 @@ const SmartImport = ({
             setSlideDirection(direction);
             setDialogClosing(true);
             setBackdropVisible(false);
-            
-            // Lancer le rangement de la barre d'import IMMÉDIATEMENT
-            if (onMenuClose) onMenuClose();
-            
+
             // Forcer morphProgress à 1 pour éviter le saut
             setMorphProgress(1);
-            
+
             // Attendre que React applique les setState avant de démarrer l'animation
             requestAnimationFrame(() => {
                 // Animer le slide de 0 à 1
@@ -549,6 +546,7 @@ const SmartImport = ({
                     // importPreview à null fait disparaître le dialog, les autres resets sont sans effet visuel
                     setImportPreview(null);
                     if (onDropboxDataClear) onDropboxDataClear();
+                    if (onMenuClose) onMenuClose(); // Ranger la barre d'import APRÈS fermeture
                     // Reset différé pour éviter le flash
                     setTimeout(() => {
                         setDialogClosing(false);

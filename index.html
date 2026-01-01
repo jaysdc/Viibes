@@ -50,7 +50,7 @@
 
       /* Étendre l'app jusqu'en bas de l'écran (sous le home indicator iOS) */
       html {
-        min-height: 100%;
+        min-height: calc(100% + env(safe-area-inset-top));
         min-height: -webkit-fill-available;
         background: #fff;
       }
