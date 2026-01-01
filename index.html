@@ -57,8 +57,9 @@
 
       #root {
         width: 100%;
-        height: 100%;
-        height: -webkit-fill-available;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height - inclut la safe area */
+        min-height: calc(100% + env(safe-area-inset-bottom));
         overflow: hidden;
         touch-action: pan-x pan-y;
       }
