@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, FOOTER_TOTAL_HEIGHT_CSS, SafeAreaSpacer, SAFE_AREA_BOTTOM } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, FOOTER_TOTAL_HEIGHT_CSS, SafeAreaSpacer } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -3940,7 +3940,21 @@ export default function App() {
     const [playlists, setPlaylists] = useState(null);
     const [currentTime, setCurrentTime] = useState('');
     const [isOnRealDevice, setIsOnRealDevice] = useState(false);
-    
+    const [safeAreaBottom, setSafeAreaBottom] = useState(0);
+
+    // Lire safe-area-inset-bottom au démarrage
+    useEffect(() => {
+        const div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.bottom = '0';
+        div.style.height = 'env(safe-area-inset-bottom, 0px)';
+        div.style.visibility = 'hidden';
+        document.body.appendChild(div);
+        const height = div.getBoundingClientRect().height;
+        document.body.removeChild(div);
+        setSafeAreaBottom(height);
+    }, []);
+
     // Détecter si on est sur un vrai appareil mobile/PWA
     useEffect(() => {
         setIsOnRealDevice(isRealDevice());
@@ -6431,8 +6445,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 <div
                     className="z-[90] flex flex-col absolute left-0 right-0"
                     style={{
-                      height: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${SAFE_AREA_BOTTOM}px)`,
-                      paddingBottom: SAFE_AREA_BOTTOM,
+                      height: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                      paddingBottom: safeAreaBottom,
                       bottom: 0,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
