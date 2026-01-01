@@ -932,7 +932,7 @@ const DropboxBrowser = ({
                                 {scanPhase === 'counting' ? (
                                     <Loader2 size={14} className="animate-spin" />
                                 ) : scanPhase === 'processing' ? (
-                                    <span>{processedFiles}/{totalFilesToProcess}</span>
+                                    null
                                 ) : (
                                     <>
                                         <FolderDown size={14} />
