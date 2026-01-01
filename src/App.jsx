@@ -6941,6 +6941,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           <Star size={20} className="text-white" />
         </div>
       </div>
+
+      {/* DEBUG - affiche les dimensions */}
+      <div
+        className="absolute top-20 left-2 z-[9999] bg-black/80 text-white text-xs p-2 rounded"
+      >
+        <div>innerHeight: {typeof window !== 'undefined' ? window.innerHeight : '?'}</div>
+        <div>outerHeight: {typeof window !== 'undefined' ? window.outerHeight : '?'}</div>
+        <div>screen.height: {typeof window !== 'undefined' ? window.screen.height : '?'}</div>
+        <div>visualViewport: {typeof window !== 'undefined' && window.visualViewport ? window.visualViewport.height : '?'}</div>
+      </div>
       </div>
     </div>
   );
