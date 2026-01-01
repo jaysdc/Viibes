@@ -2026,13 +2026,13 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
   const SkipButton = ({ direction, onClick }) => (
     <button
         onClick={onClick}
-        className="flex items-center justify-center text-gray-400 hover:text-gray-800 hover:bg-white/80 rounded-full transition-all group"
-        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem` }}
+        className="flex items-center justify-center text-gray-400 rounded-full"
+        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
     >
         <div className="relative" style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }}>
             {direction === 'back'
-                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
-                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
+                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
+                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
             }
             <span
                 className="absolute inset-0 flex items-center justify-center font-bold"
