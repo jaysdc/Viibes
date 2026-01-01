@@ -707,6 +707,37 @@ const CONFIG = {
 
 // --- 1. STYLE CSS ---
 const styles = `
+  /* Orientation lock - bloque le mode paysage */
+  @media screen and (orientation: landscape) {
+    .orientation-lock-overlay {
+      display: flex !important;
+    }
+  }
+
+  .orientation-lock-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    font-weight: bold;
+    gap: 1rem;
+  }
+
+  .orientation-lock-icon {
+    font-size: 4rem;
+    animation: rotate-phone 1.5s ease-in-out infinite;
+  }
+
+  @keyframes rotate-phone {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+  }
+
   /* Safe area iOS - utilise la vraie valeur de l'encoche */
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0px);
@@ -5008,7 +5039,17 @@ const vibeSearchResults = () => {
         }
     }
   };
-  const handleSongEnd = () => { if (currentSong) updatePlayCount(currentSong); const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex < queue.length - 1) playNext(); else { setIsPlaying(false); setProgress(0); } };
+  const handleSongEnd = () => {
+    if (currentSong) updatePlayCount(currentSong);
+    const currentIndex = queue.findIndex(s => s === currentSong);
+    if (currentIndex < queue.length - 1) {
+      // Passer au morceau suivant SANS faire tourner la roue
+      setCurrentSong(queue[currentIndex + 1]);
+    } else {
+      setIsPlaying(false);
+      setProgress(0);
+    }
+  };
   const updatePlayCount = (songToUpdate) => { const newPlaylists = { ...playlists }; Object.keys(newPlaylists).forEach(key => { newPlaylists[key] = newPlaylists[key].map(s => { if (s.id === songToUpdate.id) return { ...s, playCount: (s.playCount || 0) + 1 }; return s; }); }); setPlaylists(newPlaylists); };
 
   const applySort = (mode, direction = 'asc') => { 
@@ -5836,6 +5877,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
+      {/* Orientation lock overlay */}
+      <div className="orientation-lock-overlay">
+        <div className="orientation-lock-icon">📱</div>
+        <span>Tourne ton téléphone</span>
+      </div>
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
