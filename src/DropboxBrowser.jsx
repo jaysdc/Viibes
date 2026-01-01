@@ -81,10 +81,21 @@ const dropboxStyles = `
     from { opacity: 1; }
     to { opacity: 0; }
   }
+  @keyframes dropbox-beacon-pulse {
+    0%, 100% {
+      transform: translateX(-50%) scale(1);
+      box-shadow: 0 0 8px rgba(236, 72, 153, 0.6);
+    }
+    50% {
+      transform: translateX(-50%) scale(1.3);
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.8);
+    }
+  }
   .dropbox-ignite-blue { animation: dropbox-neon-ignite-blue 0.4s ease-out forwards; }
   .dropbox-ignite-red { animation: dropbox-neon-ignite-red 0.4s ease-out forwards; }
   .dropbox-ignite-pink { animation: dropbox-neon-ignite-pink 0.4s ease-out forwards; }
   .dropbox-fade-out { animation: dropbox-fade-out 0.15s ease-out forwards; }
+  .dropbox-beacon-pulse { animation: dropbox-beacon-pulse 1.5s ease-in-out infinite; }
 `;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -115,6 +126,7 @@ const DropboxBrowser = ({
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [closingButton, setClosingButton] = useState(null); // 'close' | 'disconnect' | null
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [isScrubbing, setIsScrubbing] = useState(false);
 
     // États pour les fades bidirectionnels
     const [listNeedsScroll, setListNeedsScroll] = useState(false);
@@ -129,6 +141,7 @@ const DropboxBrowser = ({
     const listRef = useRef(null);
     const dialogRef = useRef(null);
     const animationRef = useRef(null);
+    const scrubZoneRef = useRef(null);
 
     // Gérer le scroll pour la scrollbar rose et les fades bidirectionnels
     const handleScroll = () => {
@@ -155,6 +168,31 @@ const DropboxBrowser = ({
             setFadeTopOpacity(0);
             setFadeBottomOpacity(0);
         }
+    };
+
+    // Handlers pour le scrubbing
+    const handleScrubStart = (e) => {
+        if (!listRef.current || !showScrollbar) return;
+        setIsScrubbing(true);
+        handleScrubMove(e);
+    };
+
+    const handleScrubMove = (e) => {
+        if (!listRef.current || !scrubZoneRef.current) return;
+        if (!isScrubbing && e.type !== 'touchstart') return;
+
+        const touch = e.touches?.[0] || e;
+        const rect = scrubZoneRef.current.getBoundingClientRect();
+        const y = touch.clientY - rect.top;
+        const percent = Math.max(0, Math.min(1, y / rect.height));
+
+        const { scrollHeight, clientHeight } = listRef.current;
+        const maxScroll = scrollHeight - clientHeight;
+        listRef.current.scrollTop = percent * maxScroll;
+    };
+
+    const handleScrubEnd = () => {
+        setIsScrubbing(false);
     };
 
     // Charger le contenu d'un dossier
@@ -823,22 +861,26 @@ const DropboxBrowser = ({
 
                         {/* Zone scrubbing à droite - touche le bord droit de la fenêtre */}
                         <div
+                            ref={scrubZoneRef}
                             className="relative"
-                            style={{ width: CONFIG.SCRUB_ZONE_WIDTH, flexShrink: 0 }}
+                            style={{ width: CONFIG.SCRUB_ZONE_WIDTH, flexShrink: 0, touchAction: 'none' }}
+                            onTouchStart={handleScrubStart}
+                            onTouchMove={handleScrubMove}
+                            onTouchEnd={handleScrubEnd}
                         >
                             {showScrollbar && files.length > 0 && (
                                 <div
-                                    className="absolute"
+                                    className={`absolute ${isScrubbing ? '' : 'dropbox-beacon-pulse'}`}
                                     style={{
                                         left: '50%',
-                                        transform: 'translateX(-50%)',
+                                        transform: isScrubbing ? 'translateX(-50%) scale(1.5)' : undefined,
                                         width: CONFIG.SCROLLBAR_WIDTH,
                                         height: CONFIG.SCROLLBAR_WIDTH,
                                         top: `${scrollPercent * 100}%`,
                                         background: CONFIG.SCROLLBAR_COLOR,
                                         borderRadius: '50%',
-                                        boxShadow: CONFIG.SCROLLBAR_GLOW,
-                                        transition: 'top 0.05s ease-out',
+                                        boxShadow: isScrubbing ? '0 0 16px rgba(236, 72, 153, 1)' : CONFIG.SCROLLBAR_GLOW,
+                                        transition: isScrubbing ? 'transform 0.1s, box-shadow 0.1s' : 'top 0.05s ease-out',
                                     }}
                                 />
                             )}
