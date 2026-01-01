@@ -476,7 +476,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIROIR (Dashboard Drawer)
     // ══════════════════════════════════════════════════════════════════════════
-    DRAWER_HANDLE_HEIGHT_PERCENT: 5,    // Hauteur de la zone draggable (% de l'écran)
+    DRAWER_HANDLE_HEIGHT_PERCENT: 4.5,    // Hauteur de la zone draggable (% de l'écran)
     DRAWER_SEPARATOR_HEIGHT: 1,         // Hauteur du trait de séparation (px)
     DRAWER_TOP_MARGIN: 0,              // Marge en haut quand tiroir ouvert au max (px) XXXXXXXXXX
 
@@ -4147,6 +4147,8 @@ const handlePlayerTouchEnd = () => {
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [pendingDropboxData, setPendingDropboxData] = useState(null);
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
+    const [confirmOverlayVisible, setConfirmOverlayVisible] = useState(false);
+    const [confirmFeedback, setConfirmFeedback] = useState(null); // { text, type, triggerValidation }
     const [showTweaker, setShowTweaker] = useState(false);
     const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
     
@@ -4161,8 +4163,6 @@ const handlePlayerTouchEnd = () => {
       }
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
-    const [confirmAnimating, setConfirmAnimating] = useState(false);
-    const [isFadingOutConfirm, setIsFadingOutConfirm] = useState(false);
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
@@ -5272,22 +5272,12 @@ const vibeSearchResults = () => {
     setActiveVibeName(folderName);
 };
 
-const confirmKillVibe = () => {
-  if (pendingVibe) {
-      const vibeToLaunch = pendingVibe;
-      setPendingVibe(null);
-      
-      // Cas spécial : résultats de recherche (pas de VibeCard à blinker)
-      if (vibeToLaunch === '__SEARCH_RESULTS__') {
-          launchVibe(vibeToLaunch);
-      } else {
-          setBlinkingVibe(vibeToLaunch);
-      }
-  }
-};
-
 const cancelKillVibe = () => {
-    setPendingVibe(null);
+        setConfirmOverlayVisible(false);
+        setTimeout(() => {
+            setPendingVibe(null);
+            setConfirmFeedback(null);
+        }, 150);
     };
 
     const handleNukeAll = () => {
@@ -5705,37 +5695,63 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       handleOAuthReturn();
   }, []);
     
-    const confirmNuke = () => {
-        setConfirmAnimating(true);
-        setFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
-        
-        // Fade out si musique en cours
-        if (audioRef.current && !audioRef.current.paused) {
-            fadeMainAudio('out');
-        }
-    };
-    
-    const onNukeAnimationComplete = () => {
-        setConfirmAnimating(false);
-        setNukeConfirmMode(false);
-        setFeedback(null);
-        setPlaylists({});
-        localStorage.removeItem('vibes_playlists');
-        setVibeColorIndices({});
-        localStorage.removeItem('vibes_color_indices');
-        setCurrentSong(null);
-        setQueue([]);
-        setIsPlaying(false);
-        setActiveVibeName(null);
-        
-        setIsLibrarySearching(false);
-        setLibrarySearchQuery('');
-        setIsPlayerSearching(false);
-        setPlayerSearchQuery('');
+    const cancelNuke = () => {
+        setConfirmOverlayVisible(false);
+        setTimeout(() => {
+            setNukeConfirmMode(false);
+            setConfirmFeedback(null);
+        }, 150);
     };
 
-    const cancelNuke = () => {
-        setNukeConfirmMode(false);
+    // Fade-in de l'overlay quand on entre en mode confirmation
+    useEffect(() => {
+        if (pendingVibe || nukeConfirmMode) {
+            // Délai pour permettre le rendu avant le fade-in
+            requestAnimationFrame(() => {
+                setConfirmOverlayVisible(true);
+            });
+        }
+    }, [pendingVibe, nukeConfirmMode]);
+
+    // Callback quand l'animation ignite est terminée
+    const onConfirmAnimationComplete = () => {
+        if (confirmFeedback?.type === 'kill') {
+            // KILL VIBE - lancer la vibe puis aller au player
+            setConfirmOverlayVisible(false);
+            setTimeout(() => {
+                const vibeToLaunch = pendingVibe;
+                setPendingVibe(null);
+                setConfirmFeedback(null);
+                if (vibeToLaunch === '__SEARCH_RESULTS__') {
+                    launchVibe(vibeToLaunch);
+                } else {
+                    setBlinkingVibe(vibeToLaunch);
+                }
+            }, 150);
+        } else if (confirmFeedback?.type === 'nuke') {
+            // NUKE ALL - tout supprimer puis retour dashboard
+            setConfirmOverlayVisible(false);
+            setTimeout(() => {
+                setNukeConfirmMode(false);
+                setConfirmFeedback(null);
+                setPlaylists({});
+                localStorage.removeItem('vibes_playlists');
+                setVibeColorIndices({});
+                localStorage.removeItem('vibes_color_indices');
+                setCurrentSong(null);
+                setQueue([]);
+                setIsPlaying(false);
+                setActiveVibeName(null);
+                setIsLibrarySearching(false);
+                setLibrarySearchQuery('');
+                setIsPlayerSearching(false);
+                setPlayerSearchQuery('');
+                // Fade out audio si en cours
+                if (audioRef.current && !audioRef.current.paused) {
+                    fadeMainAudio('out');
+                }
+            }, 150);
+        }
     };
   
     const playNext = () => { const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex < queue.length - 1) { setCurrentSong(queue[currentIndex + 1]); setScrollTrigger(t => t + 1); } else setIsPlaying(false); };
@@ -6480,24 +6496,31 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                      />
                     )}
                     
-                    {/* OVERLAY DE CONFIRMATION - RECOUVRE LA BARRE DE CONTRÔLE */}
+                    {/* CAPSULE DE CONFIRMATION - RECOUVRE LA BARRE DE CONTRÔLE */}
                     {(pendingVibe || nukeConfirmMode) && (
                         <div
                             className="absolute left-0 right-0 flex items-start z-50"
                             style={{
                                 top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
-                                padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
+                                padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
+                                height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT
                             }}
                         >
-                            <div className="flex-1 h-full relative">
-                                {/* Barre statique - cachée quand on confirme */}
-                                {!(feedback && (feedback.type === 'kill' || feedback.type === 'nuke')) && (
-                                    <div 
-                                        className="absolute inset-0 rounded-full flex items-center justify-center border animate-in fade-in duration-150"
-                                        style={{ 
+                            <div
+                                className="flex-1 h-full relative"
+                                style={{
+                                    opacity: confirmOverlayVisible ? 1 : 0,
+                                    transition: 'opacity 150ms ease-out'
+                                }}
+                            >
+                                {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
+                                {!confirmFeedback && (
+                                    <div
+                                        className="absolute inset-0 rounded-full flex items-center justify-center border"
+                                        style={{
                                             backgroundColor: pendingVibe ? '#FF6700' : '#FF073A',
                                             borderColor: pendingVibe ? '#CC5200' : '#CC0530',
-                                            boxShadow: pendingVibe 
+                                            boxShadow: pendingVibe
                                                 ? '0 0 25px rgba(255, 103, 0, 0.7), 0 0 50px rgba(255, 103, 0, 0.4)'
                                                 : '0 0 25px rgba(255, 7, 58, 0.7), 0 0 50px rgba(255, 7, 58, 0.4)'
                                         }}
@@ -6508,17 +6531,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         </div>
                                     </div>
                                 )}
-                                {/* FeedbackOverlay quand on confirme NUKE */}
-                                {feedback && feedback.type === 'nuke' && (
+                                {/* FeedbackOverlay avec animation ignite quand on confirme */}
+                                {confirmFeedback && (
                                     <FeedbackOverlay
-                                        feedback={feedback}
-                                        onAnimationComplete={onNukeAnimationComplete}
-                                        neonColor={CONFIG.NEON_COLOR_RED}
-                                        bgClass="bg-red-500"
-                                        borderClass="border-red-600"
+                                        feedback={confirmFeedback}
+                                        onAnimationComplete={onConfirmAnimationComplete}
+                                        neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_ORANGE : CONFIG.NEON_COLOR_RED}
+                                        bgClass={confirmFeedback.type === 'kill' ? 'bg-orange-500' : 'bg-red-500'}
+                                        borderClass={confirmFeedback.type === 'kill' ? 'border-orange-600' : 'border-red-600'}
                                     >
-                                        <Radiation size={20} strokeWidth={3} />
-                                        <span>{feedback.text}</span>
+                                        {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                        <span>{confirmFeedback.text}</span>
                                     </FeedbackOverlay>
                                 )}
                             </div>
@@ -6581,57 +6604,67 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     sourceRect={dropboxSourceRect}
 />
 
-        {/* KILL VIBE CONFIRMATION */}
-        {(pendingVibe || (isFadingOutConfirm && feedback?.type === 'kill')) && (
-            <div 
-                className={`absolute top-0 left-0 right-0 z-[70] flex flex-col items-center justify-center animate-in fade-in duration-75 ${isFadingOutConfirm && feedback?.type === 'kill' ? 'animate-fade-out' : ''}`}
-                style={{ bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        {/* CONFIRMATION OVERLAY UNIFIÉ (KILL VIBE / NUKE ALL) */}
+        {(pendingVibe || nukeConfirmMode) && (
+            <div
+                className="absolute left-0 right-0 z-[65] flex flex-col items-center justify-center"
+                style={{
+                    top: 0,
+                    bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    opacity: confirmOverlayVisible ? 1 : 0,
+                    transition: 'opacity 150ms ease-out'
+                }}
                 onClick={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
             >
-                {/* Boutons monstrueux - toujours visibles */}
-                <div className={`flex flex-col gap-6 pointer-events-auto animate-appear ${isFadingOutConfirm && feedback?.type === 'kill' ? 'animate-fade-out' : ''}`}>
-                    <button 
-                        onClick={confirmKillVibe}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl transition-transform"
-                        style={{ backgroundColor: '#C0FF00', boxShadow: '0 0 40px rgba(192, 255, 0, 0.6)' }}
+                {/* Boutons Check/X */}
+                <div
+                    className="flex flex-col gap-8 pointer-events-auto"
+                    style={{
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transform: confirmOverlayVisible ? 'scale(1)' : 'scale(0.9)',
+                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                    }}
+                >
+                    <button
+                        onClick={() => {
+                            if (pendingVibe) {
+                                // KILL VIBE - lancer animation ignite puis transition
+                                setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                            } else {
+                                // NUKE ALL - lancer animation ignite puis nuke
+                                setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
+                            }
+                        }}
+                        className="w-40 h-40 rounded-full flex items-center justify-center shadow-2xl"
+                        style={{
+                            backgroundColor: '#C0FF00',
+                            boxShadow: '0 0 50px rgba(192, 255, 0, 0.7), 0 0 100px rgba(192, 255, 0, 0.4)',
+                            WebkitTapHighlightColor: 'transparent'
+                        }}
                     >
-                        <Check size={70} className="text-white drop-shadow-md" strokeWidth={3} />
+                        <Check size={80} className="text-white drop-shadow-lg" strokeWidth={3} />
                     </button>
-                    <button 
-                        onClick={cancelKillVibe}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl  transition-transform"
-                        style={{ backgroundColor: '#E0004C', boxShadow: '0 0 40px rgba(224, 0, 76, 0.6)' }}
+                    <button
+                        onClick={() => {
+                            // Annuler - fermer l'overlay
+                            if (pendingVibe) {
+                                cancelKillVibe();
+                            } else {
+                                cancelNuke();
+                            }
+                        }}
+                        className="w-40 h-40 rounded-full flex items-center justify-center shadow-2xl"
+                        style={{
+                            backgroundColor: '#E0004C',
+                            boxShadow: '0 0 50px rgba(224, 0, 76, 0.7), 0 0 100px rgba(224, 0, 76, 0.4)',
+                            WebkitTapHighlightColor: 'transparent'
+                        }}
                     >
-                        <X size={70} className="text-white drop-shadow-md" strokeWidth={3} />
-                    </button>
-                </div>
-            </div>
-        )}
-
-        {/* NUKE ALL CONFIRMATION */}
-        {(nukeConfirmMode || (isFadingOutConfirm && feedback?.type === 'nuke')) && (
-            <div 
-                className={`absolute top-0 left-0 right-0 z-[70] flex flex-col items-center justify-center animate-in fade-in duration-75 ${isFadingOutConfirm && feedback?.type === 'nuke' ? 'animate-fade-out' : ''}`}
-                style={{ bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-            >
-                {/* Boutons monstrueux - toujours visibles */}
-                <div className={`flex flex-col gap-6 pointer-events-auto animate-appear ${isFadingOutConfirm && feedback?.type === 'nuke' ? 'animate-fade-out' : ''}`}>
-                    <button 
-                        onClick={confirmNuke}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl transition-transform"
-                        style={{ backgroundColor: '#C0FF00', boxShadow: '0 0 40px rgba(192, 255, 0, 0.6)' }}
-                    >
-                        <Check size={70} className="text-white drop-shadow-md" strokeWidth={3} />
-                    </button>
-                    <button 
-                        onClick={cancelNuke}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl  transition-transform"
-                        style={{ backgroundColor: '#E0004C', boxShadow: '0 0 40px rgba(224, 0, 76, 0.6)' }}
-                    >
-                        <X size={70} className="text-white drop-shadow-md" strokeWidth={3} />
+                        <X size={80} className="text-white drop-shadow-lg" strokeWidth={3} />
                     </button>
                 </div>
             </div>
