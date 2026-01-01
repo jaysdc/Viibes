@@ -6431,7 +6431,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 <div
                     className={`${vibeSwipePreview ? 'z-[110]' : 'z-[90]'} flex flex-col absolute left-0 right-0`}
                     style={{
-                      height: FOOTER_CONTENT_HEIGHT_CSS,
+                      height: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + env(safe-area-inset-bottom))`,
+                      paddingBottom: 'env(safe-area-inset-bottom)',
                       bottom: 0,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
@@ -6922,23 +6923,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     </div>
                 );
             })()}
-
-      {/* TEST BUTTON - dans la safe area en bas */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 z-[9999] flex items-center justify-center"
-        style={{
-          bottom: 0,
-          width: 44,
-          height: 44,
-          marginBottom: 4,
-        }}
-      >
-        <div
-          className="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center shadow-lg"
-        >
-          <Star size={20} className="text-white" />
-        </div>
-      </div>
 
       </div>
     </div>
