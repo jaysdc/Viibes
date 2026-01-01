@@ -611,6 +611,7 @@ const SmartImport = ({
                 // Import automatique - pas besoin d'afficher le dialog
                 onImportComplete(folders, 'vibes', folderGradients, true);
                 if (onDropboxDataClear) onDropboxDataClear();
+                if (onMenuClose) onMenuClose(); // Ranger la barre d'import
                 return;
             }
 

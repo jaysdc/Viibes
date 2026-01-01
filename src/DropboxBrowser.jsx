@@ -106,6 +106,7 @@ const DropboxBrowser = ({
     onClose,
     onDisconnect,
     onImport,
+    onMenuClose, // Callback pour ranger la barre d'import
     dropboxToken,
     getValidDropboxToken,
     refreshDropboxToken,
@@ -460,6 +461,7 @@ const DropboxBrowser = ({
     // Handler fermeture avec animation
     const handleClose = () => {
         setClosingButton('close');
+        if (onMenuClose) onMenuClose(); // Ranger la barre d'import
         setTimeout(() => {
             setIsFadingOut(true);
             setTimeout(() => {
@@ -471,6 +473,7 @@ const DropboxBrowser = ({
     // Handler déconnexion avec animation
     const handleDisconnect = () => {
         setClosingButton('disconnect');
+        if (onMenuClose) onMenuClose(); // Ranger la barre d'import
         setTimeout(() => {
             setIsFadingOut(true);
             setTimeout(() => {

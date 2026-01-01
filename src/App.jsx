@@ -6551,6 +6551,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         setDropboxSourceRect(null);
         setPendingDropboxData({ folders: scannedFolders, rootName });
     }}
+    onMenuClose={() => {
+        setImportOverlayAnim('closing');
+        setTimeout(() => {
+            setShowImportMenu(false);
+            setImportOverlayAnim('none');
+            setImportButtonsReady(false);
+            setImportBtnIgniting(null);
+        }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
+    }}
     dropboxToken={dropboxToken}
     getValidDropboxToken={getValidDropboxToken}
     refreshDropboxToken={refreshDropboxToken}
