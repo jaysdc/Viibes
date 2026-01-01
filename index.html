@@ -40,7 +40,7 @@
         position: fixed;
         overflow: hidden;
         width: 100%;
-        height: 2600px !important; /* Force 2600 vrais pixels */
+        height: 860px !important; /* 812 + 50 safe area en points CSS */
         overscroll-behavior: none;
         touch-action: none;
         padding: 0;
@@ -52,14 +52,14 @@
         background: #ff00ff; /* ROSE VIF POUR TEST */
       }
 
-      /* TEST: cercle vert de 400 vrais pixels, collé en bas des 2600px */
+      /* TEST: cercle vert collé en bas */
       .test-safe-area {
         position: absolute;
-        top: 2200px; /* 2600 - 400 = 2200 */
+        top: 800px; /* 860 - 60 = 800 */
         left: 50%;
         transform: translateX(-50%);
-        width: 400px;
-        height: 400px;
+        width: 60px;
+        height: 60px;
         background: #00ff00; /* VERT VIF */
         border-radius: 50%;
         z-index: 99999;
