@@ -466,13 +466,17 @@ const DropboxBrowser = ({
     // Charger la racine au montage et lancer l'animation morph
     useEffect(() => {
         if (isVisible) {
-            loadFolder('');
+            // Reset tous les états immédiatement
+            setIsFadingOut(false);
+            setClosingButton(null);
+            setScanning(false);
+            setScanPhase(null);
+            setProcessedFiles(0);
+            setTotalFilesToProcess(0);
             setCurrentPath('');
             setCurrentFolderDisplayName('');
             setFolderNameHistory([]);
-            setClosingButton(null);
-            setIsFadingOut(false);
-            setScanning(false);
+            loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
             const viewportWidth = window.innerWidth;
@@ -902,7 +906,8 @@ const DropboxBrowser = ({
                                         width: `${(processedFiles / totalFilesToProcess) * 100}%`,
                                         background: CONFIG.DROPBOX_BLUE,
                                         transition: 'width 0.1s ease-out',
-                                        zIndex: 0
+                                        zIndex: 0,
+                                        border: '1px solid rgba(0,0,0,0.05)'
                                     }}
                                 />
                             )}
