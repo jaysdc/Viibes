@@ -37,13 +37,16 @@ input, textarea {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* L'app React par-dessus */
+/* L'app React par-dessus - DOIT couvrir TOUTE la hauteur y compris safe areas */
 #root {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
+  /* Hauteur = viewport + safe areas (top + bottom) */
+  height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
   overflow: hidden;
   touch-action: pan-x pan-y;
 }
