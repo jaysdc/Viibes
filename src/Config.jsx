@@ -1,6 +1,31 @@
 import React from 'react';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║              SAFE AREA INSETS (lus au démarrage via JavaScript)            ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+// Fonction pour lire env(safe-area-inset-bottom) en pixels
+const getSafeAreaBottom = () => {
+    if (typeof window === 'undefined') return 0;
+
+    // Créer un élément temporaire pour lire la valeur CSS
+    const div = document.createElement('div');
+    div.style.position = 'fixed';
+    div.style.bottom = '0';
+    div.style.height = 'env(safe-area-inset-bottom, 0px)';
+    div.style.visibility = 'hidden';
+    document.body.appendChild(div);
+
+    const height = div.getBoundingClientRect().height;
+    document.body.removeChild(div);
+
+    return height;
+};
+
+// Variable globale avec la valeur de safe-area-inset-bottom en pixels
+export const SAFE_AREA_BOTTOM = getSafeAreaBottom();
+
+// ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)       ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 

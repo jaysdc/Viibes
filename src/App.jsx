@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, FOOTER_TOTAL_HEIGHT_CSS, SafeAreaSpacer } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, FOOTER_TOTAL_HEIGHT_CSS, SafeAreaSpacer, SAFE_AREA_BOTTOM } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -6429,9 +6429,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                 {/* FOOTER - BARRE DU BAS */}
                 <div
-                    className="z-[90] flex flex-col absolute left-0 right-0 footer-safe-area"
+                    className="z-[90] flex flex-col absolute left-0 right-0"
                     style={{
-                      height: FOOTER_CONTENT_HEIGHT_CSS,
+                      height: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${SAFE_AREA_BOTTOM}px)`,
+                      paddingBottom: SAFE_AREA_BOTTOM,
                       bottom: 0,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
