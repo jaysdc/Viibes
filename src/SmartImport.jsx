@@ -600,7 +600,19 @@ const SmartImport = ({
             const { folders, rootName } = dropboxData;
 
             const totalFiles = Object.values(folders).reduce((sum, arr) => sum + arr.length, 0);
+            const folderCount = Object.keys(folders).length;
             const folderGradients = calculateGradients(folders);
+
+            // Import automatique si un seul dossier (pas de sous-dossiers avec MP3)
+            // et pas trop de fichiers
+            const exceedsAutoThreshold = totalFiles > SMARTIMPORT_CONFIG.AUTO_THRESHOLD;
+
+            if (folderCount === 1 && !exceedsAutoThreshold) {
+                // Import automatique - pas besoin d'afficher le dialog
+                onImportComplete(folders, 'vibes', folderGradients, true);
+                if (onDropboxDataClear) onDropboxDataClear();
+                return;
+            }
 
             const existingFolders = Object.keys(folders).filter(name =>
                 playlists && playlists[name] !== undefined
