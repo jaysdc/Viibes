@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, FOOTER_TOTAL_HEIGHT_CSS, SafeAreaSpacer } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -6255,7 +6255,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* LIBRARY */}
         <div
             className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
-            style={{ paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${CONFIG.FOOTER_TOP_SPACING}px)`
+            style={{ paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {
                 // Long press pour entrer en mode Tweaker
@@ -6389,7 +6389,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           ? (typeof dashboardHeight === 'number' ? `${dashboardHeight}px` : dashboardHeight)
                           : `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}px`,
                       minHeight: `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100 - CONFIG.DRAWER_SEPARATOR_HEIGHT}px`,
-                      bottom: FOOTER_TOTAL_HEIGHT_CSS,
+                      bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                       transition: isDrawerAnimating 
                           ? `height ${CONFIG.DRAWER_TWEAKER_ANIMATION_DURATION}ms cubic-bezier(0, ${CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, ${1 - CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, 1)` 
                           : 'none'
@@ -6644,7 +6644,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             style={{
               top: 0,
               bottom: 0,
-              paddingBottom: FOOTER_CONTENT_HEIGHT_CSS,
+              paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
               opacity: playerFadeOpacity,
               transition: CONFIG.PLAYER_FADE_OUT_ENABLED 
                   ? `opacity ${CONFIG.PLAYER_FADE_OUT_DURATION}ms ease-out, transform ${CONFIG.PLAYER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
