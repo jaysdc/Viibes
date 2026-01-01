@@ -984,7 +984,7 @@ const DropboxBrowser = ({
                                     background: scanPhase === 'counting'
                                         ? 'white'
                                         : scanPhase === 'processing'
-                                            ? 'white'
+                                            ? 'transparent'
                                             : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
                                     border: (scanPhase === 'counting' || scanPhase === 'processing') ? '1px solid rgba(0,0,0,0.05)' : 'none',
                                     color: scanPhase === 'counting'
