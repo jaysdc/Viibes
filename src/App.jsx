@@ -4458,6 +4458,17 @@ useEffect(() => {
 const vibeSearchResults = () => {
     if (librarySearchResults.length === 0) return;
 
+    // Annuler tout fade en cours et restaurer le volume
+    if (fadeInterval.current) {
+        clearInterval(fadeInterval.current);
+        fadeInterval.current = null;
+    }
+    if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = volume / 100;
+    } else if (audioRef.current) {
+        audioRef.current.volume = volume / 100;
+    }
+
     let songsToPlay = [...librarySearchResults];
     
     // Nom de la vibe = titre de la première chanson (avant mélange)
@@ -5250,7 +5261,14 @@ const vibeSearchResults = () => {
           clearInterval(fadeInterval.current);
           fadeInterval.current = null;
       }
-      
+
+      // Restaurer le volume après un fade out
+      if (gainNodeRef.current) {
+          gainNodeRef.current.gain.value = volume / 100;
+      } else if (audioRef.current) {
+          audioRef.current.volume = volume / 100;
+      }
+
       const songs = playlists[folderName];
     // Filtrer pour ne garder que les morceaux avec fichier disponible
     let songsToPlay = songs.filter(s => isSongAvailable(s));
