@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- PWA iOS - PLEIN ÉCRAN -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vibes" />
+    
+    <!-- PWA Android/General -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json" />
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="vite.svg" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    
+    <title>Vibes Player</title>
+
+    <style>
+      /* Désactiver sélection texte */
+      * {
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+      input, textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      
+      /* Bloquer comportements navigateur */
+      html, body {
+        position: fixed;
+        overflow: hidden;
+        width: 100%;
+        height: 860px !important; /* 812 + 50 safe area en points CSS */
+        overscroll-behavior: none;
+        touch-action: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      /* Étendre l'app jusqu'en bas de l'écran (sous le home indicator iOS) */
+      html {
+        background: #ff00ff; /* ROSE VIF POUR TEST */
+      }
+
+      /* TEST: cercle vert collé en bas de l'écran */
+      .test-safe-area {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 60px;
+        background: #00ff00; /* VERT VIF */
+        border-radius: 50%;
+        z-index: 99999;
+      }
+
+      #root {
+        width: 100%;
+        height: 812px !important; /* Force hauteur écran */
+        overflow: hidden;
+        touch-action: pan-x pan-y;
+      }
+
+      /* Slider rose pour iOS Safari */
+      input[type="range"].slider-rose::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: var(--slider-thumb-size, 16px);
+        height: var(--slider-thumb-size, 16px);
+        background: #ec4899;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      input[type="range"].slider-rose::-moz-range-thumb {
+        width: var(--slider-thumb-size, 16px);
+        height: var(--slider-thumb-size, 16px);
+        background: #ec4899;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+    </style>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div class="test-safe-area"></div>
+    <div id="root"></div>
+    <script type="module" src="src/main.jsx"></script>
+  </body>
+</html>
