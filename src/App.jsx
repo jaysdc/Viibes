@@ -4477,7 +4477,7 @@ useEffect(() => {
         // Faire le ramp vers 0
         gain.linearRampToValueAtTime(0, startTime + FADE_OUT_DURATION_SEC);
 
-        // DEBUG VISUEL - afficher sur l'écran
+        // DEBUG VISUEL - afficher sur l'écran (auto-hide après 10s)
         let debugDiv = document.getElementById('audio-debug');
         if (!debugDiv) {
             debugDiv = document.createElement('div');
@@ -4486,6 +4486,11 @@ useEffect(() => {
             document.body.appendChild(debugDiv);
         }
         debugDiv.innerHTML = `FADE START: vol=${startValue.toFixed(3)}<br>`;
+        // Auto-hide après 10 secondes
+        setTimeout(() => {
+            const div = document.getElementById('audio-debug');
+            if (div) div.remove();
+        }, 10000);
 
         // Surveiller le volume en temps réel et lancer la lecture quand = 0
         const checkVolume = setInterval(() => {
