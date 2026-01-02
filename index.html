@@ -30,35 +30,30 @@ input, textarea {
 }
 
 /* Le texte de test en arrière-plan - force la transparence de la safe-area */
+/* IMPORTANT: Ne pas mettre position:fixed sinon la transparence du footer ne fonctionne plus */
 #test-content {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   padding-top: env(safe-area-inset-top);
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(16px, env(safe-area-inset-right));
   padding-bottom: env(safe-area-inset-bottom);
+  color: black;
+  /* Empêcher le scroll du contenu aaaa */
+  max-height: 100vh;
   overflow: hidden;
-  color: white;
 }
 
 /* Cacher les scrollbars sur tout le document */
 html, body {
   overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
 }
 
-/* Cacher les scrollbars - webkit */
+/* Cacher les scrollbars - webkit (pour toutes les situations) */
 ::-webkit-scrollbar {
   display: none;
 }
 
 /* Cacher les scrollbars - Firefox */
-* {
+html, body, #test-content {
   scrollbar-width: none;
 }
 

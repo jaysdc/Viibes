@@ -676,6 +676,7 @@ const CONFIG = {
     CONFIRM_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
     CONFIRM_PILL_BLUR: 20,                       // Blur du pill (px)
     CONFIRM_BACKDROP_BLUR: 8,                    // Blur du fond quand pill visible (px) - fixe = performant
+    CONFIRM_FADE_DURATION: 1000,                 // Durée du fade in/out du pill (ms) - 1s pour debug
 
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
@@ -981,7 +982,35 @@ const styles = `
   .animate-pulse-pill-red {
     animation: pulse-pill-red 0.6s ease-in-out infinite;
   }
-  
+
+  /* Animation ignite pour le curseur de confirmation pill - lime (kill vibe) */
+  @keyframes ignite-pill-lime {
+    0% { box-shadow: 0 0 10px rgba(132, 204, 22, 0.4); }
+    15% { box-shadow: 0 0 25px rgba(132, 204, 22, 1), 0 0 50px rgba(132, 204, 22, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(132, 204, 22, 0.5); }
+    40% { box-shadow: 0 0 35px rgba(132, 204, 22, 1), 0 0 70px rgba(132, 204, 22, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(132, 204, 22, 0.6); }
+    70% { box-shadow: 0 0 30px rgba(132, 204, 22, 0.9), 0 0 60px rgba(132, 204, 22, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(132, 204, 22, 0.7), 0 0 50px rgba(132, 204, 22, 0.5); }
+  }
+  .animate-ignite-pill-lime {
+    animation: ignite-pill-lime 0.5s ease-out forwards;
+  }
+
+  /* Animation ignite pour le curseur de confirmation pill - red (nuke) */
+  @keyframes ignite-pill-red {
+    0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+    15% { box-shadow: 0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+    40% { box-shadow: 0 0 35px rgba(239, 68, 68, 1), 0 0 70px rgba(239, 68, 68, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+    70% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.9), 0 0 60px rgba(239, 68, 68, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.7), 0 0 50px rgba(239, 68, 68, 0.5); }
+  }
+  .animate-ignite-pill-red {
+    animation: ignite-pill-red 0.5s ease-out forwards;
+  }
+
   @keyframes appear-then-fade {
     0% { opacity: 0; transform: scale(1); }
     15% { opacity: 1; transform: scale(1); }
@@ -5855,17 +5884,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     // Callback quand l'animation ignite est terminée
     const onConfirmAnimationComplete = () => {
         if (confirmFeedback?.type === 'kill') {
-            // KILL VIBE - lancer la vibe puis aller au player
+            // KILL VIBE - lancer la vibe DIRECTEMENT (pas d'animation sur la carte vibe)
             setConfirmOverlayVisible(false);
             setTimeout(() => {
                 const vibeToLaunch = pendingVibe;
                 setPendingVibe(null);
                 setConfirmFeedback(null);
-                if (vibeToLaunch === '__SEARCH_RESULTS__') {
-                    launchVibe(vibeToLaunch);
-                } else {
-                    setBlinkingVibe(vibeToLaunch);
-                }
+                setConfirmSwipeX(0); // Reset position curseur pour la prochaine fois
+                // Lancer directement la vibe sans animation de carte
+                launchVibe(vibeToLaunch);
             }, 150);
         } else if (confirmFeedback?.type === 'nuke') {
             // NUKE ALL - tout supprimer puis retour dashboard
@@ -5873,6 +5900,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             setTimeout(() => {
                 setNukeConfirmMode(false);
                 setConfirmFeedback(null);
+                setConfirmSwipeX(0); // Reset position curseur pour la prochaine fois
                 setPlaylists({});
                 localStorage.removeItem('vibes_playlists');
                 setVibeColorIndices({});
@@ -6780,7 +6808,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         backdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         opacity: confirmOverlayVisible ? 1 : 0,
-                        transition: 'opacity 150ms ease-out',
+                        transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                     }}
                 />
                 {/* Le pill par-dessus */}
@@ -6790,7 +6818,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         top: 0,
                         bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                         opacity: confirmOverlayVisible ? 1 : 0,
-                        transition: 'opacity 150ms ease-out',
+                        transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                     }}
                 >
                     {/* Le pill glassmorphism */}
@@ -6819,20 +6847,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onTouchEnd={() => {
                             if (isAtRightThreshold) {
                                 // Swipe right = validate
+                                // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation
                                 if (pendingVibe) {
                                     setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
                                 } else {
                                     setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
                                 }
-                                setConfirmSwipeX(0);
                             } else if (isAtLeftThreshold) {
                                 // Swipe left = cancel
+                                // NE PAS reset confirmSwipeX - le curseur reste à gauche pendant l'animation
                                 if (pendingVibe) {
                                     cancelKillVibe();
                                 } else {
                                     cancelNuke();
                                 }
-                                setConfirmSwipeX(0);
                             }
                             // Ne pas remettre à 0 si pas au seuil - le curseur reste en place
                             setConfirmSwipeStart(null);
@@ -6857,25 +6885,24 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                         {/* Curseur central draggable */}
                         <div
-                            className={`absolute flex items-center justify-center ${isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-lime' : ''}`}
+                            className={`absolute flex items-center justify-center ${
+                                confirmFeedback
+                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-lime' : 'animate-ignite-pill-red')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-lime' : '')
+                            }`}
                             style={{
                                 '--pulse-scale-min': 1,
                                 '--pulse-scale-max': pulseScaleMax,
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
-                                backgroundColor: isAtLeftThreshold
+                                backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke'
                                     ? 'rgba(239, 68, 68, 0.9)'
-                                    : isAtRightThreshold
+                                    : isAtRightThreshold || confirmFeedback?.type === 'kill'
                                         ? 'rgba(132, 204, 22, 0.9)'
                                         : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
-                                boxShadow: isAtLeftThreshold
-                                    ? '0 0 20px rgba(239, 68, 68, 0.6)'
-                                    : isAtRightThreshold
-                                        ? '0 0 20px rgba(132, 204, 22, 0.6)'
-                                        : '0 4px 12px rgba(0, 0, 0, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
-                                transition: confirmSwipeStart !== null ? 'none' : 'background-color 150ms ease-out, box-shadow 150ms ease-out',
+                                transition: confirmSwipeStart !== null ? 'none' : 'background-color 150ms ease-out',
                             }}
                         >
                             {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
