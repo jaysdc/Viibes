@@ -4486,18 +4486,22 @@ useEffect(() => {
             document.body.appendChild(debugDiv);
         }
         debugDiv.innerHTML = `FADE START: vol=${startValue.toFixed(3)}<br>`;
-        // Auto-hide après 10 secondes
+
+        // Arrêter les logs après 5 secondes mais garder l'écran affiché
+        let logsActive = true;
         setTimeout(() => {
-            const div = document.getElementById('audio-debug');
-            if (div) div.remove();
-        }, 10000);
+            logsActive = false;
+            debugDiv.innerHTML += `<b style="color:gray">--- LOGS STOPPED (5s) ---</b><br>`;
+        }, 5000);
 
         // Surveiller le volume en temps réel et lancer la lecture quand = 0
         const checkVolume = setInterval(() => {
             const currentGain = gain.value;
             const elapsed = ctx.currentTime - startTime;
-            debugDiv.innerHTML += `t=${elapsed.toFixed(2)}s gain=${currentGain.toFixed(4)}<br>`;
-            debugDiv.scrollTop = debugDiv.scrollHeight;
+            if (logsActive) {
+                debugDiv.innerHTML += `t=${elapsed.toFixed(2)}s gain=${currentGain.toFixed(4)}<br>`;
+                debugDiv.scrollTop = debugDiv.scrollHeight;
+            }
 
             // Quand le volume atteint 0, arrêter le check et lancer la suite
             if (currentGain <= 0.001) {
@@ -6032,11 +6036,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       const barHeight = containerRect.height * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
       const barTop = containerRect.top + (containerRect.height - barHeight) / 2;
       const barBottom = barTop + barHeight;
-      
+
       // Calculer le volume basé sur la position Y (inversé : haut = 100%)
       const clampedY = Math.max(barTop, Math.min(barBottom, touch.clientY));
       const progress = 1 - (clampedY - barTop) / barHeight;
       const newVolume = Math.round(progress * 100);
+
+      // DEBUG VISUEL pour le volume
+      let volDebug = document.getElementById('vol-debug');
+      if (!volDebug) {
+          volDebug = document.createElement('div');
+          volDebug.id = 'vol-debug';
+          volDebug.style.cssText = 'position:fixed;bottom:100px;left:10px;right:10px;background:rgba(0,0,0,0.9);color:cyan;font-family:monospace;font-size:11px;padding:8px;z-index:99999;border-radius:8px;';
+          document.body.appendChild(volDebug);
+      }
+      volDebug.innerHTML = `touchY=${touch.clientY.toFixed(0)} barTop=${barTop.toFixed(0)} barBot=${barBottom.toFixed(0)}<br>clampY=${clampedY.toFixed(0)} prog=${progress.toFixed(2)} vol=${newVolume}`;
+
       setVolumePreview(newVolume);
       // Appliquer le volume directement via Web Audio API (fonctionne sur iOS)
       if (gainNodeRef.current) {
