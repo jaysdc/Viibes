@@ -4478,12 +4478,15 @@ useEffect(() => {
         // Attendre la fin du fade puis exécuter le callback
         fadeInterval.current = setTimeout(() => {
             fadeInterval.current = null;
+            // D'abord pause, PUIS restaurer le volume (pour éviter le saut audible)
             audioRef.current.pause();
-            // Restaurer le volume
-            gain.cancelScheduledValues(ctx.currentTime);
-            gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
-            onComplete?.();
-        }, FADE_OUT_DURATION_SEC * 1000 + 10); // +10ms de marge
+            // Petit délai avant de restaurer le gain pour s'assurer que l'audio est bien en pause
+            setTimeout(() => {
+                gain.cancelScheduledValues(ctx.currentTime);
+                gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
+                onComplete?.();
+            }, 50);
+        }, FADE_OUT_DURATION_SEC * 1000 + 50); // +50ms de marge pour être sûr que le ramp est terminé
     } else {
         // Fallback sans Web Audio API (fade par steps)
         const intervalTime = 20;
@@ -5437,13 +5440,18 @@ const vibeSearchResults = () => {
 };
 
 const cancelKillVibe = () => {
-        setConfirmOverlayVisible(false);
-        setConfirmSwipeX(0);
-        setConfirmSwipeStart(null);
+        // Déclencher l'animation ignite rouge sur la bulle
+        setConfirmFeedback({ text: 'CANCEL', type: 'cancel', triggerValidation: Date.now() });
+        // Après l'animation ignite (500ms), fermer l'overlay
         setTimeout(() => {
-            setPendingVibe(null);
-            setConfirmFeedback(null);
-        }, 150);
+            setConfirmOverlayVisible(false);
+            setConfirmSwipeX(0);
+            setConfirmSwipeStart(null);
+            setTimeout(() => {
+                setPendingVibe(null);
+                setConfirmFeedback(null);
+            }, 150);
+        }, 500);
     };
 
     const handleNukeAll = () => {
@@ -5862,13 +5870,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
   }, []);
     
     const cancelNuke = () => {
-        setConfirmOverlayVisible(false);
-        setConfirmSwipeX(0);
-        setConfirmSwipeStart(null);
+        // Déclencher l'animation ignite rouge sur la bulle
+        setConfirmFeedback({ text: 'CANCEL', type: 'cancel', triggerValidation: Date.now() });
+        // Après l'animation ignite (500ms), fermer l'overlay
         setTimeout(() => {
-            setNukeConfirmMode(false);
-            setConfirmFeedback(null);
-        }, 150);
+            setConfirmOverlayVisible(false);
+            setConfirmSwipeX(0);
+            setConfirmSwipeStart(null);
+            setTimeout(() => {
+                setNukeConfirmMode(false);
+                setConfirmFeedback(null);
+            }, 150);
+        }, 500);
     };
 
     // Fade-in de l'overlay quand on entre en mode confirmation
@@ -6898,13 +6911,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
-                                backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke'
+                                backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel'
                                     ? 'rgba(239, 68, 68, 0.9)'
                                     : isAtRightThreshold || confirmFeedback?.type === 'kill'
                                         ? 'rgba(132, 204, 22, 0.9)'
                                         : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
-                                transition: confirmSwipeStart !== null ? 'none' : 'background-color 150ms ease-out',
+                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
                             {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
