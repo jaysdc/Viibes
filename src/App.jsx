@@ -5058,17 +5058,21 @@ const vibeSearchResults = () => {
 
           if (isPlaying && currentSong) {
               // Restaurer le volume si on vient d'un fadeOut (gain était à 0)
-              if (gainNodeRef.current && savedVolume.current !== null) {
+              // On utilise volume/100 car volume est en % (0-100) et gain en (0-1)
+              if (gainNodeRef.current && audioContextRef.current) {
                   const ctx = audioContextRef.current;
                   const gain = gainNodeRef.current.gain;
-                  gain.cancelScheduledValues(ctx.currentTime);
-                  gain.setValueAtTime(savedVolume.current, ctx.currentTime);
-                  // Debug
-                  const debugDiv = document.getElementById('audio-debug');
-                  if (debugDiv) {
-                      debugDiv.innerHTML += `<b style="color:lime">VOL RESTORED NOW: ${savedVolume.current.toFixed(3)}</b><br>`;
+                  const targetGain = volume / 100;
+                  // Si le gain est proche de 0, on vient d'un fade - restaurer
+                  if (gain.value < 0.01) {
+                      gain.cancelScheduledValues(ctx.currentTime);
+                      gain.setValueAtTime(targetGain, ctx.currentTime);
+                      // Debug
+                      const debugDiv = document.getElementById('audio-debug');
+                      if (debugDiv) {
+                          debugDiv.innerHTML += `<b style="color:lime">VOL RESTORED: ${targetGain.toFixed(3)}</b><br>`;
+                      }
                   }
-                  savedVolume.current = null; // Reset pour ne pas re-restaurer
               }
               const playPromise = audio.play();
             if (playPromise !== undefined) {
