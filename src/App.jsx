@@ -4346,17 +4346,26 @@ useEffect(() => {
 }, [vibeColorIndices]);
 
   // AUDIO FADING UTILS
-  // Durée du fade out pour kill vibe (en ms)
-  const FADE_OUT_DURATION = 200;
+  // Durée du fade out pour kill vibe (en secondes pour Web Audio API)
+  const FADE_OUT_DURATION_SEC = 0.2;
 
-  // Fade out avec callback quand terminé
+  // Fade out avec callback quand terminé (utilise Web Audio API pour un fade lisse)
   const fadeOutAndStop = (onComplete) => {
     if (!audioRef.current) {
         onComplete?.();
         return;
     }
 
-    if (fadeInterval.current) clearInterval(fadeInterval.current);
+    if (audioRef.current.paused) {
+        onComplete?.();
+        return;
+    }
+
+    // Annuler tout fade précédent
+    if (fadeInterval.current) {
+        clearTimeout(fadeInterval.current);
+        fadeInterval.current = null;
+    }
 
     // Sauvegarder le volume actuel pour le restaurer après
     const volumeBeforeFade = gainNodeRef.current
@@ -4364,37 +4373,48 @@ useEffect(() => {
         : audioRef.current.volume;
     savedVolume.current = volumeBeforeFade;
 
-    if (audioRef.current.paused) {
-        onComplete?.();
-        return;
-    }
+    // Utiliser Web Audio API si disponible (fade lisse natif)
+    if (audioContextRef.current && gainNodeRef.current) {
+        const ctx = audioContextRef.current;
+        const gain = gainNodeRef.current.gain;
 
-    // Calculer le step pour atteindre 0 en FADE_OUT_DURATION ms
-    const intervalTime = 20; // 20ms entre chaque step
-    const totalSteps = FADE_OUT_DURATION / intervalTime;
-    const step = volumeBeforeFade / totalSteps;
+        // Annuler tout scheduling précédent
+        gain.cancelScheduledValues(ctx.currentTime);
+        // Définir la valeur actuelle comme point de départ
+        gain.setValueAtTime(gain.value, ctx.currentTime);
+        // Faire le ramp vers 0
+        gain.linearRampToValueAtTime(0, ctx.currentTime + FADE_OUT_DURATION_SEC);
 
-    fadeInterval.current = setInterval(() => {
-        const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-        if (currentVol > step) {
-            if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
-            else audioRef.current.volume = currentVol - step;
-        } else {
-            // Fade terminé
-            if (gainNodeRef.current) gainNodeRef.current.gain.value = 0;
-            else audioRef.current.volume = 0;
-            audioRef.current.pause();
-            clearInterval(fadeInterval.current);
+        // Attendre la fin du fade puis exécuter le callback
+        fadeInterval.current = setTimeout(() => {
             fadeInterval.current = null;
-
-            // Restaurer le volume AVANT d'appeler le callback
-            if (gainNodeRef.current) gainNodeRef.current.gain.value = volumeBeforeFade;
-            else audioRef.current.volume = volumeBeforeFade;
-
-            // Callback pour lancer la suite
+            audioRef.current.pause();
+            // Restaurer le volume
+            gain.cancelScheduledValues(ctx.currentTime);
+            gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
             onComplete?.();
-        }
-    }, intervalTime);
+        }, FADE_OUT_DURATION_SEC * 1000 + 10); // +10ms de marge
+    } else {
+        // Fallback sans Web Audio API (fade par steps)
+        const intervalTime = 20;
+        const totalSteps = (FADE_OUT_DURATION_SEC * 1000) / intervalTime;
+        const step = volumeBeforeFade / totalSteps;
+
+        const doFade = () => {
+            const currentVol = audioRef.current.volume;
+            if (currentVol > step) {
+                audioRef.current.volume = currentVol - step;
+                fadeInterval.current = setTimeout(doFade, intervalTime);
+            } else {
+                audioRef.current.volume = 0;
+                audioRef.current.pause();
+                fadeInterval.current = null;
+                audioRef.current.volume = volumeBeforeFade;
+                onComplete?.();
+            }
+        };
+        doFade();
+    }
   };
 
   // Ancienne fonction pour les autres cas (duck, fade in)
