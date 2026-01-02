@@ -4346,78 +4346,103 @@ useEffect(() => {
 }, [vibeColorIndices]);
 
   // AUDIO FADING UTILS
+  // Durée du fade out pour kill vibe (en ms)
+  const FADE_OUT_DURATION = 200;
+
+  // Fade out avec callback quand terminé
+  const fadeOutAndStop = (onComplete) => {
+    if (!audioRef.current) {
+        onComplete?.();
+        return;
+    }
+
+    if (fadeInterval.current) clearInterval(fadeInterval.current);
+
+    // Sauvegarder le volume actuel pour le restaurer après
+    const volumeBeforeFade = gainNodeRef.current
+        ? gainNodeRef.current.gain.value
+        : audioRef.current.volume;
+    savedVolume.current = volumeBeforeFade;
+
+    if (audioRef.current.paused) {
+        onComplete?.();
+        return;
+    }
+
+    // Calculer le step pour atteindre 0 en FADE_OUT_DURATION ms
+    const intervalTime = 20; // 20ms entre chaque step
+    const totalSteps = FADE_OUT_DURATION / intervalTime;
+    const step = volumeBeforeFade / totalSteps;
+
+    fadeInterval.current = setInterval(() => {
+        const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+        if (currentVol > step) {
+            if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
+            else audioRef.current.volume = currentVol - step;
+        } else {
+            // Fade terminé
+            if (gainNodeRef.current) gainNodeRef.current.gain.value = 0;
+            else audioRef.current.volume = 0;
+            audioRef.current.pause();
+            clearInterval(fadeInterval.current);
+            fadeInterval.current = null;
+
+            // Restaurer le volume AVANT d'appeler le callback
+            if (gainNodeRef.current) gainNodeRef.current.gain.value = volumeBeforeFade;
+            else audioRef.current.volume = volumeBeforeFade;
+
+            // Callback pour lancer la suite
+            onComplete?.();
+        }
+    }, intervalTime);
+  };
+
+  // Ancienne fonction pour les autres cas (duck, fade in)
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
-    
+
     if (fadeInterval.current) clearInterval(fadeInterval.current);
-    
+
     const step = 0.05;
-    const intervalTime = direction === 'out' ? 20 : 50;
-    
-    if (direction === 'out') {
-        savedVolume.current = audioRef.current.volume;
-        if (audioRef.current.paused) return; 
+    const intervalTime = 50;
+
+    if (direction === 'duck') {
+        // Duck : baisser le volume SANS couper l'audio
+        savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+        const duckTarget = targetVolume || 0.15;
 
         fadeInterval.current = setInterval(() => {
           const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol > step) {
+          if (currentVol > duckTarget + step) {
               if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
               else audioRef.current.volume = currentVol - step;
           } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = 0;
-              else audioRef.current.volume = 0;
-                audioRef.current.pause();
-                clearInterval(fadeInterval.current);
-            }
-        }, intervalTime);
-    } else if (direction === 'duck') {
-        // Duck : baisser le volume SANS couper l'audio
-        savedVolume.current = audioRef.current.volume;
-        const duckTarget = targetVolume || 0.15;
-        
-        fadeInterval.current = setInterval(() => {
-          const currentVol2 = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol2 > duckTarget + step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol2 - step;
-              else audioRef.current.volume = currentVol2 - step;
-          } else {
               if (gainNodeRef.current) gainNodeRef.current.gain.value = duckTarget;
               else audioRef.current.volume = duckTarget;
-                clearInterval(fadeInterval.current);
-            }
+              clearInterval(fadeInterval.current);
+          }
         }, 20);
-    } else {
+    } else if (direction === 'in') {
         // Fade In - restaurer le volume
         if (audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
         fadeInterval.current = setInterval(() => {
-          const currentVol3 = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol3 < savedVolume.current - step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol3 + step;
-              else audioRef.current.volume = currentVol3 + step;
+          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+          if (currentVol < savedVolume.current - step) {
+              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol + step;
+              else audioRef.current.volume = currentVol + step;
           } else {
               if (gainNodeRef.current) gainNodeRef.current.gain.value = savedVolume.current;
               else audioRef.current.volume = savedVolume.current;
-                clearInterval(fadeInterval.current);
-            }
+              clearInterval(fadeInterval.current);
+          }
         }, intervalTime);
-      }
+    }
   };
 
   const playFromLibrarySearch = (song) => {
     const doPlay = () => {
-        // Annuler tout fade en cours et restaurer le volume
-        if (fadeInterval.current) {
-            clearInterval(fadeInterval.current);
-            fadeInterval.current = null;
-        }
-        if (gainNodeRef.current) {
-            gainNodeRef.current.gain.value = volume / 100;
-        } else if (audioRef.current) {
-            audioRef.current.volume = volume / 100;
-        }
-
         const newQueue = [...librarySearchResults];
         setInitialRandomQueue(newQueue);
         setQueue(newQueue);
@@ -4428,10 +4453,9 @@ useEffect(() => {
         setLibrarySearchQuery('');
     };
 
-    // Fade out si musique en cours
+    // Fade out si musique en cours, sinon jouer directement
     if (audioRef.current && !audioRef.current.paused) {
-        fadeMainAudio('out');
-        setTimeout(doPlay, 450);
+        fadeOutAndStop(doPlay);
     } else {
         doPlay();
     }
@@ -4479,17 +4503,6 @@ useEffect(() => {
 
 const vibeSearchResults = () => {
     if (librarySearchResults.length === 0) return;
-
-    // Annuler tout fade en cours et restaurer le volume
-    if (fadeInterval.current) {
-        clearInterval(fadeInterval.current);
-        fadeInterval.current = null;
-    }
-    if (gainNodeRef.current) {
-        gainNodeRef.current.gain.value = volume / 100;
-    } else if (audioRef.current) {
-        audioRef.current.volume = volume / 100;
-    }
 
     let songsToPlay = [...librarySearchResults];
 
@@ -4810,21 +4823,6 @@ const vibeSearchResults = () => {
     if (!audio) return;
 
     const setupAndPlay = async () => {
-        // IMMÉDIATEMENT annuler tout fade en cours et restaurer le volume
-        // (avant le chargement qui peut prendre du temps)
-        if (isPlaying && currentSong) {
-            if (fadeInterval.current) {
-                clearInterval(fadeInterval.current);
-                fadeInterval.current = null;
-            }
-            // Restaurer le volume immédiatement
-            if (gainNodeRef.current) {
-                gainNodeRef.current.gain.value = volume / 100;
-            } else {
-                audio.volume = volume / 100;
-            }
-        }
-
         if (currentSong) {
             // Vérifier si on doit changer la source
             const currentSrc = audio.src;
@@ -4892,7 +4890,7 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
-              // Le fade est déjà annulé et le volume restauré au début de setupAndPlay
+              // Le volume est déjà restauré par fadeOutAndStop avant d'arriver ici
               const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -4903,9 +4901,9 @@ const vibeSearchResults = () => {
             audio.pause();
         }
     };
-    
+
     setupAndPlay();
-  }, [isPlaying, currentSong, volume]);
+  }, [isPlaying, currentSong]);
 
   // Refs pour tracker les états sans closure stale (Media Session API)
   const isPlayingRef = useRef(isPlaying);
@@ -5280,42 +5278,23 @@ const vibeSearchResults = () => {
         // Cas spécial : résultats de recherche
         if (folderName === '__SEARCH_RESULTS__') {
             if (audioRef.current && !audioRef.current.paused) {
-                fadeMainAudio('out');
-                setTimeout(() => {
-                    vibeSearchResults();
-                }, 450);
+                fadeOutAndStop(vibeSearchResults);
             } else {
                 vibeSearchResults();
             }
             return;
         }
-        
+
         // Fade out audio si une musique joue, puis lancer la vibe
         if (audioRef.current && !audioRef.current.paused) {
-            fadeMainAudio('out');
-            setTimeout(() => {
-                doLaunchVibe(folderName);
-            }, 450); // Attendre fin du fade (~400ms) + marge
+            fadeOutAndStop(() => doLaunchVibe(folderName));
             return;
-        }   
-        
+        }
+
         doLaunchVibe(folderName);
     };
-    
+
     const doLaunchVibe = (folderName) => {
-      // Annuler tout fade en cours pour éviter qu'il affecte la nouvelle chanson
-      if (fadeInterval.current) {
-          clearInterval(fadeInterval.current);
-          fadeInterval.current = null;
-      }
-
-      // Restaurer le volume après un fade out
-      if (gainNodeRef.current) {
-          gainNodeRef.current.gain.value = volume / 100;
-      } else if (audioRef.current) {
-          audioRef.current.volume = volume / 100;
-      }
-
       const songs = playlists[folderName];
     // Filtrer pour ne garder que les morceaux avec fichier disponible
     let songsToPlay = songs.filter(s => isSongAvailable(s));
@@ -5823,7 +5802,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 setPlayerSearchQuery('');
                 // Fade out audio si en cours
                 if (audioRef.current && !audioRef.current.paused) {
-                    fadeMainAudio('out');
+                    fadeOutAndStop();
                 }
             }, 150);
         }
