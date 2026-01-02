@@ -6916,6 +6916,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     style={{
                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
                         height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
+                        opacity: isPlayerSearching && playerSearchOverlayAnim === 'none' ? 0 : undefined,
                         animation: playerSearchOverlayAnim === 'opening'
                             ? `search-fade-out ${CONFIG.SEARCH_PLAYER_FADE_IN_DURATION}ms ease-out forwards`
                             : playerSearchOverlayAnim === 'closing'
