@@ -4487,26 +4487,49 @@ useEffect(() => {
         }
         debugDiv.innerHTML = `FADE START: vol=${startValue.toFixed(3)}<br>`;
 
-        // Surveiller le volume en temps réel
+        // Surveiller le volume en temps réel et lancer la lecture quand = 0
         const checkVolume = setInterval(() => {
             const currentGain = gain.value;
             const elapsed = ctx.currentTime - startTime;
             debugDiv.innerHTML += `t=${elapsed.toFixed(2)}s gain=${currentGain.toFixed(4)}<br>`;
             debugDiv.scrollTop = debugDiv.scrollHeight;
-            if (currentGain <= 0.001 || elapsed >= FADE_OUT_DURATION_SEC + 0.1) {
-                clearInterval(checkVolume);
-                debugDiv.innerHTML += `<b style="color:yellow">VOLUME = 0!</b><br>`;
-            }
-        }, 200);
 
-        // Attendre la fin du fade puis exécuter le callback
+            // Quand le volume atteint 0, arrêter le check et lancer la suite
+            if (currentGain <= 0.001) {
+                clearInterval(checkVolume);
+                if (fadeInterval.current) {
+                    clearTimeout(fadeInterval.current);
+                    fadeInterval.current = null;
+                }
+                debugDiv.innerHTML += `<b style="color:yellow">VOLUME = 0!</b><br>`;
+
+                // Pause l'audio actuel
+                audioRef.current.pause();
+                debugDiv.innerHTML += `<b style="color:cyan">PAUSE</b><br>`;
+
+                // Restaurer le volume pour la prochaine lecture
+                gain.cancelScheduledValues(ctx.currentTime);
+                gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
+                debugDiv.innerHTML += `<b style="color:magenta">VOL RESTORED: ${volumeBeforeFade.toFixed(3)}</b><br>`;
+
+                // Lancer le callback (nouvelle lecture)
+                debugDiv.innerHTML += `<b style="color:orange">CALLBACK...</b><br>`;
+                onComplete?.();
+            }
+        }, 50); // Check toutes les 50ms pour plus de précision
+
+        // Timeout de sécurité (au cas où le check rate le 0)
         fadeInterval.current = setTimeout(() => {
-            fadeInterval.current = null;
-            clearInterval(checkVolume);
-            // DEBUG: Juste pause, NE PAS restaurer le volume, NE PAS appeler onComplete
-            audioRef.current.pause();
-            debugDiv.innerHTML += `<b style="color:cyan">PAUSE - volume reste à 0</b><br>`;
-        }, FADE_OUT_DURATION_SEC * 1000 + 50); // +50ms de marge pour être sûr que le ramp est terminé
+            if (fadeInterval.current) {
+                fadeInterval.current = null;
+                clearInterval(checkVolume);
+                debugDiv.innerHTML += `<b style="color:red">TIMEOUT FALLBACK</b><br>`;
+                audioRef.current.pause();
+                gain.cancelScheduledValues(ctx.currentTime);
+                gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
+                onComplete?.();
+            }
+        }, FADE_OUT_DURATION_SEC * 1000 + 200);
     } else {
         // Fallback sans Web Audio API (fade par steps)
         const intervalTime = 20;
