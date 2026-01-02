@@ -29,12 +29,18 @@ input, textarea {
   user-select: text;
 }
 
-/* Le texte de test en arrière-plan */
+/* Le texte de test en arrière-plan - force la transparence de la safe-area */
 #test-content {
   padding-top: env(safe-area-inset-top);
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(16px, env(safe-area-inset-right));
   padding-bottom: env(safe-area-inset-bottom);
+  overflow: hidden;
+}
+
+/* Cacher les scrollbars sur tout le document */
+html, body {
+  overflow: hidden;
 }
 
 /* L'app React par-dessus */

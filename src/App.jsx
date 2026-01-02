@@ -669,8 +669,9 @@ const CONFIG = {
     // CONFIRMATION SWIPE OVERLAY
     // ══════════════════════════════════════════════════════════════════════════
     CONFIRM_SWIPE_THRESHOLD: 100,                // Seuil de swipe pour confirmer/annuler (px)
-    CONFIRM_SWIPE_ICON_SIZE: 48,                 // Taille des icônes (px)
-    CONFIRM_SWIPE_ICON_SIZE_ACTIVE: 64,          // Taille des icônes au seuil (px)
+    CONFIRM_SWIPE_ICON_SIZE: 96,                 // Taille des icônes (px) - doublé
+    CONFIRM_SWIPE_ICON_SIZE_ACTIVE: 144,         // Taille des icônes au seuil (px) - 50% de plus
+    CONFIRM_SWIPE_CHEVRON_SIZE: 28,              // Taille des chevrons (px) - doublé
 
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
@@ -928,6 +929,24 @@ const styles = `
   .animate-bounce-neon-lime {
     animation: bounce-neon-lime 1s ease-in-out infinite;
     color: #C0FF00 !important;
+  }
+
+  @keyframes bounce-neon-red {
+    0%, 100% {
+      transform: translateY(-25%);
+      filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6)) brightness(1);
+    }
+    25%, 75% {
+      filter: drop-shadow(0 0 30px rgba(239, 68, 68, 1)) brightness(1.2);
+    }
+    50% {
+      transform: translateY(0);
+      filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6)) brightness(1);
+    }
+  }
+  .animate-bounce-neon-red {
+    animation: bounce-neon-red 1s ease-in-out infinite;
+    color: #ef4444 !important;
   }
   
   @keyframes appear-then-fade {
@@ -6697,8 +6716,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             const isAtThreshold = Math.abs(confirmSwipeX) >= CONFIG.CONFIRM_SWIPE_THRESHOLD;
             const isSwipingRight = confirmSwipeX > 0;
             const isSwipingLeft = confirmSwipeX < 0;
-            // Opacity decreases as you swipe (inverse of back-to-vibes)
-            const overlayOpacity = confirmOverlayVisible ? Math.max(0.2, 0.85 - swipeProgress * 0.65) : 0;
 
             return (
             <div
@@ -6706,11 +6723,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 style={{
                     top: 0,
                     bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
-                    backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
+                    backgroundColor: 'transparent',
                     backdropFilter: 'blur(8px)',
                     WebkitBackdropFilter: 'blur(8px)',
                     opacity: confirmOverlayVisible ? 1 : 0,
-                    transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out, background-color 150ms ease-out',
+                    transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out',
                     transform: `translateX(${confirmSwipeX}px)`,
                 }}
                 onTouchStart={(e) => {
@@ -6742,62 +6759,87 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     setConfirmSwipeStart(null);
                 }}
             >
-                {/* Chevrons gauche - Annuler */}
+                {/* Chevrons gauche - Annuler (fade out au seuil) */}
                 <div
                     className="absolute left-4 flex items-center swipe-hint-left"
-                    style={{ opacity: isSwipingRight ? 0.3 : (isAtThreshold && isSwipingLeft ? 1 : 0.6) }}
-                >
-                    <X size={14} className={isAtThreshold && isSwipingLeft ? 'text-red-400' : 'text-gray-400'} strokeWidth={2.5} />
-                    <ChevronLeft size={14} className="text-gray-400 -ml-1" strokeWidth={2} />
-                    <ChevronLeft size={14} className="text-gray-500 -ml-2.5" strokeWidth={2} />
-                </div>
-
-                {/* Icons X et Check côte à côte */}
-                <div
-                    className="flex items-center gap-16 pointer-events-none"
                     style={{
-                        opacity: confirmOverlayVisible ? 1 : 0,
-                        transform: confirmOverlayVisible ? 'scale(1)' : 'scale(0.9)',
-                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                        opacity: isAtThreshold ? 0 : (isSwipingRight ? 0.3 : 0.6),
+                        transition: 'opacity 150ms ease-out'
                     }}
                 >
-                    {/* X icon (left) */}
-                    <div className={isAtThreshold && isSwipingLeft ? 'threshold-reached' : ''}>
-                        <X
-                            size={isAtThreshold && isSwipingLeft ? CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE : CONFIG.CONFIRM_SWIPE_ICON_SIZE}
-                            className={`transition-all duration-150 ${isAtThreshold && isSwipingLeft ? 'text-red-500' : 'text-gray-400'}`}
-                            strokeWidth={2.5}
-                            style={{
-                                filter: isAtThreshold && isSwipingLeft
-                                    ? 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))'
-                                    : 'none'
-                            }}
-                        />
-                    </div>
-
-                    {/* Check icon (right) */}
-                    <div className={isAtThreshold && isSwipingRight ? 'threshold-reached' : ''}>
-                        <Check
-                            size={isAtThreshold && isSwipingRight ? CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE : CONFIG.CONFIRM_SWIPE_ICON_SIZE}
-                            className={`transition-all duration-150 ${isAtThreshold && isSwipingRight ? 'text-lime-500' : 'text-gray-400'}`}
-                            strokeWidth={2.5}
-                            style={{
-                                filter: isAtThreshold && isSwipingRight
-                                    ? 'drop-shadow(0 0 20px rgba(132, 204, 22, 0.8))'
-                                    : 'none'
-                            }}
-                        />
-                    </div>
+                    <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-400" strokeWidth={2} />
+                    <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -ml-4" strokeWidth={2} />
                 </div>
 
-                {/* Chevrons droite - Valider */}
+                {/* Icons X et Check côte à côte (ou icône centrée au seuil) */}
+                <div
+                    className="flex items-center justify-center pointer-events-none"
+                    style={{
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transition: 'opacity 150ms ease-out'
+                    }}
+                >
+                    {/* Mode normal : deux icônes côte à côte */}
+                    {!isAtThreshold && (
+                        <div className="flex items-center gap-16">
+                            {/* X icon (left) */}
+                            <X
+                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE}
+                                className="text-gray-400 transition-all duration-150"
+                                strokeWidth={2.5}
+                                style={{
+                                    opacity: isSwipingRight ? Math.max(0.3, 1 - swipeProgress) : 1
+                                }}
+                            />
+                            {/* Check icon (right) */}
+                            <Check
+                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE}
+                                className="text-gray-400 transition-all duration-150"
+                                strokeWidth={2.5}
+                                style={{
+                                    opacity: isSwipingLeft ? Math.max(0.3, 1 - swipeProgress) : 1
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Mode seuil : icône active centrée avec bounce */}
+                    {isAtThreshold && isSwipingLeft && (
+                        <div className="animate-bounce-neon-red">
+                            <X
+                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE}
+                                className="text-red-500"
+                                strokeWidth={2.5}
+                                style={{
+                                    filter: 'drop-shadow(0 0 30px rgba(239, 68, 68, 0.8))'
+                                }}
+                            />
+                        </div>
+                    )}
+                    {isAtThreshold && isSwipingRight && (
+                        <div className="animate-bounce-neon-lime">
+                            <Check
+                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE}
+                                className="text-lime-500"
+                                strokeWidth={2.5}
+                                style={{
+                                    filter: 'drop-shadow(0 0 30px rgba(132, 204, 22, 0.8))'
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Chevrons droite - Valider (fade out au seuil) */}
                 <div
                     className="absolute right-4 flex items-center swipe-hint-right"
-                    style={{ opacity: isSwipingLeft ? 0.3 : (isAtThreshold && isSwipingRight ? 1 : 0.6) }}
+                    style={{
+                        opacity: isAtThreshold ? 0 : (isSwipingLeft ? 0.3 : 0.6),
+                        transition: 'opacity 150ms ease-out'
+                    }}
                 >
-                    <ChevronRight size={14} className="text-gray-500 -mr-2.5" strokeWidth={2} />
-                    <ChevronRight size={14} className="text-gray-400 -mr-1" strokeWidth={2} />
-                    <Check size={14} className={isAtThreshold && isSwipingRight ? 'text-lime-500' : 'text-gray-400'} strokeWidth={2.5} />
+                    <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -mr-4" strokeWidth={2} />
+                    <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-400" strokeWidth={2} />
                 </div>
             </div>
             );
