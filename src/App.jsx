@@ -4471,17 +4471,41 @@ useEffect(() => {
         // Annuler tout scheduling précédent
         gain.cancelScheduledValues(ctx.currentTime);
         // Définir la valeur actuelle comme point de départ
-        gain.setValueAtTime(gain.value, ctx.currentTime);
+        const startValue = gain.value;
+        const startTime = ctx.currentTime;
+        gain.setValueAtTime(startValue, startTime);
         // Faire le ramp vers 0
-        gain.linearRampToValueAtTime(0, ctx.currentTime + FADE_OUT_DURATION_SEC);
+        gain.linearRampToValueAtTime(0, startTime + FADE_OUT_DURATION_SEC);
+
+        // DEBUG VISUEL - afficher sur l'écran
+        let debugDiv = document.getElementById('audio-debug');
+        if (!debugDiv) {
+            debugDiv = document.createElement('div');
+            debugDiv.id = 'audio-debug';
+            debugDiv.style.cssText = 'position:fixed;top:50px;left:10px;right:10px;background:rgba(0,0,0,0.9);color:lime;font-family:monospace;font-size:12px;padding:10px;z-index:99999;max-height:200px;overflow:auto;border-radius:8px;';
+            document.body.appendChild(debugDiv);
+        }
+        debugDiv.innerHTML = `FADE START: vol=${startValue.toFixed(3)}<br>`;
+
+        // Surveiller le volume en temps réel
+        const checkVolume = setInterval(() => {
+            const currentGain = gain.value;
+            const elapsed = ctx.currentTime - startTime;
+            debugDiv.innerHTML += `t=${elapsed.toFixed(2)}s gain=${currentGain.toFixed(4)}<br>`;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+            if (currentGain <= 0.001 || elapsed >= FADE_OUT_DURATION_SEC + 0.1) {
+                clearInterval(checkVolume);
+                debugDiv.innerHTML += `<b style="color:yellow">VOLUME = 0!</b><br>`;
+            }
+        }, 200);
 
         // Attendre la fin du fade puis exécuter le callback
         fadeInterval.current = setTimeout(() => {
             fadeInterval.current = null;
+            clearInterval(checkVolume);
             // DEBUG: Juste pause, NE PAS restaurer le volume, NE PAS appeler onComplete
             audioRef.current.pause();
-            // Volume reste à 0 pour debug
-            console.log('[DEBUG] Fade out terminé, volume laissé à 0, pas de nouvelle lecture');
+            debugDiv.innerHTML += `<b style="color:cyan">PAUSE - volume reste à 0</b><br>`;
         }, FADE_OUT_DURATION_SEC * 1000 + 50); // +50ms de marge pour être sûr que le ramp est terminé
     } else {
         // Fallback sans Web Audio API (fade par steps)
