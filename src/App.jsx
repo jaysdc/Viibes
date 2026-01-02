@@ -666,6 +666,13 @@ const CONFIG = {
     NUKE_TEXT: 'NUKE ALL?!',                      // Texte unique Nuke
 
     // ══════════════════════════════════════════════════════════════════════════
+    // CONFIRMATION SWIPE OVERLAY
+    // ══════════════════════════════════════════════════════════════════════════
+    CONFIRM_SWIPE_THRESHOLD: 100,                // Seuil de swipe pour confirmer/annuler (px)
+    CONFIRM_SWIPE_ICON_SIZE: 48,                 // Taille des icônes (px)
+    CONFIRM_SWIPE_ICON_SIZE_ACTIVE: 64,          // Taille des icônes au seuil (px)
+
+    // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
     // ══════════════════════════════════════════════════════════════════════════
     VIBECARD_CAPSULE_PX: 1,               // Padding horizontal (rem)
@@ -681,7 +688,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
-    TC_SKIP_LABEL_SIZE: 0.55,             // Taille du "10" (rem)
+    TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
     TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
     TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
     TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
@@ -4160,6 +4167,8 @@ const handlePlayerTouchEnd = () => {
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
     const [confirmOverlayVisible, setConfirmOverlayVisible] = useState(false);
     const [confirmFeedback, setConfirmFeedback] = useState(null); // { text, type, triggerValidation }
+    const [confirmSwipeX, setConfirmSwipeX] = useState(0); // Swipe X position for confirmation overlay
+    const [confirmSwipeStart, setConfirmSwipeStart] = useState(null); // Touch start X
     const [showTweaker, setShowTweaker] = useState(false);
     const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
     
@@ -5348,6 +5357,8 @@ const vibeSearchResults = () => {
 
 const cancelKillVibe = () => {
         setConfirmOverlayVisible(false);
+        setConfirmSwipeX(0);
+        setConfirmSwipeStart(null);
         setTimeout(() => {
             setPendingVibe(null);
             setConfirmFeedback(null);
@@ -5771,6 +5782,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     
     const cancelNuke = () => {
         setConfirmOverlayVisible(false);
+        setConfirmSwipeX(0);
+        setConfirmSwipeStart(null);
         setTimeout(() => {
             setNukeConfirmMode(false);
             setConfirmFeedback(null);
@@ -6678,71 +6691,117 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     sourceRect={dropboxSourceRect}
 />
 
-        {/* CONFIRMATION OVERLAY UNIFIÉ (KILL VIBE / NUKE ALL) */}
-        {(pendingVibe || nukeConfirmMode) && (
+        {/* CONFIRMATION OVERLAY UNIFIÉ (KILL VIBE / NUKE ALL) - SWIPABLE */}
+        {(pendingVibe || nukeConfirmMode) && (() => {
+            const swipeProgress = Math.abs(confirmSwipeX) / CONFIG.CONFIRM_SWIPE_THRESHOLD;
+            const isAtThreshold = Math.abs(confirmSwipeX) >= CONFIG.CONFIRM_SWIPE_THRESHOLD;
+            const isSwipingRight = confirmSwipeX > 0;
+            const isSwipingLeft = confirmSwipeX < 0;
+            // Opacity decreases as you swipe (inverse of back-to-vibes)
+            const overlayOpacity = confirmOverlayVisible ? Math.max(0.2, 0.85 - swipeProgress * 0.65) : 0;
+
+            return (
             <div
-                className="absolute left-0 right-0 z-[65] flex flex-col items-center justify-center"
+                className="absolute left-0 right-0 z-[65] flex items-center justify-center"
                 style={{
                     top: 0,
                     bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
                     backdropFilter: 'blur(8px)',
                     WebkitBackdropFilter: 'blur(8px)',
                     opacity: confirmOverlayVisible ? 1 : 0,
-                    transition: 'opacity 150ms ease-out'
+                    transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out, background-color 150ms ease-out',
+                    transform: `translateX(${confirmSwipeX}px)`,
                 }}
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
+                onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setConfirmSwipeStart(e.touches[0].clientX);
+                }}
+                onTouchMove={(e) => {
+                    if (confirmSwipeStart === null) return;
+                    const diff = e.touches[0].clientX - confirmSwipeStart;
+                    setConfirmSwipeX(diff);
+                }}
+                onTouchEnd={() => {
+                    if (confirmSwipeX >= CONFIG.CONFIRM_SWIPE_THRESHOLD) {
+                        // Swipe right = validate
+                        if (pendingVibe) {
+                            setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                        } else {
+                            setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
+                        }
+                    } else if (confirmSwipeX <= -CONFIG.CONFIRM_SWIPE_THRESHOLD) {
+                        // Swipe left = cancel
+                        if (pendingVibe) {
+                            cancelKillVibe();
+                        } else {
+                            cancelNuke();
+                        }
+                    }
+                    setConfirmSwipeX(0);
+                    setConfirmSwipeStart(null);
+                }}
             >
-                {/* Boutons Check/X */}
+                {/* Chevrons gauche - Annuler */}
                 <div
-                    className="flex flex-col gap-8 pointer-events-auto"
+                    className="absolute left-4 flex items-center swipe-hint-left"
+                    style={{ opacity: isSwipingRight ? 0.3 : (isAtThreshold && isSwipingLeft ? 1 : 0.6) }}
+                >
+                    <X size={14} className={isAtThreshold && isSwipingLeft ? 'text-red-400' : 'text-gray-400'} strokeWidth={2.5} />
+                    <ChevronLeft size={14} className="text-gray-400 -ml-1" strokeWidth={2} />
+                    <ChevronLeft size={14} className="text-gray-500 -ml-2.5" strokeWidth={2} />
+                </div>
+
+                {/* Icons X et Check côte à côte */}
+                <div
+                    className="flex items-center gap-16 pointer-events-none"
                     style={{
                         opacity: confirmOverlayVisible ? 1 : 0,
                         transform: confirmOverlayVisible ? 'scale(1)' : 'scale(0.9)',
                         transition: 'opacity 150ms ease-out, transform 150ms ease-out'
                     }}
                 >
-                    <button
-                        onClick={() => {
-                            if (pendingVibe) {
-                                // KILL VIBE - lancer animation ignite puis transition
-                                setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
-                            } else {
-                                // NUKE ALL - lancer animation ignite puis nuke
-                                setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
-                            }
-                        }}
-                        className="w-40 h-40 rounded-full flex items-center justify-center shadow-2xl"
-                        style={{
-                            backgroundColor: '#C0FF00',
-                            boxShadow: '0 0 50px rgba(192, 255, 0, 0.7), 0 0 100px rgba(192, 255, 0, 0.4)',
-                            WebkitTapHighlightColor: 'transparent'
-                        }}
-                    >
-                        <Check size={80} className="text-white drop-shadow-lg" strokeWidth={3} />
-                    </button>
-                    <button
-                        onClick={() => {
-                            // Annuler - fermer l'overlay
-                            if (pendingVibe) {
-                                cancelKillVibe();
-                            } else {
-                                cancelNuke();
-                            }
-                        }}
-                        className="w-40 h-40 rounded-full flex items-center justify-center shadow-2xl"
-                        style={{
-                            backgroundColor: '#E0004C',
-                            boxShadow: '0 0 50px rgba(224, 0, 76, 0.7), 0 0 100px rgba(224, 0, 76, 0.4)',
-                            WebkitTapHighlightColor: 'transparent'
-                        }}
-                    >
-                        <X size={80} className="text-white drop-shadow-lg" strokeWidth={3} />
-                    </button>
+                    {/* X icon (left) */}
+                    <div className={isAtThreshold && isSwipingLeft ? 'threshold-reached' : ''}>
+                        <X
+                            size={isAtThreshold && isSwipingLeft ? CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE : CONFIG.CONFIRM_SWIPE_ICON_SIZE}
+                            className={`transition-all duration-150 ${isAtThreshold && isSwipingLeft ? 'text-red-500' : 'text-gray-400'}`}
+                            strokeWidth={2.5}
+                            style={{
+                                filter: isAtThreshold && isSwipingLeft
+                                    ? 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))'
+                                    : 'none'
+                            }}
+                        />
+                    </div>
+
+                    {/* Check icon (right) */}
+                    <div className={isAtThreshold && isSwipingRight ? 'threshold-reached' : ''}>
+                        <Check
+                            size={isAtThreshold && isSwipingRight ? CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE : CONFIG.CONFIRM_SWIPE_ICON_SIZE}
+                            className={`transition-all duration-150 ${isAtThreshold && isSwipingRight ? 'text-lime-500' : 'text-gray-400'}`}
+                            strokeWidth={2.5}
+                            style={{
+                                filter: isAtThreshold && isSwipingRight
+                                    ? 'drop-shadow(0 0 20px rgba(132, 204, 22, 0.8))'
+                                    : 'none'
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Chevrons droite - Valider */}
+                <div
+                    className="absolute right-4 flex items-center swipe-hint-right"
+                    style={{ opacity: isSwipingLeft ? 0.3 : (isAtThreshold && isSwipingRight ? 1 : 0.6) }}
+                >
+                    <ChevronRight size={14} className="text-gray-500 -mr-2.5" strokeWidth={2} />
+                    <ChevronRight size={14} className="text-gray-400 -mr-1" strokeWidth={2} />
+                    <Check size={14} className={isAtThreshold && isSwipingRight ? 'text-lime-500' : 'text-gray-400'} strokeWidth={2.5} />
                 </div>
             </div>
-        )}
+            );
+        })()}
 
         {/* FULL SCREEN PLAYER */}
         {showFullPlayer && currentSong && (
