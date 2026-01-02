@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
+import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -675,6 +675,7 @@ const CONFIG = {
     CONFIRM_PILL_BG_COLOR: 'rgba(110, 110, 110, 0.15)', // Fond du pill
     CONFIRM_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
     CONFIRM_PILL_BLUR: 20,                       // Blur du pill (px)
+    CONFIRM_BACKDROP_BLUR: 8,                    // Blur du fond quand pill visible (px) - fixe = performant
 
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
@@ -950,6 +951,35 @@ const styles = `
   .animate-bounce-neon-red {
     animation: bounce-neon-red 1s ease-in-out infinite;
     color: #ef4444 !important;
+  }
+
+  /* Animation pulse pour le pill de confirmation - grossit jusqu'au diamètre du tube */
+  @keyframes pulse-pill-lime {
+    0%, 100% {
+      transform: scale(var(--pulse-scale-min, 1));
+      box-shadow: 0 0 15px rgba(132, 204, 22, 0.6);
+    }
+    50% {
+      transform: scale(var(--pulse-scale-max, 1.25));
+      box-shadow: 0 0 30px rgba(132, 204, 22, 1);
+    }
+  }
+  .animate-pulse-pill-lime {
+    animation: pulse-pill-lime 0.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-pill-red {
+    0%, 100% {
+      transform: scale(var(--pulse-scale-min, 1));
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    }
+    50% {
+      transform: scale(var(--pulse-scale-max, 1.25));
+      box-shadow: 0 0 30px rgba(239, 68, 68, 1);
+    }
+  }
+  .animate-pulse-pill-red {
+    animation: pulse-pill-red 0.6s ease-in-out infinite;
   }
   
   @keyframes appear-then-fade {
@@ -6729,134 +6759,179 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             const isAtLeftThreshold = slideProgress <= -0.9;
             const isAtRightThreshold = slideProgress >= 0.9;
 
+            // Scale pour que le curseur grossisse jusqu'à pillHeight (diamètre du tube)
+            const pulseScaleMax = pillHeight / cursorSize;
+
             return (
-            <div
-                className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"
-                style={{
-                    top: 0,
-                    bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
-                    opacity: confirmOverlayVisible ? 1 : 0,
-                    transition: 'opacity 150ms ease-out',
-                }}
-            >
-                {/* Le pill glassmorphism */}
+            <>
+                {/* Backdrop blur fixe (pas animé = performant) */}
                 <div
-                    className="relative flex items-center justify-between pointer-events-auto"
+                    className="absolute left-0 right-0 z-[64] pointer-events-none"
                     style={{
-                        width: pillWidth,
-                        height: pillHeight,
-                        borderRadius: pillHeight / 2,
-                        backgroundColor: CONFIG.CONFIRM_PILL_BG_COLOR,
-                        backdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
-                        WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                        padding: (pillHeight - cursorSize) / 2,
+                        top: 0,
+                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                        backdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
+                        WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transition: 'opacity 150ms ease-out',
                     }}
-                    onTouchStart={(e) => {
-                        e.stopPropagation();
-                        setConfirmSwipeStart(e.touches[0].clientX);
-                    }}
-                    onTouchMove={(e) => {
-                        if (confirmSwipeStart === null) return;
-                        const diff = e.touches[0].clientX - confirmSwipeStart;
-                        setConfirmSwipeX(diff);
-                    }}
-                    onTouchEnd={() => {
-                        if (isAtRightThreshold) {
-                            // Swipe right = validate
-                            if (pendingVibe) {
-                                setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
-                            } else {
-                                setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
-                            }
-                        } else if (isAtLeftThreshold) {
-                            // Swipe left = cancel
-                            if (pendingVibe) {
-                                cancelKillVibe();
-                            } else {
-                                cancelNuke();
-                            }
-                        }
-                        setConfirmSwipeX(0);
-                        setConfirmSwipeStart(null);
+                />
+                {/* Le pill par-dessus */}
+                <div
+                    className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"
+                    style={{
+                        top: 0,
+                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transition: 'opacity 150ms ease-out',
                     }}
                 >
-                    {/* X icon à gauche */}
+                    {/* Le pill glassmorphism */}
                     <div
-                        className="flex items-center justify-center"
+                        className="relative flex items-center justify-between pointer-events-auto"
                         style={{
-                            width: cursorSize,
-                            height: cursorSize,
-                            opacity: isAtLeftThreshold ? 1 : 0.5,
-                            transition: 'opacity 150ms ease-out',
+                            width: pillWidth,
+                            height: pillHeight,
+                            borderRadius: pillHeight / 2,
+                            backgroundColor: CONFIG.CONFIRM_PILL_BG_COLOR,
+                            backdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
+                            WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                            padding: (pillHeight - cursorSize) / 2,
+                        }}
+                        onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setConfirmSwipeStart(e.touches[0].clientX);
+                        }}
+                        onTouchMove={(e) => {
+                            if (confirmSwipeStart === null) return;
+                            const diff = e.touches[0].clientX - confirmSwipeStart;
+                            setConfirmSwipeX(diff);
+                        }}
+                        onTouchEnd={() => {
+                            if (isAtRightThreshold) {
+                                // Swipe right = validate
+                                if (pendingVibe) {
+                                    setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                                } else {
+                                    setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
+                                }
+                            } else if (isAtLeftThreshold) {
+                                // Swipe left = cancel
+                                if (pendingVibe) {
+                                    cancelKillVibe();
+                                } else {
+                                    cancelNuke();
+                                }
+                            }
+                            setConfirmSwipeX(0);
+                            setConfirmSwipeStart(null);
                         }}
                     >
-                        <X
-                            size={iconSize}
-                            className={isAtLeftThreshold ? 'text-red-500' : 'text-gray-400'}
-                            strokeWidth={2.5}
+                        {/* X icon à gauche */}
+                        <div
+                            className="flex items-center justify-center"
                             style={{
-                                filter: isAtLeftThreshold ? 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))' : 'none',
-                                transition: 'color 150ms ease-out, filter 150ms ease-out',
-                            }}
-                        />
-                    </div>
-
-                    {/* Curseur central draggable */}
-                    <div
-                        className={`absolute flex items-center justify-center ${isAtLeftThreshold ? 'animate-bounce-neon-red' : isAtRightThreshold ? 'animate-bounce-neon-lime' : ''}`}
-                        style={{
-                            width: cursorSize,
-                            height: cursorSize,
-                            borderRadius: '50%',
-                            backgroundColor: isAtLeftThreshold
-                                ? 'rgba(239, 68, 68, 0.9)'
-                                : isAtRightThreshold
-                                    ? 'rgba(132, 204, 22, 0.9)'
-                                    : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
-                            boxShadow: isAtLeftThreshold
-                                ? '0 0 20px rgba(239, 68, 68, 0.6)'
-                                : isAtRightThreshold
-                                    ? '0 0 20px rgba(132, 204, 22, 0.6)'
-                                    : '0 4px 12px rgba(0, 0, 0, 0.3)',
-                            left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
-                            transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out',
-                        }}
-                    >
-                        <ChevronsUpDown
-                            size={iconSize * 0.6}
-                            className="text-gray-500 rotate-90"
-                            strokeWidth={2}
-                            style={{
-                                opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.6,
+                                width: cursorSize,
+                                height: cursorSize,
+                                opacity: isAtLeftThreshold ? 1 : 0.5,
                                 transition: 'opacity 150ms ease-out',
                             }}
-                        />
-                    </div>
+                        >
+                            <X
+                                size={iconSize}
+                                className={isAtLeftThreshold ? 'text-red-500' : 'text-gray-400'}
+                                strokeWidth={2.5}
+                                style={{
+                                    filter: isAtLeftThreshold ? 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))' : 'none',
+                                    transition: 'color 150ms ease-out, filter 150ms ease-out',
+                                }}
+                            />
+                        </div>
 
-                    {/* Check icon à droite */}
-                    <div
-                        className="flex items-center justify-center"
-                        style={{
-                            width: cursorSize,
-                            height: cursorSize,
-                            opacity: isAtRightThreshold ? 1 : 0.5,
-                            transition: 'opacity 150ms ease-out',
-                        }}
-                    >
-                        <Check
-                            size={iconSize}
-                            className={isAtRightThreshold ? 'text-lime-500' : 'text-gray-400'}
-                            strokeWidth={2.5}
+                        {/* Curseur central draggable */}
+                        <div
+                            className={`absolute flex items-center justify-center ${isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-lime' : ''}`}
                             style={{
-                                filter: isAtRightThreshold ? 'drop-shadow(0 0 10px rgba(132, 204, 22, 0.8))' : 'none',
-                                transition: 'color 150ms ease-out, filter 150ms ease-out',
+                                '--pulse-scale-min': 1,
+                                '--pulse-scale-max': pulseScaleMax,
+                                width: cursorSize,
+                                height: cursorSize,
+                                borderRadius: '50%',
+                                backgroundColor: isAtLeftThreshold
+                                    ? 'rgba(239, 68, 68, 0.9)'
+                                    : isAtRightThreshold
+                                        ? 'rgba(132, 204, 22, 0.9)'
+                                        : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
+                                boxShadow: isAtLeftThreshold
+                                    ? '0 0 20px rgba(239, 68, 68, 0.6)'
+                                    : isAtRightThreshold
+                                        ? '0 0 20px rgba(132, 204, 22, 0.6)'
+                                        : '0 4px 12px rgba(0, 0, 0, 0.3)',
+                                left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out',
                             }}
-                        />
+                        >
+                            {/* Chevrons horizontaux (gauche/droite) */}
+                            <div
+                                className="flex items-center"
+                                style={{
+                                    opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.6,
+                                    transition: 'opacity 150ms ease-out',
+                                }}
+                            >
+                                <ChevronLeft
+                                    size={iconSize * 0.5}
+                                    className="text-gray-500 -mr-2"
+                                    strokeWidth={2}
+                                />
+                                <ChevronRight
+                                    size={iconSize * 0.5}
+                                    className="text-gray-500"
+                                    strokeWidth={2}
+                                />
+                            </div>
+                            {/* Icône X ou Check quand au seuil (contenue dans la bulle) */}
+                            {isAtLeftThreshold && (
+                                <X
+                                    size={iconSize * 0.7}
+                                    className="text-white absolute"
+                                    strokeWidth={2.5}
+                                />
+                            )}
+                            {isAtRightThreshold && (
+                                <Check
+                                    size={iconSize * 0.7}
+                                    className="text-white absolute"
+                                    strokeWidth={2.5}
+                                />
+                            )}
+                        </div>
+
+                        {/* Check icon à droite */}
+                        <div
+                            className="flex items-center justify-center"
+                            style={{
+                                width: cursorSize,
+                                height: cursorSize,
+                                opacity: isAtRightThreshold ? 1 : 0.5,
+                                transition: 'opacity 150ms ease-out',
+                            }}
+                        >
+                            <Check
+                                size={iconSize}
+                                className={isAtRightThreshold ? 'text-lime-500' : 'text-gray-400'}
+                                strokeWidth={2.5}
+                                style={{
+                                    filter: isAtRightThreshold ? 'drop-shadow(0 0 10px rgba(132, 204, 22, 0.8))' : 'none',
+                                    transition: 'color 150ms ease-out, filter 150ms ease-out',
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            </>
             );
         })()}
 
