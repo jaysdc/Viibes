@@ -4481,22 +4481,25 @@ const vibeSearchResults = () => {
     }
 
     let songsToPlay = [...librarySearchResults];
-    
+
     // Nom de la vibe = titre de la première chanson (avant mélange)
     const vibeName = songsToPlay[0].artist;
-    
+
     // Créer la carte Vibe
     const vibeSongs = songsToPlay.map(s => ({...s, type: 'vibe'}));
     setPlaylists(prev => ({ ...prev, [vibeName]: vibeSongs }));
-    
+
     // Attribuer le dégradé choisi à cette nouvelle vibe
     setVibeColorIndices(prev => ({ ...prev, [vibeName]: vibeTheseGradientIndex }));
-    
+
     // Mélanger
-    for (let i = songsToPlay.length - 1; i > 0; i--) { 
-        const j = Math.floor(Math.random() * (i + 1)); 
-        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]]; 
+    for (let i = songsToPlay.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]];
     }
+
+    // Si c'est la même chanson, forcer le play car le useEffect ne se déclenchera pas
+    const isSameSong = currentSong && songsToPlay[0] && currentSong.id === songsToPlay[0].id;
 
     setInitialRandomQueue([...songsToPlay]);
     setQueue(songsToPlay);
@@ -4506,6 +4509,11 @@ const vibeSearchResults = () => {
     openFullPlayer();
     setIsLibrarySearching(false);
     setLibrarySearchQuery('');
+
+    // Forcer le play si même chanson (le useEffect ne se déclenche pas)
+    if (isSameSong && audioRef.current) {
+        audioRef.current.play().catch(() => {});
+    }
   };
 
   const processFileImport = (foldersToImport) => {
@@ -5303,18 +5311,27 @@ const vibeSearchResults = () => {
         alert(`Aucun morceau disponible pour "${folderName}" ! Ré-importez le dossier.`);
         return;
     }
-    for (let i = songsToPlay.length - 1; i > 0; i--) { 
-        const j = Math.floor(Math.random() * (i + 1)); 
-        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]]; 
-    } 
-    setInitialRandomQueue([...songsToPlay]); 
-    setQueue(songsToPlay); 
-    setActiveFilter('initialShuffle'); 
-    setCurrentSong(songsToPlay[0]); 
-    setIsPlaying(true); 
+    for (let i = songsToPlay.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]];
+    }
+
+    // Si c'est la même chanson, forcer le play car le useEffect ne se déclenchera pas
+    const isSameSong = currentSong && songsToPlay[0] && currentSong.id === songsToPlay[0].id;
+
+    setInitialRandomQueue([...songsToPlay]);
+    setQueue(songsToPlay);
+    setActiveFilter('initialShuffle');
+    setCurrentSong(songsToPlay[0]);
+    setIsPlaying(true);
     openFullPlayer();
     setPendingVibe(null);
     setActiveVibeName(folderName);
+
+    // Forcer le play si même chanson (le useEffect ne se déclenche pas)
+    if (isSameSong && audioRef.current) {
+        audioRef.current.play().catch(() => {});
+    }
 };
 
 const cancelKillVibe = () => {
