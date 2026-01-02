@@ -671,7 +671,8 @@ const CONFIG = {
     CONFIRM_SWIPE_THRESHOLD: 100,                // Seuil de swipe pour confirmer/annuler (px)
     CONFIRM_SWIPE_ICON_SIZE: 96,                 // Taille des icônes (px) - doublé
     CONFIRM_SWIPE_ICON_SIZE_ACTIVE: 144,         // Taille des icônes au seuil (px) - 50% de plus
-    CONFIRM_SWIPE_CHEVRON_SIZE: 28,              // Taille des chevrons (px) - doublé
+    CONFIRM_SWIPE_CHEVRON_SIZE: 18,              // Taille des chevrons (px) - réduit de 33%
+    CONFIRM_SWIPE_BLUR_MAX: 8,                   // Blur max en px
 
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
@@ -6716,6 +6717,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             const isAtThreshold = Math.abs(confirmSwipeX) >= CONFIG.CONFIRM_SWIPE_THRESHOLD;
             const isSwipingRight = confirmSwipeX > 0;
             const isSwipingLeft = confirmSwipeX < 0;
+            // Blur diminue quand on swipe
+            const blurAmount = CONFIG.CONFIRM_SWIPE_BLUR_MAX * (1 - swipeProgress);
 
             return (
             <div
@@ -6724,11 +6727,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     top: 0,
                     bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                     backgroundColor: 'transparent',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
+                    backdropFilter: `blur(${blurAmount}px)`,
+                    WebkitBackdropFilter: `blur(${blurAmount}px)`,
                     opacity: confirmOverlayVisible ? 1 : 0,
                     transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out',
-                    transform: `translateX(${confirmSwipeX}px)`,
                 }}
                 onTouchStart={(e) => {
                     e.stopPropagation();
@@ -6768,15 +6770,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     }}
                 >
                     <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-400" strokeWidth={2} />
-                    <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -ml-4" strokeWidth={2} />
+                    <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -ml-3" strokeWidth={2} />
                 </div>
 
-                {/* Icons X et Check côte à côte (ou icône centrée au seuil) */}
+                {/* Icons X et Check côte à côte - glissent avec le swipe */}
                 <div
                     className="flex items-center justify-center pointer-events-none"
                     style={{
                         opacity: confirmOverlayVisible ? 1 : 0,
-                        transition: 'opacity 150ms ease-out'
+                        transform: `translateX(${confirmSwipeX}px)`,
+                        transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out'
                     }}
                 >
                     {/* Mode normal : deux icônes côte à côte */}
@@ -6838,7 +6841,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         transition: 'opacity 150ms ease-out'
                     }}
                 >
-                    <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -mr-4" strokeWidth={2} />
+                    <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -mr-3" strokeWidth={2} />
                     <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-400" strokeWidth={2} />
                 </div>
             </div>
