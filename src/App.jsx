@@ -676,7 +676,7 @@ const CONFIG = {
     CONFIRM_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
     CONFIRM_PILL_BLUR: 20,                       // Blur du pill (px)
     CONFIRM_BACKDROP_BLUR: 8,                    // Blur du fond quand pill visible (px) - fixe = performant
-    CONFIRM_FADE_DURATION: 1000,                 // Durée du fade in/out du pill (ms) - 1s pour debug
+    CONFIRM_FADE_DURATION: 150,                  // Durée du fade in/out du pill (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
@@ -4437,7 +4437,7 @@ useEffect(() => {
 
   // AUDIO FADING UTILS
   // Durée du fade out pour kill vibe (en secondes pour Web Audio API)
-  const FADE_OUT_DURATION_SEC = 0.2;
+  const FADE_OUT_DURATION_SEC = 1.0;
 
   // Fade out avec callback quand terminé (utilise Web Audio API pour un fade lisse)
   const fadeOutAndStop = (onComplete) => {
@@ -6847,7 +6847,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onTouchEnd={() => {
                             if (isAtRightThreshold) {
                                 // Swipe right = validate
-                                // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation
+                                // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation ignite
                                 if (pendingVibe) {
                                     setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
                                 } else {
@@ -6855,14 +6855,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 }
                             } else if (isAtLeftThreshold) {
                                 // Swipe left = cancel
-                                // NE PAS reset confirmSwipeX - le curseur reste à gauche pendant l'animation
+                                // NE PAS reset confirmSwipeX - le curseur reste à gauche pendant l'animation ignite
                                 if (pendingVibe) {
                                     cancelKillVibe();
                                 } else {
                                     cancelNuke();
                                 }
+                            } else {
+                                // PAS au seuil = retour au centre
+                                setConfirmSwipeX(0);
                             }
-                            // Ne pas remettre à 0 si pas au seuil - le curseur reste en place
                             setConfirmSwipeStart(null);
                         }}
                     >
