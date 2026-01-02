@@ -4478,14 +4478,10 @@ useEffect(() => {
         // Attendre la fin du fade puis exécuter le callback
         fadeInterval.current = setTimeout(() => {
             fadeInterval.current = null;
-            // D'abord pause, PUIS restaurer le volume (pour éviter le saut audible)
+            // DEBUG: Juste pause, NE PAS restaurer le volume, NE PAS appeler onComplete
             audioRef.current.pause();
-            // Petit délai avant de restaurer le gain pour s'assurer que l'audio est bien en pause
-            setTimeout(() => {
-                gain.cancelScheduledValues(ctx.currentTime);
-                gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
-                onComplete?.();
-            }, 50);
+            // Volume reste à 0 pour debug
+            console.log('[DEBUG] Fade out terminé, volume laissé à 0, pas de nouvelle lecture');
         }, FADE_OUT_DURATION_SEC * 1000 + 50); // +50ms de marge pour être sûr que le ramp est terminé
     } else {
         // Fallback sans Web Audio API (fade par steps)
