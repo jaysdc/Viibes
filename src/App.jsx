@@ -4512,6 +4512,7 @@ const vibeSearchResults = () => {
 
     // Forcer le play si même chanson (le useEffect ne se déclenche pas)
     if (isSameSong && audioRef.current) {
+        audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
     }
   };
@@ -5330,6 +5331,7 @@ const vibeSearchResults = () => {
 
     // Forcer le play si même chanson (le useEffect ne se déclenche pas)
     if (isSameSong && audioRef.current) {
+        audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
     }
 };
@@ -6910,14 +6912,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                 {/* Poignée - fade out quand recherche, fade in quand on ferme */}
                 <div
-                    className="bg-gray-300 rounded-full handle-pulse"
+                    className="bg-gray-300 rounded-full"
                     style={{
                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
                         height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
-                        opacity: (isPlayerSearching || playerSearchOverlayAnim === 'opening') ? 0 : 1,
-                        transition: `opacity ${isPlayerSearching || playerSearchOverlayAnim === 'opening'
-                            ? CONFIG.SEARCH_PLAYER_FADE_IN_DURATION
-                            : CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION}ms ease-out`
+                        animation: playerSearchOverlayAnim === 'opening'
+                            ? `search-fade-out ${CONFIG.SEARCH_PLAYER_FADE_IN_DURATION}ms ease-out forwards`
+                            : playerSearchOverlayAnim === 'closing'
+                                ? `search-fade-in ${CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION}ms ease-out forwards`
+                                : (isPlayerSearching ? 'none' : 'handle-pulse 2s ease-in-out infinite')
                     }}
                 />
             </div>
