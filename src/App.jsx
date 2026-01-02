@@ -666,13 +666,15 @@ const CONFIG = {
     NUKE_TEXT: 'NUKE ALL?!',                      // Texte unique Nuke
 
     // ══════════════════════════════════════════════════════════════════════════
-    // CONFIRMATION SWIPE OVERLAY
+    // CONFIRMATION PILL (slide to confirm)
     // ══════════════════════════════════════════════════════════════════════════
-    CONFIRM_SWIPE_THRESHOLD: 100,                // Seuil de swipe pour confirmer/annuler (px)
-    CONFIRM_SWIPE_ICON_SIZE: 96,                 // Taille des icônes (px) - doublé
-    CONFIRM_SWIPE_ICON_SIZE_ACTIVE: 144,         // Taille des icônes au seuil (px) - 50% de plus
-    CONFIRM_SWIPE_CHEVRON_SIZE: 18,              // Taille des chevrons (px) - réduit de 33%
-    CONFIRM_SWIPE_BLUR_MAX: 8,                   // Blur max en px
+    CONFIRM_PILL_HEIGHT_PERCENT: 25,             // Hauteur du pill (% largeur écran, comme volume)
+    CONFIRM_PILL_WIDTH_PERCENT: 80,              // Largeur du pill (% largeur écran)
+    CONFIRM_PILL_ICON_SIZE_PERCENT: 50,          // Taille icônes X/Check (% hauteur pill)
+    CONFIRM_PILL_CURSOR_SIZE_PERCENT: 80,        // Taille du curseur (% hauteur pill)
+    CONFIRM_PILL_BG_COLOR: 'rgba(110, 110, 110, 0.15)', // Fond du pill
+    CONFIRM_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
+    CONFIRM_PILL_BLUR: 20,                       // Blur du pill (px)
 
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
@@ -6711,138 +6713,148 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     sourceRect={dropboxSourceRect}
 />
 
-        {/* CONFIRMATION OVERLAY UNIFIÉ (KILL VIBE / NUKE ALL) - SWIPABLE */}
-        {(pendingVibe || nukeConfirmMode) && (() => {
-            const swipeProgress = Math.abs(confirmSwipeX) / CONFIG.CONFIRM_SWIPE_THRESHOLD;
-            const isAtThreshold = Math.abs(confirmSwipeX) >= CONFIG.CONFIRM_SWIPE_THRESHOLD;
-            const isSwipingRight = confirmSwipeX > 0;
-            const isSwipingLeft = confirmSwipeX < 0;
-            // Blur diminue quand on swipe
-            const blurAmount = CONFIG.CONFIRM_SWIPE_BLUR_MAX * (1 - swipeProgress);
+        {/* CONFIRMATION PILL (slide to confirm) */}
+        {(pendingVibe || nukeConfirmMode) && mainContainerRef.current && (() => {
+            const containerRect = mainContainerRef.current.getBoundingClientRect();
+            const pillHeight = containerRect.width * CONFIG.CONFIRM_PILL_HEIGHT_PERCENT / 100;
+            const pillWidth = containerRect.width * CONFIG.CONFIRM_PILL_WIDTH_PERCENT / 100;
+            const cursorSize = pillHeight * CONFIG.CONFIRM_PILL_CURSOR_SIZE_PERCENT / 100;
+            const iconSize = pillHeight * CONFIG.CONFIRM_PILL_ICON_SIZE_PERCENT / 100;
+
+            // Zone de déplacement du curseur (de gauche à droite dans le pill)
+            const maxSlide = (pillWidth - cursorSize) / 2;
+            const clampedX = Math.max(-maxSlide, Math.min(maxSlide, confirmSwipeX));
+            const slideProgress = clampedX / maxSlide; // -1 (cancel) to +1 (confirm)
+
+            const isAtLeftThreshold = slideProgress <= -0.9;
+            const isAtRightThreshold = slideProgress >= 0.9;
 
             return (
             <div
-                className="absolute left-0 right-0 z-[65] flex items-center justify-center"
+                className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"
                 style={{
                     top: 0,
                     bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
-                    backgroundColor: 'transparent',
-                    backdropFilter: `blur(${blurAmount}px)`,
-                    WebkitBackdropFilter: `blur(${blurAmount}px)`,
                     opacity: confirmOverlayVisible ? 1 : 0,
-                    transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out',
-                }}
-                onTouchStart={(e) => {
-                    e.stopPropagation();
-                    setConfirmSwipeStart(e.touches[0].clientX);
-                }}
-                onTouchMove={(e) => {
-                    if (confirmSwipeStart === null) return;
-                    const diff = e.touches[0].clientX - confirmSwipeStart;
-                    setConfirmSwipeX(diff);
-                }}
-                onTouchEnd={() => {
-                    if (confirmSwipeX >= CONFIG.CONFIRM_SWIPE_THRESHOLD) {
-                        // Swipe right = validate
-                        if (pendingVibe) {
-                            setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
-                        } else {
-                            setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
-                        }
-                    } else if (confirmSwipeX <= -CONFIG.CONFIRM_SWIPE_THRESHOLD) {
-                        // Swipe left = cancel
-                        if (pendingVibe) {
-                            cancelKillVibe();
-                        } else {
-                            cancelNuke();
-                        }
-                    }
-                    setConfirmSwipeX(0);
-                    setConfirmSwipeStart(null);
+                    transition: 'opacity 150ms ease-out',
                 }}
             >
-                {/* Chevrons gauche - Annuler (fade out au seuil) */}
+                {/* Le pill glassmorphism */}
                 <div
-                    className="absolute left-4 flex items-center swipe-hint-left"
+                    className="relative flex items-center justify-between pointer-events-auto"
                     style={{
-                        opacity: isAtThreshold ? 0 : (isSwipingRight ? 0.3 : 0.6),
-                        transition: 'opacity 150ms ease-out'
+                        width: pillWidth,
+                        height: pillHeight,
+                        borderRadius: pillHeight / 2,
+                        backgroundColor: CONFIG.CONFIRM_PILL_BG_COLOR,
+                        backdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
+                        WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                        padding: (pillHeight - cursorSize) / 2,
+                    }}
+                    onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setConfirmSwipeStart(e.touches[0].clientX);
+                    }}
+                    onTouchMove={(e) => {
+                        if (confirmSwipeStart === null) return;
+                        const diff = e.touches[0].clientX - confirmSwipeStart;
+                        setConfirmSwipeX(diff);
+                    }}
+                    onTouchEnd={() => {
+                        if (isAtRightThreshold) {
+                            // Swipe right = validate
+                            if (pendingVibe) {
+                                setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                            } else {
+                                setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
+                            }
+                        } else if (isAtLeftThreshold) {
+                            // Swipe left = cancel
+                            if (pendingVibe) {
+                                cancelKillVibe();
+                            } else {
+                                cancelNuke();
+                            }
+                        }
+                        setConfirmSwipeX(0);
+                        setConfirmSwipeStart(null);
                     }}
                 >
-                    <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-400" strokeWidth={2} />
-                    <ChevronLeft size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -ml-3" strokeWidth={2} />
-                </div>
+                    {/* X icon à gauche */}
+                    <div
+                        className="flex items-center justify-center"
+                        style={{
+                            width: cursorSize,
+                            height: cursorSize,
+                            opacity: isAtLeftThreshold ? 1 : 0.5,
+                            transition: 'opacity 150ms ease-out',
+                        }}
+                    >
+                        <X
+                            size={iconSize}
+                            className={isAtLeftThreshold ? 'text-red-500' : 'text-gray-400'}
+                            strokeWidth={2.5}
+                            style={{
+                                filter: isAtLeftThreshold ? 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))' : 'none',
+                                transition: 'color 150ms ease-out, filter 150ms ease-out',
+                            }}
+                        />
+                    </div>
 
-                {/* Icons X et Check côte à côte - glissent avec le swipe */}
-                <div
-                    className="flex items-center justify-center pointer-events-none"
-                    style={{
-                        opacity: confirmOverlayVisible ? 1 : 0,
-                        transform: `translateX(${confirmSwipeX}px)`,
-                        transition: confirmSwipeStart !== null ? 'none' : 'opacity 150ms ease-out'
-                    }}
-                >
-                    {/* Mode normal : deux icônes côte à côte */}
-                    {!isAtThreshold && (
-                        <div className="flex items-center gap-16">
-                            {/* X icon (left) */}
-                            <X
-                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE}
-                                className="text-gray-400 transition-all duration-150"
-                                strokeWidth={2.5}
-                                style={{
-                                    opacity: isSwipingRight ? Math.max(0.3, 1 - swipeProgress) : 1
-                                }}
-                            />
-                            {/* Check icon (right) */}
-                            <Check
-                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE}
-                                className="text-gray-400 transition-all duration-150"
-                                strokeWidth={2.5}
-                                style={{
-                                    opacity: isSwipingLeft ? Math.max(0.3, 1 - swipeProgress) : 1
-                                }}
-                            />
-                        </div>
-                    )}
+                    {/* Curseur central draggable */}
+                    <div
+                        className={`absolute flex items-center justify-center ${isAtLeftThreshold ? 'animate-bounce-neon-red' : isAtRightThreshold ? 'animate-bounce-neon-lime' : ''}`}
+                        style={{
+                            width: cursorSize,
+                            height: cursorSize,
+                            borderRadius: '50%',
+                            backgroundColor: isAtLeftThreshold
+                                ? 'rgba(239, 68, 68, 0.9)'
+                                : isAtRightThreshold
+                                    ? 'rgba(132, 204, 22, 0.9)'
+                                    : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
+                            boxShadow: isAtLeftThreshold
+                                ? '0 0 20px rgba(239, 68, 68, 0.6)'
+                                : isAtRightThreshold
+                                    ? '0 0 20px rgba(132, 204, 22, 0.6)'
+                                    : '0 4px 12px rgba(0, 0, 0, 0.3)',
+                            left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                            transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out',
+                        }}
+                    >
+                        <ChevronsUpDown
+                            size={iconSize * 0.6}
+                            className="text-gray-500 rotate-90"
+                            strokeWidth={2}
+                            style={{
+                                opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.6,
+                                transition: 'opacity 150ms ease-out',
+                            }}
+                        />
+                    </div>
 
-                    {/* Mode seuil : icône active centrée avec bounce */}
-                    {isAtThreshold && isSwipingLeft && (
-                        <div className="animate-bounce-neon-red">
-                            <X
-                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE}
-                                className="text-red-500"
-                                strokeWidth={2.5}
-                                style={{
-                                    filter: 'drop-shadow(0 0 30px rgba(239, 68, 68, 0.8))'
-                                }}
-                            />
-                        </div>
-                    )}
-                    {isAtThreshold && isSwipingRight && (
-                        <div className="animate-bounce-neon-lime">
-                            <Check
-                                size={CONFIG.CONFIRM_SWIPE_ICON_SIZE_ACTIVE}
-                                className="text-lime-500"
-                                strokeWidth={2.5}
-                                style={{
-                                    filter: 'drop-shadow(0 0 30px rgba(132, 204, 22, 0.8))'
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* Chevrons droite - Valider (fade out au seuil) */}
-                <div
-                    className="absolute right-4 flex items-center swipe-hint-right"
-                    style={{
-                        opacity: isAtThreshold ? 0 : (isSwipingLeft ? 0.3 : 0.6),
-                        transition: 'opacity 150ms ease-out'
-                    }}
-                >
-                    <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-500 -mr-3" strokeWidth={2} />
-                    <ChevronRight size={CONFIG.CONFIRM_SWIPE_CHEVRON_SIZE} className="text-gray-400" strokeWidth={2} />
+                    {/* Check icon à droite */}
+                    <div
+                        className="flex items-center justify-center"
+                        style={{
+                            width: cursorSize,
+                            height: cursorSize,
+                            opacity: isAtRightThreshold ? 1 : 0.5,
+                            transition: 'opacity 150ms ease-out',
+                        }}
+                    >
+                        <Check
+                            size={iconSize}
+                            className={isAtRightThreshold ? 'text-lime-500' : 'text-gray-400'}
+                            strokeWidth={2.5}
+                            style={{
+                                filter: isAtRightThreshold ? 'drop-shadow(0 0 10px rgba(132, 204, 22, 0.8))' : 'none',
+                                transition: 'color 150ms ease-out, filter 150ms ease-out',
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
             );
