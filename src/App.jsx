@@ -4407,6 +4407,17 @@ useEffect(() => {
 
   const playFromLibrarySearch = (song) => {
     const doPlay = () => {
+        // Annuler tout fade en cours et restaurer le volume
+        if (fadeInterval.current) {
+            clearInterval(fadeInterval.current);
+            fadeInterval.current = null;
+        }
+        if (gainNodeRef.current) {
+            gainNodeRef.current.gain.value = volume / 100;
+        } else if (audioRef.current) {
+            audioRef.current.volume = volume / 100;
+        }
+
         const newQueue = [...librarySearchResults];
         setInitialRandomQueue(newQueue);
         setQueue(newQueue);
@@ -4416,11 +4427,11 @@ useEffect(() => {
         setIsLibrarySearching(false);
         setLibrarySearchQuery('');
     };
-    
+
     // Fade out si musique en cours
     if (audioRef.current && !audioRef.current.paused) {
         fadeMainAudio('out');
-        setTimeout(doPlay, 350);
+        setTimeout(doPlay, 450);
     } else {
         doPlay();
     }
@@ -5272,7 +5283,7 @@ const vibeSearchResults = () => {
                 fadeMainAudio('out');
                 setTimeout(() => {
                     vibeSearchResults();
-                }, 350);
+                }, 450);
             } else {
                 vibeSearchResults();
             }
@@ -5284,7 +5295,7 @@ const vibeSearchResults = () => {
             fadeMainAudio('out');
             setTimeout(() => {
                 doLaunchVibe(folderName);
-            }, 350); // Attendre fin du fade (300ms) + marge
+            }, 450); // Attendre fin du fade (~400ms) + marge
             return;
         }   
         
