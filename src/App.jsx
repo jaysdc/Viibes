@@ -4788,8 +4788,23 @@ const vibeSearchResults = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    
+
     const setupAndPlay = async () => {
+        // IMMÉDIATEMENT annuler tout fade en cours et restaurer le volume
+        // (avant le chargement qui peut prendre du temps)
+        if (isPlaying && currentSong) {
+            if (fadeInterval.current) {
+                clearInterval(fadeInterval.current);
+                fadeInterval.current = null;
+            }
+            // Restaurer le volume immédiatement
+            if (gainNodeRef.current) {
+                gainNodeRef.current.gain.value = volume / 100;
+            } else {
+                audio.volume = volume / 100;
+            }
+        }
+
         if (currentSong) {
             // Vérifier si on doit changer la source
             const currentSrc = audio.src;
@@ -4857,12 +4872,7 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
-              // S'assurer que le volume est correct avant de jouer
-              if (gainNodeRef.current) {
-                  gainNodeRef.current.gain.value = volume / 100;
-              } else {
-                  audio.volume = volume / 100;
-              }
+              // Le fade est déjà annulé et le volume restauré au début de setupAndPlay
               const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -6881,25 +6891,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
                 </div>
 
-                {/* Poignée - slide vers le haut (masquée) quand recherche, slide vers le bas (visible) quand on ferme */}
+                {/* Poignée - fade out quand recherche, fade in quand on ferme */}
                 <div
-                    className="flex justify-center items-end w-full overflow-hidden"
+                    className="bg-gray-300 rounded-full handle-pulse"
                     style={{
-                        animation: (isPlayerSearching || playerSearchOverlayAnim === 'opening')
-                            ? `player-handle-slide-out ${CONFIG.SEARCH_PLAYER_FADE_IN_DURATION}ms ease-out forwards`
-                            : playerSearchOverlayAnim === 'closing'
-                                ? `player-handle-slide-in ${CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION}ms ease-out forwards`
-                                : 'none'
+                        width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
+                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
+                        opacity: (isPlayerSearching || playerSearchOverlayAnim === 'opening') ? 0 : 1,
+                        transition: `opacity ${isPlayerSearching || playerSearchOverlayAnim === 'opening'
+                            ? CONFIG.SEARCH_PLAYER_FADE_IN_DURATION
+                            : CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION}ms ease-out`
                     }}
-                >
-                    <div
-                        className="bg-gray-300 rounded-full handle-pulse"
-                        style={{
-                            width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                            height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
-                        }}
-                    />
-                </div>
+                />
             </div>
 
             <div 
