@@ -4516,10 +4516,12 @@ useEffect(() => {
                 audioRef.current.pause();
                 debugDiv.innerHTML += `<b style="color:cyan">PAUSE</b><br>`;
 
-                // Restaurer le volume pour la prochaine lecture
+                // NE PAS restaurer le volume ici - le garder à 0
+                // Il sera restauré APRÈS que la nouvelle source soit chargée
+                // pour éviter les pics de son
                 gain.cancelScheduledValues(ctx.currentTime);
-                gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
-                debugDiv.innerHTML += `<b style="color:magenta">VOL RESTORED: ${volumeBeforeFade.toFixed(3)}</b><br>`;
+                gain.setValueAtTime(0, ctx.currentTime);
+                debugDiv.innerHTML += `<b style="color:magenta">VOL KEPT AT 0 (restore later)</b><br>`;
 
                 // Lancer le callback (nouvelle lecture)
                 debugDiv.innerHTML += `<b style="color:orange">CALLBACK...</b><br>`;
@@ -4535,7 +4537,7 @@ useEffect(() => {
                 debugDiv.innerHTML += `<b style="color:red">TIMEOUT FALLBACK</b><br>`;
                 audioRef.current.pause();
                 gain.cancelScheduledValues(ctx.currentTime);
-                gain.setValueAtTime(volumeBeforeFade, ctx.currentTime);
+                gain.setValueAtTime(0, ctx.currentTime); // Garder à 0, restauré plus tard
                 onComplete?.();
             }
         }, FADE_OUT_DURATION_SEC * 1000 + 200);
@@ -5055,7 +5057,19 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
-              // Le volume est déjà restauré par fadeOutAndStop avant d'arriver ici
+              // Restaurer le volume si on vient d'un fadeOut (gain était à 0)
+              if (gainNodeRef.current && savedVolume.current !== null) {
+                  const ctx = audioContextRef.current;
+                  const gain = gainNodeRef.current.gain;
+                  gain.cancelScheduledValues(ctx.currentTime);
+                  gain.setValueAtTime(savedVolume.current, ctx.currentTime);
+                  // Debug
+                  const debugDiv = document.getElementById('audio-debug');
+                  if (debugDiv) {
+                      debugDiv.innerHTML += `<b style="color:lime">VOL RESTORED NOW: ${savedVolume.current.toFixed(3)}</b><br>`;
+                  }
+                  savedVolume.current = null; // Reset pour ne pas re-restaurer
+              }
               const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
