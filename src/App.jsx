@@ -6751,16 +6751,23 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             const cursorSize = pillHeight * CONFIG.CONFIRM_PILL_CURSOR_SIZE_PERCENT / 100;
             const iconSize = pillHeight * CONFIG.CONFIRM_PILL_ICON_SIZE_PERCENT / 100;
 
-            // Zone de déplacement du curseur (de gauche à droite dans le pill)
-            const maxSlide = (pillWidth - cursorSize) / 2;
+            // Padding interne du pill (espace entre le bord et le curseur)
+            const pillPadding = (pillHeight - cursorSize) / 2;
+
+            // Scale pour que le curseur grossisse jusqu'à pillHeight (diamètre du tube)
+            const pulseScaleMax = pillHeight / cursorSize;
+
+            // Taille max de la bulle quand elle pulse (= pillHeight)
+            const maxBubbleSize = pillHeight;
+
+            // Zone de déplacement du curseur - bloqué quand la TAILLE MAX touche le bord
+            // La bulle peut grossir jusqu'à pillHeight, donc son centre doit rester à pillHeight/2 du bord
+            const maxSlide = (pillWidth / 2) - (maxBubbleSize / 2);
             const clampedX = Math.max(-maxSlide, Math.min(maxSlide, confirmSwipeX));
             const slideProgress = clampedX / maxSlide; // -1 (cancel) to +1 (confirm)
 
             const isAtLeftThreshold = slideProgress <= -0.9;
             const isAtRightThreshold = slideProgress >= 0.9;
-
-            // Scale pour que le curseur grossisse jusqu'à pillHeight (diamètre du tube)
-            const pulseScaleMax = pillHeight / cursorSize;
 
             return (
             <>
@@ -6798,16 +6805,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
                             border: '1px solid rgba(255, 255, 255, 0.2)',
                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                            padding: (pillHeight - cursorSize) / 2,
+                            padding: pillPadding,
                         }}
                         onTouchStart={(e) => {
                             e.stopPropagation();
-                            setConfirmSwipeStart(e.touches[0].clientX);
+                            setConfirmSwipeStart(e.touches[0].clientX - confirmSwipeX);
                         }}
                         onTouchMove={(e) => {
                             if (confirmSwipeStart === null) return;
-                            const diff = e.touches[0].clientX - confirmSwipeStart;
-                            setConfirmSwipeX(diff);
+                            const newX = e.touches[0].clientX - confirmSwipeStart;
+                            setConfirmSwipeX(newX);
                         }}
                         onTouchEnd={() => {
                             if (isAtRightThreshold) {
@@ -6817,6 +6824,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 } else {
                                     setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
                                 }
+                                setConfirmSwipeX(0);
                             } else if (isAtLeftThreshold) {
                                 // Swipe left = cancel
                                 if (pendingVibe) {
@@ -6824,29 +6832,26 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 } else {
                                     cancelNuke();
                                 }
+                                setConfirmSwipeX(0);
                             }
-                            setConfirmSwipeX(0);
+                            // Ne pas remettre à 0 si pas au seuil - le curseur reste en place
                             setConfirmSwipeStart(null);
                         }}
                     >
-                        {/* X icon à gauche */}
+                        {/* X icon à gauche - cachée quand la bulle la recouvre */}
                         <div
                             className="flex items-center justify-center"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
-                                opacity: isAtLeftThreshold ? 1 : 0.5,
+                                opacity: isAtLeftThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
                             }}
                         >
                             <X
                                 size={iconSize}
-                                className={isAtLeftThreshold ? 'text-red-500' : 'text-gray-400'}
+                                className="text-gray-400"
                                 strokeWidth={2.5}
-                                style={{
-                                    filter: isAtLeftThreshold ? 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))' : 'none',
-                                    transition: 'color 150ms ease-out, filter 150ms ease-out',
-                                }}
                             />
                         </div>
 
@@ -6870,10 +6875,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         ? '0 0 20px rgba(132, 204, 22, 0.6)'
                                         : '0 4px 12px rgba(0, 0, 0, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
-                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out',
+                                transition: confirmSwipeStart !== null ? 'none' : 'background-color 150ms ease-out, box-shadow 150ms ease-out',
                             }}
                         >
-                            {/* Chevrons horizontaux (gauche/droite) */}
+                            {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
                             <div
                                 className="flex items-center"
                                 style={{
@@ -6909,24 +6914,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             )}
                         </div>
 
-                        {/* Check icon à droite */}
+                        {/* Check icon à droite - cachée quand la bulle la recouvre */}
                         <div
                             className="flex items-center justify-center"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
-                                opacity: isAtRightThreshold ? 1 : 0.5,
+                                opacity: isAtRightThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
                             }}
                         >
                             <Check
                                 size={iconSize}
-                                className={isAtRightThreshold ? 'text-lime-500' : 'text-gray-400'}
+                                className="text-gray-400"
                                 strokeWidth={2.5}
-                                style={{
-                                    filter: isAtRightThreshold ? 'drop-shadow(0 0 10px rgba(132, 204, 22, 0.8))' : 'none',
-                                    transition: 'color 150ms ease-out, filter 150ms ease-out',
-                                }}
                             />
                         </div>
                     </div>
