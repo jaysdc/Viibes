@@ -6013,18 +6013,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           }
           return;
       }
-
+      
       const touch = e.touches[0];
       const containerRect = mainContainerRef.current?.getBoundingClientRect() || { height: 500, top: 0 };
+      const barHeight = containerRect.height * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
+      const barTop = containerRect.top + (containerRect.height - barHeight) / 2;
+      const barBottom = barTop + barHeight;
 
-      // Calculer les positions du tube en coordonnées viewport (comme touch.clientY)
-      const tubeHeight = containerRect.height * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
-      const tubeTop = containerRect.top + (containerRect.height - tubeHeight) / 2;
-      const tubeBottom = tubeTop + tubeHeight;
-
-      // Calculer le volume basé sur la position Y dans le tube (inversé : haut = 100%)
-      const clampedY = Math.max(tubeTop, Math.min(tubeBottom, touch.clientY));
-      const progress = 1 - (clampedY - tubeTop) / tubeHeight;
+      // Calculer le volume basé sur la position Y (inversé : haut = 100%)
+      const clampedY = Math.max(barTop, Math.min(barBottom, touch.clientY));
+      const progress = 1 - (clampedY - barTop) / barHeight;
       const newVolume = Math.round(progress * 100);
 
       setVolumePreview(newVolume);
