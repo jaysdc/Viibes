@@ -3950,12 +3950,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             )}
         </button>
 
-        {/* Dégradé haut */}
-        <div className="absolute top-0 left-0 right-0 h-[20px] bg-gradient-to-b from-white via-white/90 to-transparent z-40 pointer-events-none"></div>
-        
-        {/* Dégradé bas */}
-        <div className="absolute bottom-0 left-0 right-0 h-[20px] bg-gradient-to-t from-white via-white/90 to-transparent z-40 pointer-events-none"></div>
-        
         {/* Container scrollable avec mask CSS */}
         <div 
           ref={containerRef} 
