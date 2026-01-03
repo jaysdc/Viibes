@@ -192,11 +192,11 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // ROUE DE SÉLECTION (Liste des chansons)
     // ══════════════════════════════════════════════════════════════════════════
-    WHEEL_TITLE_SIZE_MAIN_CENTER: 20,   // Titre chanson centrale en mode principal
-    WHEEL_ARTIST_SIZE_MAIN: 14,         // Artiste en mode principal
-    
-    WHEEL_TITLE_SIZE_MAIN_OTHER: 18,    // Titre autres chansons en mode principal
-    WHEEL_ARTIST_SIZE_MAIN_OTHER: 12,   // Artiste autres chansons en mode principal
+    WHEEL_TITLE_SIZE_MAIN_CENTER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MAIN,   // Titre chanson centrale (depuis Config.jsx)
+    WHEEL_ARTIST_SIZE_MAIN: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MAIN,       // Artiste en mode principal (depuis Config.jsx)
+
+    WHEEL_TITLE_SIZE_MAIN_OTHER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MAIN - 2,    // Titre autres chansons (un peu plus petit)
+    WHEEL_ARTIST_SIZE_MAIN_OTHER: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MAIN - 2,  // Artiste autres chansons (un peu plus petit)
 
     WHEEL_TITLE_LINEHEIGHT_MAIN: 1.25,   // Taille ligne titre en mode principal
     WHEEL_ARTIST_LINEHEIGHT_MAIN: 1.25,  // Taille ligne artist en mode principal
@@ -204,11 +204,11 @@ const CONFIG = {
 
     WHEEL_ITEM_HEIGHT_MAIN_VH: UNIFIED_CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH,  // Taille élément mode principal (depuis Config.jsx)
 
-    WHEEL_TITLE_SIZE_MINI_CENTER: 16,   // Titre chanson centrale en mode dashboard
-    WHEEL_ARTIST_SIZE_MINI: 12,         // Artiste en mode dashboard
+    WHEEL_TITLE_SIZE_MINI_CENTER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MINI,   // Titre chanson centrale dashboard (depuis Config.jsx)
+    WHEEL_ARTIST_SIZE_MINI: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MINI,       // Artiste en mode dashboard (depuis Config.jsx)
 
-    WHEEL_TITLE_SIZE_MINI_OTHER: 14,    // Titre autres chansons en mode dashboard
-    WHEEL_ARTIST_SIZE_MINI_OTHER: 10,   // Artiste autres chansons en mode dashboard
+    WHEEL_TITLE_SIZE_MINI_OTHER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MINI - 2,    // Titre autres chansons dashboard (un peu plus petit)
+    WHEEL_ARTIST_SIZE_MINI_OTHER: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MINI - 2,  // Artiste autres chansons dashboard (un peu plus petit)
 
     WHEEL_TITLE_LINEHEIGHT_MINI: 1.2,   // Taille ligne titre en mode dashboard
     WHEEL_ARTIST_LINEHEIGHT_MINI: 1.2,  // Taille ligne artist en mode dashboard
