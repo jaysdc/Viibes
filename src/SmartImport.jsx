@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Flame, Layers, Check, AlertTriangle, Music2, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
+import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
+import { UNIFIED_CONFIG } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    SMARTIMPORT - PARAMÈTRES TWEAKABLES                    ║
@@ -21,7 +22,7 @@ export const SMARTIMPORT_CONFIG = {
     DIALOG_MAX_WIDTH: '20rem',           // Largeur max du dialog
     DIALOG_HEIGHT: '65vh',               // Hauteur max du dialog
     DIALOG_PADDING: '1.25rem',           // Padding interne du dialog
-    DIALOG_RADIUS: '2rem',               // Border radius général du dialog
+    DIALOG_RADIUS: '1rem',               // Border radius général du dialog (unifié avec DropboxBrowser)
     DIALOG_BG_COLOR: '#FAFAFA',          // Couleur de fond du dossier (violet très pâle)
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -222,7 +223,9 @@ const SmartImport = ({
     getGradientByIndex,
     getGradientName,
     onImportComplete,
-    onMenuClose,           // Callback pour fermer le menu radial
+    onMenuClose,
+    dropboxData,
+    onDropboxDataClear,           // Callback pour fermer le menu radial
     inputRef,
     folderButtonRef,       // Ref du bouton Folder
     slideOutDuration,      // Durée du slide out (synchro avec barre import)
@@ -423,8 +426,9 @@ const SmartImport = ({
         // Capturer la position du bouton source ET les dimensions finales AVANT de fermer le menu
         if (containerRef?.current) {
             const containerRect = containerRef.current.getBoundingClientRect();
-            const dialogMaxWidth = parseFloat(SMARTIMPORT_CONFIG.DIALOG_MAX_WIDTH) * 16;
-            const dialogHeight = containerRect.height * 0.65;
+            // Utiliser les dimensions depuis UNIFIED_CONFIG (en % de l'écran)
+            const dialogMaxWidth = containerRect.width * (UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH / 100);
+            const dialogHeight = containerRect.height * (UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT / 100);
             const finalLeft = (containerRect.width - dialogMaxWidth) / 2;
             const finalTop = (containerRect.height - dialogHeight) / 2;
             
@@ -500,10 +504,10 @@ const SmartImport = ({
                 const mergedFolders = { [importPreview.rootName]: importPreview.allFiles };
                 // Pour fusion, utiliser le premier gradient disponible ou en calculer un
                 const fusionGradients = { [importPreview.rootName]: importPreview.folderGradients?.[Object.keys(importPreview.folders)[0]] ?? 0 };
-                onImportComplete(mergedFolders, 'fusion', fusionGradients);
+                onImportComplete(mergedFolders, 'fusion', fusionGradients, importPreview.isDropbox);
                 if (importPreview.event) importPreview.event.target.value = '';
             } else if (action === 'vibes') {
-                onImportComplete(importPreview.folders, 'vibes', importPreview.folderGradients);
+                onImportComplete(importPreview.folders, 'vibes', importPreview.folderGradients, importPreview.isDropbox);
                 if (importPreview.event) importPreview.event.target.value = '';
             }
             
@@ -520,13 +524,10 @@ const SmartImport = ({
             setSlideDirection(direction);
             setDialogClosing(true);
             setBackdropVisible(false);
-            
-            // Lancer le rangement de la barre d'import IMMÉDIATEMENT
-            if (onMenuClose) onMenuClose();
-            
+
             // Forcer morphProgress à 1 pour éviter le saut
             setMorphProgress(1);
-            
+
             // Attendre que React applique les setState avant de démarrer l'animation
             requestAnimationFrame(() => {
                 // Animer le slide de 0 à 1
@@ -544,6 +545,8 @@ const SmartImport = ({
                     // Animation terminée, reset tout EN UNE SEULE FOIS
                     // importPreview à null fait disparaître le dialog, les autres resets sont sans effet visuel
                     setImportPreview(null);
+                    if (onDropboxDataClear) onDropboxDataClear();
+                    if (onMenuClose) onMenuClose(); // Ranger la barre d'import APRÈS fermeture
                     // Reset différé pour éviter le flash
                     setTimeout(() => {
                         setDialogClosing(false);
@@ -588,6 +591,70 @@ const SmartImport = ({
             };
         }
     }, [inputRef, playlists, vibeColorIndices, onMenuClose]);
+
+    // Gérer l'arrivée de données Dropbox
+    useEffect(() => {
+        if (dropboxData && dropboxData.folders) {
+            const { folders, rootName } = dropboxData;
+
+            const totalFiles = Object.values(folders).reduce((sum, arr) => sum + arr.length, 0);
+            const folderCount = Object.keys(folders).length;
+            const folderGradients = calculateGradients(folders);
+
+            // Import automatique si un seul dossier (pas de sous-dossiers avec MP3)
+            // et pas trop de fichiers
+            const exceedsAutoThreshold = totalFiles > SMARTIMPORT_CONFIG.AUTO_THRESHOLD;
+
+            if (folderCount === 1 && !exceedsAutoThreshold) {
+                // Import automatique - pas besoin d'afficher le dialog
+                onImportComplete(folders, 'vibes', folderGradients, true);
+                if (onDropboxDataClear) onDropboxDataClear();
+                if (onMenuClose) onMenuClose(); // Ranger la barre d'import
+                return;
+            }
+
+            const existingFolders = Object.keys(folders).filter(name =>
+                playlists && playlists[name] !== undefined
+            );
+
+            // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            // Utiliser les dimensions depuis UNIFIED_CONFIG (en % de l'écran)
+            const dialogMaxWidth = screenWidth * (UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH / 100);
+            const dialogHeight = screenHeight * (UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT / 100);
+            const finalLeft = (screenWidth - dialogMaxWidth) / 2;
+            const finalTop = (screenHeight - dialogHeight) / 2;
+
+            setDialogDimensions({
+                finalLeft,
+                finalTop,
+                finalWidth: dialogMaxWidth,
+                finalHeight: dialogHeight
+            });
+
+            setSourceRect({
+                left: finalLeft,
+                top: finalTop,
+                width: dialogMaxWidth,
+                height: 48
+            });
+
+            setImportPreview({
+                folders: folders,
+                folderGradients: folderGradients,
+                allFiles: Object.values(folders).flat(),
+                totalFiles: totalFiles,
+                rootName: rootName,
+                existingFolders: existingFolders,
+                event: null,
+                isDropbox: true
+            });
+
+            setBackdropVisible(true);
+            setMorphProgress(1);
+        }
+    }, [dropboxData]);
 
     // Handlers pour le swipe de couleur
     const handleCardSwipeStart = (e, cardName) => {
@@ -874,8 +941,8 @@ const SmartImport = ({
                                 >
                                     {importPreview.totalFiles}
                                 </span>
-                                <Music2 
-                                    className="text-gray-400" 
+                                <Music
+                                    className="text-gray-400"
                                     style={{ width: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE, height: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}
                                 />
                             </div>
@@ -1069,9 +1136,9 @@ const SmartImport = ({
                         {folderCount === 1 ? (
                             /* Cas 1 dossier : 2 boutons - X cercle + Vibe flex */
                             <div className="flex gap-2 items-center">
-                                <div className="h-11 w-11 relative overflow-visible rounded-full flex-shrink-0">
+                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'cancel' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-red"
                                             style={{ background: '#ef4444', zIndex: 0 }}
                                         />
@@ -1080,17 +1147,17 @@ const SmartImport = ({
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
-                                        style={{ 
-                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)', 
-                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af' 
+                                        style={{
+                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
                                         }}
                                     >
                                         <X size={18} />
                                     </button>
                                 </div>
-                                <div className="flex-1 h-11 relative overflow-visible rounded-full">
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-pink"
                                             style={{ background: '#ec4899', zIndex: 0 }}
                                         />
@@ -1109,9 +1176,9 @@ const SmartImport = ({
                         ) : (
                             /* Cas plusieurs dossiers : 3 boutons - X cercle + Fusion/Vibes flex égaux */
                             <div className="flex gap-2 items-center">
-                                <div className="h-11 w-11 relative overflow-visible rounded-full flex-shrink-0">
+                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'cancel' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-red"
                                             style={{ background: '#ef4444', zIndex: 0 }}
                                         />
@@ -1120,22 +1187,22 @@ const SmartImport = ({
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
-                                        style={{ 
-                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)', 
-                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af' 
+                                        style={{
+                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
                                         }}
                                     >
                                         <X size={18} />
                                     </button>
                                 </div>
-                                <div className="flex-1 h-11 relative overflow-visible rounded-full">
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'fusion' && (
-                                        <div 
+                                        <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-orange"
-                                            style={{ 
-                                                background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', 
+                                            style={{
+                                                background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)',
                                                 border: '1px solid #FF6B00',
-                                                zIndex: 0 
+                                                zIndex: 0
                                             }}
                                         />
                                     )}
@@ -1143,16 +1210,16 @@ const SmartImport = ({
                                         onClick={() => handleButtonClick('fusion')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
-                                        style={{ 
-                                            background: btnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)', 
-                                            color: btnIgniting === 'fusion' ? 'white' : '#6b7280' 
+                                        style={{
+                                            background: btnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            color: btnIgniting === 'fusion' ? 'white' : '#6b7280'
                                         }}
                                     >
                                         <Layers size={14} />
                                         FUSION
                                     </button>
                                 </div>
-                                <div className="flex-1 h-11 relative overflow-visible rounded-full">
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
                                         <div 
                                             className="absolute inset-0 rounded-full smartimport-ignite-pink"
