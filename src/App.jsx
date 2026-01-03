@@ -720,12 +720,13 @@ const CONFIG = {
 
 // --- 1. STYLE CSS ---
 const styles = `
-  /* Orientation lock - bloque le mode paysage */
+  /* Orientation lock - bloque le mode paysage (TEMPORAIREMENT DÉSACTIVÉ)
   @media screen and (orientation: landscape) {
     .orientation-lock-overlay {
       display: flex !important;
     }
   }
+  */
 
   .orientation-lock-overlay {
     display: none;
