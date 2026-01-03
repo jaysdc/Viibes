@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
 import { UNIFIED_CONFIG } from './Config.jsx';
+import { SMARTIMPORT_CONFIG } from './SmartImport.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    DROPBOX BROWSER - PARAMÈTRES                           ║
@@ -705,7 +706,7 @@ const DropboxBrowser = ({
                         paddingBottom: '0.75rem',
                         paddingLeft: 0,
                         paddingRight: 0,
-                        background: '#FAFAFA',
+                        background: SMARTIMPORT_CONFIG.DIALOG_BG_COLOR,
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
                         // Cacher le contenu pendant l'animation initiale (seulement si sourceRect existe)
                         opacity: !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3),

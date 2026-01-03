@@ -160,8 +160,8 @@ const CONFIG = {
     CAPSULE_HEIGHT_VH: UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH,  // Hauteur capsule mode principal (depuis Config.jsx)
     CAPSULE_WIDTH_PERCENT: 92,          // Largeur capsule (% largeur conteneur)
 
-    CAPSULE_TITLE_SIZE_MAIN: 22,        // Taille titre en mode principal (px)
-    CAPSULE_ARTIST_SIZE_MAIN: 15,       // Taille artiste en mode principal (px)
+    CAPSULE_TITLE_SIZE_MAIN: UNIFIED_CONFIG.CAPSULE_TITLE_SIZE_MAIN,        // Taille titre en mode principal (depuis Config.jsx)
+    CAPSULE_ARTIST_SIZE_MAIN: UNIFIED_CONFIG.CAPSULE_ARTIST_SIZE_MAIN,       // Taille artiste en mode principal (depuis Config.jsx)
 
     CAPSULE_TITLE_LINEHEIGHT_MAIN: 1.15,  // Taille ligne titre en mode principal (px)
     CAPSULE_ARTIST_LINEHEIGHT_MAIN: 1.15,    // Taille ligne artist en mode principal (px)
@@ -169,8 +169,8 @@ const CONFIG = {
 
     CAPSULE_HEIGHT_MINI_VH: UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH,  // Même hauteur que principal (unifié depuis Config.jsx)
 
-    CAPSULE_TITLE_SIZE_DASHBOARD: 18,   // Taille titre en mode dashboard (px)
-    CAPSULE_ARTIST_SIZE_DASHBOARD: 12,  // Taille artiste en mode dashboard (px)
+    CAPSULE_TITLE_SIZE_DASHBOARD: UNIFIED_CONFIG.CAPSULE_TITLE_SIZE_DASHBOARD,   // Taille titre en mode dashboard (depuis Config.jsx)
+    CAPSULE_ARTIST_SIZE_DASHBOARD: UNIFIED_CONFIG.CAPSULE_ARTIST_SIZE_DASHBOARD,  // Taille artiste en mode dashboard (depuis Config.jsx)
 
     CAPSULE_TITLE_LINEHEIGHT_DASHBOARD: 1.1, // Taille ligne titre en mode dashboard (px)
     CAPSULE_ARTIST_LINEHEIGHT_DASHBOARD: 1.1,  // Taille ligne artist en mode dashboard (px)
