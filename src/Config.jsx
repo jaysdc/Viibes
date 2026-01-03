@@ -34,6 +34,13 @@ export const UNIFIED_CONFIG = {
     CAPSULE_HEIGHT: '2.0rem',           // Hauteur unifiée de toutes les capsules
     ICON_SIZE_PERCENT: 50,              // Taille des icônes = 50% de la hauteur capsule
 
+    // Roue du lecteur - hauteur des éléments (% hauteur écran)
+    WHEEL_ITEM_HEIGHT_MAIN_VH: 5.8,     // Taille élément roue lecteur principal
+    WHEEL_ITEM_HEIGHT_MINI_VH: 5.5,     // Taille élément roue lecteur dashboard
+
+    // Capsules beacon et contrôle (hauteur en % de l'écran)
+    PLAYER_CAPSULE_HEIGHT_VH: 6.5,      // Hauteur capsule beacon + capsule de lecture (unifié)
+
     // Titres (espace entre safe area iOS et le titre)
     TITLE_MARGIN_TOP: '1rem',           // Marge au-dessus du titre (après la safe area)
     TITLE_MARGIN_BOTTOM: '0.5rem',      // Marge sous le titre (avant les boutons/contenu)

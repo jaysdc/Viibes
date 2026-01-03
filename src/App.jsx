@@ -157,7 +157,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE CONTRÔLE (Titre/Artiste au-dessus du player)
     // ══════════════════════════════════════════════════════════════════════════
-    CAPSULE_HEIGHT_VH: 6.5,             // Hauteur capsule mode principal (% hauteur écran)
+    CAPSULE_HEIGHT_VH: UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH,  // Hauteur capsule mode principal (depuis Config.jsx)
     CAPSULE_WIDTH_PERCENT: 92,          // Largeur capsule (% largeur conteneur)
 
     CAPSULE_TITLE_SIZE_MAIN: 22,        // Taille titre en mode principal (px)
@@ -167,7 +167,7 @@ const CONFIG = {
     CAPSULE_ARTIST_LINEHEIGHT_MAIN: 1.15,    // Taille ligne artist en mode principal (px)
     CAPSULE_GAP_MAIN: 0,                // Écart titre/artiste mode principal (px)
 
-    CAPSULE_HEIGHT_MINI_VH: 6.2,        // Hauteur capsule mode dashboard (% hauteur écran)
+    CAPSULE_HEIGHT_MINI_VH: UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH,  // Même hauteur que principal (unifié depuis Config.jsx)
 
     CAPSULE_TITLE_SIZE_DASHBOARD: 18,   // Taille titre en mode dashboard (px)
     CAPSULE_ARTIST_SIZE_DASHBOARD: 12,  // Taille artiste en mode dashboard (px)
@@ -202,7 +202,7 @@ const CONFIG = {
     WHEEL_ARTIST_LINEHEIGHT_MAIN: 1.25,  // Taille ligne artist en mode principal
     WHEEL_GAP_MAIN: 0,                  // Écart titre/artiste mode principal (px)
 
-    WHEEL_ITEM_HEIGHT_MAIN_VH: 5.8,     // Taille élément mode principal (% hauteur écran)
+    WHEEL_ITEM_HEIGHT_MAIN_VH: UNIFIED_CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH,  // Taille élément mode principal (depuis Config.jsx)
 
     WHEEL_TITLE_SIZE_MINI_CENTER: 16,   // Titre chanson centrale en mode dashboard
     WHEEL_ARTIST_SIZE_MINI: 12,         // Artiste en mode dashboard
@@ -214,7 +214,7 @@ const CONFIG = {
     WHEEL_ARTIST_LINEHEIGHT_MINI: 1.2,  // Taille ligne artist en mode dashboard
     WHEEL_GAP_MINI: 0,                  // Écart titre/artiste mode dashboard (px)
 
-    WHEEL_ITEM_HEIGHT_MINI_VH: 5.5,     // Taille élément mode dashboard (% hauteur écran)
+    WHEEL_ITEM_HEIGHT_MINI_VH: UNIFIED_CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH,  // Taille élément mode dashboard (depuis Config.jsx)
 
     WHEEL_CENTER_THRESHOLD: 0.5,        // Seuil de changement de sélection (0.1 = tôt, 0.5 = milieu, 0.9 = tard)
 
@@ -229,7 +229,7 @@ const CONFIG = {
     WHEEL_CYLINDER_SIDE_ROTATE_Y: 25,   // Rotation Y max des colonnes latérales (degrés)
 
     // MASQUE DE FONDU (haut/bas de la roue)
-    WHEEL_MASK_ENABLED: true,           // Activer le masque de fondu
+    WHEEL_MASK_ENABLED: false,          // Masque de fondu désactivé
     WHEEL_MASK_EDGE_OPACITY: 0.5,      // Opacité aux bords (0 = invisible, 1 = visible)
     WHEEL_MASK_CENTER_SIZE: 70,         // Taille zone centrale 100% opaque (% de la hauteur)
     WHEEL_MASK_CURVE: 2,                // Courbe du fondu (1 = linéaire, 2+ = reste net plus longtemps au centre)

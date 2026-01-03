@@ -912,99 +912,105 @@ const DropboxBrowser = ({
 
                     {/* 3 boutons en bas - X rond + 2 capsules flex */}
                     <div
-                        className="flex items-center gap-2"
+                        className="relative"
                         style={{
                             flexShrink: 0,
                             paddingLeft: CONFIG.HORIZONTAL_PADDING,
                             paddingRight: CONFIG.HORIZONTAL_PADDING
                         }}
                     >
-                        {/* Bouton FERMER - rond */}
-                        <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                            {closingButton === 'close' && (
-                                <div
-                                    className="absolute inset-0 rounded-full dropbox-ignite-red"
-                                    style={{ background: '#ef4444', zIndex: 0 }}
-                                />
-                            )}
-                            <button
-                                onClick={handleClose}
-                                disabled={!!closingButton || scanning}
-                                className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
+                        {/* Barre de progression pleine largeur (phase 2) - recouvre les 3 boutons */}
+                        {scanPhase === 'processing' && totalFilesToProcess > 0 && (
+                            <div
+                                className="absolute left-0 right-0 top-0 bottom-0 rounded-full overflow-hidden"
                                 style={{
-                                    background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                    color: closingButton === 'close' ? 'white' : '#9ca3af'
+                                    marginLeft: CONFIG.HORIZONTAL_PADDING,
+                                    marginRight: CONFIG.HORIZONTAL_PADDING,
+                                    height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                    background: 'rgba(0,0,0,0.05)',
+                                    border: '1px solid rgba(0,0,0,0.05)',
+                                    zIndex: 10
                                 }}
                             >
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {/* Bouton DÉCONNECTER - capsule flex */}
-                        <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                            {closingButton === 'disconnect' && (
                                 <div
-                                    className="absolute inset-0 rounded-full dropbox-ignite-red"
-                                    style={{ background: '#ef4444', zIndex: 0 }}
-                                />
-                            )}
-                            <button
-                                onClick={handleDisconnect}
-                                disabled={!!closingButton || scanning}
-                                className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
-                                style={{
-                                    background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                    color: closingButton === 'disconnect' ? 'white' : '#ef4444'
-                                }}
-                            >
-                                <LogOut size={14} />
-                            </button>
-                        </div>
-
-                        {/* Bouton IMPORTER - capsule flex avec barre de progression */}
-                        <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                            {/* Barre de progression (phase 2) */}
-                            {scanPhase === 'processing' && totalFilesToProcess > 0 && (
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 rounded-full"
+                                    className="absolute left-0 top-0 bottom-0"
                                     style={{
                                         width: `${(processedFiles / totalFilesToProcess) * 100}%`,
                                         background: CONFIG.DROPBOX_BLUE,
-                                        transition: 'width 0.1s ease-out',
-                                        zIndex: 0,
-                                        border: '1px solid rgba(0,0,0,0.05)'
+                                        transition: 'width 0.1s ease-out'
                                     }}
                                 />
-                            )}
-                            <button
-                                onClick={handleImport}
-                                disabled={!canImport || !!closingButton}
-                                className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
-                                style={{
-                                    // Phase 1 (counting): fond blanc avec bordure grise
-                                    // Phase 2 (processing): fond transparent (barre visible)
-                                    // Normal: fond bleu ou gris
-                                    background: scanPhase === 'counting'
-                                        ? 'white'
-                                        : scanPhase === 'processing'
-                                            ? 'transparent'
-                                            : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
-                                    border: (scanPhase === 'counting' || scanPhase === 'processing') ? '1px solid rgba(0,0,0,0.05)' : 'none',
-                                    color: scanPhase === 'counting'
-                                        ? CONFIG.DROPBOX_BLUE
-                                        : (canImport ? 'white' : '#9CA3AF'),
-                                    opacity: canImport || scanning ? 1 : 0.4,
-                                    boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
-                                }}
-                            >
-                                {scanPhase === 'counting' ? (
-                                    <Loader2 size={14} className="animate-spin" />
-                                ) : scanPhase === 'processing' ? (
-                                    null
-                                ) : (
-                                    <FolderDown size={14} />
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
+                            {/* Bouton FERMER - rond */}
+                            <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                {closingButton === 'close' && (
+                                    <div
+                                        className="absolute inset-0 rounded-full dropbox-ignite-red"
+                                        style={{ background: '#ef4444', zIndex: 0 }}
+                                    />
                                 )}
-                            </button>
+                                <button
+                                    onClick={handleClose}
+                                    disabled={!!closingButton || scanning}
+                                    className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
+                                    style={{
+                                        background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                        color: closingButton === 'close' ? 'white' : '#9ca3af'
+                                    }}
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Bouton DÉCONNECTER - capsule flex */}
+                            <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                {closingButton === 'disconnect' && (
+                                    <div
+                                        className="absolute inset-0 rounded-full dropbox-ignite-red"
+                                        style={{ background: '#ef4444', zIndex: 0 }}
+                                    />
+                                )}
+                                <button
+                                    onClick={handleDisconnect}
+                                    disabled={!!closingButton || scanning}
+                                    className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
+                                    style={{
+                                        background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                        color: closingButton === 'disconnect' ? 'white' : '#ef4444'
+                                    }}
+                                >
+                                    <LogOut size={14} />
+                                </button>
+                            </div>
+
+                            {/* Bouton IMPORTER - capsule flex */}
+                            <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                <button
+                                    onClick={handleImport}
+                                    disabled={!canImport || !!closingButton}
+                                    className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
+                                    style={{
+                                        background: scanPhase === 'counting'
+                                            ? 'white'
+                                            : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
+                                        border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none',
+                                        color: scanPhase === 'counting'
+                                            ? CONFIG.DROPBOX_BLUE
+                                            : (canImport ? 'white' : '#9CA3AF'),
+                                        opacity: canImport || scanning ? 1 : 0.4,
+                                        boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
+                                    }}
+                                >
+                                    {scanPhase === 'counting' ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                    ) : (
+                                        <FolderDown size={14} />
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
