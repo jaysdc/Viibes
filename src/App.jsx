@@ -2216,19 +2216,18 @@ const ControlBar = ({
                     </div>
                     
                     {/* OVERLAY VOLUME SLIDER */}
-                    {isVolumeActive && mainContainerRef.current && ReactDOM.createPortal((() => {
-                        const containerRect = mainContainerRef.current?.getBoundingClientRect() || { width: 300, height: 500 };
-                        
-                        const tubeHeight = containerRect.height * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
-                        const tubeWidth = containerRect.width * CONFIG.VOLUME_BAR_WIDTH_PERCENT / 100;
-                        const tubeTop = (containerRect.height - tubeHeight) / 2;
-                        const tubeLeft = (containerRect.width - tubeWidth) / 2;
-                        
-                        // Utiliser les coordonnées capturées au touchStart
-                        const beaconHeight = volumeBeaconRect ? volumeBeaconRect.height : containerRect.height * capsuleHeightVh / 100;
-                        const beaconWidth = volumeBeaconRect ? volumeBeaconRect.width : containerRect.width * CONFIG.CAPSULE_WIDTH_PERCENT / 100;
-                        const beaconTop = volumeBeaconRect ? volumeBeaconRect.top : (containerRect.height - beaconHeight) / 2;
-                        const beaconLeft = volumeBeaconRect ? volumeBeaconRect.left : (containerRect.width - beaconWidth) / 2;
+                    {isVolumeActive && ReactDOM.createPortal((() => {
+                        // Dimensions du tube : centré sur l'écran
+                        const tubeHeight = window.innerHeight * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
+                        const tubeWidth = window.innerWidth * CONFIG.VOLUME_BAR_WIDTH_PERCENT / 100;
+                        const tubeTop = (window.innerHeight - tubeHeight) / 2;
+                        const tubeLeft = (window.innerWidth - tubeWidth) / 2;
+
+                        // Coordonnées du beacon (point de départ du morph)
+                        const beaconHeight = volumeBeaconRect ? volumeBeaconRect.height : window.innerHeight * capsuleHeightVh / 100;
+                        const beaconWidth = volumeBeaconRect ? volumeBeaconRect.width : window.innerWidth * CONFIG.CAPSULE_WIDTH_PERCENT / 100;
+                        const beaconTop = volumeBeaconRect ? volumeBeaconRect.top : (window.innerHeight - beaconHeight) / 2;
+                        const beaconLeft = volumeBeaconRect ? volumeBeaconRect.left : (window.innerWidth - beaconWidth) / 2;
                         
                         const p = volumeMorphProgress;
                         const currentWidth = beaconWidth + (tubeWidth - beaconWidth) * p;
@@ -2241,9 +2240,14 @@ const ControlBar = ({
                         const thumbY = tubeTop + tubeHeight * (1 - volumePreview / 100);
                         
                         return (
-                            <div 
-                                className="absolute inset-0 z-[100] flex items-center justify-center"
-                                style={{ 
+                            <div
+                                className="z-[100] flex items-center justify-center"
+                                style={{
+                                    position: 'fixed',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
                                     backgroundColor: `rgba(0, 0, 0, ${CONFIG.VOLUME_OVERLAY_OPACITY * volumeMorphProgress})`,
                                     transition: `background-color ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_OVERLAY_EASING}`,
                                 }}
@@ -2351,7 +2355,7 @@ const ControlBar = ({
                                 )}
                             </div>
                         );
-                    })(), mainContainerRef.current)}
+                    })(), document.body)}
                 </>
             )}
         </div>
@@ -6015,14 +6019,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       }
       
       const touch = e.touches[0];
-      const containerRect = mainContainerRef.current?.getBoundingClientRect() || { height: 500, top: 0 };
-      const barHeight = containerRect.height * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
-      const barTop = containerRect.top + (containerRect.height - barHeight) / 2;
-      const barBottom = barTop + barHeight;
 
-      // Calculer le volume basé sur la position Y (inversé : haut = 100%)
-      const clampedY = Math.max(barTop, Math.min(barBottom, touch.clientY));
-      const progress = 1 - (clampedY - barTop) / barHeight;
+      // Dimensions du tube : centré sur l'écran
+      const tubeHeight = window.innerHeight * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
+      const tubeTop = (window.innerHeight - tubeHeight) / 2;
+      const tubeBottom = tubeTop + tubeHeight;
+
+      // Calculer le volume basé sur la position Y dans le tube (inversé : haut = 100%)
+      const clampedY = Math.max(tubeTop, Math.min(tubeBottom, touch.clientY));
+      const progress = 1 - (clampedY - tubeTop) / tubeHeight;
       const newVolume = Math.round(progress * 100);
 
       setVolumePreview(newVolume);
@@ -7209,7 +7214,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{playerHeaderHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={(() => { const screenHeight = mainContainerRef.current?.offsetHeight || window.innerHeight; const statusBarHeight = 32; const footerHeight = getFooterHeight(); return screenHeight - statusBarHeight - playerHeaderHeight - footerHeight; })()} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
                   </div>
                 )}
         
