@@ -4437,7 +4437,7 @@ useEffect(() => {
 
   // AUDIO FADING UTILS
   // Durée du fade out pour kill vibe (en secondes pour Web Audio API)
-  const FADE_OUT_DURATION_SEC = 1.0;
+  const FADE_OUT_DURATION_SEC = 0.25;
 
   // Fade out avec callback quand terminé (utilise Web Audio API pour un fade lisse)
   const fadeOutAndStop = (onComplete) => {
@@ -4477,31 +4477,9 @@ useEffect(() => {
         // Faire le ramp vers 0
         gain.linearRampToValueAtTime(0, startTime + FADE_OUT_DURATION_SEC);
 
-        // DEBUG VISUEL - afficher sur l'écran (auto-hide après 10s)
-        let debugDiv = document.getElementById('audio-debug');
-        if (!debugDiv) {
-            debugDiv = document.createElement('div');
-            debugDiv.id = 'audio-debug';
-            debugDiv.style.cssText = 'position:fixed;top:50px;left:10px;right:10px;background:rgba(0,0,0,0.9);color:lime;font-family:monospace;font-size:12px;padding:10px;z-index:99999;max-height:200px;overflow:auto;border-radius:8px;';
-            document.body.appendChild(debugDiv);
-        }
-        debugDiv.innerHTML = `FADE START: vol=${startValue.toFixed(3)}<br>`;
-
-        // Arrêter les logs après 5 secondes mais garder l'écran affiché
-        let logsActive = true;
-        setTimeout(() => {
-            logsActive = false;
-            debugDiv.innerHTML += `<b style="color:gray">--- LOGS STOPPED (5s) ---</b><br>`;
-        }, 5000);
-
         // Surveiller le volume en temps réel et lancer la lecture quand = 0
         const checkVolume = setInterval(() => {
             const currentGain = gain.value;
-            const elapsed = ctx.currentTime - startTime;
-            if (logsActive) {
-                debugDiv.innerHTML += `t=${elapsed.toFixed(2)}s gain=${currentGain.toFixed(4)}<br>`;
-                debugDiv.scrollTop = debugDiv.scrollHeight;
-            }
 
             // Quand le volume atteint 0, arrêter le check et lancer la suite
             if (currentGain <= 0.001) {
@@ -4510,37 +4488,29 @@ useEffect(() => {
                     clearTimeout(fadeInterval.current);
                     fadeInterval.current = null;
                 }
-                debugDiv.innerHTML += `<b style="color:yellow">VOLUME = 0!</b><br>`;
 
                 // Pause l'audio actuel
                 audioRef.current.pause();
-                debugDiv.innerHTML += `<b style="color:cyan">PAUSE</b><br>`;
 
-                // NE PAS restaurer le volume ici - le garder à 0
-                // Il sera restauré APRÈS que la nouvelle source soit chargée
-                // pour éviter les pics de son
+                // Garder le gain à 0, il sera restauré après chargement nouvelle source
                 gain.cancelScheduledValues(ctx.currentTime);
                 gain.setValueAtTime(0, ctx.currentTime);
-                debugDiv.innerHTML += `<b style="color:magenta">VOL KEPT AT 0 (restore later)</b><br>`;
 
-                // Lancer le callback (nouvelle lecture)
-                debugDiv.innerHTML += `<b style="color:orange">CALLBACK...</b><br>`;
                 onComplete?.();
             }
-        }, 50); // Check toutes les 50ms pour plus de précision
+        }, 25); // Check toutes les 25ms pour fade court
 
-        // Timeout de sécurité (au cas où le check rate le 0)
+        // Timeout de sécurité
         fadeInterval.current = setTimeout(() => {
             if (fadeInterval.current) {
                 fadeInterval.current = null;
                 clearInterval(checkVolume);
-                debugDiv.innerHTML += `<b style="color:red">TIMEOUT FALLBACK</b><br>`;
                 audioRef.current.pause();
                 gain.cancelScheduledValues(ctx.currentTime);
-                gain.setValueAtTime(0, ctx.currentTime); // Garder à 0, restauré plus tard
+                gain.setValueAtTime(0, ctx.currentTime);
                 onComplete?.();
             }
-        }, FADE_OUT_DURATION_SEC * 1000 + 200);
+        }, FADE_OUT_DURATION_SEC * 1000 + 100);
     } else {
         // Fallback sans Web Audio API (fade par steps)
         const intervalTime = 20;
@@ -5067,11 +5037,6 @@ const vibeSearchResults = () => {
                   if (gain.value < 0.01) {
                       gain.cancelScheduledValues(ctx.currentTime);
                       gain.setValueAtTime(targetGain, ctx.currentTime);
-                      // Debug
-                      const debugDiv = document.getElementById('audio-debug');
-                      if (debugDiv) {
-                          debugDiv.innerHTML += `<b style="color:lime">VOL RESTORED: ${targetGain.toFixed(3)}</b><br>`;
-                      }
                   }
               }
               const playPromise = audio.play();
@@ -6059,16 +6024,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       const clampedY = Math.max(barTop, Math.min(barBottom, touch.clientY));
       const progress = 1 - (clampedY - barTop) / barHeight;
       const newVolume = Math.round(progress * 100);
-
-      // DEBUG VISUEL pour le volume
-      let volDebug = document.getElementById('vol-debug');
-      if (!volDebug) {
-          volDebug = document.createElement('div');
-          volDebug.id = 'vol-debug';
-          volDebug.style.cssText = 'position:fixed;bottom:100px;left:10px;right:10px;background:rgba(0,0,0,0.9);color:cyan;font-family:monospace;font-size:11px;padding:8px;z-index:99999;border-radius:8px;';
-          document.body.appendChild(volDebug);
-      }
-      volDebug.innerHTML = `touchY=${touch.clientY.toFixed(0)} barTop=${barTop.toFixed(0)} barBot=${barBottom.toFixed(0)}<br>clampY=${clampedY.toFixed(0)} prog=${progress.toFixed(2)} vol=${newVolume}`;
 
       setVolumePreview(newVolume);
       // Appliquer le volume directement via Web Audio API (fonctionne sur iOS)
