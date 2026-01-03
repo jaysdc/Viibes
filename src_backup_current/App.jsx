@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers } from 'lucide-react';
+import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
+import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -81,11 +82,19 @@ const getRefreshToken = () => {
 
 // Nettoyer tous les tokens Dropbox
 const clearDropboxTokens = () => {
+    console.log('=== CLEARING ALL DROPBOX TOKENS ===');
+    console.log('Before clear - ACCESS_TOKEN:', localStorage.getItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN));
+    console.log('Before clear - dropbox_token:', localStorage.getItem('dropbox_token'));
+
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.EXPIRES_AT);
     localStorage.removeItem(DROPBOX_STORAGE_KEYS.CODE_VERIFIER);
     localStorage.removeItem('dropbox_token'); // Ancien format
+
+    console.log('After clear - ACCESS_TOKEN:', localStorage.getItem(DROPBOX_STORAGE_KEYS.ACCESS_TOKEN));
+    console.log('After clear - dropbox_token:', localStorage.getItem('dropbox_token'));
+    console.log('=== TOKENS CLEARED ===');
 };
 
 // Détection automatique : vrai mobile/PWA vs desktop
@@ -96,6 +105,25 @@ const isRealDevice = () => {
   return isStandalone || isMobile;
 };
 
+// Obtenir la safe area bottom en pixels (pour les calculs JS)
+const getSafeAreaBottom = () => {
+  if (typeof window === 'undefined') return 0;
+  const div = document.createElement('div');
+  div.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
+  div.style.position = 'absolute';
+  div.style.visibility = 'hidden';
+  document.body.appendChild(div);
+  const safeArea = parseInt(getComputedStyle(div).paddingBottom) || 0;
+  document.body.removeChild(div);
+  return safeArea;
+};
+
+// Calculer la hauteur totale du footer (safe area + boutons + padding)
+const getFooterHeight = () => {
+  const safeArea = getSafeAreaBottom();
+  const paddingTop = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16; // rem to px
+  return safeArea + UNIFIED_CONFIG.FOOTER_BTN_HEIGHT + paddingTop;
+};
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                        TOUS LES PARAMÈTRES TWEAKABLES                     ║
@@ -110,7 +138,6 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     UNIFIED_CAPSULE_HEIGHT: UNIFIED_CONFIG.CAPSULE_HEIGHT,
     UNIFIED_ICON_SIZE_PERCENT: UNIFIED_CONFIG.ICON_SIZE_PERCENT,
-    UNIFIED_HEADER_PADDING_AFTER_SAFE_AREA: UNIFIED_CONFIG.HEADER_PADDING_AFTER_SAFE_AREA,
 
     // ══════════════════════════════════════════════════════════════════════════
     // DÉGRADÉS & COULEURS
@@ -437,20 +464,19 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // FOOTER
     // ══════════════════════════════════════════════════════════════════════════
-    FOOTER_HEIGHT_PERCENT: 15,           // Hauteur du footer (% de l'écran)
     FOOTER_SLIDE_DURATION: 400,          // Durée de l'animation slide du footer (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
     // BARRE DE CONTRÔLE (TimeCapsule + Recenter + Volume)
     // ══════════════════════════════════════════════════════════════════════════
-    CONTROL_BAR_Y: 60,                  // Position verticale dans le footer (0=bas, 100=haut)
-    CONTROL_BAR_HEIGHT_PERCENT: 50,     // Hauteur des éléments (% du footer)
+    CONTROL_BAR_Y: 50,                  // Position verticale dans le footer (0=bas, 100=haut)
+    CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
     CONTROL_BAR_SPACING_PERCENT: 15,     // Espacement total (% largeur écran)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIROIR (Dashboard Drawer)
     // ══════════════════════════════════════════════════════════════════════════
-    DRAWER_HANDLE_HEIGHT_PERCENT: 5,    // Hauteur de la zone draggable (% de l'écran)
+    DRAWER_HANDLE_HEIGHT_PERCENT: 4.5,    // Hauteur de la zone draggable (% de l'écran)
     DRAWER_SEPARATOR_HEIGHT: 1,         // Hauteur du trait de séparation (px)
     DRAWER_TOP_MARGIN: 0,              // Marge en haut quand tiroir ouvert au max (px) XXXXXXXXXX
 
@@ -478,9 +504,7 @@ const CONFIG = {
     IMPORT_FOLDER_ICON_COLOR: '#4b5563',        // Couleur de l'icône dossier (gray-600)
     IMPORT_FOLDER_GLOW: 'rgba(173, 216, 230, 0.8)',
     IMPORT_HANDLE_WIDTH_PERCENT: 15,            // % de la largeur du header
-    IMPORT_HANDLE_HEIGHT: 6,                    // px
-    IMPORT_BUTTONS_HANDLE_GAP: '2rem',               // espace entre les boutons et le handle
-    IMPORT_BOTTOM_MARGIN: '1rem',             // marge entre le bas du handle et le bas du header
+    // IMPORT_HANDLE_HEIGHT -> utilise UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
     
     // CONTRÔLES - Couleur de fond commune
     CONTROL_BG_COLOR: '249, 250, 251',          // RGB - gris très clair (TimeCapsule, Volume, Recenter, Import OFF)
@@ -528,7 +552,6 @@ const CONFIG = {
     // HEADER DASHBOARD (Logo + icônes + Search bar)
     // ══════════════════════════════════════════════════════════════════════════
     HEADER_STATUS_HEIGHT: '2rem',         // Hauteur zone encoche/heure/batterie
-    IOS_SAFE_AREA_TOP: 3,                 // Padding haut sur vrai iPhone (rem) - compense l'encoche/Dynamic Island
     HEADER_BASIC_HEIGHT: '5rem',       // Hauteur du contenu du header (logo + boutons)
     HEADER_PADDING_TOP: 3,                // Padding entre l'encoche et le header (rem)
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
@@ -571,7 +594,6 @@ const CONFIG = {
     PLAYER_HEADER_TITLE_MARGIN_BOTTOM: '0.5rem',     // Marge sous le titre (px)
     PLAYER_HEADER_CONTROLS_MARGIN_BOTTOM: '0.5rem',  // Marge sous la barre de contrôle (px)
     PLAYER_HEADER_HANDLE_WIDTH: 48,           // Largeur du handle (px)
-    PLAYER_HEADER_HANDLE_HEIGHT: 4,           // Hauteur du handle (px)
     PLAYER_HEADER_HANDLE_MARGIN_BOTTOM: '0.5rem',   // Marge sous le handle (px)
     PLAYER_WHEEL_OFFSET_PERCENT: 5,              // Décalage vertical de la roue vers le bas (% de l'espace disponible)
 
@@ -644,6 +666,19 @@ const CONFIG = {
     NUKE_TEXT: 'NUKE ALL?!',                      // Texte unique Nuke
 
     // ══════════════════════════════════════════════════════════════════════════
+    // CONFIRMATION PILL (slide to confirm)
+    // ══════════════════════════════════════════════════════════════════════════
+    CONFIRM_PILL_HEIGHT_PERCENT: 25,             // Hauteur du pill (% largeur écran, comme volume)
+    CONFIRM_PILL_WIDTH_PERCENT: 80,              // Largeur du pill (% largeur écran)
+    CONFIRM_PILL_ICON_SIZE_PERCENT: 50,          // Taille icônes X/Check (% hauteur pill)
+    CONFIRM_PILL_CURSOR_SIZE_PERCENT: 80,        // Taille du curseur (% hauteur pill)
+    CONFIRM_PILL_BG_COLOR: 'rgba(110, 110, 110, 0.15)', // Fond du pill
+    CONFIRM_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
+    CONFIRM_PILL_BLUR: 20,                       // Blur du pill (px)
+    CONFIRM_BACKDROP_BLUR: 8,                    // Blur du fond quand pill visible (px) - fixe = performant
+    CONFIRM_FADE_DURATION: 150,                  // Durée du fade in/out du pill (ms)
+
+    // ══════════════════════════════════════════════════════════════════════════
     // CAPSULE LIQUID GLASS DES VIBECARDS
     // ══════════════════════════════════════════════════════════════════════════
     VIBECARD_CAPSULE_PX: 1,               // Padding horizontal (rem)
@@ -659,7 +694,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
-    TC_SKIP_LABEL_SIZE: 0.6,              // Taille du "10" (rem)
+    TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
     TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
     TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
     TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
@@ -685,6 +720,42 @@ const CONFIG = {
 
 // --- 1. STYLE CSS ---
 const styles = `
+  /* Orientation lock - bloque le mode paysage */
+  @media screen and (orientation: landscape) {
+    .orientation-lock-overlay {
+      display: flex !important;
+    }
+  }
+
+  .orientation-lock-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    font-weight: bold;
+    gap: 1rem;
+  }
+
+  .orientation-lock-icon {
+    font-size: 4rem;
+    animation: rotate-phone 1.5s ease-in-out infinite;
+  }
+
+  @keyframes rotate-phone {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+  }
+
+  /* Safe area iOS - utilise la vraie valeur de l'encoche */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -864,7 +935,82 @@ const styles = `
     animation: bounce-neon-lime 1s ease-in-out infinite;
     color: #C0FF00 !important;
   }
-  
+
+  @keyframes bounce-neon-red {
+    0%, 100% {
+      transform: translateY(-25%);
+      filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6)) brightness(1);
+    }
+    25%, 75% {
+      filter: drop-shadow(0 0 30px rgba(239, 68, 68, 1)) brightness(1.2);
+    }
+    50% {
+      transform: translateY(0);
+      filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6)) brightness(1);
+    }
+  }
+  .animate-bounce-neon-red {
+    animation: bounce-neon-red 1s ease-in-out infinite;
+    color: #ef4444 !important;
+  }
+
+  /* Animation pulse pour le pill de confirmation - grossit jusqu'au diamètre du tube */
+  @keyframes pulse-pill-lime {
+    0%, 100% {
+      transform: scale(var(--pulse-scale-min, 1));
+      box-shadow: 0 0 15px rgba(132, 204, 22, 0.6);
+    }
+    50% {
+      transform: scale(var(--pulse-scale-max, 1.25));
+      box-shadow: 0 0 30px rgba(132, 204, 22, 1);
+    }
+  }
+  .animate-pulse-pill-lime {
+    animation: pulse-pill-lime 0.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-pill-red {
+    0%, 100% {
+      transform: scale(var(--pulse-scale-min, 1));
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    }
+    50% {
+      transform: scale(var(--pulse-scale-max, 1.25));
+      box-shadow: 0 0 30px rgba(239, 68, 68, 1);
+    }
+  }
+  .animate-pulse-pill-red {
+    animation: pulse-pill-red 0.6s ease-in-out infinite;
+  }
+
+  /* Animation ignite pour le curseur de confirmation pill - lime (kill vibe) */
+  @keyframes ignite-pill-lime {
+    0% { box-shadow: 0 0 10px rgba(132, 204, 22, 0.4); }
+    15% { box-shadow: 0 0 25px rgba(132, 204, 22, 1), 0 0 50px rgba(132, 204, 22, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(132, 204, 22, 0.5); }
+    40% { box-shadow: 0 0 35px rgba(132, 204, 22, 1), 0 0 70px rgba(132, 204, 22, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(132, 204, 22, 0.6); }
+    70% { box-shadow: 0 0 30px rgba(132, 204, 22, 0.9), 0 0 60px rgba(132, 204, 22, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(132, 204, 22, 0.7), 0 0 50px rgba(132, 204, 22, 0.5); }
+  }
+  .animate-ignite-pill-lime {
+    animation: ignite-pill-lime 0.5s ease-out forwards;
+  }
+
+  /* Animation ignite pour le curseur de confirmation pill - red (nuke) */
+  @keyframes ignite-pill-red {
+    0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+    15% { box-shadow: 0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+    40% { box-shadow: 0 0 35px rgba(239, 68, 68, 1), 0 0 70px rgba(239, 68, 68, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+    70% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.9), 0 0 60px rgba(239, 68, 68, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.7), 0 0 50px rgba(239, 68, 68, 0.5); }
+  }
+  .animate-ignite-pill-red {
+    animation: ignite-pill-red 0.5s ease-out forwards;
+  }
+
   @keyframes appear-then-fade {
     0% { opacity: 0; transform: scale(1); }
     15% { opacity: 1; transform: scale(1); }
@@ -979,12 +1125,23 @@ const styles = `
   /* Animation slide du handle */
  @keyframes import-handle-slide-in {
     0% { max-height: 0; }
-    100% { max-height: 1rem; }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
   }
 
   @keyframes import-handle-slide-out {
-    0% { max-height: 1rem; }
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
     100% { max-height: 0; }
+  }
+
+  /* Animation slide du handle player */
+  @keyframes player-handle-slide-in {
+    0% { max-height: 0; opacity: 0; }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
+  }
+
+  @keyframes player-handle-slide-out {
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
+    100% { max-height: 0; opacity: 0; }
   }
 
   @keyframes blink-3 {
@@ -1968,13 +2125,13 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
   const SkipButton = ({ direction, onClick }) => (
     <button
         onClick={onClick}
-        className="flex items-center justify-center text-gray-400 hover:text-gray-800 hover:bg-white/80 rounded-full transition-all group"
-        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem` }}
+        className="flex items-center justify-center text-gray-400 rounded-full"
+        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
     >
         <div className="relative" style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }}>
             {direction === 'back'
-                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
-                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} className="group-hover:text-gray-900"/>
+                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
+                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
             }
             <span
                 className="absolute inset-0 flex items-center justify-center font-bold"
@@ -1985,11 +2142,13 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
 );
 
 const RecenterCapsule = ({ onClick }) => (
-  <button 
+  <button
       onClick={onClick}
-      className={`w-16 h-10 bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm transition-all hover:bg-gray-100 overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm transition-all hover:bg-gray-100 overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
       style={{
-        border: CONFIG.RECENTER_NEON_ENABLED 
+        height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+        width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
+        border: CONFIG.RECENTER_NEON_ENABLED
             ? `${CONFIG.RECENTER_NEON_WIDTH}px solid ${CONFIG.RECENTER_NEON_COLOR}`
             : '1px solid rgb(229, 231, 235)'
     }}
@@ -2017,11 +2176,10 @@ const ControlBar = ({
   isVolumeActive, mainContainerRef, volumeMorphProgress, volumePreview, beaconNeonRef, capsuleHeightVh, volumeBeaconRect
 }) => {
     return (
-        <div 
-            className="absolute left-0 right-0 flex items-center"
-            style={{ 
-                height: `${CONFIG.CONTROL_BAR_HEIGHT_PERCENT}%`,
-                top: `${100 - CONFIG.CONTROL_BAR_Y - (CONFIG.CONTROL_BAR_HEIGHT_PERCENT / 2)}%`,
+        <div
+            className="absolute left-0 right-0 flex items-start"
+            style={{
+                top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
                 padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
                 gap: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
             }}
@@ -2041,10 +2199,12 @@ const ControlBar = ({
             {!vibeSwipePreview && (
                 <>
                     <RecenterCapsule onClick={onRecenter} />
-                    <div 
-                        className={`w-10 h-10 bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-all hover:bg-gray-100 ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
+                    <div
+                        className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-all hover:bg-gray-100 ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
                         style={{
-                          border: CONFIG.VOLUME_NEON_ENABLED 
+                          height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                          width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                          border: CONFIG.VOLUME_NEON_ENABLED
                               ? `${CONFIG.VOLUME_NEON_WIDTH}px solid ${CONFIG.VOLUME_NEON_COLOR}`
                               : '1px solid rgb(229, 231, 235)'
                       }}
@@ -2434,9 +2594,10 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         const gradientBg = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
         
         return (
-            <div 
-                className="flex-1 h-10 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
-                style={{ 
+            <div
+                className="flex-1 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
+                style={{
+                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     background: gradientBg,
                     opacity: 0.3 + (progress * 0.7),
                     boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
@@ -2471,9 +2632,10 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         const neonColor = isKill ? '255, 103, 0' : '255, 7, 58';
         
         return (
-            <div 
-            className={`flex-1 h-10 rounded-full flex items-center justify-center border animate-appear overflow-hidden ${animClass}`}
+            <div
+            className={`flex-1 rounded-full flex items-center justify-center border animate-appear overflow-hidden ${animClass}`}
                 style={{
+                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     '--neon-color': neonColor,
                     backgroundColor: bgColor,
                     borderColor: borderColor,
@@ -2491,14 +2653,13 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     const feedbackStyle = "bg-gray-50 border-gray-200";
     const glowStyle = {};
 
-    const heightClass = isMini ? 'h-10' : 'h-10';
-
     return (
-      <div 
-          className={`flex-1 ${heightClass} rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`} 
+      <div
+          className={`flex-1 rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
+            height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             ...glowStyle,
-            border: CONFIG.TIMECAPSULE_NEON_ENABLED 
+            border: CONFIG.TIMECAPSULE_NEON_ENABLED
                 ? `${CONFIG.TIMECAPSULE_NEON_WIDTH}px solid ${CONFIG.TIMECAPSULE_NEON_COLOR}`
                 : '1px solid rgb(229, 231, 235)'
         }}
@@ -3044,9 +3205,9 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const WHEEL_TITLE_SIZE_MAIN_OTHER = CONFIG.WHEEL_TITLE_SIZE_MAIN_OTHER;
     const WHEEL_TITLE_SIZE_MINI_CENTER = CONFIG.WHEEL_TITLE_SIZE_MINI_CENTER;
     const WHEEL_TITLE_SIZE_MINI_OTHER = CONFIG.WHEEL_TITLE_SIZE_MINI_OTHER;
-    const WHEEL_ARTIST_SIZE_MAIN_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MAIN_CENTER;
+    const WHEEL_ARTIST_SIZE_MAIN_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MAIN;
     const WHEEL_ARTIST_SIZE_MAIN_OTHER = CONFIG.WHEEL_ARTIST_SIZE_MAIN_OTHER;
-    const WHEEL_ARTIST_SIZE_MINI_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MINI_CENTER;
+    const WHEEL_ARTIST_SIZE_MINI_CENTER = CONFIG.WHEEL_ARTIST_SIZE_MINI;
     const WHEEL_ARTIST_SIZE_MINI_OTHER = CONFIG.WHEEL_ARTIST_SIZE_MINI_OTHER;
     const WHEEL_TITLE_LINEHEIGHT_MAIN = CONFIG.WHEEL_TITLE_LINEHEIGHT_MAIN;
     const WHEEL_TITLE_LINEHEIGHT_MINI = CONFIG.WHEEL_TITLE_LINEHEIGHT_MINI;
@@ -3179,7 +3340,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     const HEIGHT = CONFIG.VOLUME_HEIGHT;
     const TRACK_HEIGHT = CONFIG.VOLUME_TRACK_HEIGHT;
     const THUMB_SIZE = CONFIG.VOLUME_THUMB_SIZE;
-    const BORDER_RADIUS = CONFIG.VOLUME_BORDER_RADIUS;
+    const BORDER_RADIUS = CONFIG.VOLUME_BAR_BORDER_RADIUS;
     const ITEM_HEIGHT_MAIN_VH = CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH;
     const ITEM_HEIGHT_MINI_VH = CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH;
     const LINE_WIDTH_PERCENT = CONFIG.WHEEL_SELECTION_SEPARATOR;
@@ -3878,7 +4039,21 @@ export default function App() {
     const [playlists, setPlaylists] = useState(null);
     const [currentTime, setCurrentTime] = useState('');
     const [isOnRealDevice, setIsOnRealDevice] = useState(false);
-    
+    const [safeAreaBottom, setSafeAreaBottom] = useState(0);
+
+    // Lire safe-area-inset-bottom au démarrage
+    useEffect(() => {
+        const div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.bottom = '0';
+        div.style.height = 'env(safe-area-inset-bottom, 0px)';
+        div.style.visibility = 'hidden';
+        document.body.appendChild(div);
+        const height = div.getBoundingClientRect().height;
+        document.body.removeChild(div);
+        setSafeAreaBottom(height);
+    }, []);
+
     // Détecter si on est sur un vrai appareil mobile/PWA
     useEffect(() => {
         setIsOnRealDevice(isRealDevice());
@@ -3970,7 +4145,7 @@ export default function App() {
   const closeFullPlayer = useCallback(() => {
     // Calculer la position Y finale (là où le tiroir va apparaître)
     const containerHeight = mainContainerRef.current?.offsetHeight || window.innerHeight;
-    const footerHeight = containerHeight * CONFIG.FOOTER_HEIGHT_PERCENT / 100;
+    const footerHeight = getFooterHeight();
     const drawerHeight = containerHeight * CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100;
     const targetY = containerHeight - footerHeight - drawerHeight;
     
@@ -4043,6 +4218,7 @@ const handlePlayerTouchEnd = () => {
     };
 
     const dropboxButtonRef = useRef(null);
+    const [dropboxSourceRect, setDropboxSourceRect] = useState(null);
     const [showVolumeOverlay, setShowVolumeOverlay] = useState(false);
     const [dashboardHeight, setDashboardHeight] = useState(0);
     const [showMainPlayerTrigger, setShowMainPlayerTrigger] = useState(false);
@@ -4064,11 +4240,16 @@ const handlePlayerTouchEnd = () => {
     const [pendingImportAction, setPendingImportAction] = useState(null);
     const [importBtnIgniting, setImportBtnIgniting] = useState(null); // 'nuke' | 'dropbox' | 'folder' | null
     const [showDropboxBrowser, setShowDropboxBrowser] = useState(false);
-    const [dropboxToken, setDropboxToken] = useState(() => localStorage.getItem('dropbox_token'));
+    const [dropboxToken, setDropboxToken] = useState(() => localStorage.getItem('dropbox_access_token') || localStorage.getItem('dropbox_token'));
     const [dropboxPath, setDropboxPath] = useState('');
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);
+    const [pendingDropboxData, setPendingDropboxData] = useState(null);
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
+    const [confirmOverlayVisible, setConfirmOverlayVisible] = useState(false);
+    const [confirmFeedback, setConfirmFeedback] = useState(null); // { text, type, triggerValidation }
+    const [confirmSwipeX, setConfirmSwipeX] = useState(0); // Swipe X position for confirmation overlay
+    const [confirmSwipeStart, setConfirmSwipeStart] = useState(null); // Touch start X
     const [showTweaker, setShowTweaker] = useState(false);
     const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
     
@@ -4083,8 +4264,6 @@ const handlePlayerTouchEnd = () => {
       }
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
-    const [confirmAnimating, setConfirmAnimating] = useState(false);
-    const [isFadingOutConfirm, setIsFadingOutConfirm] = useState(false);
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
@@ -4257,63 +4436,146 @@ useEffect(() => {
 }, [vibeColorIndices]);
 
   // AUDIO FADING UTILS
+  // Durée du fade out pour kill vibe (en secondes pour Web Audio API)
+  const FADE_OUT_DURATION_SEC = 0.25;
+
+  // Fade out avec callback quand terminé (utilise Web Audio API pour un fade lisse)
+  const fadeOutAndStop = (onComplete) => {
+    if (!audioRef.current) {
+        onComplete?.();
+        return;
+    }
+
+    if (audioRef.current.paused) {
+        onComplete?.();
+        return;
+    }
+
+    // Annuler tout fade précédent
+    if (fadeInterval.current) {
+        clearTimeout(fadeInterval.current);
+        fadeInterval.current = null;
+    }
+
+    // Sauvegarder le volume actuel pour le restaurer après
+    const volumeBeforeFade = gainNodeRef.current
+        ? gainNodeRef.current.gain.value
+        : audioRef.current.volume;
+    savedVolume.current = volumeBeforeFade;
+
+    // Utiliser Web Audio API si disponible (fade lisse natif)
+    if (audioContextRef.current && gainNodeRef.current) {
+        const ctx = audioContextRef.current;
+        const gain = gainNodeRef.current.gain;
+
+        // Annuler tout scheduling précédent
+        gain.cancelScheduledValues(ctx.currentTime);
+        // Définir la valeur actuelle comme point de départ
+        const startValue = gain.value;
+        const startTime = ctx.currentTime;
+        gain.setValueAtTime(startValue, startTime);
+        // Faire le ramp vers 0
+        gain.linearRampToValueAtTime(0, startTime + FADE_OUT_DURATION_SEC);
+
+        // Surveiller le volume en temps réel et lancer la lecture quand = 0
+        const checkVolume = setInterval(() => {
+            const currentGain = gain.value;
+
+            // Quand le volume atteint 0, arrêter le check et lancer la suite
+            if (currentGain <= 0.001) {
+                clearInterval(checkVolume);
+                if (fadeInterval.current) {
+                    clearTimeout(fadeInterval.current);
+                    fadeInterval.current = null;
+                }
+
+                // Pause l'audio actuel
+                audioRef.current.pause();
+
+                // Garder le gain à 0, il sera restauré après chargement nouvelle source
+                gain.cancelScheduledValues(ctx.currentTime);
+                gain.setValueAtTime(0, ctx.currentTime);
+
+                onComplete?.();
+            }
+        }, 25); // Check toutes les 25ms pour fade court
+
+        // Timeout de sécurité
+        fadeInterval.current = setTimeout(() => {
+            if (fadeInterval.current) {
+                fadeInterval.current = null;
+                clearInterval(checkVolume);
+                audioRef.current.pause();
+                gain.cancelScheduledValues(ctx.currentTime);
+                gain.setValueAtTime(0, ctx.currentTime);
+                onComplete?.();
+            }
+        }, FADE_OUT_DURATION_SEC * 1000 + 100);
+    } else {
+        // Fallback sans Web Audio API (fade par steps)
+        const intervalTime = 20;
+        const totalSteps = (FADE_OUT_DURATION_SEC * 1000) / intervalTime;
+        const step = volumeBeforeFade / totalSteps;
+
+        const doFade = () => {
+            const currentVol = audioRef.current.volume;
+            if (currentVol > step) {
+                audioRef.current.volume = currentVol - step;
+                fadeInterval.current = setTimeout(doFade, intervalTime);
+            } else {
+                audioRef.current.volume = 0;
+                audioRef.current.pause();
+                fadeInterval.current = null;
+                audioRef.current.volume = volumeBeforeFade;
+                onComplete?.();
+            }
+        };
+        doFade();
+    }
+  };
+
+  // Ancienne fonction pour les autres cas (duck, fade in)
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
-    
+
     if (fadeInterval.current) clearInterval(fadeInterval.current);
-    
+
     const step = 0.05;
-    const intervalTime = direction === 'out' ? 20 : 50;
-    
-    if (direction === 'out') {
-        savedVolume.current = audioRef.current.volume;
-        if (audioRef.current.paused) return; 
+    const intervalTime = 50;
+
+    if (direction === 'duck') {
+        // Duck : baisser le volume SANS couper l'audio
+        savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+        const duckTarget = targetVolume || 0.15;
 
         fadeInterval.current = setInterval(() => {
           const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol > step) {
+          if (currentVol > duckTarget + step) {
               if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
               else audioRef.current.volume = currentVol - step;
           } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = 0;
-              else audioRef.current.volume = 0;
-                audioRef.current.pause();
-                clearInterval(fadeInterval.current);
-            }
-        }, intervalTime);
-    } else if (direction === 'duck') {
-        // Duck : baisser le volume SANS couper l'audio
-        savedVolume.current = audioRef.current.volume;
-        const duckTarget = targetVolume || 0.15;
-        
-        fadeInterval.current = setInterval(() => {
-          const currentVol2 = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol2 > duckTarget + step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol2 - step;
-              else audioRef.current.volume = currentVol2 - step;
-          } else {
               if (gainNodeRef.current) gainNodeRef.current.gain.value = duckTarget;
               else audioRef.current.volume = duckTarget;
-                clearInterval(fadeInterval.current);
-            }
+              clearInterval(fadeInterval.current);
+          }
         }, 20);
-    } else {
+    } else if (direction === 'in') {
         // Fade In - restaurer le volume
         if (audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
         fadeInterval.current = setInterval(() => {
-          const currentVol3 = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol3 < savedVolume.current - step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol3 + step;
-              else audioRef.current.volume = currentVol3 + step;
+          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+          if (currentVol < savedVolume.current - step) {
+              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol + step;
+              else audioRef.current.volume = currentVol + step;
           } else {
               if (gainNodeRef.current) gainNodeRef.current.gain.value = savedVolume.current;
               else audioRef.current.volume = savedVolume.current;
-                clearInterval(fadeInterval.current);
-            }
+              clearInterval(fadeInterval.current);
+          }
         }, intervalTime);
-      }
+    }
   };
 
   const playFromLibrarySearch = (song) => {
@@ -4327,11 +4589,10 @@ useEffect(() => {
         setIsLibrarySearching(false);
         setLibrarySearchQuery('');
     };
-    
-    // Fade out si musique en cours
+
+    // Fade out si musique en cours, sinon jouer directement
     if (audioRef.current && !audioRef.current.paused) {
-        fadeMainAudio('out');
-        setTimeout(doPlay, 350);
+        fadeOutAndStop(doPlay);
     } else {
         doPlay();
     }
@@ -4373,7 +4634,7 @@ useEffect(() => {
           setShowImportMenu(false);
           setImportOverlayAnim('none');
           setImportButtonsReady(false);
-      }, CONFIG.IMPORT_HEADER_SLIDE_DURATION);
+      }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
   }
 }, [importButtonsReady, pendingImportAction]);
 
@@ -4381,22 +4642,25 @@ const vibeSearchResults = () => {
     if (librarySearchResults.length === 0) return;
 
     let songsToPlay = [...librarySearchResults];
-    
+
     // Nom de la vibe = titre de la première chanson (avant mélange)
     const vibeName = songsToPlay[0].artist;
-    
+
     // Créer la carte Vibe
     const vibeSongs = songsToPlay.map(s => ({...s, type: 'vibe'}));
     setPlaylists(prev => ({ ...prev, [vibeName]: vibeSongs }));
-    
+
     // Attribuer le dégradé choisi à cette nouvelle vibe
     setVibeColorIndices(prev => ({ ...prev, [vibeName]: vibeTheseGradientIndex }));
-    
+
     // Mélanger
-    for (let i = songsToPlay.length - 1; i > 0; i--) { 
-        const j = Math.floor(Math.random() * (i + 1)); 
-        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]]; 
+    for (let i = songsToPlay.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]];
     }
+
+    // Si c'est la même chanson, forcer le play car le useEffect ne se déclenchera pas
+    const isSameSong = currentSong && songsToPlay[0] && currentSong.id === songsToPlay[0].id;
 
     setInitialRandomQueue([...songsToPlay]);
     setQueue(songsToPlay);
@@ -4406,6 +4670,12 @@ const vibeSearchResults = () => {
     openFullPlayer();
     setIsLibrarySearching(false);
     setLibrarySearchQuery('');
+
+    // Forcer le play si même chanson (le useEffect ne se déclenche pas)
+    if (isSameSong && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+    }
   };
 
   const processFileImport = (foldersToImport) => {
@@ -4501,7 +4771,7 @@ const vibeSearchResults = () => {
     });
     
     setPlaylists(newPlaylists);
-    
+
     // Attribuer des couleurs uniques aux nouveaux dossiers
     const newFolderNames = Object.keys(folders);
     setVibeColorIndices(prev => {
@@ -4521,6 +4791,59 @@ const vibeSearchResults = () => {
       
       return needsUpdate ? updated : prev;
     });
+  };
+
+  // Traiter l'import de fichiers Dropbox
+  const processDropboxImport = (foldersToImport) => {
+    const newPlaylists = playlists ? { ...playlists } : {};
+
+    const allExistingSongsMap = new Map();
+    if (playlists) {
+        Object.values(playlists).forEach(playlist => {
+            playlist.forEach(song => {
+                if (song.fileSignature) {
+                    allExistingSongsMap.set(song.fileSignature, song);
+                }
+            });
+        });
+    }
+
+    Object.keys(foldersToImport).forEach(folderName => {
+        const filesInFolder = foldersToImport[folderName];
+
+        const newSongsForThisFolder = filesInFolder.map((file) => {
+            const extension = file.name.split('.').pop().toLowerCase();
+            const fileSignature = `${file.size}-${extension}`;
+
+            let title = file.name.replace(/\.[^/.]+$/, "");
+            let artist = "Artiste Inconnu";
+            if (title.includes(" - ")) {
+                const parts = title.split(" - ");
+                artist = parts[0].trim();
+                title = parts[1].trim();
+            }
+
+            const existingSong = allExistingSongsMap.get(fileSignature);
+            const playCount = existingSong ? existingSong.playCount : 0;
+            const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            return {
+                id: id,
+                title: title,
+                artist: artist,
+                playCount: playCount,
+                file: null,
+                dropboxPath: file.path_lower,
+                fileSignature: fileSignature,
+                type: 'dropbox'
+            };
+        });
+
+        newPlaylists[folderName] = newSongsForThisFolder;
+    });
+
+    setPlaylists(newPlaylists);
+    setFeedback({ text: `Import Dropbox terminé`, type: 'confirm', triggerValidation: Date.now() });
   };
 
     const handleDashTouchStart = (e) => { 
@@ -4557,7 +4880,7 @@ const vibeSearchResults = () => {
         }
         
         // Calcul position (une seule fois getBoundingClientRect car on a déjà newHeight)
-        const bottomBarHeight = containerHeight * (CONFIG.FOOTER_HEIGHT_PERCENT / 100);
+        const bottomBarHeight = getFooterHeight();
         const drawerTop = containerHeight - newHeight - bottomBarHeight;
         const topPositionPercent = (drawerTop / containerHeight) * 100;
         drawerTopPercentRef.current = topPositionPercent;
@@ -4588,10 +4911,10 @@ const vibeSearchResults = () => {
         
         isDraggingDrawer.current = false;
         
-        if (showMainPlayerTrigger && drawerTopPercentRef.current <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) { 
+        if (showMainPlayerTrigger && drawerTopPercentRef.current <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) {
           // Calculer la position Y du haut du tiroir (là où le player doit commencer)
           const containerHeight = mainContainerRef.current.offsetHeight;
-          const footerHeight = containerHeight * CONFIG.FOOTER_HEIGHT_PERCENT / 100;
+          const footerHeight = getFooterHeight();
           const currentDrawerHeight = dashboardRef.current?.offsetHeight || dashboardHeight;
           const drawerTopY = containerHeight - footerHeight - currentDrawerHeight;
           
@@ -4635,7 +4958,7 @@ const vibeSearchResults = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    
+
     const setupAndPlay = async () => {
         if (currentSong) {
             // Vérifier si on doit changer la source
@@ -4675,9 +4998,26 @@ const vibeSearchResults = () => {
             if (newSrc) {
                 audio.src = newSrc;
                 audio.dataset.songId = currentSong.id;
+                // Attendre que l'audio soit prêt avant de jouer
+                await new Promise((resolve) => {
+                    const onCanPlay = () => {
+                        audio.removeEventListener('canplay', onCanPlay);
+                        audio.removeEventListener('error', onError);
+                        resolve();
+                    };
+                    const onError = () => {
+                        audio.removeEventListener('canplay', onCanPlay);
+                        audio.removeEventListener('error', onError);
+                        console.error('Erreur chargement audio');
+                        resolve();
+                    };
+                    audio.addEventListener('canplay', onCanPlay);
+                    audio.addEventListener('error', onError);
+                    audio.load();
+                });
             }
           }
-        
+
           // Initialiser Web Audio API au premier play (nécessaire pour iOS)
           if (isPlaying && !audioContextRef.current && audioRef.current) {
               initAudioContext();
@@ -4685,8 +5025,20 @@ const vibeSearchResults = () => {
           if (isPlaying && audioContextRef.current?.state === 'suspended') {
               audioContextRef.current.resume();
           }
-          
-          if (isPlaying) {
+
+          if (isPlaying && currentSong) {
+              // Restaurer le volume si on vient d'un fadeOut (gain était à 0)
+              // On utilise volume/100 car volume est en % (0-100) et gain en (0-1)
+              if (gainNodeRef.current && audioContextRef.current) {
+                  const ctx = audioContextRef.current;
+                  const gain = gainNodeRef.current.gain;
+                  const targetGain = volume / 100;
+                  // Si le gain est proche de 0, on vient d'un fade - restaurer
+                  if (gain.value < 0.01) {
+                      gain.cancelScheduledValues(ctx.currentTime);
+                      gain.setValueAtTime(targetGain, ctx.currentTime);
+                  }
+              }
               const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -4697,13 +5049,163 @@ const vibeSearchResults = () => {
             audio.pause();
         }
     };
-    
+
     setupAndPlay();
   }, [isPlaying, currentSong]);
 
-  // Ref pour tracker isPlaying sans closure stale
+  // Refs pour tracker les états sans closure stale (Media Session API)
   const isPlayingRef = useRef(isPlaying);
+  const currentSongRef = useRef(currentSong);
+  const queueRef = useRef(queue);
+  const wakeLockRef = useRef(null);
+
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCREEN WAKE LOCK - Empêcher l'écran de s'éteindre pendant la lecture
+  // ══════════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      if (!('wakeLock' in navigator)) return;
+
+      if (isPlaying) {
+        try {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+          console.log('[WakeLock] Screen wake lock acquired');
+        } catch (e) {
+          console.log('[WakeLock] Failed to acquire:', e.message);
+        }
+      } else {
+        if (wakeLockRef.current) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+          console.log('[WakeLock] Screen wake lock released');
+        }
+      }
+    };
+
+    requestWakeLock();
+
+    // Re-acquire wake lock when page becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isPlaying) {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    };
+  }, [isPlaying]);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // MEDIA SESSION API - Contrôles écran de verrouillage iOS/Android
+  // ══════════════════════════════════════════════════════════════════════════════
+
+  // Enregistrer les handlers UNE SEULE FOIS au montage
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    // Play: appeler directement .play() sur l'audio
+    navigator.mediaSession.setActionHandler('play', async () => {
+      console.log('[MediaSession] play handler called');
+      if (audioRef.current) {
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (e) {
+          console.error('[MediaSession] play error:', e);
+        }
+      }
+    });
+
+    // Pause: appeler directement .pause() sur l'audio
+    navigator.mediaSession.setActionHandler('pause', () => {
+      console.log('[MediaSession] pause handler called');
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      console.log('[MediaSession] previoustrack handler called');
+      if (audioRef.current && audioRef.current.currentTime > 3) {
+        audioRef.current.currentTime = 0;
+      } else {
+        const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+        if (currentIndex > 0) {
+          setCurrentSong(queueRef.current[currentIndex - 1]);
+        } else if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+        }
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      console.log('[MediaSession] nexttrack handler called');
+      const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+      if (currentIndex < queueRef.current.length - 1) {
+        setCurrentSong(queueRef.current[currentIndex + 1]);
+      } else {
+        if (audioRef.current) audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      console.log('[MediaSession] seekbackward handler called');
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      console.log('[MediaSession] seekforward handler called');
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.min(
+          audioRef.current.duration || 0,
+          audioRef.current.currentTime + (details.seekOffset || 10)
+        );
+      }
+    });
+
+    // Cleanup: retirer les handlers au démontage
+    return () => {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+      }
+    };
+  }, []); // Dépendances vides = une seule fois
+
+  // Mettre à jour les métadonnées quand la chanson change
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    if (currentSong) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title || 'Unknown Title',
+        artist: currentSong.artist || 'Unknown Artist',
+        album: currentSong.vibeId || 'Vibes',
+        artwork: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+    }
+  }, [currentSong]);
 
   // Refs pour le préchargement du fichier Dropbox du morceau suivant
   const preloadedRef = useRef({ songId: null, link: null, audio: null });
@@ -4755,7 +5257,17 @@ const vibeSearchResults = () => {
         }
     }
   };
-  const handleSongEnd = () => { if (currentSong) updatePlayCount(currentSong); const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex < queue.length - 1) playNext(); else { setIsPlaying(false); setProgress(0); } };
+  const handleSongEnd = () => {
+    if (currentSong) updatePlayCount(currentSong);
+    const currentIndex = queue.findIndex(s => s === currentSong);
+    if (currentIndex < queue.length - 1) {
+      // Passer au morceau suivant SANS faire tourner la roue
+      setCurrentSong(queue[currentIndex + 1]);
+    } else {
+      setIsPlaying(false);
+      setProgress(0);
+    }
+  };
   const updatePlayCount = (songToUpdate) => { const newPlaylists = { ...playlists }; Object.keys(newPlaylists).forEach(key => { newPlaylists[key] = newPlaylists[key].map(s => { if (s.id === songToUpdate.id) return { ...s, playCount: (s.playCount || 0) + 1 }; return s; }); }); setPlaylists(newPlaylists); };
 
   const applySort = (mode, direction = 'asc') => { 
@@ -4914,35 +5426,23 @@ const vibeSearchResults = () => {
         // Cas spécial : résultats de recherche
         if (folderName === '__SEARCH_RESULTS__') {
             if (audioRef.current && !audioRef.current.paused) {
-                fadeMainAudio('out');
-                setTimeout(() => {
-                    vibeSearchResults();
-                }, 350);
+                fadeOutAndStop(vibeSearchResults);
             } else {
                 vibeSearchResults();
             }
             return;
         }
-        
+
         // Fade out audio si une musique joue, puis lancer la vibe
         if (audioRef.current && !audioRef.current.paused) {
-            fadeMainAudio('out');
-            setTimeout(() => {
-                doLaunchVibe(folderName);
-            }, 350); // Attendre fin du fade (300ms) + marge
+            fadeOutAndStop(() => doLaunchVibe(folderName));
             return;
-        }   
-        
+        }
+
         doLaunchVibe(folderName);
     };
-    
+
     const doLaunchVibe = (folderName) => {
-      // Annuler tout fade en cours pour éviter qu'il affecte la nouvelle chanson
-      if (fadeInterval.current) {
-          clearInterval(fadeInterval.current);
-          fadeInterval.current = null;
-      }
-      
       const songs = playlists[folderName];
     // Filtrer pour ne garder que les morceaux avec fichier disponible
     let songsToPlay = songs.filter(s => isSongAvailable(s));
@@ -4950,36 +5450,43 @@ const vibeSearchResults = () => {
         alert(`Aucun morceau disponible pour "${folderName}" ! Ré-importez le dossier.`);
         return;
     }
-    for (let i = songsToPlay.length - 1; i > 0; i--) { 
-        const j = Math.floor(Math.random() * (i + 1)); 
-        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]]; 
-    } 
-    setInitialRandomQueue([...songsToPlay]); 
-    setQueue(songsToPlay); 
-    setActiveFilter('initialShuffle'); 
-    setCurrentSong(songsToPlay[0]); 
-    setIsPlaying(true); 
+    for (let i = songsToPlay.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [songsToPlay[i], songsToPlay[j]] = [songsToPlay[j], songsToPlay[i]];
+    }
+
+    // Si c'est la même chanson, forcer le play car le useEffect ne se déclenchera pas
+    const isSameSong = currentSong && songsToPlay[0] && currentSong.id === songsToPlay[0].id;
+
+    setInitialRandomQueue([...songsToPlay]);
+    setQueue(songsToPlay);
+    setActiveFilter('initialShuffle');
+    setCurrentSong(songsToPlay[0]);
+    setIsPlaying(true);
     openFullPlayer();
     setPendingVibe(null);
     setActiveVibeName(folderName);
-};
 
-const confirmKillVibe = () => {
-  if (pendingVibe) {
-      const vibeToLaunch = pendingVibe;
-      setPendingVibe(null);
-      
-      // Cas spécial : résultats de recherche (pas de VibeCard à blinker)
-      if (vibeToLaunch === '__SEARCH_RESULTS__') {
-          launchVibe(vibeToLaunch);
-      } else {
-          setBlinkingVibe(vibeToLaunch);
-      }
-  }
+    // Forcer le play si même chanson (le useEffect ne se déclenche pas)
+    if (isSameSong && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+    }
 };
 
 const cancelKillVibe = () => {
-    setPendingVibe(null);
+        // Déclencher l'animation ignite rouge sur la bulle
+        setConfirmFeedback({ text: 'CANCEL', type: 'cancel', triggerValidation: Date.now() });
+        // Après l'animation ignite (500ms), fermer l'overlay
+        setTimeout(() => {
+            setConfirmOverlayVisible(false);
+            setConfirmSwipeX(0);
+            setConfirmSwipeStart(null);
+            setTimeout(() => {
+                setPendingVibe(null);
+                setConfirmFeedback(null);
+            }, 150);
+        }, 500);
     };
 
     const handleNukeAll = () => {
@@ -4988,11 +5495,27 @@ const cancelKillVibe = () => {
 
   const handleDropboxAuth = async () => {
     console.log('handleDropboxAuth appelé !'); // DEBUG
+    // Toujours relire depuis localStorage pour avoir la valeur à jour
     const token = getDropboxAccessToken();
-    console.log('Token:', token); // DEBUG
+    console.log('Token from localStorage:', token); // DEBUG
+    console.log('dropboxToken state:', dropboxToken); // DEBUG
+
+    // Capturer la position du bouton pour l'animation morph (seulement si token existe)
+    const captureButtonRect = () => {
+        if (dropboxButtonRef.current) {
+            const rect = dropboxButtonRef.current.getBoundingClientRect();
+            setDropboxSourceRect({
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            });
+        }
+    };
 
     if (token) {
-        // Déjà connecté, ouvrir le browser
+        // Déjà connecté, capturer le rect et ouvrir le browser avec animation morph
+        captureButtonRect();
         setDropboxToken(token);
         setDropboxPath('');
         setShowDropboxBrowser(true);
@@ -5001,17 +5524,21 @@ const cancelKillVibe = () => {
         // Token expiré mais refresh token disponible
         const refreshed = await refreshDropboxToken();
         if (refreshed) {
+            // Après refresh réussi, capturer le rect et ouvrir avec morph
+            captureButtonRect();
             const newToken = getDropboxAccessToken();
             setDropboxToken(newToken);
             setDropboxPath('');
             setShowDropboxBrowser(true);
             loadDropboxFolder('', newToken);
         } else {
-            // Refresh échoué, relancer OAuth
+            // Refresh échoué, relancer OAuth (pas de morph car on quitte l'app)
+            setDropboxSourceRect(null);
             startDropboxOAuth();
         }
     } else {
-        // Pas de token, lancer OAuth PKCE
+        // Pas de token, lancer OAuth PKCE (pas de morph car on quitte l'app)
+        setDropboxSourceRect(null);
         startDropboxOAuth();
     }
   };
@@ -5377,37 +5904,69 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       handleOAuthReturn();
   }, []);
     
-    const confirmNuke = () => {
-        setConfirmAnimating(true);
-        setFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
-        
-        // Fade out si musique en cours
-        if (audioRef.current && !audioRef.current.paused) {
-            fadeMainAudio('out');
-        }
-    };
-    
-    const onNukeAnimationComplete = () => {
-        setConfirmAnimating(false);
-        setNukeConfirmMode(false);
-        setFeedback(null);
-        setPlaylists({});
-        localStorage.removeItem('vibes_playlists');
-        setVibeColorIndices({});
-        localStorage.removeItem('vibes_color_indices');
-        setCurrentSong(null);
-        setQueue([]);
-        setIsPlaying(false);
-        setActiveVibeName(null);
-        
-        setIsLibrarySearching(false);
-        setLibrarySearchQuery('');
-        setIsPlayerSearching(false);
-        setPlayerSearchQuery('');
+    const cancelNuke = () => {
+        // Déclencher l'animation ignite rouge sur la bulle
+        setConfirmFeedback({ text: 'CANCEL', type: 'cancel', triggerValidation: Date.now() });
+        // Après l'animation ignite (500ms), fermer l'overlay
+        setTimeout(() => {
+            setConfirmOverlayVisible(false);
+            setConfirmSwipeX(0);
+            setConfirmSwipeStart(null);
+            setTimeout(() => {
+                setNukeConfirmMode(false);
+                setConfirmFeedback(null);
+            }, 150);
+        }, 500);
     };
 
-    const cancelNuke = () => {
-        setNukeConfirmMode(false);
+    // Fade-in de l'overlay quand on entre en mode confirmation
+    useEffect(() => {
+        if (pendingVibe || nukeConfirmMode) {
+            // Délai pour permettre le rendu avant le fade-in
+            requestAnimationFrame(() => {
+                setConfirmOverlayVisible(true);
+            });
+        }
+    }, [pendingVibe, nukeConfirmMode]);
+
+    // Callback quand l'animation ignite est terminée
+    const onConfirmAnimationComplete = () => {
+        if (confirmFeedback?.type === 'kill') {
+            // KILL VIBE - lancer la vibe DIRECTEMENT (pas d'animation sur la carte vibe)
+            setConfirmOverlayVisible(false);
+            setTimeout(() => {
+                const vibeToLaunch = pendingVibe;
+                setPendingVibe(null);
+                setConfirmFeedback(null);
+                setConfirmSwipeX(0); // Reset position curseur pour la prochaine fois
+                // Lancer directement la vibe sans animation de carte
+                launchVibe(vibeToLaunch);
+            }, 150);
+        } else if (confirmFeedback?.type === 'nuke') {
+            // NUKE ALL - tout supprimer puis retour dashboard
+            setConfirmOverlayVisible(false);
+            setTimeout(() => {
+                setNukeConfirmMode(false);
+                setConfirmFeedback(null);
+                setConfirmSwipeX(0); // Reset position curseur pour la prochaine fois
+                setPlaylists({});
+                localStorage.removeItem('vibes_playlists');
+                setVibeColorIndices({});
+                localStorage.removeItem('vibes_color_indices');
+                setCurrentSong(null);
+                setQueue([]);
+                setIsPlaying(false);
+                setActiveVibeName(null);
+                setIsLibrarySearching(false);
+                setLibrarySearchQuery('');
+                setIsPlayerSearching(false);
+                setPlayerSearchQuery('');
+                // Fade out audio si en cours
+                if (audioRef.current && !audioRef.current.paused) {
+                    fadeOutAndStop();
+                }
+            }, 150);
+        }
     };
   
     const playNext = () => { const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex < queue.length - 1) { setCurrentSong(queue[currentIndex + 1]); setScrollTrigger(t => t + 1); } else setIsPlaying(false); };
@@ -5460,11 +6019,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
       const barHeight = containerRect.height * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
       const barTop = containerRect.top + (containerRect.height - barHeight) / 2;
       const barBottom = barTop + barHeight;
-      
+
       // Calculer le volume basé sur la position Y (inversé : haut = 100%)
       const clampedY = Math.max(barTop, Math.min(barBottom, touch.clientY));
       const progress = 1 - (clampedY - barTop) / barHeight;
       const newVolume = Math.round(progress * 100);
+
       setVolumePreview(newVolume);
       // Appliquer le volume directement via Web Audio API (fonctionne sur iOS)
       if (gainNodeRef.current) {
@@ -5563,9 +6123,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
+      {/* Orientation lock overlay */}
+      <div className="orientation-lock-overlay">
+        <div className="orientation-lock-icon">📱</div>
+      </div>
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
+
       {!isOnRealDevice && (
           <div className="h-8 w-full bg-white/90 backdrop-blur-md flex justify-between items-center px-4 text-[10px] font-medium z-50 absolute top-0 left-0 right-0">
             <div className="w-1/3">{currentTime}</div>
@@ -5575,24 +6140,21 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div className="w-1/3 flex justify-end gap-1">5G <span className="ml-1">100%</span></div>
           </div>
         )}
-        {isOnRealDevice && (
-          <div style={{ height: `${CONFIG.IOS_SAFE_AREA_TOP}rem` }} />
-        )}
 
         <style>{styles}</style>
-        
+
         {/* HEADER - Indépendant */}
-        <div 
-            className="px-6 bg-white border-b border-gray-200"
+        <div
+            className="px-6 bg-white border-b border-gray-200 safe-area-top"
             style={{
                 zIndex: CONFIG.HEADER_Z_INDEX,
-                paddingTop: `${CONFIG.HEADER_PADDING_TOP}rem`,
+                paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                 paddingBottom: `${CONFIG.HEADER_PADDING_BOTTOM}rem`,
             }}
         >
           
           {/* Logo centré */}
-          <div className="flex justify-center items-center mb-3 pt-0">
+          <div className="flex justify-center items-center" style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}>
              <VibesLogo size={36} />
              <span className="text-[10px] text-gray-300 ml-1 font-bold">v72</span>
           </div>
@@ -5610,7 +6172,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           />
           
           {/* 3 boutons capsules OU barre de recherche OU barre d'import */}
-          <div ref={headerButtonsRef} className="flex flex-col items-center mb-2">
+          <div ref={headerButtonsRef} className="flex flex-col items-center">
           {(isLibrarySearching || searchOverlayAnim !== 'none') ? (
                 <div 
                     className="w-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible"
@@ -5864,12 +6426,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 : `import-handle-slide-in ${CONFIG.IMPORT_HEADER_FADE_IN_DURATION}ms ease-out forwards`
                         }}
                     >
-                        <div 
+                        <div
                             className="bg-gray-300 rounded-full handle-pulse cursor-pointer"
                             style={{
                                 width: `${CONFIG.IMPORT_HANDLE_WIDTH_PERCENT}%`,
-                                height: CONFIG.IMPORT_HANDLE_HEIGHT,
-                                marginTop: CONFIG.IMPORT_BUTTONS_HANDLE_GAP
+                                height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
+                                marginTop: `${CONFIG.HEADER_PADDING_BOTTOM}rem`
                             }}
                             onClick={() => {
                                 setImportMenuVisible(false);
@@ -5923,11 +6485,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* FIN HEADER */}
 
         {/* LIBRARY */}
-        <div 
+        <div
             className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
-            style={{ paddingBottom: currentSong 
-              ? `${dashboardHeight + (window.innerHeight * CONFIG.FOOTER_HEIGHT_PERCENT / 100) + CONFIG.DRAWER_TOP_SPACING}px` 
-              : `calc(${CONFIG.FOOTER_HEIGHT_PERCENT}% + ${CONFIG.FOOTER_TOP_SPACING}px)` 
+            style={{ paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {
                 // Long press pour entrer en mode Tweaker
@@ -6009,13 +6569,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
             )}
 
+            {/* Spacer dynamique pour éviter que le contenu soit caché par le drawer */}
+            {currentSong && (
+                <div style={{ height: `${dashboardHeight}px`, flexShrink: 0 }} />
+            )}
+
         </div>
 
         {/* TWEAKER MODE */}
         {showTweaker && (
-            <Tweaker 
-            isOnRealDevice={isOnRealDevice}
-            iosSafeAreaTop={CONFIG.IOS_SAFE_AREA_TOP}
+            <Tweaker
             playlists={playlists} 
             vibeColorIndices={vibeColorIndices}
             cardAnimConfig={{
@@ -6042,8 +6605,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             getInitialGradientIndex={getInitialGradientIndex}
             getGradientName={getGradientName}
             getGradientByIndex={getGradientByIndex}
-            dashboardHeight={dashboardHeight}
-            footerHeight={(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.FOOTER_HEIGHT_PERCENT / 100}
             hasSong={!!currentSong}
             capsuleHeightVh={CONFIG.CAPSULE_HEIGHT_MINI_VH}
             onSwipeProgress={setVibeSwipePreview}
@@ -6060,7 +6621,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           ? (typeof dashboardHeight === 'number' ? `${dashboardHeight}px` : dashboardHeight)
                           : `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}px`,
                       minHeight: `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100 - CONFIG.DRAWER_SEPARATOR_HEIGHT}px`,
-                      bottom: `${CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+                      bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                       transition: isDrawerAnimating 
                           ? `height ${CONFIG.DRAWER_TWEAKER_ANIMATION_DURATION}ms cubic-bezier(0, ${CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, ${1 - CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, 1)` 
                           : 'none'
@@ -6076,11 +6637,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             style={{ height: `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}px` }}
                         >
                             {currentSong && (
-                                <div 
+                                <div
                                     className="bg-gray-300 rounded-full handle-pulse"
                                     style={{
                                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                                        height: CONFIG.PLAYER_HEADER_HANDLE_HEIGHT
+                                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
                                     }}
                                 />
                             )}
@@ -6112,15 +6673,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             </div>
                         )}
 
-                {/* FOOTER - BARRE DU BAS FIXE (au-dessus de tout sauf VibeBuilder/SmartImport) */}
-                <div 
-                    className={`absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 ${vibeSwipePreview ? 'z-[110]' : 'z-[90]'}`}
-                    style={{ 
-                      height: `${CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+                {/* FOOTER - BARRE DU BAS */}
+                <div
+                    className="z-[90] flex flex-col absolute left-0 right-0"
+                    style={{
+                      height: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                      paddingBottom: safeAreaBottom,
+                      bottom: 0,
                       transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
                 >
+                    {/* Fond avec blur - couvre TOUTE la zone y compris safe-area */}
+                    <div className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 rounded-b-none"></div>
                     {/* BARRE DE CONTRÔLE */}
                     {!(pendingVibe || nukeConfirmMode) && (
                         <ControlBar
@@ -6147,25 +6712,31 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                      />
                     )}
                     
-                    {/* OVERLAY DE CONFIRMATION - RECOUVRE LA BARRE DE CONTRÔLE */}
+                    {/* CAPSULE DE CONFIRMATION - RECOUVRE LA BARRE DE CONTRÔLE */}
                     {(pendingVibe || nukeConfirmMode) && (
-                        <div 
-                            className="absolute left-0 right-0 flex items-center z-50"
-                            style={{ 
-                                height: `${CONFIG.CONTROL_BAR_HEIGHT_PERCENT}%`,
-                                top: `${100 - CONFIG.CONTROL_BAR_Y - (CONFIG.CONTROL_BAR_HEIGHT_PERCENT / 2)}%`,
-                                padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
+                        <div
+                            className="absolute left-0 right-0 flex items-start z-50"
+                            style={{
+                                top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
+                                padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
+                                height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT
                             }}
                         >
-                            <div className="flex-1 h-full relative">
-                                {/* Barre statique - cachée quand on confirme */}
-                                {!(feedback && (feedback.type === 'kill' || feedback.type === 'nuke')) && (
-                                    <div 
-                                        className="absolute inset-0 rounded-full flex items-center justify-center border animate-in fade-in duration-150"
-                                        style={{ 
+                            <div
+                                className="flex-1 h-full relative"
+                                style={{
+                                    opacity: confirmOverlayVisible ? 1 : 0,
+                                    transition: 'opacity 150ms ease-out'
+                                }}
+                            >
+                                {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
+                                {!confirmFeedback && (
+                                    <div
+                                        className="absolute inset-0 rounded-full flex items-center justify-center border"
+                                        style={{
                                             backgroundColor: pendingVibe ? '#FF6700' : '#FF073A',
                                             borderColor: pendingVibe ? '#CC5200' : '#CC0530',
-                                            boxShadow: pendingVibe 
+                                            boxShadow: pendingVibe
                                                 ? '0 0 25px rgba(255, 103, 0, 0.7), 0 0 50px rgba(255, 103, 0, 0.4)'
                                                 : '0 0 25px rgba(255, 7, 58, 0.7), 0 0 50px rgba(255, 7, 58, 0.4)'
                                         }}
@@ -6176,17 +6747,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         </div>
                                     </div>
                                 )}
-                                {/* FeedbackOverlay quand on confirme NUKE */}
-                                {feedback && feedback.type === 'nuke' && (
+                                {/* FeedbackOverlay avec animation ignite quand on confirme */}
+                                {confirmFeedback && (
                                     <FeedbackOverlay
-                                        feedback={feedback}
-                                        onAnimationComplete={onNukeAnimationComplete}
-                                        neonColor={CONFIG.NEON_COLOR_RED}
-                                        bgClass="bg-red-500"
-                                        borderClass="border-red-600"
+                                        feedback={confirmFeedback}
+                                        onAnimationComplete={onConfirmAnimationComplete}
+                                        neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_ORANGE : CONFIG.NEON_COLOR_RED}
+                                        bgClass={confirmFeedback.type === 'kill' ? 'bg-orange-500' : 'bg-red-500'}
+                                        borderClass={confirmFeedback.type === 'kill' ? 'border-orange-600' : 'border-red-600'}
                                     >
-                                        <Radiation size={20} strokeWidth={3} />
-                                        <span>{feedback.text}</span>
+                                        {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                        <span>{confirmFeedback.text}</span>
                                     </FeedbackOverlay>
                                 )}
                             </div>
@@ -6217,177 +6788,231 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         )}
 
         {/* DROPBOX BROWSER */}
-        {showDropboxBrowser && (
-            <div className="absolute inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
-                    {/* Header */}
-                    <div className="bg-[#0061FE] text-white px-4 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <DropboxLogoVector size={24} color="white" />
-                            <span className="font-bold">Dropbox</span>
-                        </div>
-                        <button 
-                            onClick={() => setShowDropboxBrowser(false)}
-                            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-                        >
-                            <X size={18} />
-                        </button>
-                    </div>
-                    
-                    {/* Chemin actuel */}
-                    <div className="px-4 py-2 bg-gray-100 text-sm text-gray-600 flex items-center gap-2">
-                        <button 
-                            onClick={() => {
-                                if (dropboxPath) {
-                                    const parentPath = dropboxPath.split('/').slice(0, -1).join('/');
-                                    setDropboxPath(parentPath);
-                                    loadDropboxFolder(parentPath, dropboxToken);
+        <DropboxBrowser
+    isVisible={showDropboxBrowser}
+    onClose={() => {
+        setShowDropboxBrowser(false);
+        setDropboxSourceRect(null);
+    }}
+    onDisconnect={() => {
+        clearDropboxTokens();
+        setDropboxToken(null);
+        setDropboxSourceRect(null);
+    }}
+    onImport={(scannedFolders, rootName) => {
+        setShowDropboxBrowser(false);
+        setDropboxSourceRect(null);
+        setPendingDropboxData({ folders: scannedFolders, rootName });
+    }}
+    onMenuClose={() => {
+        setImportOverlayAnim('closing');
+        setTimeout(() => {
+            setShowImportMenu(false);
+            setImportOverlayAnim('none');
+            setImportButtonsReady(false);
+            setImportBtnIgniting(null);
+        }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
+    }}
+    dropboxToken={dropboxToken}
+    getValidDropboxToken={getValidDropboxToken}
+    refreshDropboxToken={refreshDropboxToken}
+    clearDropboxTokens={clearDropboxTokens}
+    sourceRect={dropboxSourceRect}
+/>
+
+        {/* CONFIRMATION PILL (slide to confirm) */}
+        {(pendingVibe || nukeConfirmMode) && mainContainerRef.current && (() => {
+            const containerRect = mainContainerRef.current.getBoundingClientRect();
+            const pillHeight = containerRect.width * CONFIG.CONFIRM_PILL_HEIGHT_PERCENT / 100;
+            const pillWidth = containerRect.width * CONFIG.CONFIRM_PILL_WIDTH_PERCENT / 100;
+            const cursorSize = pillHeight * CONFIG.CONFIRM_PILL_CURSOR_SIZE_PERCENT / 100;
+            const iconSize = pillHeight * CONFIG.CONFIRM_PILL_ICON_SIZE_PERCENT / 100;
+
+            // Padding interne du pill (espace entre le bord et le curseur)
+            const pillPadding = (pillHeight - cursorSize) / 2;
+
+            // Scale pour que le curseur grossisse jusqu'à pillHeight (diamètre du tube)
+            const pulseScaleMax = pillHeight / cursorSize;
+
+            // Taille max de la bulle quand elle pulse (= pillHeight)
+            const maxBubbleSize = pillHeight;
+
+            // Zone de déplacement du curseur - bloqué quand la TAILLE MAX touche le bord
+            // La bulle peut grossir jusqu'à pillHeight, donc son centre doit rester à pillHeight/2 du bord
+            const maxSlide = (pillWidth / 2) - (maxBubbleSize / 2);
+            const clampedX = Math.max(-maxSlide, Math.min(maxSlide, confirmSwipeX));
+            const slideProgress = clampedX / maxSlide; // -1 (cancel) to +1 (confirm)
+
+            const isAtLeftThreshold = slideProgress <= -0.9;
+            const isAtRightThreshold = slideProgress >= 0.9;
+
+            return (
+            <>
+                {/* Backdrop blur fixe (pas animé = performant) */}
+                <div
+                    className="absolute left-0 right-0 z-[64] pointer-events-none"
+                    style={{
+                        top: 0,
+                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                        backdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
+                        WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
+                    }}
+                />
+                {/* Le pill par-dessus */}
+                <div
+                    className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"
+                    style={{
+                        top: 0,
+                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
+                    }}
+                >
+                    {/* Le pill glassmorphism */}
+                    <div
+                        className="relative flex items-center justify-between pointer-events-auto"
+                        style={{
+                            width: pillWidth,
+                            height: pillHeight,
+                            borderRadius: pillHeight / 2,
+                            backgroundColor: CONFIG.CONFIRM_PILL_BG_COLOR,
+                            backdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
+                            WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                            padding: pillPadding,
+                        }}
+                        onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setConfirmSwipeStart(e.touches[0].clientX - confirmSwipeX);
+                        }}
+                        onTouchMove={(e) => {
+                            if (confirmSwipeStart === null) return;
+                            const newX = e.touches[0].clientX - confirmSwipeStart;
+                            setConfirmSwipeX(newX);
+                        }}
+                        onTouchEnd={() => {
+                            if (isAtRightThreshold) {
+                                // Swipe right = validate
+                                // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation ignite
+                                if (pendingVibe) {
+                                    setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                                } else {
+                                    setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
                                 }
+                            } else if (isAtLeftThreshold) {
+                                // Swipe left = cancel
+                                // NE PAS reset confirmSwipeX - le curseur reste à gauche pendant l'animation ignite
+                                if (pendingVibe) {
+                                    cancelKillVibe();
+                                } else {
+                                    cancelNuke();
+                                }
+                            } else {
+                                // PAS au seuil = retour au centre
+                                setConfirmSwipeX(0);
+                            }
+                            setConfirmSwipeStart(null);
+                        }}
+                    >
+                        {/* X icon à gauche - cachée quand la bulle la recouvre */}
+                        <div
+                            className="flex items-center justify-center"
+                            style={{
+                                width: cursorSize,
+                                height: cursorSize,
+                                opacity: isAtLeftThreshold ? 0 : 0.5,
+                                transition: 'opacity 150ms ease-out',
                             }}
-                            className={`p-1 rounded ${dropboxPath ? 'hover:bg-gray-200' : 'opacity-30'}`}
-                            disabled={!dropboxPath}
                         >
-                            <ChevronLeft size={16} />
-                        </button>
-                        <span className="truncate">/{dropboxPath || 'Racine'}</span>
-                    </div>
-                    
-                    {/* Liste des fichiers */}
-                    <div className="flex-1 overflow-y-auto">
-                        {dropboxLoading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <Disc3 size={32} className="animate-spin text-[#0061FE]" />
-                            </div>
-                        ) : dropboxFiles.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400">
-                                Dossier vide
-                            </div>
-                        ) : (
-                            dropboxFiles.map((file, index) => {
-                                const isFolder = file['.tag'] === 'folder';
-                                const isMp3 = file.name.toLowerCase().endsWith('.mp3');
-                                
-                                if (!isFolder && !isMp3) return null;
-                                
-                                return (
-                                    <div
-                                        key={index}
-                                        onClick={() => {
-                                            if (isFolder) {
-                                                setDropboxPath(file.path_lower);
-                                                loadDropboxFolder(file.path_lower, dropboxToken);
-                                            }
-                                        }}
-                                        className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 ${isFolder ? 'cursor-pointer hover:bg-gray-50 active:bg-gray-100' : 'opacity-60'}`}
-                                    >
-                                        {isFolder ? (
-                                            <Folder size={20} className="text-[#0061FE]" />
-                                        ) : (
-                                            <Music size={20} className="text-pink-500" />
-                                        )}
-                                        <span className="flex-1 truncate text-sm">{file.name}</span>
-                                        {isFolder && <ChevronRight size={16} className="text-gray-300" />}
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                    
-                    {/* Bouton Import */}
-                    {dropboxPath && (
-                        <div className="p-4 border-t border-gray-200">
-                            <button
-                                onClick={() => {
-                                    const folderName = dropboxPath.split('/').pop() || 'Dropbox Import';
-                                    importDropboxFolder(dropboxPath, folderName);
-                                }}
-                                disabled={dropboxLoading}
-                                className="w-full py-3 bg-[#0061FE] text-white font-bold rounded-full flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                {dropboxLoading ? (
-                                    <Disc3 size={20} className="animate-spin" />
-                                ) : (
-                                    <>
-                                        <FolderDown size={20} />
-                                        <span>Importer ce dossier</span>
-                                    </>
-                                )}
-                            </button>
+                            <X
+                                size={iconSize}
+                                className="text-gray-400"
+                                strokeWidth={2.5}
+                            />
                         </div>
-                    )}
-                    
-                    {/* Bouton Déconnexion */}
-                    <div className="px-4 pb-4">
-                        <button
-                            onClick={() => {
-                                localStorage.removeItem('dropbox_token');
-                                setDropboxToken(null);
-                                setShowDropboxBrowser(false);
+
+                        {/* Curseur central draggable */}
+                        <div
+                            className={`absolute flex items-center justify-center ${
+                                confirmFeedback
+                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-lime' : 'animate-ignite-pill-red')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-lime' : '')
+                            }`}
+                            style={{
+                                '--pulse-scale-min': 1,
+                                '--pulse-scale-max': pulseScaleMax,
+                                width: cursorSize,
+                                height: cursorSize,
+                                borderRadius: '50%',
+                                backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel'
+                                    ? 'rgba(239, 68, 68, 0.9)'
+                                    : isAtRightThreshold || confirmFeedback?.type === 'kill'
+                                        ? 'rgba(132, 204, 22, 0.9)'
+                                        : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
+                                left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
-                            className="w-full py-2 text-sm text-gray-400 hover:text-red-500"
                         >
-                            Déconnecter Dropbox
-                        </button>
+                            {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
+                            <div
+                                className="flex items-center"
+                                style={{
+                                    opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.6,
+                                    transition: 'opacity 150ms ease-out',
+                                }}
+                            >
+                                <ChevronLeft
+                                    size={iconSize * 0.5}
+                                    className="text-gray-500 -mr-2"
+                                    strokeWidth={2}
+                                />
+                                <ChevronRight
+                                    size={iconSize * 0.5}
+                                    className="text-gray-500"
+                                    strokeWidth={2}
+                                />
+                            </div>
+                            {/* Icône X ou Check quand au seuil (contenue dans la bulle) */}
+                            {isAtLeftThreshold && (
+                                <X
+                                    size={iconSize * 0.7}
+                                    className="text-white absolute"
+                                    strokeWidth={2.5}
+                                />
+                            )}
+                            {isAtRightThreshold && (
+                                <Check
+                                    size={iconSize * 0.7}
+                                    className="text-white absolute"
+                                    strokeWidth={2.5}
+                                />
+                            )}
+                        </div>
+
+                        {/* Check icon à droite - cachée quand la bulle la recouvre */}
+                        <div
+                            className="flex items-center justify-center"
+                            style={{
+                                width: cursorSize,
+                                height: cursorSize,
+                                opacity: isAtRightThreshold ? 0 : 0.5,
+                                transition: 'opacity 150ms ease-out',
+                            }}
+                        >
+                            <Check
+                                size={iconSize}
+                                className="text-gray-400"
+                                strokeWidth={2.5}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-
-        {/* KILL VIBE CONFIRMATION */}
-        {(pendingVibe || (isFadingOutConfirm && feedback?.type === 'kill')) && (
-            <div 
-                className={`absolute top-0 left-0 right-0 z-[70] flex flex-col items-center justify-center animate-in fade-in duration-75 ${isFadingOutConfirm && feedback?.type === 'kill' ? 'animate-fade-out' : ''}`}
-                style={{ bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-            >
-                {/* Boutons monstrueux - toujours visibles */}
-                <div className={`flex flex-col gap-6 pointer-events-auto animate-appear ${isFadingOutConfirm && feedback?.type === 'kill' ? 'animate-fade-out' : ''}`}>
-                    <button 
-                        onClick={confirmKillVibe}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl transition-transform"
-                        style={{ backgroundColor: '#C0FF00', boxShadow: '0 0 40px rgba(192, 255, 0, 0.6)' }}
-                    >
-                        <Check size={70} className="text-white drop-shadow-md" strokeWidth={3} />
-                    </button>
-                    <button 
-                        onClick={cancelKillVibe}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl  transition-transform"
-                        style={{ backgroundColor: '#E0004C', boxShadow: '0 0 40px rgba(224, 0, 76, 0.6)' }}
-                    >
-                        <X size={70} className="text-white drop-shadow-md" strokeWidth={3} />
-                    </button>
-                </div>
-            </div>
-        )}
-
-        {/* NUKE ALL CONFIRMATION */}
-        {(nukeConfirmMode || (isFadingOutConfirm && feedback?.type === 'nuke')) && (
-            <div 
-                className={`absolute top-0 left-0 right-0 z-[70] flex flex-col items-center justify-center animate-in fade-in duration-75 ${isFadingOutConfirm && feedback?.type === 'nuke' ? 'animate-fade-out' : ''}`}
-                style={{ bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-            >
-                {/* Boutons monstrueux - toujours visibles */}
-                <div className={`flex flex-col gap-6 pointer-events-auto animate-appear ${isFadingOutConfirm && feedback?.type === 'nuke' ? 'animate-fade-out' : ''}`}>
-                    <button 
-                        onClick={confirmNuke}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl transition-transform"
-                        style={{ backgroundColor: '#C0FF00', boxShadow: '0 0 40px rgba(192, 255, 0, 0.6)' }}
-                    >
-                        <Check size={70} className="text-white drop-shadow-md" strokeWidth={3} />
-                    </button>
-                    <button 
-                        onClick={cancelNuke}
-                        className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl  transition-transform"
-                        style={{ backgroundColor: '#E0004C', boxShadow: '0 0 40px rgba(224, 0, 76, 0.6)' }}
-                    >
-                        <X size={70} className="text-white drop-shadow-md" strokeWidth={3} />
-                    </button>
-                </div>
-            </div>
-        )}
+            </>
+            );
+        })()}
 
         {/* FULL SCREEN PLAYER */}
         {showFullPlayer && currentSong && (
@@ -6396,7 +7021,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             style={{
               top: 0,
               bottom: 0,
-              paddingBottom: `${CONFIG.FOOTER_HEIGHT_PERCENT}vh`,
+              paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
               opacity: playerFadeOpacity,
               transition: CONFIG.PLAYER_FADE_OUT_ENABLED 
                   ? `opacity ${CONFIG.PLAYER_FADE_OUT_DURATION}ms ease-out, transform ${CONFIG.PLAYER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
@@ -6423,18 +7048,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                   <div className="w-1/3 flex justify-end gap-1">5G <span className="ml-1">100%</span></div>
               </div>
             )}
-            {isOnRealDevice && (
-              <div className="w-full bg-white" style={{ height: `${CONFIG.IOS_SAFE_AREA_TOP}rem` }} />
-            )}
-            
+
             {/* ZONE DRAGGABLE - TOUT LE HEADER */}
-            <div 
+            <div
                 ref={playerHeaderRef}
                 className="w-full flex flex-col items-center cursor-grab active:cursor-grabbing select-none border-b border-gray-200"
-                style={{ 
-                    paddingTop: CONFIG.PLAYER_HEADER_TITLE_MARGIN_TOP,
+                style={{
+                    paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                     paddingBottom: CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM,
-                    gap: CONFIG.PLAYER_HEADER_TITLE_MARGIN_BOTTOM
+                    gap: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM
                 }}
                 onTouchStart={handlePlayerTouchStart}
                 onTouchMove={handlePlayerTouchMove}
@@ -6568,12 +7190,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
                 </div>
 
-                {/* Poignée */}
-                <div 
-                    className="bg-gray-300 rounded-full handle-pulse"
+                {/* Poignée - fade out quand recherche, fade in quand on ferme */}
+                <div
+                    className="bg-gray-300 rounded-full"
                     style={{
                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                        height: CONFIG.PLAYER_HEADER_HANDLE_HEIGHT
+                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
+                        opacity: isPlayerSearching && playerSearchOverlayAnim === 'none' ? 0 : undefined,
+                        animation: playerSearchOverlayAnim === 'opening'
+                            ? `search-fade-out ${CONFIG.SEARCH_PLAYER_FADE_IN_DURATION}ms ease-out forwards`
+                            : playerSearchOverlayAnim === 'closing'
+                                ? `search-fade-in ${CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION}ms ease-out forwards`
+                                : (isPlayerSearching ? 'none' : 'handle-pulse 2s ease-in-out infinite')
                     }}
                 />
             </div>
@@ -6581,7 +7209,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{playerHeaderHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={(() => { const screenHeight = mainContainerRef.current?.offsetHeight || window.innerHeight; const statusBarHeight = 32; const footerHeight = screenHeight * CONFIG.FOOTER_HEIGHT_PERCENT / 100; return screenHeight - statusBarHeight - playerHeaderHeight - footerHeight; })()} />}</div>
+            >{playerHeaderHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={(() => { const screenHeight = mainContainerRef.current?.offsetHeight || window.innerHeight; const statusBarHeight = 32; const footerHeight = getFooterHeight(); return screenHeight - statusBarHeight - playerHeaderHeight - footerHeight; })()} />}</div>
                   </div>
                 )}
         
@@ -6591,8 +7219,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         vibeColorIndices={vibeColorIndices}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}
-                        onImportComplete={(folders, mode, folderGradients) => {
-                          processFileImport(folders);
+                        dropboxData={pendingDropboxData}
+                        onDropboxDataClear={() => setPendingDropboxData(null)}
+                        onImportComplete={(folders, mode, folderGradients, isDropbox) => {
+                          if (isDropbox) {
+                              processDropboxImport(folders);
+                          } else {
+                              processFileImport(folders);
+                          }
                           // Appliquer les couleurs choisies dans SmartImport
                           if (folderGradients) {
                               setVibeColorIndices(prev => ({
@@ -6631,9 +7265,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 
                 return (
                   <div className="absolute inset-0 z-[200]">
-                  <VibeBuilder 
-                      isOnRealDevice={isOnRealDevice}
-                      iosSafeAreaTop={CONFIG.IOS_SAFE_AREA_TOP}
+                  <VibeBuilder
                       sourcePlaylists={playlists}
                         onClose={() => setShowBuilder(false)}
                         cardAnimConfig={{
@@ -6667,8 +7299,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onPlayNext={addToPlayNext}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
-                            height: CONFIG.VIBECARD_HEIGHT,
-                            gap: CONFIG.VIBECARD_GAP,
+                            height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
+                            heightPx: (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.VIBECARD_HEIGHT_VH / 100,
+                            gap: CONFIG.VIBECARD_GAP_VH,
                             liquidGlassBlur: CONFIG.LIQUID_GLASS_BLUR,
                             marqueeSpeed: CONFIG.MARQUEE_SPEED,
                             marqueeThreshold: CONFIG.VIBECARD_CAPSULE_MARQUEE_THRESHOLD,
@@ -6677,6 +7310,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             capsulePX: CONFIG.VIBECARD_CAPSULE_PX,
                             capsulePY: CONFIG.VIBECARD_CAPSULE_PY
                         }}
+                        footerHeight={getFooterHeight()}
                         initialGradientIndex={initialIdx}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}
@@ -6686,6 +7320,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     </div>
                 );
             })()}
+
       </div>
     </div>
   );

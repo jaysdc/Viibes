@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp } from 'lucide-react';
-import { VibeLogoVector, FlameLogoVector } from './Assets.jsx';
+import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG } from './Config.js';
+import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    VIBEBUILDER - PARAMÈTRES TWEAKABLES                    ║
@@ -218,8 +217,6 @@ const CONFIG = {
     ],
 
     HEADER_DRAGMODE_ICON_SIZE: '1.25rem', // Taille icônes Let's Vibe/Ghosting (20px)
-    HEADER_LOGO_SIZE: 40,                 // Taille logo VibeBuilder (px)
-    HEADER_BUILDER_TEXT_SIZE: '0.875rem', // Taille texte "Builder" (14px = text-sm)
 
     // ══════════════════════════════════════════════════════════════════════════
     // SMART WAVE
@@ -234,7 +231,6 @@ const CONFIG = {
     VIBELOGO_SIZE: '2.5rem',              // Taille par défaut VibeLogo
     VIBING_TITLE_SIZE: '1.5rem',          // Taille par défaut VibingTitle
     HEADER_PADDING_X: '0.75rem',          // Padding horizontal header (12px = px-3)
-    HEADER_PADDING_TOP: '1rem',           // Padding top header (16px = pt-4)
     HEADER_PADDING_BOTTOM: '0.75rem',     // Padding bottom header (12px = pb-3)
     HEADER_PADDING_BOTTOM_ADDALL: '0.5rem', // Padding bottom quand AddAll visible (8px = pb-2)
     SEARCH_PADDING_X: '1rem',             // Padding horizontal search bar (16px = px-4)
@@ -720,9 +716,18 @@ const VibeLogo = ({ size = CONFIG.VIBELOGO_SIZE }) => (
 );
 
 const VibeBuilderTitle = () => (
-    <div className="flex items-center gap-1 select-none justify-center">
-        <VibeLogoVector size={CONFIG.HEADER_LOGO_SIZE} className="" />
-        <span className="font-black text-gray-900 tracking-wide uppercase -mb-1" style={{ fontSize: CONFIG.HEADER_BUILDER_TEXT_SIZE }}>Builder</span>
+    <div className="flex items-center select-none justify-center" style={{ gap: UNIFIED_CONFIG.TITLE_ICON_GAP }}>
+        <AudioLines size={UNIFIED_CONFIG.TITLE_ICON_SIZE} className="text-pink-500" />
+        <span
+            className="font-black text-gray-900"
+            style={{
+                fontSize: UNIFIED_CONFIG.TITLE_FONT_SIZE,
+                fontVariant: 'small-caps',
+                textTransform: 'lowercase'
+            }}
+        >
+            Builder
+        </span>
     </div>
 );
 
@@ -1026,7 +1031,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 } }) => {
+const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 } }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -1577,9 +1582,10 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
 
     return (
         <>
-        <div 
+        <div
             className="absolute inset-0 bg-white z-50 flex flex-col"
             style={{
+                paddingBottom: 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
                 transform: closingDirection 
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
@@ -1595,20 +1601,8 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                         : `transform ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1), border-radius ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1), outline ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1)`
             }}
         >
-        {!isOnRealDevice && (
-          <div className="w-full bg-white/90 backdrop-blur-md flex justify-between items-end px-6 pb-2 text-xs font-medium z-20 shrink-0" style={{ height: CONFIG.HEADER_STATUS_HEIGHT }}>
-              <div className="w-1/3">9:41</div>
-              <div className="w-1/3 flex justify-center">
-                  <div className="bg-black rounded-b-2xl absolute top-0" style={{ height: CONFIG.HEADER_NOTCH_HEIGHT, width: CONFIG.HEADER_NOTCH_WIDTH }}></div>
-              </div>
-              <div className="w-1/3 flex justify-end gap-1">5G <span className="ml-1">100%</span></div>
-          </div>
-        )}
-        {isOnRealDevice && (
-          <div className="w-full bg-white shrink-0" style={{ height: `${iosSafeAreaTop}rem` }} />
-        )}
             <style>{styles}</style>
-            
+
             {/* OVERLAY PRÉ-ÉCOUTE */}
             {vibingSong && (
                 <div 
@@ -1695,37 +1689,38 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
             )}
 
             {/* HEADER */}
-            <div 
-                className="bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm z-20 sticky top-0 transition-all duration-200 ease-out"
-                style={{ 
-                    paddingLeft: CONFIG.HEADER_PADDING_X, 
-                    paddingRight: CONFIG.HEADER_PADDING_X, 
-                    paddingTop: CONFIG.HEADER_PADDING_TOP,
+            <div
+                className="bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm z-20 sticky top-0 transition-all duration-200 ease-out cursor-grab active:cursor-grabbing select-none"
+                style={{
+                    paddingLeft: CONFIG.HEADER_PADDING_X,
+                    paddingRight: CONFIG.HEADER_PADDING_X,
+                    paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                     paddingBottom: showAddAll ? CONFIG.HEADER_PADDING_BOTTOM_ADDALL : CONFIG.HEADER_PADDING_BOTTOM
                 }}
-            >
-            <div 
-                className="flex justify-between items-center mb-1 cursor-grab active:cursor-grabbing select-none"
                 onTouchStart={handleTitleTouchStart}
                 onTouchMove={handleTitleTouchMove}
                 onTouchEnd={handleTitleTouchEnd}
-            > 
+            >
+            <div
+                className="flex justify-between items-center"
+                style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}
+            >
                 {/* Indicateur gauche - chevrons seuls */}
                 <div className="flex items-center gap-0.5 swipe-hint-left">
                     <ChevronLeft size={14} className="text-gray-300" strokeWidth={2} />
                     <ChevronLeft size={14} className="text-gray-200 -ml-2.5" strokeWidth={2} />
                 </div>
-                
+
                 {/* Titre central */}
                 <div className="text-center"><VibeBuilderTitle size={16} /></div>
-                
+
                 {/* Indicateur droite - chevrons seuls */}
                 <div className="flex items-center gap-0.5 swipe-hint-right">
                     <ChevronRight size={14} className="text-gray-200 -mr-2.5" strokeWidth={2} />
                     <ChevronRight size={14} className="text-gray-300" strokeWidth={2} />
                 </div>
                 </div>
-                <div className="flex items-center gap-2 relative z-20" style={{ marginTop: CONFIG.HEADER_TITLE_GAP }}>
+                <div className="flex items-center gap-2 relative z-20">
                     <div className="flex-1 relative" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
                     {dragState ? (
                             <div 
@@ -1910,9 +1905,9 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                     ></div>
                 )}
 
-<div 
-                    ref={listRef} 
-                    className={`absolute inset-0 pb-48 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
+<div
+                    ref={listRef}
+                    className={`absolute inset-0 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
                     onScroll={(e) => setListScrollTop(e.target.scrollTop)}
                 >
                     {/* Conteneur avec hauteur totale pour le scroll */}
@@ -1963,26 +1958,46 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                 const isNameLong = vibeName.length > (vibeCardConfig?.marqueeThreshold || 12);
                 
                 return (
-                    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 z-30">
+                    <div
+                        style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            zIndex: 30,
+                            background: 'white',
+                            borderTop: '1px solid #e5e7eb',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
+                        {/* Padding au-dessus de la carte */}
+                        <div style={{ height: 12, flexShrink: 0 }} />
                         
                         {/* Future VibeCard - Swipable pour changer couleur */}
-                        <div 
-                            onTouchStart={handleCardSwipeStart}
-                            onTouchMove={handleCardSwipeMove}
-                            onTouchEnd={handleCardSwipeEnd}
-                            onMouseDown={handleCardSwipeStart}
-                            onMouseMove={handleCardSwipeMove}
-                            onMouseUp={handleCardSwipeEnd}
-                            className={`w-full rounded-xl shadow-lg cursor-pointer relative ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
-                            style={{ 
-                                height: vibeCardConfig?.height || 96,
-                                background: futureGradient,
-                                transition: 'box-shadow 0.1s ease-out',
-                                boxShadow: isCreatingVibe 
-                                    ? `0 0 20px ${futurePrimaryColor}, 0 0 40px ${futurePrimaryColor}99, 0 0 60px ${futurePrimaryColor}66`
-                                    : '0 10px 40px rgba(0,0,0,0.15)'
+                        <div
+                            style={{
+                                marginLeft: 16,
+                                marginRight: 16,
                             }}
                         >
+                        <div
+                                onTouchStart={handleCardSwipeStart}
+                                onTouchMove={handleCardSwipeMove}
+                                onTouchEnd={handleCardSwipeEnd}
+                                onMouseDown={handleCardSwipeStart}
+                                onMouseMove={handleCardSwipeMove}
+                                onMouseUp={handleCardSwipeEnd}
+                                className={`w-full rounded-xl cursor-pointer relative ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
+                                style={{
+                                    height: vibeCardConfig?.height || '9vh',
+                                    background: futureGradient,
+                                    transition: 'box-shadow 0.1s ease-out',
+                                    boxShadow: isCreatingVibe
+                                        ? `0 0 20px ${futurePrimaryColor}, 0 0 40px ${futurePrimaryColor}99, 0 0 60px ${futurePrimaryColor}66`
+                                        : '0 10px 40px rgba(0,0,0,0.15)'
+                                }}
+                            >
                             {/* Indication swipe - EN HAUT AU CENTRE */}
                             <div 
                                 className="absolute flex items-center gap-0.5 text-white/50 z-10"
@@ -2101,6 +2116,8 @@ const VibeBuilder = ({ isOnRealDevice = false, iosSafeAreaTop = 3, sourcePlaylis
                             </div>
                         </div>
                         </div>
+                        <SafeAreaSpacer />
+                    </div>
                 );
             })()}
             

@@ -8,7 +8,6 @@
     "orientation": "portrait",
     "background_color": "#000000",
     "theme_color": "#000000",
-    "categories": ["music", "entertainment"],
     "icons": [
       {
         "src": "icon-192.png",
