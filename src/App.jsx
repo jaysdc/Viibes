@@ -3791,6 +3791,16 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 // Convertir en pixels CSS pour le positionnement
                 const topCss = (headerPx + zonePx / 2 - beaconPx / 2) / dpr;
                 const heightCss = beaconPx / dpr;
+                // Lire safe-area-inset-top directement
+                const safeDiv = document.createElement('div');
+                safeDiv.style.position = 'fixed';
+                safeDiv.style.top = '0';
+                safeDiv.style.height = 'env(safe-area-inset-top, 0px)';
+                safeDiv.style.visibility = 'hidden';
+                document.body.appendChild(safeDiv);
+                const safeAreaTopCss = safeDiv.getBoundingClientRect().height;
+                document.body.removeChild(safeDiv);
+                const safeAreaTopReal = safeAreaTopCss * dpr;
                 return (
                   <>
                     <div
@@ -3809,6 +3819,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                       className="absolute left-4 right-4 bg-black/80 text-white text-xs p-2 rounded"
                       style={{ bottom: '25%' }}
                     >
+                      <div>SafeTop: {safeAreaTopReal.toFixed(1)} real px ({safeAreaTopCss.toFixed(1)} css)</div>
                       <div>Header: {headerPx.toFixed(1)} real px</div>
                       <div>Footer: {footerPx.toFixed(1)} real px</div>
                       <div>Beacon: {beaconPx.toFixed(1)} real px</div>
