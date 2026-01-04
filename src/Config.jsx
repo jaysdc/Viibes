@@ -116,6 +116,7 @@ export const UNIFIED_CONFIG = {
     // Player Header
     PLAYER_HEADER_BORDER_WIDTH: 1,       // Largeur bordure bas du header (px)
     PLAYER_HEADER_HANDLE_MARGIN_BOTTOM: '0.5rem',  // Marge sous le handle du header
+    PLAYER_HEADER_TITLE_HEIGHT: 37,      // Hauteur du titre "Vibing" (100 * 0.37 = 37px CSS)
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -128,7 +129,7 @@ export const getPlayerHeaderHeightPx = () => {
     const dpr = window.devicePixelRatio;
     return getSafeAreaTop() +                                                            // env(safe-area-inset-top) - déjà en vrais px
         cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP) +                                   // paddingTop - déjà en vrais px
-        UNIFIED_CONFIG.TITLE_ICON_SIZE * dpr +                                           // titre (hauteur = icône)
+        UNIFIED_CONFIG.PLAYER_HEADER_TITLE_HEIGHT * dpr +                                  // titre "Vibing" (37px CSS)
         cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                // gap entre titre et capsule - déjà en vrais px
         cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT) +                                     // capsule de tri - déjà en vrais px
         cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                // gap entre capsule et handle - déjà en vrais px
