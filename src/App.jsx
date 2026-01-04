@@ -3735,34 +3735,47 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         
         {/* OVERLAY SCRUBBING */}
         {isScrubbing && effectivePortalRef.current && ReactDOM.createPortal((() => {
-          const containerRect = effectivePortalRef.current?.getBoundingClientRect() || { width: 300, height: 500 };
+          const portalRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
+          const wheelRect = containerRef.current?.getBoundingClientRect() || portalRect;
+          const containerRect = portalRect; // Pour le reste du code qui utilise containerRect
+
+          // Dimensions FINALES (position fixe au centre)
+          const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+          const centerX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+          const centerY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+          const thickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+
+          // Position du beacon - on la connaît, pas besoin de getBoundingClientRect
+          const beaconWidthPercent = CONFIG.CAPSULE_WIDTH_PERCENT; // 92%
+          const beaconHeightVh = isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH; // 6.5vh
+          const beaconWidth = containerRect.width * beaconWidthPercent / 100;
+          const beaconHeight = containerRect.height * beaconHeightVh / 100;
+          const beaconLeft = (containerRect.width - beaconWidth) / 2;
+          const beaconTop = (containerRect.height - beaconHeight) / 2;
+
+          /* MORPH DÉSACTIVÉ - À RÉPARER
           const containerBorderWidth = 8;
-          
-          // Dimensions FINALES (grand arc au centre)
           const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
           const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
           const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
           const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
-          
-          // Dimensions INITIALES (petit arc sur le beacon)
-          const beaconRect = beaconNeonRef?.current?.getBoundingClientRect();
+
           const beaconBorderWidth = CONFIG.BEACON_NEON_WIDTH;
           const initialArcRadius = beaconRect ? (beaconRect.height - beaconBorderWidth * 2) / 2 : 25;
-          // Centre initial = bord droit de la capsule, centré verticalement
-          const initialCenterX = beaconRect 
+          const initialCenterX = beaconRect
             ? beaconRect.right - containerRect.left - containerBorderWidth - initialArcRadius - beaconBorderWidth
             : containerRect.width - 50;
-          const initialCenterY = beaconRect 
+          const initialCenterY = beaconRect
             ? beaconRect.top - containerRect.top - containerBorderWidth + (beaconRect.height / 2)
             : containerRect.height / 2;
           const initialThickness = beaconBorderWidth * 2 + 4;
-          
-          // Interpolation selon scrubMorphProgress
+
           const p = scrubMorphProgress;
           const arcRadius = initialArcRadius + (finalArcRadius - initialArcRadius) * p;
           const centerX = initialCenterX + (finalCenterX - initialCenterX) * p;
           const centerY = initialCenterY + (finalCenterY - initialCenterY) * p;
           const thickness = initialThickness + (finalThickness - initialThickness) * p;
+          */
           
           const totalSongs = queue.length;
           
@@ -3792,15 +3805,28 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           const bubbleColor = CONFIG.BEACON_SCRUB_BUBBLE_COLOR;
           
           return (
-            <div 
+            <div
               className="absolute inset-0 z-[100] flex items-center justify-center"
-              style={{ 
+              style={{
                 backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY * scrubMorphProgress})`,
                 transition: `background-color ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}`,
               }}
               onTouchMove={handleScrubTouchMove}
               onTouchEnd={handleScrubTouchEnd}
             >
+              {/* DEBUG: Overlay rose - TOUTE la capsule beacon */}
+              {/* Zone d'intérêt = écran - header (safe area top) - footer (FOOTER_BTN_HEIGHT + padding + safe area bottom) */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  left: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
+                  right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
+                  top: `calc(env(safe-area-inset-top, 0px) + (100vh - env(safe-area-inset-top, 0px) - ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px - ${UNIFIED_CONFIG.FOOTER_PADDING_TOP} - env(safe-area-inset-bottom, 0px) - 16px) / 2 - ${isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH}vh / 2)`,
+                  height: `${isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH}vh`,
+                  backgroundColor: 'rgba(236, 72, 153, 0.5)',
+                  border: '3px solid white',
+                }}
+              />
               {/* Tube rempli avec glow */}
               <svg 
                 className="absolute"
