@@ -3801,8 +3801,33 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 const safeAreaTopCss = safeDiv.getBoundingClientRect().height;
                 document.body.removeChild(safeDiv);
                 const safeAreaTopReal = safeAreaTopCss * dpr;
+                // Lire safe-area-inset-bottom
+                const safeDivBottom = document.createElement('div');
+                safeDivBottom.style.position = 'fixed';
+                safeDivBottom.style.bottom = '0';
+                safeDivBottom.style.height = 'env(safe-area-inset-bottom, 0px)';
+                safeDivBottom.style.visibility = 'hidden';
+                document.body.appendChild(safeDivBottom);
+                const safeAreaBottomCss = safeDivBottom.getBoundingClientRect().height;
+                document.body.removeChild(safeDivBottom);
                 return (
                   <>
+                    {/* DEBUG: Zone safe area TOP (rouge) */}
+                    <div
+                      className="absolute left-0 right-0 top-0"
+                      style={{
+                        height: safeAreaTopCss,
+                        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                      }}
+                    />
+                    {/* DEBUG: Zone safe area BOTTOM (rouge) */}
+                    <div
+                      className="absolute left-0 right-0 bottom-0"
+                      style={{
+                        height: safeAreaBottomCss,
+                        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                      }}
+                    />
                     <div
                       className="absolute rounded-full"
                       style={{
