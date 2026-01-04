@@ -25,6 +25,42 @@ const getSafeAreaBottom = () => {
 // Variable globale avec la valeur de safe-area-inset-bottom en pixels
 export const SAFE_AREA_BOTTOM = getSafeAreaBottom();
 
+// Fonction pour lire env(safe-area-inset-top) en pixels
+const getSafeAreaTop = () => {
+    if (typeof window === 'undefined') return 0;
+
+    const div = document.createElement('div');
+    div.style.position = 'fixed';
+    div.style.top = '0';
+    div.style.height = 'env(safe-area-inset-top, 0px)';
+    div.style.visibility = 'hidden';
+    document.body.appendChild(div);
+
+    const height = div.getBoundingClientRect().height;
+    document.body.removeChild(div);
+
+    return height;
+};
+
+// Variable globale avec la valeur de safe-area-inset-top en pixels
+export const SAFE_AREA_TOP = getSafeAreaTop();
+
+// Fonction pour convertir une valeur CSS (rem, px, etc.) en pixels
+const cssToPixels = (cssValue) => {
+    if (typeof window === 'undefined') return 0;
+
+    const div = document.createElement('div');
+    div.style.position = 'fixed';
+    div.style.visibility = 'hidden';
+    div.style.height = cssValue;
+    document.body.appendChild(div);
+
+    const height = div.getBoundingClientRect().height;
+    document.body.removeChild(div);
+
+    return height;
+};
+
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)       ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -75,7 +111,39 @@ export const UNIFIED_CONFIG = {
     // Footer
     FOOTER_PADDING_TOP: '0.5rem',        // Padding entre le haut du footer et les éléments
     FOOTER_BTN_HEIGHT: 40,               // Hauteur des boutons du footer (px)
+    FOOTER_BORDER_WIDTH: 1,              // Largeur bordure haut du footer (px)
+
+    // Player Header
+    PLAYER_HEADER_BORDER_WIDTH: 1,       // Largeur bordure bas du header (px)
+    PLAYER_HEADER_HANDLE_MARGIN_BOTTOM: '0.5rem',  // Marge sous le handle du header
 };
+
+// ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║              HAUTEURS EN PIXELS (fonctions à appeler après mount)         ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+// Hauteur du header du player en pixels
+// Structure: paddingTop + titre + gap + capsule + gap + handle + paddingBottom + border
+export const getPlayerHeaderHeightPx = () =>
+    getSafeAreaTop() +                                                                   // env(safe-area-inset-top)
+    cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP) +                                       // paddingTop (partie après safe-area)
+    UNIFIED_CONFIG.TITLE_ICON_SIZE +                                                     // titre (hauteur = icône)
+    cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                    // gap entre titre et capsule
+    cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT) +                                         // capsule de tri
+    cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                    // gap entre capsule et handle
+    (UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio) +                   // handle
+    cssToPixels(UNIFIED_CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM) +                     // paddingBottom
+    UNIFIED_CONFIG.PLAYER_HEADER_BORDER_WIDTH;                                           // border
+
+// Hauteur du footer du player en pixels (border + padding + boutons + safe-area-bottom)
+export const getPlayerFooterHeightPx = () =>
+    UNIFIED_CONFIG.FOOTER_BORDER_WIDTH +
+    cssToPixels(UNIFIED_CONFIG.FOOTER_PADDING_TOP) +
+    UNIFIED_CONFIG.FOOTER_BTN_HEIGHT +
+    getSafeAreaBottom();
+
+// Hauteur du beacon en pixels (6.5vh converti en px)
+export const getBeaconHeightPx = () => cssToPixels(`${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh`);
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              HAUTEUR DU FOOTER (CSS sans safe-area)                       ║

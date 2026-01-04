@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -3733,109 +3733,73 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           );
         })()}
         
-        {/* OVERLAY SCRUBBING */}
+        {/* OVERLAY SCRUBBING - version simple sans morph */}
         {isScrubbing && effectivePortalRef.current && ReactDOM.createPortal((() => {
           const portalRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
-          const wheelRect = containerRef.current?.getBoundingClientRect() || portalRect;
-          const containerRect = portalRect; // Pour le reste du code qui utilise containerRect
+          const containerRect = portalRect;
 
-          // Dimensions FINALES (position fixe au centre)
+          // Position fixe au centre (pas de morph)
           const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
           const centerX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
           const centerY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
           const thickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
 
-          // Position du beacon - on la connaît, pas besoin de getBoundingClientRect
-          const beaconWidthPercent = CONFIG.CAPSULE_WIDTH_PERCENT; // 92%
-          const beaconHeightVh = isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH; // 6.5vh
-          const beaconWidth = containerRect.width * beaconWidthPercent / 100;
-          const beaconHeight = containerRect.height * beaconHeightVh / 100;
-          const beaconLeft = (containerRect.width - beaconWidth) / 2;
-          const beaconTop = (containerRect.height - beaconHeight) / 2;
-
-          /* MORPH DÉSACTIVÉ - À RÉPARER
-          const containerBorderWidth = 8;
-          const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-          const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
-          const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-          const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
-
-          const beaconBorderWidth = CONFIG.BEACON_NEON_WIDTH;
-          const initialArcRadius = beaconRect ? (beaconRect.height - beaconBorderWidth * 2) / 2 : 25;
-          const initialCenterX = beaconRect
-            ? beaconRect.right - containerRect.left - containerBorderWidth - initialArcRadius - beaconBorderWidth
-            : containerRect.width - 50;
-          const initialCenterY = beaconRect
-            ? beaconRect.top - containerRect.top - containerBorderWidth + (beaconRect.height / 2)
-            : containerRect.height / 2;
-          const initialThickness = beaconBorderWidth * 2 + 4;
-
-          const p = scrubMorphProgress;
-          const arcRadius = initialArcRadius + (finalArcRadius - initialArcRadius) * p;
-          const centerX = initialCenterX + (finalCenterX - initialCenterX) * p;
-          const centerY = initialCenterY + (finalCenterY - initialCenterY) * p;
-          const thickness = initialThickness + (finalThickness - initialThickness) * p;
-          */
-          
           const totalSongs = queue.length;
-          
+
           // Position du point sélectionné (cyan)
           const selectedProgress = totalSongs > 1 ? scrubIndex / (totalSongs - 1) : 0.5;
           const selectedAngle = -Math.PI / 2 + selectedProgress * Math.PI;
           const selectedX = centerX + arcRadius * Math.cos(selectedAngle);
           const selectedY = centerY + arcRadius * Math.sin(selectedAngle);
-          
+
           // Position du point en lecture (rose)
           const playingProgress = totalSongs > 1 ? currentIndex / (totalSongs - 1) : 0.5;
           const playingAngle = -Math.PI / 2 + playingProgress * Math.PI;
           const playingX = centerX + arcRadius * Math.cos(playingAngle);
           const playingY = centerY + arcRadius * Math.sin(playingAngle);
-          
+
           // Position des extrémités (début = haut, fin = bas)
           const startX = centerX + arcRadius * Math.cos(-Math.PI / 2);
           const startY = centerY + arcRadius * Math.sin(-Math.PI / 2);
           const endX = centerX + arcRadius * Math.cos(Math.PI / 2);
           const endY = centerY + arcRadius * Math.sin(Math.PI / 2);
-          
+
           const scrubSong = queue[scrubIndex];
-          
+
           // Couleurs depuis CONFIG
           const tubeColor = CONFIG.BEACON_SCRUB_TUBE_COLOR;
           const tubeGlowColor = CONFIG.BEACON_SCRUB_TUBE_GLOW_COLOR;
           const bubbleColor = CONFIG.BEACON_SCRUB_BUBBLE_COLOR;
-          
+
           return (
             <div
               className="absolute inset-0 z-[100] flex items-center justify-center"
               style={{
-                backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY * scrubMorphProgress})`,
-                transition: `background-color ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}`,
+                backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
               }}
               onTouchMove={handleScrubTouchMove}
               onTouchEnd={handleScrubTouchEnd}
             >
-              {/* DEBUG: Overlay rose - TOUTE la capsule beacon */}
-              {/* Zone d'intérêt = écran - header (safe area top) - footer (FOOTER_BTN_HEIGHT + padding + safe area bottom) */}
+              {/* DEBUG: Capsule verte (test positionnement avec variables px) */}
               <div
                 className="absolute rounded-full"
                 style={{
                   left: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
                   right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
-                  top: `calc(env(safe-area-inset-top, 0px) + (100vh - env(safe-area-inset-top, 0px) - ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px - ${UNIFIED_CONFIG.FOOTER_PADDING_TOP} - env(safe-area-inset-bottom, 0px) - 16px) / 2 - ${isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH}vh / 2)`,
-                  height: `${isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH}vh`,
-                  backgroundColor: 'rgba(236, 72, 153, 0.5)',
-                  border: '3px solid white',
+                  top: getPlayerHeaderHeightPx() + (window.innerHeight - getPlayerHeaderHeightPx() - getPlayerFooterHeightPx()) / 2 - getBeaconHeightPx() / 2,
+                  height: getBeaconHeightPx(),
+                  backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                  border: `${1 / window.devicePixelRatio}px solid rgba(34, 197, 94, 1)`,
                 }}
               />
               {/* Tube rempli avec glow */}
-              <svg 
+              <svg
                 className="absolute"
-                style={{ 
+                style={{
                   left: centerX - arcRadius - 20,
                   top: centerY - arcRadius - 20,
                   width: arcRadius * 2 + 40,
                   height: arcRadius * 2 + 40,
-                  transition: isScrubMorphing ? `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` : 'none',
                 }}
               >
                 <defs>
@@ -3847,7 +3811,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     </feMerge>
                   </filter>
                 </defs>
-                {/* Tube externe (glow) avec animation */}
+                {/* Tube externe (glow) */}
                 <path
                   className="scrub-tube-glow"
                   d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
@@ -3856,7 +3820,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   strokeWidth={thickness + CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE}
                   strokeLinecap="round"
                   filter="url(#tubeGlow)"
-                  style={{ transition: `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` }}
                 />
                 {/* Tube interne (rempli) */}
                 <path
@@ -3865,12 +3828,11 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   stroke={tubeColor}
                   strokeWidth={thickness}
                   strokeLinecap="round"
-                  style={{ transition: `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` }}
                 />
               </svg>
-              
+
               {/* Capsule début "1" */}
-              <div 
+              <div
                 className="absolute flex items-center justify-center rounded-full font-bold"
                 style={{
                   left: startX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
@@ -3881,15 +3843,13 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
                   fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
                   boxShadow: `0 0 8px ${tubeGlowColor}`,
-                  opacity: scrubMorphProgress,
-                  transition: isScrubMorphing ? `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` : 'none',
                 }}
               >
                 1
               </div>
-              
+
               {/* Capsule fin "N" */}
-              <div 
+              <div
                 className="absolute flex items-center justify-center rounded-full font-bold"
                 style={{
                   left: endX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
@@ -3900,15 +3860,13 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
                   fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
                   boxShadow: `0 0 8px ${tubeGlowColor}`,
-                  opacity: scrubMorphProgress,
-                  transition: isScrubMorphing ? `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` : 'none',
                 }}
               >
                 {totalSongs}
               </div>
-              
+
               {/* Point chanson en lecture (rose) */}
-              <div 
+              <div
                 className="absolute rounded-full"
                 style={{
                   left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
@@ -3917,13 +3875,11 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
                   backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
                   boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
-                  opacity: scrubMorphProgress,
-                  transition: isScrubMorphing ? `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` : 'none',
                 }}
               />
-              
+
               {/* Point sélection (cyan) - le plus gros */}
-              <div 
+              <div
                 className="absolute rounded-full"
                 style={{
                   left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
@@ -3932,42 +3888,38 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
                   backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
                   boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
-                  opacity: scrubMorphProgress,
-                  transition: isScrubMorphing ? `all ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}` : 'none',
                 }}
               />
-              
+
               {/* Texte au centre : titre, artiste, numéro */}
-              <div 
+              <div
                 className="absolute text-center text-white flex flex-col items-center justify-center"
-                style={{ 
+                style={{
                   left: '50%',
                   top: '50%',
                   transform: 'translate(-50%, -50%)',
                   maxWidth: '70%',
-                  opacity: scrubMorphProgress,
-                  transition: `opacity ${CONFIG.BEACON_SCRUB_MORPH_DURATION}ms ${CONFIG.BEACON_SCRUB_MORPH_EASING}`,
                 }}
               >
-                <div 
+                <div
                   className="font-black truncate w-full"
                   style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE + 4 }}
                 >
                   {scrubSong?.title || ''}
                 </div>
-                <div 
+                <div
                   className="text-pink-400 font-medium mt-1 truncate w-full"
                   style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE - 2 }}
                 >
                   {scrubSong?.artist || ''}
                 </div>
-                <div 
+                <div
                   className="text-gray-400 mt-2 font-mono"
                   style={{ fontSize: CONFIG.BEACON_SCRUB_COUNTER_SIZE }}
                 >
                   {scrubIndex + 1} / {totalSongs}
                 </div>
-                </div>
+              </div>
             </div>
           );
         })(), effectivePortalRef.current)}
