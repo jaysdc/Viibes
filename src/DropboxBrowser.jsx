@@ -172,7 +172,8 @@ const DropboxBrowser = ({
     const [importData, setImportData] = useState(null); // { folders, folderGradients, totalFiles, rootName, existingFolders }
     const [importBtnIgniting, setImportBtnIgniting] = useState(null); // 'cancel' | 'fusion' | 'vibes' | null
     const [importListNeedsScroll, setImportListNeedsScroll] = useState(false);
-    const [importListFadeOpacity, setImportListFadeOpacity] = useState(1);
+    const [importFadeTopOpacity, setImportFadeTopOpacity] = useState(0);
+    const [importFadeBottomOpacity, setImportFadeBottomOpacity] = useState(1);
 
     // États pour le swipe de couleur (phase import)
     const [swipingCard, setSwipingCard] = useState(null);
@@ -239,6 +240,28 @@ const DropboxBrowser = ({
 
     const handleScrubEnd = () => {
         setIsScrubbing(false);
+    };
+
+    // Gérer le scroll pour la liste d'import (fades bidirectionnels)
+    const handleImportListScroll = () => {
+        if (!importListRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = importListRef.current;
+        const maxScroll = scrollHeight - clientHeight;
+
+        if (maxScroll > 0) {
+            setImportListNeedsScroll(true);
+            // Fade en haut : apparaît quand on scroll vers le bas
+            const topOpacity = Math.min(1, scrollTop / CONFIG.FADE_DISTANCE);
+            setImportFadeTopOpacity(topOpacity);
+            // Fade en bas : disparaît quand on approche du bas
+            const distanceFromBottom = maxScroll - scrollTop;
+            const bottomOpacity = Math.min(1, distanceFromBottom / CONFIG.FADE_DISTANCE);
+            setImportFadeBottomOpacity(bottomOpacity);
+        } else {
+            setImportListNeedsScroll(false);
+            setImportFadeTopOpacity(0);
+            setImportFadeBottomOpacity(0);
+        }
     };
 
     // Calculer les gradients pour les vibes (comme SmartImport)
@@ -847,6 +870,28 @@ const DropboxBrowser = ({
         return () => clearTimeout(timer);
     }, [files, loading]);
 
+    // Initialiser les fades de la liste d'import quand on entre en phase import
+    useEffect(() => {
+        if (phase === 'import' && importListRef.current) {
+            const timer = setTimeout(() => {
+                if (importListRef.current) {
+                    const { scrollHeight, clientHeight, scrollTop } = importListRef.current;
+                    const maxScroll = scrollHeight - clientHeight;
+                    if (maxScroll > 0) {
+                        setImportListNeedsScroll(true);
+                        setImportFadeTopOpacity(Math.min(1, scrollTop / CONFIG.FADE_DISTANCE));
+                        setImportFadeBottomOpacity(Math.min(1, (maxScroll - scrollTop) / CONFIG.FADE_DISTANCE));
+                    } else {
+                        setImportListNeedsScroll(false);
+                        setImportFadeTopOpacity(0);
+                        setImportFadeBottomOpacity(0);
+                    }
+                }
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [phase, importData]);
+
     // Restaurer la position de scroll après chargement
     useEffect(() => {
         if (!loading && pendingScrollRestore !== null && listRef.current) {
@@ -1186,9 +1231,9 @@ const DropboxBrowser = ({
                                 </div>
 
                                 {/* Liste des vibes */}
-                                <div className="relative mb-2 flex-1 min-h-0 overflow-hidden" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <div className="relative mb-2 flex-1 min-h-0" style={{ paddingLeft: 0, paddingRight: 0, overflowX: 'clip', overflowY: 'visible' }}>
                                     <div className="h-full" style={{ overflow: 'visible' }}>
-                                        <div ref={importListRef} className="h-full overflow-y-auto overflow-x-visible" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', flexDirection: 'column', gap: SMARTIMPORT_CONFIG.CARD_GAP, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
+                                        <div ref={importListRef} className="h-full overflow-y-auto" onScroll={handleImportListScroll} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', flexDirection: 'column', gap: SMARTIMPORT_CONFIG.CARD_GAP, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: `calc(${SMARTIMPORT_CONFIG.HORIZONTAL_PADDING} + 0.6rem)`, paddingTop: '0.75rem', paddingBottom: '0.5rem' }}>
                                             {Object.entries(importData.folders).map(([folderName, folderFiles]) => {
                                                 const gradientIndex = importData.folderGradients?.[folderName] ?? 0;
                                                 const gradient = getGradientByIndex(gradientIndex);
@@ -1200,7 +1245,14 @@ const DropboxBrowser = ({
                                                     <div
                                                         key={folderName}
                                                         className="relative rounded-xl overflow-visible"
-                                                        style={{ height: SMARTIMPORT_CONFIG.CARD_HEIGHT, background: isBeingSwiped && swipePreview ? swipePreview.gradient : gradientStyle, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', flexShrink: 0 }}
+                                                        style={{
+                                                            height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
+                                                            background: isBeingSwiped && swipePreview ? swipePreview.gradient : gradientStyle,
+                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                                            flexShrink: 0,
+                                                            transform: isBeingSwiped ? `translateX(${swipeOffset * 1.5}px)` : 'translateX(0)',
+                                                            transition: isBeingSwiped ? 'none' : 'transform 0.2s ease-out',
+                                                        }}
                                                         onTouchStart={(e) => handleCardSwipeStart(e, folderName)}
                                                         onTouchMove={(e) => handleCardSwipeMove(e, folderName)}
                                                         onTouchEnd={() => handleCardSwipeEnd(folderName)}
@@ -1236,8 +1288,11 @@ const DropboxBrowser = ({
                                             })}
                                         </div>
                                     </div>
-                                    {importListNeedsScroll && importListFadeOpacity > 0 && (
-                                        <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: SMARTIMPORT_CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, rgba(255,255,255,${SMARTIMPORT_CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: importListFadeOpacity }} />
+                                    {importListNeedsScroll && importFadeTopOpacity > 0 && (
+                                        <div className="absolute left-0 right-0 top-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to bottom, ${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR} 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeTopOpacity }} />
+                                    )}
+                                    {importListNeedsScroll && importFadeBottomOpacity > 0 && (
+                                        <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, ${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR} 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeBottomOpacity }} />
                                     )}
                                 </div>
 
@@ -1258,13 +1313,14 @@ const DropboxBrowser = ({
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                             {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: '#ff6b00', zIndex: 0 }} />}
                                             <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'rgba(255,107,0,0.15)', color: importBtnIgniting === 'fusion' ? 'white' : '#ff6b00' }}>
-                                                <Flame size={14} />
+                                                <Layers size={14} />
                                             </button>
                                         </div>
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                             {importBtnIgniting === 'vibes' && <div className="absolute inset-0 rounded-full dropbox-ignite-pink" style={{ background: '#ec4899', zIndex: 0 }} />}
                                             <button onClick={() => handleImportAction('vibes')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'vibes' ? 'transparent' : '#ec4899', color: 'white', boxShadow: '0 0 15px rgba(236, 72, 153, 0.4)' }}>
-                                                <Layers size={14} />
+                                                <Flame size={14} />
+                                                <span>{Object.keys(importData.folders).length}</span>
                                             </button>
                                         </div>
                                     </div>
