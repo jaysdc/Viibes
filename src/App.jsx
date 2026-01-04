@@ -504,7 +504,7 @@ const CONFIG = {
     IMPORT_FOLDER_ICON_COLOR: '#4b5563',        // Couleur de l'icône dossier (gray-600)
     IMPORT_FOLDER_GLOW: 'rgba(173, 216, 230, 0.8)',
     IMPORT_HANDLE_WIDTH_PERCENT: 15,            // % de la largeur du header
-    // IMPORT_HANDLE_HEIGHT -> utilise UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
+    // IMPORT_HANDLE_HEIGHT -> utilise UNIFIED_CONFIG.HANDLE_HEIGHT
     
     // CONTRÔLES - Couleur de fond commune
     CONTROL_BG_COLOR: '249, 250, 251',          // RGB - gris très clair (TimeCapsule, Volume, Recenter, Import OFF)
@@ -1126,22 +1126,22 @@ const styles = `
   /* Animation slide du handle */
  @keyframes import-handle-slide-in {
     0% { max-height: 0; }
-    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
   }
 
   @keyframes import-handle-slide-out {
-    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.HEADER_PADDING_BOTTOM}rem); }
     100% { max-height: 0; }
   }
 
   /* Animation slide du handle player */
   @keyframes player-handle-slide-in {
     0% { max-height: 0; opacity: 0; }
-    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
+    100% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
   }
 
   @keyframes player-handle-slide-out {
-    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
+    0% { max-height: calc(${UNIFIED_CONFIG.HANDLE_HEIGHT}px + ${CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM}); opacity: 1; }
     100% { max-height: 0; opacity: 0; }
   }
 
@@ -3781,17 +3781,38 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               onTouchEnd={handleScrubTouchEnd}
             >
               {/* DEBUG: Capsule verte (test positionnement avec variables px) */}
-              <div
-                className="absolute rounded-full"
-                style={{
-                  left: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
-                  right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
-                  top: getPlayerHeaderHeightPx() + (window.innerHeight - getPlayerHeaderHeightPx() - getPlayerFooterHeightPx()) / 2 - getBeaconHeightPx() / 2,
-                  height: getBeaconHeightPx(),
-                  backgroundColor: 'rgba(34, 197, 94, 0.3)',
-                  border: `${1 / window.devicePixelRatio}px solid rgba(34, 197, 94, 1)`,
-                }}
-              />
+              {(() => {
+                const headerPx = getPlayerHeaderHeightPx();
+                const footerPx = getPlayerFooterHeightPx();
+                const beaconPx = getBeaconHeightPx();
+                const zonePx = window.innerHeight - headerPx - footerPx;
+                return (
+                  <>
+                    <div
+                      className="absolute rounded-full"
+                      style={{
+                        left: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
+                        right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
+                        top: headerPx + zonePx / 2 - beaconPx / 2,
+                        height: beaconPx,
+                        backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                        border: `${1 / window.devicePixelRatio}px solid rgba(34, 197, 94, 1)`,
+                      }}
+                    />
+                    {/* DEBUG: Overlay valeurs */}
+                    <div
+                      className="absolute left-4 right-4 bg-black/80 text-white text-xs p-2 rounded"
+                      style={{ bottom: '25%' }}
+                    >
+                      <div>Header: {headerPx.toFixed(1)}px</div>
+                      <div>Footer: {footerPx.toFixed(1)}px</div>
+                      <div>Beacon: {beaconPx.toFixed(1)}px</div>
+                      <div>Zone: {zonePx.toFixed(1)}px</div>
+                      <div>Screen: {window.innerHeight}px</div>
+                    </div>
+                  </>
+                );
+              })()}
               {/* Tube rempli avec glow */}
               <svg
                 className="absolute"
@@ -6420,7 +6441,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             className="bg-gray-300 rounded-full handle-pulse cursor-pointer"
                             style={{
                                 width: `${CONFIG.IMPORT_HANDLE_WIDTH_PERCENT}%`,
-                                height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
+                                height: UNIFIED_CONFIG.HANDLE_HEIGHT,
                                 marginTop: `${CONFIG.HEADER_PADDING_BOTTOM}rem`
                             }}
                             onClick={() => {
@@ -6631,7 +6652,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="bg-gray-300 rounded-full handle-pulse"
                                     style={{
                                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio
+                                        height: UNIFIED_CONFIG.HANDLE_HEIGHT
                                     }}
                                 />
                             )}
@@ -7185,7 +7206,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="bg-gray-300 rounded-full"
                     style={{
                         width: CONFIG.PLAYER_HEADER_HANDLE_WIDTH,
-                        height: UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio,
+                        height: UNIFIED_CONFIG.HANDLE_HEIGHT,
                         opacity: isPlayerSearching && playerSearchOverlayAnim === 'none' ? 0 : undefined,
                         animation: playerSearchOverlayAnim === 'opening'
                             ? `search-fade-out ${CONFIG.SEARCH_PLAYER_FADE_IN_DURATION}ms ease-out forwards`

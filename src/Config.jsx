@@ -101,7 +101,7 @@ export const UNIFIED_CONFIG = {
     TITLE_ICON_GAP: '0.5rem',           // Espace entre icône et texte
 
     // Handles (barres grises de drag)
-    HANDLE_HEIGHT_REAL_PX: 18,           // Hauteur en VRAIS pixels physiques (divisé par devicePixelRatio dans le code)
+    HANDLE_HEIGHT: 6,                    // Hauteur en pixels CSS
     HANDLE_COLOR: '#d1d5db',            // gray-300
 
     // Écrans d'import (SmartImport + DropboxBrowser)
@@ -131,7 +131,7 @@ export const getPlayerHeaderHeightPx = () =>
     cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                    // gap entre titre et capsule
     cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT) +                                         // capsule de tri
     cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                    // gap entre capsule et handle
-    (UNIFIED_CONFIG.HANDLE_HEIGHT_REAL_PX / window.devicePixelRatio) +                   // handle
+    UNIFIED_CONFIG.HANDLE_HEIGHT +                                                        // handle
     cssToPixels(UNIFIED_CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM) +                     // paddingBottom
     UNIFIED_CONFIG.PLAYER_HEADER_BORDER_WIDTH;                                           // border
 
