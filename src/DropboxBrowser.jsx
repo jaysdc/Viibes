@@ -183,6 +183,7 @@ const DropboxBrowser = ({
     const [swipeDirection, setSwipeDirection] = useState(null);
     const [swipePreview, setSwipePreview] = useState(null);
     const cardWidthRef = useRef(0);
+    const swipeStateRef = useRef({ card: null, startX: null, startY: null, direction: null });
 
     const listRef = useRef(null);
     const importListRef = useRef(null);
@@ -303,62 +304,26 @@ const DropboxBrowser = ({
         return folderGradients;
     };
 
-    // Handlers pour le swipe de couleur sur les cartes
+    // Handlers pour le swipe de couleur sur les cartes (utilise swipeStateRef pour passive:false)
     const handleCardSwipeStart = (e, cardName) => {
         if (!e.touches || !e.touches[0]) return;
         setSwipingCard(cardName);
         setSwipeTouchStartX(e.touches[0].clientX);
         setSwipeTouchStartY(e.touches[0].clientY);
         setSwipeDirection(null);
+        // Stocker dans la ref pour l'event listener passive:false
+        swipeStateRef.current = {
+            card: cardName,
+            startX: e.touches[0].clientX,
+            startY: e.touches[0].clientY,
+            direction: null
+        };
         if (e.currentTarget) {
             cardWidthRef.current = e.currentTarget.offsetWidth;
         }
     };
 
-    const handleCardSwipeMove = (e, cardName) => {
-        if (swipingCard !== cardName || swipeTouchStartX === null || swipeTouchStartY === null) return;
-        const clientX = e.touches[0].clientX;
-        const clientY = e.touches[0].clientY;
-        const diffX = clientX - swipeTouchStartX;
-        const diffY = clientY - swipeTouchStartY;
-
-        if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                setSwipeDirection('horizontal');
-                const currentIdx = importData?.folderGradients?.[cardName] ?? 0;
-                const currentGradient = getGradientByIndex(currentIdx);
-                const gradientStyle = currentGradient.length === 2
-                    ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
-                    : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
-                const safeIndex = ((currentIdx % 20) + 20) % 20;
-                setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
-            } else {
-                setSwipeDirection('vertical');
-            }
-        }
-
-        // Si c'est un swipe vertical, on ignore (laisser le scroll se faire)
-        if (swipeDirection === 'vertical') return;
-
-        // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe
-        if (swipeDirection === 'horizontal') {
-            e.preventDefault(); // Bloque le scroll vertical pendant le swipe horizontal
-            const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
-            if (Math.abs(diffX) < maxSwipeDistance) {
-                setSwipeOffset(diffX);
-                const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
-                const currentIdx = importData?.folderGradients?.[cardName] ?? 0;
-                const previewIdx = currentIdx + (direction * colorsTraversed);
-                const previewGradient = getGradientByIndex(previewIdx);
-                const gradientStyle = previewGradient.length === 2
-                    ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
-                    : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
-                const safeIndex = ((previewIdx % 20) + 20) % 20;
-                setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
-            }
-        }
-    };
+    // handleCardSwipeMove est maintenant géré par le useEffect avec passive:false
 
     const handleCardSwipeEnd = (cardName) => {
         if (swipingCard !== cardName) return;
@@ -385,6 +350,8 @@ const DropboxBrowser = ({
         setSwipeTouchStartY(null);
         setSwipeDirection(null);
         setSwipePreview(null);
+        // Reset la ref aussi
+        swipeStateRef.current = { card: null, startX: null, startY: null, direction: null };
     };
 
     // Charger le contenu d'un dossier
@@ -644,7 +611,19 @@ const DropboxBrowser = ({
             // Compter le total de fichiers
             const allFilesCount = Object.values(scannedFolders).reduce((sum, arr) => sum + arr.length, 0);
 
-            // Préparer les données pour la phase import
+            // Si un seul dossier (pas de sous-dossiers), importer directement sans phase import
+            const folderKeys = Object.keys(scannedFolders);
+            if (folderKeys.length === 1) {
+                onImportComplete(scannedFolders, 'vibes', folderGradients, true);
+                handleCloseAfterImport();
+                setScanning(false);
+                setScanPhase(null);
+                setProcessedFiles(0);
+                setTotalFilesToProcess(0);
+                return;
+            }
+
+            // Préparer les données pour la phase import (plusieurs dossiers)
             setImportData({
                 folders: scannedFolders,
                 folderGradients,
@@ -894,6 +873,62 @@ const DropboxBrowser = ({
             return () => clearTimeout(timer);
         }
     }, [phase, importData]);
+
+    // Swipe avec passive:false pour bloquer le scroll pendant le swipe horizontal (iOS)
+    useEffect(() => {
+        const container = importListRef.current;
+        if (!container || phase !== 'import') return;
+
+        const handleTouchMove = (e) => {
+            const state = swipeStateRef.current;
+            if (!state.card || state.startX === null || state.startY === null) return;
+
+            const clientX = e.touches[0].clientX;
+            const clientY = e.touches[0].clientY;
+            const diffX = clientX - state.startX;
+            const diffY = clientY - state.startY;
+
+            // Déterminer la direction au premier mouvement significatif
+            if (state.direction === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+                state.direction = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+                setSwipeDirection(state.direction);
+                if (state.direction === 'horizontal') {
+                    const currentIdx = importData?.folderGradients?.[state.card] ?? 0;
+                    const currentGradient = getGradientByIndex(currentIdx);
+                    const gradientStyle = currentGradient.length === 2
+                        ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
+                        : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
+                    const safeIndex = ((currentIdx % 20) + 20) % 20;
+                    setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+                }
+            }
+
+            // Si vertical, laisser le scroll natif
+            if (state.direction === 'vertical') return;
+
+            // Si horizontal, BLOQUER le scroll et gérer le swipe
+            if (state.direction === 'horizontal') {
+                e.preventDefault(); // Fonctionne car passive: false
+                const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
+                if (Math.abs(diffX) < maxSwipeDistance) {
+                    setSwipeOffset(diffX);
+                    const direction = diffX > 0 ? 1 : -1;
+                    const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
+                    const currentIdx = importData?.folderGradients?.[state.card] ?? 0;
+                    const previewIdx = currentIdx + (direction * colorsTraversed);
+                    const previewGradient = getGradientByIndex(previewIdx);
+                    const gradientStyle = previewGradient.length === 2
+                        ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
+                        : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
+                    const safeIndex = ((previewIdx % 20) + 20) % 20;
+                    setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+                }
+            }
+        };
+
+        container.addEventListener('touchmove', handleTouchMove, { passive: false });
+        return () => container.removeEventListener('touchmove', handleTouchMove);
+    }, [phase, importData, getGradientByIndex, getGradientName]);
 
     // Restaurer la position de scroll après chargement
     useEffect(() => {
@@ -1258,12 +1293,11 @@ const DropboxBrowser = ({
                                                             touchAction: 'pan-y', // Permet scroll vertical, on gère horizontal nous-mêmes
                                                         }}
                                                         onTouchStart={(e) => handleCardSwipeStart(e, folderName)}
-                                                        onTouchMove={(e) => handleCardSwipeMove(e, folderName)}
                                                         onTouchEnd={() => handleCardSwipeEnd(folderName)}
                                                     >
-                                                        {/* Indicateurs swipe */}
+                                                        {/* Indicateurs swipe - chevrons à côté du pointer */}
                                                         {!isBeingSwiped && (
-                                                            <div className="absolute top-0 left-0 right-0 flex justify-between items-center pointer-events-none" style={{ top: SMARTIMPORT_CONFIG.SWIPE_INDICATOR_TOP, paddingLeft: '0.5rem', paddingRight: '0.5rem', opacity: SMARTIMPORT_CONFIG.SWIPE_CHEVRON_OPACITY }}>
+                                                            <div className="absolute top-0 left-0 right-0 flex justify-center items-center gap-1 pointer-events-none" style={{ top: SMARTIMPORT_CONFIG.SWIPE_INDICATOR_TOP, opacity: SMARTIMPORT_CONFIG.SWIPE_CHEVRON_OPACITY }}>
                                                                 <ChevronLeft size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white/60" strokeWidth={3} />
                                                                 <Pointer size={SMARTIMPORT_CONFIG.SWIPE_POINTER_SIZE} className="text-white/60" strokeWidth={2} />
                                                                 <ChevronRight size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white/60" strokeWidth={3} />
@@ -1293,10 +1327,10 @@ const DropboxBrowser = ({
                                         </div>
                                     </div>
                                     {importListNeedsScroll && importFadeTopOpacity > 0 && (
-                                        <div className="absolute left-0 right-0 top-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to bottom, ${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR} 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeTopOpacity }} />
+                                        <div className="absolute left-0 right-0 top-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeTopOpacity }} />
                                     )}
                                     {importListNeedsScroll && importFadeBottomOpacity > 0 && (
-                                        <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, ${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR} 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeBottomOpacity }} />
+                                        <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeBottomOpacity }} />
                                     )}
                                 </div>
 

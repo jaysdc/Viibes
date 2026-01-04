@@ -4698,6 +4698,9 @@ const vibeSearchResults = () => {
     // Si c'est la même chanson, forcer le play car le useEffect ne se déclenchera pas
     const isSameSong = currentSong && songsToPlay[0] && currentSong.id === songsToPlay[0].id;
 
+    // Activer le Screen Wake Lock - appelé lors d'une ACTION UTILISATEUR (tap sur résultats recherche)
+    requestWakeLock();
+
     setInitialRandomQueue([...songsToPlay]);
     setQueue(songsToPlay);
     setActiveFilter('initialShuffle');
@@ -5102,32 +5105,60 @@ const vibeSearchResults = () => {
   // ══════════════════════════════════════════════════════════════════════════════
   // SCREEN WAKE LOCK - Empêcher l'écran de s'éteindre pendant la lecture
   // ══════════════════════════════════════════════════════════════════════════════
-  useEffect(() => {
-    const requestWakeLock = async () => {
-      if (!('wakeLock' in navigator)) return;
 
-      if (isPlaying) {
+  // Fonction pour acquérir le wake lock - DOIT être appelée lors d'une action utilisateur (tap)
+  const requestWakeLock = useCallback(async () => {
+    if (!('wakeLock' in navigator)) return;
+
+    try {
+      // Ne pas re-demander si on l'a déjà
+      if (wakeLockRef.current) return;
+
+      wakeLockRef.current = await navigator.wakeLock.request('screen');
+      console.log('[WakeLock] Screen wake lock acquired (user action)');
+
+      // Listener pour savoir quand le lock est relâché automatiquement
+      wakeLockRef.current.addEventListener('release', () => {
+        console.log('[WakeLock] Screen wake lock was released');
+        wakeLockRef.current = null;
+      });
+    } catch (e) {
+      console.log('[WakeLock] Failed to acquire:', e.message);
+    }
+  }, []);
+
+  // Fonction pour libérer le wake lock
+  const releaseWakeLock = useCallback(async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+        console.log('[WakeLock] Screen wake lock released');
+      } catch (e) {
+        console.log('[WakeLock] Failed to release:', e.message);
+      }
+    }
+  }, []);
+
+  // Libérer le wake lock quand la lecture s'arrête
+  useEffect(() => {
+    if (!isPlaying) {
+      releaseWakeLock();
+    }
+  }, [isPlaying, releaseWakeLock]);
+
+  // Re-acquérir le wake lock quand la page redevient visible (si en lecture)
+  // Note: visibilitychange est déclenché par le système, pas par l'utilisateur,
+  // mais le wake lock peut être re-acquis dans ce contexte spécifique
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && isPlayingRef.current && !wakeLockRef.current) {
         try {
           wakeLockRef.current = await navigator.wakeLock.request('screen');
-          console.log('[WakeLock] Screen wake lock acquired');
+          console.log('[WakeLock] Screen wake lock re-acquired on visibility');
         } catch (e) {
-          console.log('[WakeLock] Failed to acquire:', e.message);
+          console.log('[WakeLock] Failed to re-acquire on visibility:', e.message);
         }
-      } else {
-        if (wakeLockRef.current) {
-          await wakeLockRef.current.release();
-          wakeLockRef.current = null;
-          console.log('[WakeLock] Screen wake lock released');
-        }
-      }
-    };
-
-    requestWakeLock();
-
-    // Re-acquire wake lock when page becomes visible again
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isPlaying) {
-        requestWakeLock();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -5139,7 +5170,7 @@ const vibeSearchResults = () => {
         wakeLockRef.current = null;
       }
     };
-  }, [isPlaying]);
+  }, []);
 
   // ══════════════════════════════════════════════════════════════════════════════
   // MEDIA SESSION API - Contrôles écran de verrouillage iOS/Android
@@ -5493,6 +5524,9 @@ const vibeSearchResults = () => {
 
     // Si c'est la même chanson, forcer le play car le useEffect ne se déclenchera pas
     const isSameSong = currentSong && songsToPlay[0] && currentSong.id === songsToPlay[0].id;
+
+    // Activer le Screen Wake Lock - appelé lors d'une ACTION UTILISATEUR (tap sur vibe)
+    requestWakeLock();
 
     setInitialRandomQueue([...songsToPlay]);
     setQueue(songsToPlay);
@@ -6690,7 +6724,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         <SongWheel 
                                 queue={queue} 
                                 currentSong={currentSong} 
-                                onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); }} 
+                                onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); }} 
                                 isPlaying={isPlaying} 
                                 togglePlay={() => setIsPlaying(!isPlaying)} 
                                 playPrev={playPrev} 
@@ -6847,15 +6881,26 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const colorIndex = folderGradients?.[folderName] ?? 0;
                     const normalizedIndex = ((colorIndex % 20) + 20) % 20;
 
-                    // Créer ou mettre à jour la vibe
+                    // Créer ou mettre à jour la vibe avec le bon format pour Dropbox
                     setPlaylists(prev => ({
                         ...prev,
-                        [folderName]: files.map(f => ({
-                            name: f.name || f,
-                            path: f.path_lower || null,
-                            size: f.size || 0,
-                            source: 'dropbox'
-                        }))
+                        [folderName]: files.map(f => {
+                            const fileName = f.name || f;
+                            const nameWithoutExt = fileName.replace(/\.mp3$/i, '');
+                            const parts = nameWithoutExt.split(' - ');
+                            const title = parts.length > 1 ? parts.slice(1).join(' - ') : nameWithoutExt;
+                            const artist = parts.length > 1 ? parts[0] : '';
+                            return {
+                                id: `dropbox-${f.path_lower || fileName}-${Date.now()}`,
+                                title: title,
+                                artist: artist,
+                                playCount: 0,
+                                file: null,
+                                dropboxPath: f.path_lower,
+                                fileSignature: `dropbox:${f.path_lower}:${f.size || 0}`,
+                                type: 'dropbox'
+                            };
+                        })
                     }));
 
                     setVibeColorIndices(prev => ({
@@ -7276,7 +7321,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
                   </div>
                 )}
         
