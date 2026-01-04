@@ -195,8 +195,8 @@ const CONFIG = {
     WHEEL_TITLE_SIZE_MAIN_CENTER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MAIN,   // Titre chanson centrale (depuis Config.jsx)
     WHEEL_ARTIST_SIZE_MAIN: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MAIN,       // Artiste en mode principal (depuis Config.jsx)
 
-    WHEEL_TITLE_SIZE_MAIN_OTHER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MAIN - 2,    // Titre autres chansons (un peu plus petit)
-    WHEEL_ARTIST_SIZE_MAIN_OTHER: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MAIN - 2,  // Artiste autres chansons (un peu plus petit)
+    WHEEL_TITLE_SIZE_MAIN_OTHER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MAIN_OTHER,    // Titre autres chansons (depuis Config.jsx)
+    WHEEL_ARTIST_SIZE_MAIN_OTHER: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MAIN_OTHER,  // Artiste autres chansons (depuis Config.jsx)
 
     WHEEL_TITLE_LINEHEIGHT_MAIN: 1.25,   // Taille ligne titre en mode principal
     WHEEL_ARTIST_LINEHEIGHT_MAIN: 1.25,  // Taille ligne artist en mode principal
@@ -207,8 +207,8 @@ const CONFIG = {
     WHEEL_TITLE_SIZE_MINI_CENTER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MINI,   // Titre chanson centrale dashboard (depuis Config.jsx)
     WHEEL_ARTIST_SIZE_MINI: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MINI,       // Artiste en mode dashboard (depuis Config.jsx)
 
-    WHEEL_TITLE_SIZE_MINI_OTHER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MINI - 2,    // Titre autres chansons dashboard (un peu plus petit)
-    WHEEL_ARTIST_SIZE_MINI_OTHER: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MINI - 2,  // Artiste autres chansons dashboard (un peu plus petit)
+    WHEEL_TITLE_SIZE_MINI_OTHER: UNIFIED_CONFIG.WHEEL_TITLE_SIZE_MINI_OTHER,    // Titre autres chansons dashboard (depuis Config.jsx)
+    WHEEL_ARTIST_SIZE_MINI_OTHER: UNIFIED_CONFIG.WHEEL_ARTIST_SIZE_MINI_OTHER,  // Artiste autres chansons dashboard (depuis Config.jsx)
 
     WHEEL_TITLE_LINEHEIGHT_MINI: 1.2,   // Taille ligne titre en mode dashboard
     WHEEL_ARTIST_LINEHEIGHT_MINI: 1.2,  // Taille ligne artist en mode dashboard
@@ -3171,14 +3171,14 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         setSwipeDirection(null);
     };
     
-    const onTouchMove = (e) => { 
+    const onTouchMove = (e) => {
         if (touchStartX === null || touchStartY === null) return;
         const currentX = e.targetTouches[0].clientX;
         const currentY = e.targetTouches[0].clientY;
         const diffX = currentX - touchStartX;
         const diffY = currentY - touchStartY;
-        
-        // Déterminer la direction au premier mouvement significatif
+
+        // Déterminer la direction au premier mouvement significatif (verrouillage)
         if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 setSwipeDirection('horizontal');
@@ -3186,13 +3186,16 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
                 setSwipeDirection('vertical');
             }
         }
-        
-        // Si c'est un swipe vertical, on ignore
+
+        // Si c'est un swipe vertical, on laisse le scroll natif faire son travail
         if (swipeDirection === 'vertical') return;
-        
-        // Si c'est horizontal, on gère le swipe
-        if (swipeDirection === 'horizontal' && Math.abs(diffX) < 150) {
-            setOffset(diffX);
+
+        // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe
+        if (swipeDirection === 'horizontal') {
+            e.preventDefault(); // Empêche le scroll vertical pendant un swipe horizontal
+            if (Math.abs(diffX) < 150) {
+                setOffset(diffX);
+            }
         }
     };
     
