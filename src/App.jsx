@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Play, Pause, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -888,6 +888,7 @@ const styles = `
 
     .animate-spin-slow {
         animation: spin-slow 7.5s linear infinite;
+        transform-origin: center center;
     }
 
   @keyframes appear-ease {
@@ -2145,13 +2146,14 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
 const RecenterCapsule = ({ onClick }) => (
   <button
       onClick={onClick}
-      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm transition-all hover:bg-gray-100 overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
       style={{
         height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
         width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
         border: CONFIG.RECENTER_NEON_ENABLED
             ? `${CONFIG.RECENTER_NEON_WIDTH}px solid ${CONFIG.RECENTER_NEON_COLOR}`
-            : '1px solid rgb(229, 231, 235)'
+            : '1px solid rgb(229, 231, 235)',
+        WebkitTapHighlightColor: 'transparent'
     }}
   >
       <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipBack size={10} fill="currentColor" /></div>
@@ -2201,19 +2203,24 @@ const ControlBar = ({
                 <>
                     <RecenterCapsule onClick={onRecenter} />
                     <div
-                        className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-all hover:bg-gray-100 ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
+                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                          border: CONFIG.VOLUME_NEON_ENABLED
-                              ? `${CONFIG.VOLUME_NEON_WIDTH}px solid ${CONFIG.VOLUME_NEON_COLOR}`
-                              : '1px solid rgb(229, 231, 235)'
+                          background: volume === 0 ? 'rgba(236, 72, 153, 0.15)' : '#fafafa',
+                          border: volume === 0
+                              ? '1px solid rgba(236, 72, 153, 0.3)'
+                              : CONFIG.VOLUME_NEON_ENABLED
+                                  ? `${CONFIG.VOLUME_NEON_WIDTH}px solid ${CONFIG.VOLUME_NEON_COLOR}`
+                                  : '1px solid rgb(229, 231, 235)',
+                          WebkitTapHighlightColor: 'transparent',
+                          transition: 'background 0.2s, border 0.2s'
                       }}
                         onTouchStart={onVolumeTouchStart}
                         onTouchMove={onVolumeTouchMove}
                         onTouchEnd={onVolumeTouchEnd}
                     >
-                        {volume === 0 ? <VolumeX size={20} className="text-gray-400" /> : <Volume2 size={20} className="text-gray-400" />}
+                        {volume === 0 ? <VolumeX size={20} className="text-pink-400" /> : <Volume2 size={20} className="text-gray-400" />}
                     </div>
                     
                     {/* OVERLAY VOLUME SLIDER */}
@@ -3141,7 +3148,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                         ))}
                     </div>
                 )}
-                <button onClick={(e) => { e.stopPropagation(); playPrev(); }} className="w-12 h-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors border-r border-gray-200 active:bg-gray-200"><SkipBack size={20} fill="currentColor" /></button>
+                <button onClick={(e) => { e.stopPropagation(); playPrev(); }} className="w-12 h-full flex items-center justify-center text-gray-400 border-r border-gray-200" style={{ WebkitTapHighlightColor: 'transparent' }}><SkipBack size={20} fill="currentColor" /></button>
                 
                 {/* Zone centrale - titre centré par rapport à TOUTE la capsule via absolute */}
                 <div className="flex-1 min-w-0 h-full relative" onClick={handlePlayPause}>
@@ -3153,7 +3160,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                     </div>
                 </div>
                 
-                <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="w-12 h-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors border-l border-gray-200 active:bg-gray-200"><SkipForward size={20} fill="currentColor" /></button>
+                <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="w-12 h-full flex items-center justify-center text-gray-400 border-l border-gray-200" style={{ WebkitTapHighlightColor: 'transparent' }}><SkipForward size={20} fill="currentColor" /></button>
             </div>
         </div>
     );
@@ -3981,7 +3988,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             }}
         >
             {isPlaying ? (
-                <Disc3 size={20} className="animate-spin-slow" />
+                <Disc3 size={20} className="animate-spin-slow" style={{ display: 'block' }} />
             ) : (
                 <Pause size={14} />
             )}
@@ -5078,14 +5085,30 @@ const vibeSearchResults = () => {
                       gain.setValueAtTime(targetGain, ctx.currentTime);
                   }
               }
-              const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    if (error.name !== 'AbortError') console.error("Playback error:", error);
-                });
-            }
+              // Ne jouer que si l'audio est vraiment en pause (évite stutter sur resume)
+              if (audio.paused) {
+                  const playPromise = audio.play();
+                  if (playPromise !== undefined) {
+                      playPromise.catch(error => {
+                          if (error.name !== 'AbortError') console.error("Playback error:", error);
+                      });
+                  }
+              }
         } else {
-            audio.pause();
+            // Ne pauser que si l'audio joue vraiment (évite stutter)
+            if (!audio.paused) {
+                // Si l'AudioContext est suspended, le résumer d'abord pour éviter le stutter
+                // (peut arriver après resume de l'app sur iOS)
+                if (audioContextRef.current?.state === 'suspended') {
+                    audioContextRef.current.resume().then(() => {
+                        audio.pause();
+                    }).catch(() => {
+                        audio.pause();
+                    });
+                } else {
+                    audio.pause();
+                }
+            }
         }
     };
 
@@ -6330,8 +6353,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
                         }}
-                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}
+                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
+                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent' }}
                       >
                           <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </button>
@@ -6355,8 +6378,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 });
                             });
                         }}
-                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}
+                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
+                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent' }}
                       >
                           <FolderDown style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </button>

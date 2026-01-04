@@ -40,9 +40,9 @@ const CONFIG = {
     HORIZONTAL_PADDING: '0.75rem',
 
     // Scroll fade indicators - plus prononcé que SmartImport
-    FADE_HEIGHT: '5rem',
+    FADE_HEIGHT: '6.65rem',              // +33% de 5rem
     FADE_OPACITY: 0.95,
-    FADE_DISTANCE: 50,                   // Distance en px où le fade commence à disparaître
+    FADE_DISTANCE: 67,                   // +33% de 50px - Distance en px où le fade commence à disparaître
 
     // Animation
     BUTTON_ANIM_DURATION: 400,
@@ -764,6 +764,9 @@ const DropboxBrowser = ({
             setPhaseTransition(null);
             setImportData(null);
             setImportBtnIgniting(null);
+            // Reset morph states - IMPORTANT pour éviter le bug du blur seul
+            setMorphProgress(0);
+            setBackdropVisible(false);
             loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
