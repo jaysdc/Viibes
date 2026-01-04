@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
+import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2, Flame, Layers, Check, AlertTriangle, CheckCircle2, ChevronRight, Pointer } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
 import { UNIFIED_CONFIG } from './Config.jsx';
 import { SMARTIMPORT_CONFIG } from './SmartImport.jsx';
@@ -47,6 +47,9 @@ const CONFIG = {
     // Animation
     BUTTON_ANIM_DURATION: 400,
     MORPH_DURATION: 400,
+
+    // Transition entre phases (browse/import)
+    PHASE_TRANSITION_DURATION: 300,
 };
 
 // Styles CSS pour les animations (réutilise le style SmartImport)
@@ -95,8 +98,24 @@ const dropboxStyles = `
   .dropbox-ignite-blue { animation: dropbox-neon-ignite-blue 0.4s ease-out forwards; }
   .dropbox-ignite-red { animation: dropbox-neon-ignite-red 0.4s ease-out forwards; }
   .dropbox-ignite-pink { animation: dropbox-neon-ignite-pink 0.4s ease-out forwards; }
+  .dropbox-ignite-orange { animation: dropbox-neon-ignite-orange 0.4s ease-out forwards; }
   .dropbox-fade-out { animation: dropbox-fade-out 0.15s ease-out forwards; }
   .dropbox-beacon-pulse { animation: dropbox-beacon-pulse 1.5s ease-in-out infinite; }
+
+  @keyframes dropbox-neon-ignite-orange {
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(255, 107, 0, 0.2); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(255, 107, 0, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(255, 107, 0, 0.3); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(255, 107, 0, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(255, 107, 0, 0.5); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(255, 107, 0, 0.7); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(255, 107, 0, 0.5); }
+  }
+
+  @keyframes dropbox-header-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
 `;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -106,13 +125,18 @@ const DropboxBrowser = ({
     isVisible,
     onClose,
     onDisconnect,
-    onImport,
+    onImportComplete,  // Callback final pour importer les vibes (renommé de onImport)
     onMenuClose, // Callback pour ranger la barre d'import
     dropboxToken,
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
     sourceRect, // Position du bouton source pour l'animation morph
+    // Props pour la phase import
+    playlists,
+    vibeColorIndices,
+    getGradientByIndex,
+    getGradientName,
 }) => {
     // États
     const [currentPath, setCurrentPath] = useState('');
@@ -142,7 +166,25 @@ const DropboxBrowser = ({
     const [backdropVisible, setBackdropVisible] = useState(false);
     const [dialogDimensions, setDialogDimensions] = useState(null);
 
+    // États pour la phase import
+    const [phase, setPhase] = useState('browse'); // 'browse' | 'import'
+    const [phaseTransition, setPhaseTransition] = useState(null); // 'to-import' | 'to-browse' | null
+    const [importData, setImportData] = useState(null); // { folders, folderGradients, totalFiles, rootName, existingFolders }
+    const [importBtnIgniting, setImportBtnIgniting] = useState(null); // 'cancel' | 'fusion' | 'vibes' | null
+    const [importListNeedsScroll, setImportListNeedsScroll] = useState(false);
+    const [importListFadeOpacity, setImportListFadeOpacity] = useState(1);
+
+    // États pour le swipe de couleur (phase import)
+    const [swipingCard, setSwipingCard] = useState(null);
+    const [swipeOffset, setSwipeOffset] = useState(0);
+    const [swipeTouchStartX, setSwipeTouchStartX] = useState(null);
+    const [swipeTouchStartY, setSwipeTouchStartY] = useState(null);
+    const [swipeDirection, setSwipeDirection] = useState(null);
+    const [swipePreview, setSwipePreview] = useState(null);
+    const cardWidthRef = useRef(0);
+
     const listRef = useRef(null);
+    const importListRef = useRef(null);
     const dialogRef = useRef(null);
     const animationRef = useRef(null);
     const scrubZoneRef = useRef(null);
@@ -197,6 +239,126 @@ const DropboxBrowser = ({
 
     const handleScrubEnd = () => {
         setIsScrubbing(false);
+    };
+
+    // Calculer les gradients pour les vibes (comme SmartImport)
+    const calculateGradients = (folders) => {
+        const usedIndices = Object.values(vibeColorIndices || {});
+        const tempUsage = new Array(20).fill(0);
+        usedIndices.forEach(idx => { if (idx !== undefined && idx < 20) tempUsage[idx]++; });
+
+        const usedInImport = new Set();
+        const folderGradients = {};
+
+        Object.keys(folders).forEach(folderName => {
+            if (vibeColorIndices && vibeColorIndices[folderName] !== undefined) {
+                folderGradients[folderName] = vibeColorIndices[folderName];
+                usedInImport.add(vibeColorIndices[folderName]);
+            } else {
+                let bestIndex = -1;
+                let bestUsage = Infinity;
+
+                for (let i = 0; i < tempUsage.length; i++) {
+                    if (usedInImport.has(i)) continue;
+                    if (tempUsage[i] < bestUsage) {
+                        bestUsage = tempUsage[i];
+                        bestIndex = i;
+                    }
+                }
+
+                if (bestIndex === -1) {
+                    const minUsage = Math.min(...tempUsage);
+                    bestIndex = tempUsage.findIndex(count => count === minUsage);
+                }
+
+                folderGradients[folderName] = bestIndex;
+                usedInImport.add(bestIndex);
+                tempUsage[bestIndex]++;
+            }
+        });
+
+        return folderGradients;
+    };
+
+    // Handlers pour le swipe de couleur sur les cartes
+    const handleCardSwipeStart = (e, cardName) => {
+        if (!e.touches || !e.touches[0]) return;
+        setSwipingCard(cardName);
+        setSwipeTouchStartX(e.touches[0].clientX);
+        setSwipeTouchStartY(e.touches[0].clientY);
+        setSwipeDirection(null);
+        if (e.currentTarget) {
+            cardWidthRef.current = e.currentTarget.offsetWidth;
+        }
+    };
+
+    const handleCardSwipeMove = (e, cardName) => {
+        if (swipingCard !== cardName || swipeTouchStartX === null || swipeTouchStartY === null) return;
+        const clientX = e.touches[0].clientX;
+        const clientY = e.touches[0].clientY;
+        const diffX = clientX - swipeTouchStartX;
+        const diffY = clientY - swipeTouchStartY;
+
+        if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                setSwipeDirection('horizontal');
+                const currentIdx = importData?.folderGradients?.[cardName] ?? 0;
+                const currentGradient = getGradientByIndex(currentIdx);
+                const gradientStyle = currentGradient.length === 2
+                    ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
+                    : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
+                const safeIndex = ((currentIdx % 20) + 20) % 20;
+                setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+            } else {
+                setSwipeDirection('vertical');
+            }
+        }
+
+        if (swipeDirection === 'vertical') return;
+
+        if (swipeDirection === 'horizontal') {
+            const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
+            if (Math.abs(diffX) < maxSwipeDistance) {
+                setSwipeOffset(diffX);
+                const direction = diffX > 0 ? 1 : -1;
+                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
+                const currentIdx = importData?.folderGradients?.[cardName] ?? 0;
+                const previewIdx = currentIdx + (direction * colorsTraversed);
+                const previewGradient = getGradientByIndex(previewIdx);
+                const gradientStyle = previewGradient.length === 2
+                    ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
+                    : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
+                const safeIndex = ((previewIdx % 20) + 20) % 20;
+                setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+            }
+        }
+    };
+
+    const handleCardSwipeEnd = (cardName) => {
+        if (swipingCard !== cardName) return;
+        const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
+        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
+
+        if (swipeDirection === 'horizontal' && colorsTraversed >= 1 && importData) {
+            const direction = swipeOffset > 0 ? 1 : -1;
+            const currentIdx = importData.folderGradients?.[cardName] ?? 0;
+            const newIdx = currentIdx + (direction * colorsTraversed);
+
+            setImportData(prev => ({
+                ...prev,
+                folderGradients: {
+                    ...prev.folderGradients,
+                    [cardName]: newIdx
+                }
+            }));
+        }
+
+        setSwipingCard(null);
+        setSwipeOffset(0);
+        setSwipeTouchStartX(null);
+        setSwipeTouchStartY(null);
+        setSwipeDirection(null);
+        setSwipePreview(null);
     };
 
     // Charger le contenu d'un dossier
@@ -408,7 +570,7 @@ const DropboxBrowser = ({
         return result;
     };
 
-    // Handler pour l'import
+    // Handler pour l'import - passe en phase import au lieu d'appeler directement onImportComplete
     const handleImport = async () => {
         if (!currentPath) {
             alert('Sélectionne un dossier à importer');
@@ -445,8 +607,32 @@ const DropboxBrowser = ({
                 setProcessedFiles(processed);
             });
 
-            // Passer les données à SmartImport via onImport
-            onImport(scannedFolders, folderName);
+            // Calculer les gradients pour chaque vibe
+            const folderGradients = calculateGradients(scannedFolders);
+
+            // Détecter les vibes existantes
+            const existingFolders = Object.keys(scannedFolders).filter(name =>
+                playlists && playlists[name] !== undefined
+            );
+
+            // Compter le total de fichiers
+            const allFilesCount = Object.values(scannedFolders).reduce((sum, arr) => sum + arr.length, 0);
+
+            // Préparer les données pour la phase import
+            setImportData({
+                folders: scannedFolders,
+                folderGradients,
+                totalFiles: allFilesCount,
+                rootName: folderName,
+                existingFolders
+            });
+
+            // Lancer la transition vers la phase import
+            setPhaseTransition('to-import');
+            setTimeout(() => {
+                setPhase('import');
+                setPhaseTransition(null);
+            }, CONFIG.PHASE_TRANSITION_DURATION);
 
         } catch (error) {
             console.error('Erreur import:', error);
@@ -457,6 +643,47 @@ const DropboxBrowser = ({
         setScanPhase(null);
         setProcessedFiles(0);
         setTotalFilesToProcess(0);
+    };
+
+    // Handler pour les boutons de la phase import
+    const handleImportAction = (action) => {
+        if (importBtnIgniting) return;
+        setImportBtnIgniting(action);
+
+        setTimeout(() => {
+            if (action === 'cancel') {
+                // Retourner à la phase browse
+                setPhaseTransition('to-browse');
+                setTimeout(() => {
+                    setPhase('browse');
+                    setPhaseTransition(null);
+                    setImportData(null);
+                }, CONFIG.PHASE_TRANSITION_DURATION);
+            } else if (action === 'fusion') {
+                // Fusionner tout en une seule vibe
+                const mergedFolders = { [importData.rootName]: Object.values(importData.folders).flat() };
+                const fusionGradients = { [importData.rootName]: importData.folderGradients?.[Object.keys(importData.folders)[0]] ?? 0 };
+                onImportComplete(mergedFolders, 'fusion', fusionGradients, true);
+                handleCloseAfterImport();
+            } else if (action === 'vibes') {
+                // Importer comme vibes séparées
+                onImportComplete(importData.folders, 'vibes', importData.folderGradients, true);
+                handleCloseAfterImport();
+            }
+            setImportBtnIgniting(null);
+        }, SMARTIMPORT_CONFIG.IGNITE_DURATION);
+    };
+
+    // Fermeture après import réussi
+    const handleCloseAfterImport = () => {
+        setIsFadingOut(true);
+        setTimeout(() => {
+            onClose();
+            if (onMenuClose) onMenuClose();
+            // Reset
+            setPhase('browse');
+            setImportData(null);
+        }, 150);
     };
 
     // Handler fermeture avec animation
@@ -527,6 +754,11 @@ const DropboxBrowser = ({
             setFolderNameHistory([]);
             setScrollPositionHistory([]);
             setPendingScrollRestore(null);
+            // Reset phase import
+            setPhase('browse');
+            setPhaseTransition(null);
+            setImportData(null);
+            setImportBtnIgniting(null);
             loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
@@ -712,307 +944,333 @@ const DropboxBrowser = ({
                         opacity: !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3),
                     }}
                 >
-                    {/* Header - capsule pleine largeur avec padding horizontal */}
+                    {/* PHASE BROWSE - Navigation Dropbox */}
                     <div
-                        className="mb-2"
+                        className="absolute inset-0 flex flex-col"
                         style={{
-                            flexShrink: 0,
-                            paddingLeft: CONFIG.HORIZONTAL_PADDING,
-                            paddingRight: CONFIG.HORIZONTAL_PADDING
+                            opacity: phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0,
+                            transform: phase === 'browse' ? (phaseTransition === 'to-import' ? 'translateX(-20px)' : 'translateX(0)') : 'translateX(-20px)',
+                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
+                            pointerEvents: phase === 'browse' ? 'auto' : 'none',
+                            paddingTop: '0.75rem',
+                            paddingBottom: '0.75rem',
                         }}
                     >
+                        {/* Header - capsule pleine largeur avec padding horizontal */}
                         <div
-                            className="flex items-center rounded-full px-3 border border-gray-200 w-full"
+                            className="mb-2"
                             style={{
-                                background: 'white',
-                                height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                flexShrink: 0,
+                                paddingLeft: CONFIG.HORIZONTAL_PADDING,
+                                paddingRight: CONFIG.HORIZONTAL_PADDING
                             }}
                         >
-                            {/* Bouton retour ou logo Dropbox */}
-                            {isAtRoot ? (
-                                <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
-                            ) : (
-                                <button
-                                    onClick={navigateBack}
-                                    className="flex items-center justify-center -ml-1 mr-1"
-                                    style={{ color: CONFIG.DROPBOX_BLUE }}
-                                >
-                                    <ChevronLeft size={18} strokeWidth={2.5} />
-                                </button>
-                            )}
+                            <div
+                                className="flex items-center rounded-full px-3 border border-gray-200 w-full"
+                                style={{
+                                    background: 'white',
+                                    height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                    minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                }}
+                            >
+                                {/* Bouton retour ou logo Dropbox */}
+                                {isAtRoot ? (
+                                    <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
+                                ) : (
+                                    <button
+                                        onClick={navigateBack}
+                                        className="flex items-center justify-center -ml-1 mr-1"
+                                        style={{ color: CONFIG.DROPBOX_BLUE }}
+                                    >
+                                        <ChevronLeft size={18} strokeWidth={2.5} />
+                                    </button>
+                                )}
 
-                            {/* Nom du dossier + compteurs (MP3 d'abord, puis dossiers) */}
-                            <div className="flex items-center gap-2 ml-2">
-                                <span
-                                    className="font-bold text-gray-700 truncate"
-                                    style={{ fontSize: '0.8rem' }}
+                                {/* Nom du dossier + compteurs (MP3 d'abord, puis dossiers) */}
+                                <div className="flex items-center gap-2 ml-2">
+                                    <span
+                                        className="font-bold text-gray-700 truncate"
+                                        style={{ fontSize: '0.8rem' }}
+                                    >
+                                        {currentFolderName}
+                                    </span>
+                                    {mp3Count > 0 && (
+                                        <span className="flex items-center gap-0.5 text-gray-400">
+                                            <span className="text-xs">{mp3Count}</span>
+                                            <Music size={12} />
+                                        </span>
+                                    )}
+                                    {folderCount > 0 && (
+                                        <span className="flex items-center gap-0.5 text-gray-400">
+                                            <span className="text-xs">{folderCount}</span>
+                                            <Folder size={12} />
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Liste des fichiers avec zone scrubbing à droite - pas de gap entre liste et scrub zone */}
+                        <div className="flex-1 flex mb-2" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                            {/* Zone liste - padding gauche inclus, pas de padding droit */}
+                            <div className="flex-1 relative">
+                                <div
+                                    ref={listRef}
+                                    className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+                                    style={{
+                                        scrollbarWidth: 'none',
+                                        msOverflowStyle: 'none',
+                                        paddingLeft: '0.75rem',
+                                        paddingRight: 0,
+                                    }}
+                                    onScroll={handleScroll}
                                 >
-                                    {currentFolderName}
-                                </span>
-                                {mp3Count > 0 && (
-                                    <span className="flex items-center gap-0.5 text-gray-400">
-                                        <span className="text-xs">{mp3Count}</span>
-                                        <Music size={12} />
-                                    </span>
+                                    {loading ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <Loader2 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
+                                        </div>
+                                    ) : files.length === 0 ? (
+                                        <div className="text-center py-12 text-gray-300 font-medium text-2xl">—</div>
+                                    ) : (
+                                        <div className="flex flex-col">
+                                            {files.map((file, index) => {
+                                                const isFolder = file['.tag'] === 'folder';
+
+                                                if (isFolder) {
+                                                    return (
+                                                        <div
+                                                            key={file.path_lower || index}
+                                                            onClick={() => navigateToFolder(file.path_lower, file.name)}
+                                                            className="flex items-center pl-3 pr-2 cursor-pointer"
+                                                            style={{
+                                                                height: CONFIG.CARD_HEIGHT,
+                                                                background: 'white',
+                                                                borderRadius: CONFIG.CARD_RADIUS,
+                                                                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                                                marginBottom: CONFIG.CARD_GAP,
+                                                            }}
+                                                        >
+                                                            <span
+                                                                className="flex-1 truncate font-bold text-gray-900"
+                                                                style={{ fontSize: CONFIG.ROW_TITLE_SIZE }}
+                                                            >
+                                                                {file.name}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                } else {
+                                                    const fileName = file.name.replace(/\.mp3$/i, '');
+                                                    const parts = fileName.split(' - ');
+                                                    const title = parts.length > 1 ? parts.slice(1).join(' - ') : fileName;
+                                                    const artist = parts.length > 1 ? parts[0] : '';
+
+                                                    return (
+                                                        <div
+                                                            key={file.path_lower || index}
+                                                            className="flex items-center pl-3 border-b border-gray-100"
+                                                            style={{ height: CONFIG.FILE_HEIGHT }}
+                                                        >
+                                                            <Music size={12} className="text-gray-300 mr-2 flex-shrink-0" />
+                                                            <div className="flex-1 flex flex-col justify-center overflow-hidden">
+                                                                <span className="font-bold truncate text-gray-900" style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: 1.2 }}>
+                                                                    {title}
+                                                                </span>
+                                                                {artist && (
+                                                                    <span className="truncate font-medium text-gray-500" style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: 1.2 }}>
+                                                                        {artist}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {listNeedsScroll && fadeTopOpacity > 0 && (
+                                    <div className="absolute left-0 right-0 top-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: fadeTopOpacity }} />
                                 )}
-                                {folderCount > 0 && (
-                                    <span className="flex items-center gap-0.5 text-gray-400">
-                                        <span className="text-xs">{folderCount}</span>
-                                        <Folder size={12} />
-                                    </span>
+                                {listNeedsScroll && fadeBottomOpacity > 0 && (
+                                    <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: fadeBottomOpacity }} />
                                 )}
+                            </div>
+
+                            <div ref={scrubZoneRef} className="relative" style={{ width: CONFIG.SCRUB_ZONE_WIDTH, flexShrink: 0, touchAction: 'none' }} onTouchStart={handleScrubStart} onTouchMove={handleScrubMove} onTouchEnd={handleScrubEnd}>
+                                {showScrollbar && files.length > 0 && (
+                                    <div className={`absolute ${isScrubbing ? '' : 'dropbox-beacon-pulse'}`} style={{ left: '50%', transform: isScrubbing ? 'translateX(-50%) scale(1.5)' : undefined, width: CONFIG.SCROLLBAR_WIDTH, height: CONFIG.SCROLLBAR_WIDTH, top: `${scrollPercent * 100}%`, background: CONFIG.SCROLLBAR_COLOR, borderRadius: '50%', boxShadow: isScrubbing ? '0 0 16px rgba(236, 72, 153, 1)' : CONFIG.SCROLLBAR_GLOW, transition: isScrubbing ? 'transform 0.1s, box-shadow 0.1s' : 'top 0.05s ease-out' }} />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Boutons browse */}
+                        <div className="relative" style={{ flexShrink: 0, paddingLeft: CONFIG.HORIZONTAL_PADDING, paddingRight: CONFIG.HORIZONTAL_PADDING }}>
+                            {scanPhase === 'processing' && totalFilesToProcess > 0 && (
+                                <div className="absolute left-0 right-0 top-0 bottom-0 rounded-full overflow-hidden" style={{ marginLeft: CONFIG.HORIZONTAL_PADDING, marginRight: CONFIG.HORIZONTAL_PADDING, height: UNIFIED_CONFIG.CAPSULE_HEIGHT, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)', zIndex: 10 }}>
+                                    <div className="absolute left-0 top-0 bottom-0" style={{ width: `${(processedFiles / totalFilesToProcess) * 100}%`, background: CONFIG.DROPBOX_BLUE, transition: 'width 0.1s ease-out' }} />
+                                </div>
+                            )}
+                            <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
+                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                    {closingButton === 'close' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
+                                    <button onClick={handleClose} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center" style={{ background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'close' ? 'white' : '#9ca3af' }}>
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                    {closingButton === 'disconnect' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
+                                    <button onClick={handleDisconnect} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'disconnect' ? 'white' : '#ef4444' }}>
+                                        <LogOut size={14} />
+                                    </button>
+                                </div>
+                                <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                    <button onClick={handleImport} disabled={!canImport || !!closingButton} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: scanPhase === 'counting' ? 'white' : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'), border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none', color: scanPhase === 'counting' ? CONFIG.DROPBOX_BLUE : (canImport ? 'white' : '#9CA3AF'), opacity: canImport || scanning ? 1 : 0.4, boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none' }}>
+                                        {scanPhase === 'counting' ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Liste des fichiers avec zone scrubbing à droite - pas de gap entre liste et scrub zone */}
-                    <div className="flex-1 flex mb-2" style={{ paddingLeft: 0, paddingRight: 0 }}>
-                        {/* Zone liste - padding gauche inclus, pas de padding droit */}
-                        <div className="flex-1 relative">
-                            <div
-                                ref={listRef}
-                                className="absolute inset-0 overflow-y-auto overflow-x-hidden"
-                                style={{
-                                    scrollbarWidth: 'none',
-                                    msOverflowStyle: 'none',
-                                    paddingLeft: '0.75rem',
-                                    paddingRight: 0,
-                                }}
-                                onScroll={handleScroll}
-                            >
-                                {loading ? (
-                                    <div className="flex items-center justify-center py-8">
-                                        <Loader2 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
+                    {/* PHASE IMPORT - Cartes de vibes colorées */}
+                    <div
+                        className="absolute inset-0 flex flex-col"
+                        style={{
+                            opacity: phase === 'import' ? (phaseTransition === 'to-browse' ? 0 : 1) : 0,
+                            transform: phase === 'import' ? (phaseTransition === 'to-browse' ? 'translateX(20px)' : 'translateX(0)') : 'translateX(20px)',
+                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
+                            pointerEvents: phase === 'import' ? 'auto' : 'none',
+                            paddingTop: '0.75rem',
+                            paddingBottom: '0.75rem',
+                        }}
+                    >
+                        {importData && (
+                            <>
+                                {/* Header Import - avec bouton retour */}
+                                <div className="mb-2" style={{ flexShrink: 0, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
+                                    <div className="flex items-center justify-between rounded-full px-4 border border-gray-200 w-full" style={{ background: 'white', height: UNIFIED_CONFIG.CAPSULE_HEIGHT, minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                        <button onClick={() => handleImportAction('cancel')} className="flex items-center justify-center -ml-2 mr-2" style={{ color: CONFIG.DROPBOX_BLUE }}>
+                                            <ChevronLeft size={18} strokeWidth={2.5} />
+                                        </button>
+                                        <div className="flex-1 overflow-hidden mr-2">
+                                            <span className="font-bold text-gray-700 whitespace-nowrap truncate" style={{ fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}>{importData.rootName}</span>
+                                        </div>
+                                        {importData.totalFiles > SMARTIMPORT_CONFIG.WARNING_THRESHOLD && (
+                                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,150,0,0.15)' }}>
+                                                <AlertTriangle size={12} className="text-orange-500" />
+                                                <span className="text-xs font-bold text-orange-600">{importData.totalFiles}</span>
+                                                <AlertTriangle size={12} className="text-orange-500" />
+                                            </div>
+                                        )}
                                     </div>
-                                ) : files.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-300 font-medium text-2xl">—</div>
-                                ) : (
-                                    <div className="flex flex-col">
-                                        {files.map((file, index) => {
-                                            const isFolder = file['.tag'] === 'folder';
+                                </div>
 
-                                            if (isFolder) {
-                                                // Dossiers = cartes blanches (représentent des vibes)
-                                                return (
-                                                    <div
-                                                        key={file.path_lower || index}
-                                                        onClick={() => navigateToFolder(file.path_lower, file.name)}
-                                                        className="flex items-center pl-3 pr-2 cursor-pointer"
-                                                        style={{
-                                                            height: CONFIG.CARD_HEIGHT,
-                                                            background: 'white',
-                                                            borderRadius: CONFIG.CARD_RADIUS,
-                                                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                                                            marginBottom: CONFIG.CARD_GAP,
-                                                        }}
-                                                    >
-                                                        {/* Pas d'icône folder à gauche - on sait que ce sont des dossiers */}
-                                                        <span
-                                                            className="flex-1 truncate font-bold text-gray-900"
-                                                            style={{ fontSize: CONFIG.ROW_TITLE_SIZE }}
-                                                        >
-                                                            {file.name}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            } else {
-                                                // Fichiers audio - style VibeBuilder (titre + artiste sur deux lignes)
-                                                const fileName = file.name.replace(/\.mp3$/i, '');
-                                                // Essayer d'extraire artiste - titre si format "Artiste - Titre"
-                                                const parts = fileName.split(' - ');
-                                                const title = parts.length > 1 ? parts.slice(1).join(' - ') : fileName;
-                                                const artist = parts.length > 1 ? parts[0] : '';
+                                {/* Badges résumé */}
+                                <div className="flex justify-between items-center mb-2" style={{ paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="font-bold flex items-center justify-center gap-0.5" style={{ background: SMARTIMPORT_CONFIG.BADGE_BG, color: SMARTIMPORT_CONFIG.BADGE_COLOR, borderRadius: SMARTIMPORT_CONFIG.BADGE_RADIUS, height: SMARTIMPORT_CONFIG.BADGE_HEIGHT, minWidth: SMARTIMPORT_CONFIG.BADGE_MIN_WIDTH, paddingLeft: SMARTIMPORT_CONFIG.BADGE_PADDING_X, paddingRight: SMARTIMPORT_CONFIG.BADGE_PADDING_X, fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}>
+                                            +{Object.keys(importData.folders).length - (importData.existingFolders?.length || 0)}
+                                        </div>
+                                        {importData.existingFolders?.length > 0 && (
+                                            <div className="font-bold flex items-center justify-center gap-0.5" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', borderRadius: SMARTIMPORT_CONFIG.BADGE_RADIUS, height: SMARTIMPORT_CONFIG.BADGE_HEIGHT, minWidth: SMARTIMPORT_CONFIG.BADGE_MIN_WIDTH, paddingLeft: SMARTIMPORT_CONFIG.BADGE_PADDING_X, paddingRight: SMARTIMPORT_CONFIG.BADGE_PADDING_X, fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}>
+                                                <Check size={10} strokeWidth={3} />
+                                                {importData.existingFolders.length}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1 text-gray-400">
+                                        <span className="text-xs font-bold">{importData.totalFiles}</span>
+                                        <Music className="text-gray-400" style={{ width: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE, height: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }} />
+                                    </div>
+                                </div>
+
+                                {/* Liste des vibes */}
+                                <div className="relative mb-2 flex-1 min-h-0 overflow-hidden" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                    <div className="h-full" style={{ overflow: 'visible' }}>
+                                        <div ref={importListRef} className="h-full overflow-y-auto overflow-x-visible" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', flexDirection: 'column', gap: SMARTIMPORT_CONFIG.CARD_GAP, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
+                                            {Object.entries(importData.folders).map(([folderName, folderFiles]) => {
+                                                const gradientIndex = importData.folderGradients?.[folderName] ?? 0;
+                                                const gradient = getGradientByIndex(gradientIndex);
+                                                const gradientStyle = gradient.length === 2 ? `linear-gradient(135deg, ${gradient[0]} 0%, ${gradient[1]} 100%)` : `linear-gradient(135deg, ${gradient.join(', ')})`;
+                                                const exists = importData.existingFolders?.includes(folderName);
+                                                const isBeingSwiped = swipingCard === folderName && swipeDirection === 'horizontal';
 
                                                 return (
                                                     <div
-                                                        key={file.path_lower || index}
-                                                        className="flex items-center pl-3 border-b border-gray-100"
-                                                        style={{
-                                                            height: CONFIG.FILE_HEIGHT,
-                                                        }}
+                                                        key={folderName}
+                                                        className="relative rounded-xl overflow-visible"
+                                                        style={{ height: SMARTIMPORT_CONFIG.CARD_HEIGHT, background: isBeingSwiped && swipePreview ? swipePreview.gradient : gradientStyle, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', flexShrink: 0 }}
+                                                        onTouchStart={(e) => handleCardSwipeStart(e, folderName)}
+                                                        onTouchMove={(e) => handleCardSwipeMove(e, folderName)}
+                                                        onTouchEnd={() => handleCardSwipeEnd(folderName)}
                                                     >
-                                                        {/* Icône note de musique à gauche */}
-                                                        <Music size={12} className="text-gray-300 mr-2 flex-shrink-0" />
-                                                        <div className="flex-1 flex flex-col justify-center overflow-hidden">
-                                                            <span
-                                                                className="font-bold truncate text-gray-900"
-                                                                style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: 1.2 }}
-                                                            >
-                                                                {title}
-                                                            </span>
-                                                            {artist && (
-                                                                <span
-                                                                    className="truncate font-medium text-gray-500"
-                                                                    style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: 1.2 }}
-                                                                >
-                                                                    {artist}
-                                                                </span>
-                                                            )}
+                                                        {/* Indicateurs swipe */}
+                                                        {!isBeingSwiped && (
+                                                            <div className="absolute top-0 left-0 right-0 flex justify-between items-center pointer-events-none" style={{ top: SMARTIMPORT_CONFIG.SWIPE_INDICATOR_TOP, paddingLeft: '0.5rem', paddingRight: '0.5rem', opacity: SMARTIMPORT_CONFIG.SWIPE_CHEVRON_OPACITY }}>
+                                                                <ChevronLeft size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white/60" strokeWidth={3} />
+                                                                <Pointer size={SMARTIMPORT_CONFIG.SWIPE_POINTER_SIZE} className="text-white/60" strokeWidth={2} />
+                                                                <ChevronRight size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white/60" strokeWidth={3} />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Badge existe */}
+                                                        {exists && (
+                                                            <div className="absolute flex items-center justify-center rounded-full bg-green-500 shadow-lg" style={{ width: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE, height: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE, top: SMARTIMPORT_CONFIG.EXISTS_BADGE_TOP, right: SMARTIMPORT_CONFIG.EXISTS_BADGE_RIGHT, zIndex: 10 }}>
+                                                                <CheckCircle2 size={SMARTIMPORT_CONFIG.EXISTS_BADGE_ICON_SIZE} className="text-white" strokeWidth={3} />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Contenu carte */}
+                                                        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                                                            <div className="flex items-center gap-2 rounded-full px-3 py-1" style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)` }}>
+                                                                <span className="font-bold text-white truncate" style={{ fontSize: SMARTIMPORT_CONFIG.CAPSULE_FONT_SIZE, maxWidth: '120px' }}>{folderName}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)` }}>
+                                                                <span className="font-bold text-white" style={{ fontSize: SMARTIMPORT_CONFIG.CAPSULE_COUNT_SIZE }}>{folderFiles.length}</span>
+                                                                <Music size={10} className="text-white" />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 );
-                                            }
-                                        })}
+                                            })}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Fade indicator en HAUT - visible quand on a scrollé vers le bas */}
-                            {listNeedsScroll && fadeTopOpacity > 0 && (
-                                <div
-                                    className="absolute left-0 right-0 top-0 pointer-events-none"
-                                    style={{
-                                        height: CONFIG.FADE_HEIGHT,
-                                        background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
-                                        opacity: fadeTopOpacity
-                                    }}
-                                />
-                            )}
-
-                            {/* Fade indicator en BAS - visible quand il y a du contenu en dessous */}
-                            {listNeedsScroll && fadeBottomOpacity > 0 && (
-                                <div
-                                    className="absolute left-0 right-0 bottom-0 pointer-events-none"
-                                    style={{
-                                        height: CONFIG.FADE_HEIGHT,
-                                        background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
-                                        opacity: fadeBottomOpacity
-                                    }}
-                                />
-                            )}
-                        </div>
-
-                        {/* Zone scrubbing à droite - touche le bord droit de la fenêtre */}
-                        <div
-                            ref={scrubZoneRef}
-                            className="relative"
-                            style={{ width: CONFIG.SCRUB_ZONE_WIDTH, flexShrink: 0, touchAction: 'none' }}
-                            onTouchStart={handleScrubStart}
-                            onTouchMove={handleScrubMove}
-                            onTouchEnd={handleScrubEnd}
-                        >
-                            {showScrollbar && files.length > 0 && (
-                                <div
-                                    className={`absolute ${isScrubbing ? '' : 'dropbox-beacon-pulse'}`}
-                                    style={{
-                                        left: '50%',
-                                        transform: isScrubbing ? 'translateX(-50%) scale(1.5)' : undefined,
-                                        width: CONFIG.SCROLLBAR_WIDTH,
-                                        height: CONFIG.SCROLLBAR_WIDTH,
-                                        top: `${scrollPercent * 100}%`,
-                                        background: CONFIG.SCROLLBAR_COLOR,
-                                        borderRadius: '50%',
-                                        boxShadow: isScrubbing ? '0 0 16px rgba(236, 72, 153, 1)' : CONFIG.SCROLLBAR_GLOW,
-                                        transition: isScrubbing ? 'transform 0.1s, box-shadow 0.1s' : 'top 0.05s ease-out',
-                                    }}
-                                />
-                            )}
-                        </div>
-                    </div>
-
-                    {/* 3 boutons en bas - X rond + 2 capsules flex */}
-                    <div
-                        className="relative"
-                        style={{
-                            flexShrink: 0,
-                            paddingLeft: CONFIG.HORIZONTAL_PADDING,
-                            paddingRight: CONFIG.HORIZONTAL_PADDING
-                        }}
-                    >
-                        {/* Barre de progression pleine largeur (phase 2) - recouvre les 3 boutons */}
-                        {scanPhase === 'processing' && totalFilesToProcess > 0 && (
-                            <div
-                                className="absolute left-0 right-0 top-0 bottom-0 rounded-full overflow-hidden"
-                                style={{
-                                    marginLeft: CONFIG.HORIZONTAL_PADDING,
-                                    marginRight: CONFIG.HORIZONTAL_PADDING,
-                                    height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                    background: 'rgba(0,0,0,0.05)',
-                                    border: '1px solid rgba(0,0,0,0.05)',
-                                    zIndex: 10
-                                }}
-                            >
-                                <div
-                                    className="absolute left-0 top-0 bottom-0"
-                                    style={{
-                                        width: `${(processedFiles / totalFilesToProcess) * 100}%`,
-                                        background: CONFIG.DROPBOX_BLUE,
-                                        transition: 'width 0.1s ease-out'
-                                    }}
-                                />
-                            </div>
-                        )}
-
-                        <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
-                            {/* Bouton FERMER - rond */}
-                            <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                {closingButton === 'close' && (
-                                    <div
-                                        className="absolute inset-0 rounded-full dropbox-ignite-red"
-                                        style={{ background: '#ef4444', zIndex: 0 }}
-                                    />
-                                )}
-                                <button
-                                    onClick={handleClose}
-                                    disabled={!!closingButton || scanning}
-                                    className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
-                                    style={{
-                                        background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                        color: closingButton === 'close' ? 'white' : '#9ca3af'
-                                    }}
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            {/* Bouton DÉCONNECTER - capsule flex */}
-                            <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                {closingButton === 'disconnect' && (
-                                    <div
-                                        className="absolute inset-0 rounded-full dropbox-ignite-red"
-                                        style={{ background: '#ef4444', zIndex: 0 }}
-                                    />
-                                )}
-                                <button
-                                    onClick={handleDisconnect}
-                                    disabled={!!closingButton || scanning}
-                                    className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
-                                    style={{
-                                        background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                        color: closingButton === 'disconnect' ? 'white' : '#ef4444'
-                                    }}
-                                >
-                                    <LogOut size={14} />
-                                </button>
-                            </div>
-
-                            {/* Bouton IMPORTER - capsule flex */}
-                            <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                <button
-                                    onClick={handleImport}
-                                    disabled={!canImport || !!closingButton}
-                                    className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
-                                    style={{
-                                        background: scanPhase === 'counting'
-                                            ? 'white'
-                                            : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'),
-                                        border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none',
-                                        color: scanPhase === 'counting'
-                                            ? CONFIG.DROPBOX_BLUE
-                                            : (canImport ? 'white' : '#9CA3AF'),
-                                        opacity: canImport || scanning ? 1 : 0.4,
-                                        boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none',
-                                    }}
-                                >
-                                    {scanPhase === 'counting' ? (
-                                        <Loader2 size={14} className="animate-spin" />
-                                    ) : (
-                                        <FolderDown size={14} />
+                                    {importListNeedsScroll && importListFadeOpacity > 0 && (
+                                        <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: SMARTIMPORT_CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, rgba(255,255,255,${SMARTIMPORT_CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: importListFadeOpacity }} />
                                     )}
-                                </button>
-                            </div>
-                        </div>
+                                </div>
+
+                                {/* Boutons Import */}
+                                <div className="relative" style={{ flexShrink: 0, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
+                                    {swipePreview && (
+                                        <div className="absolute inset-0 rounded-full z-20 flex items-center justify-center" style={{ background: swipePreview.gradient, boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
+                                            <span className="text-white font-bold text-sm">{swipePreview.gradientName}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2" style={{ opacity: swipePreview ? 0 : 1 }}>
+                                        <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                            {importBtnIgniting === 'cancel' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
+                                            <button onClick={() => handleImportAction('cancel')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center" style={{ background: importBtnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)', color: importBtnIgniting === 'cancel' ? 'white' : '#9ca3af' }}>
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                            {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: '#ff6b00', zIndex: 0 }} />}
+                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'rgba(255,107,0,0.15)', color: importBtnIgniting === 'fusion' ? 'white' : '#ff6b00' }}>
+                                                <Flame size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                            {importBtnIgniting === 'vibes' && <div className="absolute inset-0 rounded-full dropbox-ignite-pink" style={{ background: '#ec4899', zIndex: 0 }} />}
+                                            <button onClick={() => handleImportAction('vibes')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'vibes' ? 'transparent' : '#ec4899', color: 'white', boxShadow: '0 0 15px rgba(236, 72, 153, 0.4)' }}>
+                                                <Layers size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

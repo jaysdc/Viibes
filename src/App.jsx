@@ -6826,36 +6826,66 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         {/* DROPBOX BROWSER */}
         <DropboxBrowser
-    isVisible={showDropboxBrowser}
-    onClose={() => {
-        setShowDropboxBrowser(false);
-        setDropboxSourceRect(null);
-    }}
-    onDisconnect={() => {
-        clearDropboxTokens();
-        setDropboxToken(null);
-        setDropboxSourceRect(null);
-    }}
-    onImport={(scannedFolders, rootName) => {
-        setShowDropboxBrowser(false);
-        setDropboxSourceRect(null);
-        setPendingDropboxData({ folders: scannedFolders, rootName });
-    }}
-    onMenuClose={() => {
-        setImportOverlayAnim('closing');
-        setTimeout(() => {
-            setShowImportMenu(false);
-            setImportOverlayAnim('none');
-            setImportButtonsReady(false);
-            setImportBtnIgniting(null);
-        }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
-    }}
-    dropboxToken={dropboxToken}
-    getValidDropboxToken={getValidDropboxToken}
-    refreshDropboxToken={refreshDropboxToken}
-    clearDropboxTokens={clearDropboxTokens}
-    sourceRect={dropboxSourceRect}
-/>
+            isVisible={showDropboxBrowser}
+            onClose={() => {
+                setShowDropboxBrowser(false);
+                setDropboxSourceRect(null);
+            }}
+            onDisconnect={() => {
+                clearDropboxTokens();
+                setDropboxToken(null);
+                setDropboxSourceRect(null);
+            }}
+            onImportComplete={(folders, mode, folderGradients, fromDropbox) => {
+                // Mode: 'fusion' = une seule vibe, 'vibes' = vibes séparées
+                // folderGradients: { folderName: gradientIndex }
+                setShowDropboxBrowser(false);
+                setDropboxSourceRect(null);
+
+                // Importer les vibes avec les gradients choisis
+                Object.entries(folders).forEach(([folderName, files]) => {
+                    const colorIndex = folderGradients?.[folderName] ?? 0;
+                    const normalizedIndex = ((colorIndex % 20) + 20) % 20;
+
+                    // Créer ou mettre à jour la vibe
+                    setPlaylists(prev => ({
+                        ...prev,
+                        [folderName]: files.map(f => ({
+                            name: f.name || f,
+                            path: f.path_lower || null,
+                            size: f.size || 0,
+                            source: 'dropbox'
+                        }))
+                    }));
+
+                    setVibeColorIndices(prev => ({
+                        ...prev,
+                        [folderName]: normalizedIndex
+                    }));
+                });
+
+                // Sauvegarder
+                setTimeout(() => savePlaylistsToLocalStorage(), 100);
+            }}
+            onMenuClose={() => {
+                setImportOverlayAnim('closing');
+                setTimeout(() => {
+                    setShowImportMenu(false);
+                    setImportOverlayAnim('none');
+                    setImportButtonsReady(false);
+                    setImportBtnIgniting(null);
+                }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
+            }}
+            dropboxToken={dropboxToken}
+            getValidDropboxToken={getValidDropboxToken}
+            refreshDropboxToken={refreshDropboxToken}
+            clearDropboxTokens={clearDropboxTokens}
+            sourceRect={dropboxSourceRect}
+            playlists={playlists}
+            vibeColorIndices={vibeColorIndices}
+            getGradientByIndex={getGradientByIndex}
+            getGradientName={getGradientName}
+        />
 
         {/* CONFIRMATION PILL (slide to confirm) */}
         {(pendingVibe || nukeConfirmMode) && mainContainerRef.current && (() => {
