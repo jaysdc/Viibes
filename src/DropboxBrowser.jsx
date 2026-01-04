@@ -337,9 +337,12 @@ const DropboxBrowser = ({
             }
         }
 
+        // Si c'est un swipe vertical, on ignore (laisser le scroll se faire)
         if (swipeDirection === 'vertical') return;
 
+        // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe
         if (swipeDirection === 'horizontal') {
+            e.preventDefault(); // Bloque le scroll vertical pendant le swipe horizontal
             const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
             if (Math.abs(diffX) < maxSwipeDistance) {
                 setSwipeOffset(diffX);
@@ -1252,6 +1255,7 @@ const DropboxBrowser = ({
                                                             flexShrink: 0,
                                                             transform: isBeingSwiped ? `translateX(${swipeOffset * 1.5}px)` : 'translateX(0)',
                                                             transition: isBeingSwiped ? 'none' : 'transform 0.2s ease-out',
+                                                            touchAction: 'pan-y', // Permet scroll vertical, on gère horizontal nous-mêmes
                                                         }}
                                                         onTouchStart={(e) => handleCardSwipeStart(e, folderName)}
                                                         onTouchMove={(e) => handleCardSwipeMove(e, folderName)}
@@ -1300,7 +1304,11 @@ const DropboxBrowser = ({
                                 <div className="relative" style={{ flexShrink: 0, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
                                     {swipePreview && (
                                         <div className="absolute inset-0 rounded-full z-20 flex items-center justify-center" style={{ background: swipePreview.gradient, boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
-                                            <span className="text-white font-bold text-sm">{swipePreview.gradientName}</span>
+                                            <div className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                                <ChevronLeft size={16} />
+                                                <span>{swipePreview.gradientName}</span>
+                                                <ChevronRight size={16} />
+                                            </div>
                                         </div>
                                     )}
                                     <div className="flex items-center gap-2" style={{ opacity: swipePreview ? 0 : 1 }}>
@@ -1311,8 +1319,8 @@ const DropboxBrowser = ({
                                             </button>
                                         </div>
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                            {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: '#ff6b00', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'rgba(255,107,0,0.15)', color: importBtnIgniting === 'fusion' ? 'white' : '#ff6b00' }}>
+                                            {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', border: '1px solid #FF6B00', zIndex: 0 }} />}
+                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)', color: importBtnIgniting === 'fusion' ? 'white' : '#6b7280' }}>
                                                 <Layers size={14} />
                                             </button>
                                         </div>
