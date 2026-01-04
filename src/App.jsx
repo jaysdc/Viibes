@@ -3812,22 +3812,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 document.body.removeChild(safeDivBottom);
                 return (
                   <>
-                    {/* DEBUG: Zone safe area TOP (rouge) */}
-                    <div
-                      className="absolute left-0 right-0 top-0"
-                      style={{
-                        height: safeAreaTopCss,
-                        backgroundColor: 'rgb(255, 0, 0)',
-                      }}
-                    />
-                    {/* DEBUG: Zone safe area BOTTOM (rouge) */}
-                    <div
-                      className="absolute left-0 right-0 bottom-0"
-                      style={{
-                        height: safeAreaBottomCss,
-                        backgroundColor: 'rgb(255, 0, 0)',
-                      }}
-                    />
                     <div
                       className="absolute rounded-full"
                       style={{
