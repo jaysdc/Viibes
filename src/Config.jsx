@@ -4,7 +4,7 @@ import React from 'react';
 // ║              SAFE AREA INSETS (lus au démarrage via JavaScript)            ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
-// Fonction pour lire env(safe-area-inset-bottom) en pixels
+// Fonction pour lire env(safe-area-inset-bottom) en VRAIS pixels
 const getSafeAreaBottom = () => {
     if (typeof window === 'undefined') return 0;
 
@@ -19,13 +19,13 @@ const getSafeAreaBottom = () => {
     const height = div.getBoundingClientRect().height;
     document.body.removeChild(div);
 
-    return height;
+    return height * window.devicePixelRatio;
 };
 
 // Variable globale avec la valeur de safe-area-inset-bottom en pixels
 export const SAFE_AREA_BOTTOM = getSafeAreaBottom();
 
-// Fonction pour lire env(safe-area-inset-top) en pixels
+// Fonction pour lire env(safe-area-inset-top) en VRAIS pixels
 const getSafeAreaTop = () => {
     if (typeof window === 'undefined') return 0;
 
@@ -39,13 +39,13 @@ const getSafeAreaTop = () => {
     const height = div.getBoundingClientRect().height;
     document.body.removeChild(div);
 
-    return height;
+    return height * window.devicePixelRatio;
 };
 
 // Variable globale avec la valeur de safe-area-inset-top en pixels
 export const SAFE_AREA_TOP = getSafeAreaTop();
 
-// Fonction pour convertir une valeur CSS (rem, px, etc.) en pixels
+// Fonction pour convertir une valeur CSS (rem, px, etc.) en VRAIS pixels
 const cssToPixels = (cssValue) => {
     if (typeof window === 'undefined') return 0;
 
@@ -58,7 +58,7 @@ const cssToPixels = (cssValue) => {
     const height = div.getBoundingClientRect().height;
     document.body.removeChild(div);
 
-    return height;
+    return height * window.devicePixelRatio;
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -122,27 +122,31 @@ export const UNIFIED_CONFIG = {
 // ║              HAUTEURS EN PIXELS (fonctions à appeler après mount)         ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
-// Hauteur du header du player en pixels
+// Hauteur du header du player en VRAIS pixels
 // Structure: paddingTop + titre + gap + capsule + gap + handle + paddingBottom + border
-export const getPlayerHeaderHeightPx = () =>
-    getSafeAreaTop() +                                                                   // env(safe-area-inset-top)
-    cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP) +                                       // paddingTop (partie après safe-area)
-    UNIFIED_CONFIG.TITLE_ICON_SIZE +                                                     // titre (hauteur = icône)
-    cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                    // gap entre titre et capsule
-    cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT) +                                         // capsule de tri
-    cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                    // gap entre capsule et handle
-    UNIFIED_CONFIG.HANDLE_HEIGHT +                                                        // handle
-    cssToPixels(UNIFIED_CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM) +                     // paddingBottom
-    UNIFIED_CONFIG.PLAYER_HEADER_BORDER_WIDTH;                                           // border
+export const getPlayerHeaderHeightPx = () => {
+    const dpr = window.devicePixelRatio;
+    return getSafeAreaTop() +                                                            // env(safe-area-inset-top) - déjà en vrais px
+        cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP) +                                   // paddingTop - déjà en vrais px
+        UNIFIED_CONFIG.TITLE_ICON_SIZE * dpr +                                           // titre (hauteur = icône)
+        cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                // gap entre titre et capsule - déjà en vrais px
+        cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT) +                                     // capsule de tri - déjà en vrais px
+        cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM) +                                // gap entre capsule et handle - déjà en vrais px
+        UNIFIED_CONFIG.HANDLE_HEIGHT * dpr +                                             // handle
+        cssToPixels(UNIFIED_CONFIG.PLAYER_HEADER_HANDLE_MARGIN_BOTTOM) +                 // paddingBottom - déjà en vrais px
+        UNIFIED_CONFIG.PLAYER_HEADER_BORDER_WIDTH * dpr;                                 // border
+};
 
-// Hauteur du footer du player en pixels (border + padding + boutons + safe-area-bottom)
-export const getPlayerFooterHeightPx = () =>
-    UNIFIED_CONFIG.FOOTER_BORDER_WIDTH +
-    cssToPixels(UNIFIED_CONFIG.FOOTER_PADDING_TOP) +
-    UNIFIED_CONFIG.FOOTER_BTN_HEIGHT +
-    getSafeAreaBottom();
+// Hauteur du footer du player en VRAIS pixels (border + padding + boutons + safe-area-bottom)
+export const getPlayerFooterHeightPx = () => {
+    const dpr = window.devicePixelRatio;
+    return UNIFIED_CONFIG.FOOTER_BORDER_WIDTH * dpr +
+        cssToPixels(UNIFIED_CONFIG.FOOTER_PADDING_TOP) +                                 // déjà en vrais px
+        UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * dpr +
+        getSafeAreaBottom();                                                             // déjà en vrais px
+};
 
-// Hauteur du beacon en pixels (6.5vh converti en px)
+// Hauteur du beacon en VRAIS pixels (6.5vh converti)
 export const getBeaconHeightPx = () => cssToPixels(`${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh`);
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗

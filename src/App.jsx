@@ -3782,10 +3782,15 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             >
               {/* DEBUG: Capsule verte (test positionnement avec variables px) */}
               {(() => {
+                const dpr = window.devicePixelRatio;
+                const screenRealPx = window.innerHeight * dpr;
                 const headerPx = getPlayerHeaderHeightPx();
                 const footerPx = getPlayerFooterHeightPx();
                 const beaconPx = getBeaconHeightPx();
-                const zonePx = window.innerHeight - headerPx - footerPx;
+                const zonePx = screenRealPx - headerPx - footerPx;
+                // Convertir en pixels CSS pour le positionnement
+                const topCss = (headerPx + zonePx / 2 - beaconPx / 2) / dpr;
+                const heightCss = beaconPx / dpr;
                 return (
                   <>
                     <div
@@ -3793,10 +3798,10 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                       style={{
                         left: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
                         right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
-                        top: headerPx + zonePx / 2 - beaconPx / 2,
-                        height: beaconPx,
+                        top: topCss,
+                        height: heightCss,
                         backgroundColor: 'rgba(34, 197, 94, 0.3)',
-                        border: `${1 / window.devicePixelRatio}px solid rgba(34, 197, 94, 1)`,
+                        border: `${1 / dpr}px solid rgba(34, 197, 94, 1)`,
                       }}
                     />
                     {/* DEBUG: Overlay valeurs */}
@@ -3804,11 +3809,12 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                       className="absolute left-4 right-4 bg-black/80 text-white text-xs p-2 rounded"
                       style={{ bottom: '25%' }}
                     >
-                      <div>Header: {headerPx.toFixed(1)}px</div>
-                      <div>Footer: {footerPx.toFixed(1)}px</div>
-                      <div>Beacon: {beaconPx.toFixed(1)}px</div>
-                      <div>Zone: {zonePx.toFixed(1)}px</div>
-                      <div>Screen: {window.innerHeight}px</div>
+                      <div>Header: {headerPx.toFixed(1)} real px</div>
+                      <div>Footer: {footerPx.toFixed(1)} real px</div>
+                      <div>Beacon: {beaconPx.toFixed(1)} real px</div>
+                      <div>Zone: {zonePx.toFixed(1)} real px</div>
+                      <div>Screen: {screenRealPx.toFixed(1)} real px</div>
+                      <div>DPR: {dpr}</div>
                     </div>
                   </>
                 );
