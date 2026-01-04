@@ -747,6 +747,12 @@ const DropboxBrowser = ({
     // Charger la racine au montage et lancer l'animation morph
     useEffect(() => {
         if (isVisible) {
+            // IMPORTANT: Annuler toute animation précédente AVANT de commencer
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+                animationRef.current = null;
+            }
+
             // Reset tous les états immédiatement
             setIsFadingOut(false);
             setClosingButton(null);
@@ -764,9 +770,6 @@ const DropboxBrowser = ({
             setPhaseTransition(null);
             setImportData(null);
             setImportBtnIgniting(null);
-            // Reset morph states - IMPORTANT pour éviter le bug du blur seul
-            setMorphProgress(0);
-            setBackdropVisible(false);
             loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
@@ -788,42 +791,49 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // Lancer l'animation morph si on a un sourceRect
-            if (sourceRect) {
-                setMorphProgress(0);
-                setBackdropVisible(true);
-
-                requestAnimationFrame(() => {
-                    const startTime = performance.now();
-                    const animate = (currentTime) => {
-                        const elapsed = currentTime - startTime;
-                        const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
-                        // Easing cubic ease-in-out
-                        const eased = progress < 0.5
-                            ? 4 * progress * progress * progress
-                            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-                        setMorphProgress(eased);
-                        if (progress < 1) {
-                            animationRef.current = requestAnimationFrame(animate);
-                        } else {
-                            animationRef.current = null;
-                        }
-                    };
-                    animationRef.current = requestAnimationFrame(animate);
-                });
-            } else {
-                // Pas de sourceRect, affichage direct
-                setMorphProgress(1);
-                setBackdropVisible(true);
-            }
-        } else {
-            // Reset quand on ferme
+            // Lancer l'animation morph - on utilise un délai minimal pour s'assurer
+            // que les états sont bien réinitialisés avant de démarrer l'animation
+            // Cela évite le bug où seul le blur s'affiche
             setMorphProgress(0);
             setBackdropVisible(false);
+
+            // Petit délai pour forcer React à flush les états avant l'animation
+            requestAnimationFrame(() => {
+                if (sourceRect) {
+                    setBackdropVisible(true);
+
+                    requestAnimationFrame(() => {
+                        const startTime = performance.now();
+                        const animate = (currentTime) => {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
+                            // Easing cubic ease-in-out
+                            const eased = progress < 0.5
+                                ? 4 * progress * progress * progress
+                                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                            setMorphProgress(eased);
+                            if (progress < 1) {
+                                animationRef.current = requestAnimationFrame(animate);
+                            } else {
+                                animationRef.current = null;
+                            }
+                        };
+                        animationRef.current = requestAnimationFrame(animate);
+                    });
+                } else {
+                    // Pas de sourceRect, affichage direct
+                    setMorphProgress(1);
+                    setBackdropVisible(true);
+                }
+            });
+        } else {
+            // Reset quand on ferme
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
                 animationRef.current = null;
             }
+            setMorphProgress(0);
+            setBackdropVisible(false);
         }
     }, [isVisible]);
 

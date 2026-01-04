@@ -3988,7 +3988,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             }}
         >
             {isPlaying ? (
-                <Disc3 size={20} className="animate-spin-slow" style={{ display: 'block' }} />
+                <div className="w-5 h-5 flex items-center justify-center animate-spin-slow">
+                    <Disc3 size={20} />
+                </div>
             ) : (
                 <Pause size={14} />
             )}
@@ -5097,11 +5099,17 @@ const vibeSearchResults = () => {
         } else {
             // Ne pauser que si l'audio joue vraiment (évite stutter)
             if (!audio.paused) {
-                // Si l'AudioContext est suspended, le résumer d'abord pour éviter le stutter
-                // (peut arriver après resume de l'app sur iOS)
-                if (audioContextRef.current?.state === 'suspended') {
-                    audioContextRef.current.resume().then(() => {
-                        audio.pause();
+                // Sur iOS après resume de l'app, l'AudioContext peut être dans un état instable
+                // (suspended, interrupted, ou running mais désynchronisé)
+                // On doit attendre que le contexte soit stable avant de pauser
+                const ctx = audioContextRef.current;
+                if (ctx && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+                    // Résumer le contexte, attendre qu'il soit stable, puis pauser
+                    ctx.resume().then(() => {
+                        // Petit délai pour laisser le sample rate se stabiliser sur iOS
+                        setTimeout(() => {
+                            audio.pause();
+                        }, 50);
                     }).catch(() => {
                         audio.pause();
                     });
@@ -5170,17 +5178,49 @@ const vibeSearchResults = () => {
     }
   }, [isPlaying, releaseWakeLock]);
 
-  // Re-acquérir le wake lock quand la page redevient visible (si en lecture)
+  // Re-acquérir le wake lock et gérer l'AudioContext quand la page redevient visible
   // Note: visibilitychange est déclenché par le système, pas par l'utilisateur,
   // mais le wake lock peut être re-acquis dans ce contexte spécifique
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && isPlayingRef.current && !wakeLockRef.current) {
-        try {
-          wakeLockRef.current = await navigator.wakeLock.request('screen');
-          console.log('[WakeLock] Screen wake lock re-acquired on visibility');
-        } catch (e) {
-          console.log('[WakeLock] Failed to re-acquire on visibility:', e.message);
+      if (document.visibilityState === 'visible') {
+        // Gérer l'AudioContext pour éviter stutter/accélération sur iOS
+        // iOS Safari peut mettre l'AudioContext en état "interrupted" ou "suspended"
+        // et le sample rate peut se désynchroniser causant des problèmes de tempo
+        if (audioContextRef.current) {
+          const ctx = audioContextRef.current;
+          console.log('[Audio] Visibility change - AudioContext state:', ctx.state);
+
+          // Si le contexte est suspendu ou interrompu, le résumer avec un petit délai
+          // pour éviter les glitches audio sur iOS
+          if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
+            // Petit délai pour laisser iOS se stabiliser
+            setTimeout(async () => {
+              try {
+                await ctx.resume();
+                console.log('[Audio] AudioContext resumed after visibility change');
+              } catch (e) {
+                console.log('[Audio] Failed to resume AudioContext:', e.message);
+              }
+            }, 100);
+          }
+        }
+
+        // Re-acquérir le wake lock si en lecture
+        if (isPlayingRef.current && !wakeLockRef.current) {
+          try {
+            wakeLockRef.current = await navigator.wakeLock.request('screen');
+            console.log('[WakeLock] Screen wake lock re-acquired on visibility');
+          } catch (e) {
+            console.log('[WakeLock] Failed to re-acquire on visibility:', e.message);
+          }
+        }
+      } else {
+        // Page devient invisible - suspendre l'AudioContext proprement sur iOS
+        // Cela évite les problèmes de tempo/stutter au retour
+        if (audioContextRef.current && audioContextRef.current.state === 'running') {
+          // Ne pas suspendre si de la musique joue (sinon elle s'arrête)
+          // iOS gère ça automatiquement via l'interruption
         }
       }
     };
