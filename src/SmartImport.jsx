@@ -21,7 +21,8 @@ export const SMARTIMPORT_CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     DIALOG_MAX_WIDTH: '20rem',           // Largeur max du dialog
     DIALOG_HEIGHT: '65vh',               // Hauteur max du dialog
-    DIALOG_PADDING: '1.25rem',           // Padding interne du dialog
+    DIALOG_PADDING_VERTICAL: '0.75rem',  // Padding vertical du dialog (comme DropboxBrowser)
+    HORIZONTAL_PADDING: '0.75rem',       // Padding horizontal header/boutons (comme DropboxBrowser)
     DIALOG_RADIUS: '1rem',               // Border radius général du dialog (unifié avec DropboxBrowser)
     DIALOG_BG_COLOR: '#FAFAFA',          // Couleur de fond du dossier (violet très pâle)
     
@@ -840,27 +841,38 @@ const SmartImport = ({
                     )}
                     
                     {/* Corps du dossier */}
-                    <div 
+                    <div
                         className="w-full h-full border border-white/20 shadow-2xl flex flex-col overflow-hidden"
-                        style={{ 
-                            padding: SMARTIMPORT_CONFIG.DIALOG_PADDING,
+                        style={{
+                            paddingTop: SMARTIMPORT_CONFIG.DIALOG_PADDING_VERTICAL,
+                            paddingBottom: SMARTIMPORT_CONFIG.DIALOG_PADDING_VERTICAL,
+                            paddingLeft: 0,
+                            paddingRight: 0,
                             background: folderBg,
                             boxShadow: folderShadow,
                             opacity: 1,
                             // Si onglet activé : coin haut-gauche moins arrondi pour se joindre à l'onglet
-                            borderRadius: SMARTIMPORT_CONFIG.FOLDER_TAB_ENABLED 
+                            borderRadius: SMARTIMPORT_CONFIG.FOLDER_TAB_ENABLED
                             ? `0 ${SMARTIMPORT_CONFIG.DIALOG_RADIUS} ${SMARTIMPORT_CONFIG.DIALOG_RADIUS} ${SMARTIMPORT_CONFIG.DIALOG_RADIUS}`
                             : SMARTIMPORT_CONFIG.DIALOG_RADIUS,
 
                         }}
                     >
                         {/* Header capsule : fond blanc, bordure fine */}
-                        <div 
-                            className="flex items-center justify-between rounded-full px-4 mb-4 border border-gray-200"
-                            style={{ 
+                        <div
+                            className="mb-2"
+                            style={{
+                                flexShrink: 0,
+                                paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING
+                            }}
+                        >
+                        <div
+                            className="flex items-center justify-between rounded-full px-4 border border-gray-200 w-full"
+                            style={{
                                 background: 'white',
-                                paddingTop: SMARTIMPORT_CONFIG.HEADER_PADDING_Y,
-                                paddingBottom: SMARTIMPORT_CONFIG.HEADER_PADDING_Y
+                                height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                             }}
                         >
                             {/* Nom du dossier avec autoscroll */}
@@ -894,9 +906,16 @@ const SmartImport = ({
                                 </div>
                             )}
                         </div>
-                        
+                        </div>
+
                         {/* Header résumé : badges vibes | total fichiers + icône */}
-                        <div className="flex justify-between items-center px-1 mb-2">
+                        <div
+                            className="flex justify-between items-center mb-2"
+                            style={{
+                                paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING
+                            }}
+                        >
                             <div className="flex items-center gap-1.5">
                                 {/* Badge nouvelles vibes (+X) rose */}
                                 <div 
@@ -949,22 +968,24 @@ const SmartImport = ({
                         </div>
                         
                         {/* Liste des vibes avec gradient sur toute la carte */}
-                        <div className="relative mb-4 flex-1 min-h-0 overflow-hidden rounded-2xl">
-                            <div 
+                        <div className="relative mb-2 flex-1 min-h-0 overflow-hidden" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                            <div
                                 className="h-full"
                                 style={{ overflow: 'visible' }}
                             >
-                                <div 
+                                <div
                                     ref={listRef}
                                     className="h-full overflow-y-auto overflow-x-visible"
-                                    style={{ 
-                                        scrollbarWidth: 'none', 
+                                    style={{
+                                        scrollbarWidth: 'none',
                                         msOverflowStyle: 'none',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: SMARTIMPORT_CONFIG.CARD_GAP,
-                                        padding: '0.75rem 0.5rem 0.5rem 0.25rem',
-                                        paddingRight: '0.75rem'
+                                        paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                        paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                        paddingTop: '0.5rem',
+                                        paddingBottom: '0.5rem'
                                     }}
                                     onScroll={() => {
                                         if (listRef.current) {
@@ -1112,7 +1133,14 @@ const SmartImport = ({
                         </div>
                         
                         {/* Boutons */}
-                        <div className="relative">
+                        <div
+                            className="relative"
+                            style={{
+                                flexShrink: 0,
+                                paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING
+                            }}
+                        >
                         {/* Capsule preview couleur - par-dessus les boutons */}
                         {swipePreview && (
                             <div 
