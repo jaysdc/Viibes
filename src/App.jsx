@@ -3160,54 +3160,63 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
 };
 
 const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding }) => {
-    const [touchStartX, setTouchStartX] = useState(null); 
-    const [touchStartY, setTouchStartY] = useState(null); 
+    const rowRef = useRef(null);
+    const touchStartRef = useRef({ x: null, y: null });
+    const swipeDirectionRef = useRef(null);
     const [offset, setOffset] = useState(0);
-    const [swipeDirection, setSwipeDirection] = useState(null);
 
-    const onTouchStart = (e) => { 
-        setTouchStartX(e.targetTouches[0].clientX); 
-        setTouchStartY(e.targetTouches[0].clientY); 
-        setSwipeDirection(null);
-    };
-    
-    const onTouchMove = (e) => {
-        if (touchStartX === null || touchStartY === null) return;
-        const currentX = e.targetTouches[0].clientX;
-        const currentY = e.targetTouches[0].clientY;
-        const diffX = currentX - touchStartX;
-        const diffY = currentY - touchStartY;
+    // Utiliser useEffect pour ajouter le listener avec { passive: false }
+    // Cela permet à preventDefault() de fonctionner sur iOS
+    useEffect(() => {
+        const element = rowRef.current;
+        if (!element) return;
 
-        // Déterminer la direction au premier mouvement significatif (verrouillage)
-        if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                setSwipeDirection('horizontal');
-            } else {
-                setSwipeDirection('vertical');
+        const handleTouchMove = (e) => {
+            const { x: touchStartX, y: touchStartY } = touchStartRef.current;
+            if (touchStartX === null || touchStartY === null) return;
+
+            const currentX = e.targetTouches[0].clientX;
+            const currentY = e.targetTouches[0].clientY;
+            const diffX = currentX - touchStartX;
+            const diffY = currentY - touchStartY;
+
+            // Déterminer la direction au premier mouvement significatif (verrouillage)
+            if (swipeDirectionRef.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+                swipeDirectionRef.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
             }
-        }
 
-        // Si c'est un swipe vertical, on laisse le scroll natif faire son travail
-        if (swipeDirection === 'vertical') return;
+            // Si c'est un swipe vertical, on laisse le scroll natif faire son travail
+            if (swipeDirectionRef.current === 'vertical') return;
 
-        // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe
-        if (swipeDirection === 'horizontal') {
-            e.preventDefault(); // Empêche le scroll vertical pendant un swipe horizontal
-            if (Math.abs(diffX) < 150) {
-                setOffset(diffX);
+            // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe
+            if (swipeDirectionRef.current === 'horizontal') {
+                e.preventDefault(); // Fonctionne car passive: false
+                if (Math.abs(diffX) < 150) {
+                    setOffset(diffX);
+                }
             }
-        }
+        };
+
+        element.addEventListener('touchmove', handleTouchMove, { passive: false });
+        return () => element.removeEventListener('touchmove', handleTouchMove);
+    }, []);
+
+    const onTouchStart = (e) => {
+        touchStartRef.current = {
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        };
+        swipeDirectionRef.current = null;
     };
-    
-    const onTouchEnd = () => { 
-        if (swipeDirection === 'horizontal' && touchStartX !== null) {
+
+    const onTouchEnd = () => {
+        if (swipeDirectionRef.current === 'horizontal' && touchStartRef.current.x !== null) {
             if (offset < -50) onSwipeLeft(song);
             else if (offset > 50) onSwipeRight(song);
         }
-        setOffset(0); 
-        setTouchStartX(null);
-        setTouchStartY(null);
-        setSwipeDirection(null);
+        setOffset(0);
+        touchStartRef.current = { x: null, y: null };
+        swipeDirectionRef.current = null;
     };
     const WHEEL_TITLE_SIZE_MAIN_CENTER = CONFIG.WHEEL_TITLE_SIZE_MAIN_CENTER;
     const WHEEL_TITLE_SIZE_MAIN_OTHER = CONFIG.WHEEL_TITLE_SIZE_MAIN_OTHER;
@@ -3300,12 +3309,12 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     }
 
     return (
-      <div 
+      <div
+      ref={rowRef}
       className="snap-center flex items-center justify-center px-4 cursor-pointer origin-center absolute w-full"
       style={{ height: itemHeight, top: centerPadding + index * itemHeight, ...cylinderStyle }}
-      onTouchStart={onTouchStart} 
-      onTouchMove={onTouchMove} 
-      onTouchEnd={onTouchEnd} 
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       onClick={() => { if(Math.abs(offset) < 5) onClick(); }}
       >
         {showFeedback && <div className={`absolute inset-0 mx-4 ${overlayClass}`} style={{ opacity: progressOpacity }}>{OverlayContent}</div>}
