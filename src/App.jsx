@@ -5595,9 +5595,10 @@ const cancelKillVibe = () => {
         const screenWidth = window.innerWidth;
 
         // Calcul du TOP:
-        // safe-area + TITLE_MARGIN_TOP (0.3rem) + logo (36px) + TITLE_MARGIN_BOTTOM (0.5rem)
+        // safe-area + TITLE_MARGIN_TOP (0.3rem) + logo height + TITLE_MARGIN_BOTTOM (0.5rem)
+        // VibesLogo size={36} → VibesLogoVector size={36*3=108} → height={108*0.4=43.2}
         const titleMarginTop = remToPx(0.3);
-        const logoHeight = 36; // 36px fixe
+        const logoHeight = 36 * 3 * 0.4; // 43.2px CSS
         const titleMarginBottom = remToPx(0.5);
         const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
 
