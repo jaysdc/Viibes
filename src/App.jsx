@@ -5122,6 +5122,18 @@ const vibeSearchResults = () => {
       console.log('[MediaSession] play handler called');
       if (audioRef.current) {
         try {
+          // Résumer l'AudioContext s'il est suspendu (requis sur iOS)
+          if (audioContextRef.current?.state === 'suspended') {
+            console.log('[MediaSession] Resuming AudioContext');
+            await audioContextRef.current.resume();
+          }
+          // S'assurer que le volume est appliqué
+          if (gainNodeRef.current) {
+            // Le volume est déjà géré par le state, pas besoin de le re-set
+          } else if (audioRef.current) {
+            // Fallback si pas de Web Audio API
+            audioRef.current.volume = 1;
+          }
           await audioRef.current.play();
           setIsPlaying(true);
         } catch (e) {
