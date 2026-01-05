@@ -4178,22 +4178,37 @@ const handlePlayerTouchEnd = () => {
     const gainNodeRef = useRef(null);
     const mediaSourceRef = useRef(null);
     const fadeInterval = useRef(null);
-    // Initialiser Web Audio API pour contrôle volume iOS
+
+    // Détecter iOS pour désactiver Web Audio API (problème avec background playback)
+    const isIOSDevice = useRef(/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+    // Initialiser Web Audio API pour contrôle volume
+    // IMPORTANT: Sur iOS, on NE DOIT PAS utiliser createMediaElementSource car ça empêche
+    // la lecture en background (l'AudioContext est suspendu et l'audio ne peut plus jouer)
     const initAudioContext = useCallback(() => {
+      // Sur iOS, ne pas utiliser Web Audio API pour l'audio principal
+      // Cela permet aux contrôles lock screen de fonctionner
+      if (isIOSDevice.current) {
+        console.log('[AudioContext] Skipping Web Audio API on iOS for background playback compatibility');
+        return;
+      }
+
       if (audioContextRef.current || !audioRef.current) return;
-      
+
       try {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           audioContextRef.current = new AudioContext();
           gainNodeRef.current = audioContextRef.current.createGain();
           mediaSourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-          
+
           // Pipeline: audio element → gain node → speakers
           mediaSourceRef.current.connect(gainNodeRef.current);
           gainNodeRef.current.connect(audioContextRef.current.destination);
-          
+
           // Appliquer le volume actuel
           gainNodeRef.current.gain.value = volume / 100;
+          console.log('[AudioContext] Web Audio API initialized (non-iOS)');
       } catch (e) {
           console.warn('Web Audio API not supported:', e);
       }
@@ -5125,12 +5140,25 @@ const vibeSearchResults = () => {
     navigator.mediaSession.setActionHandler('play', async () => {
       console.log('[MediaSession] play handler called');
       try {
-        // Résumer l'AudioContext s'il est suspendu (requis sur iOS)
+        // Sur iOS, l'AudioContext peut être suspendu quand l'app est en background
+        // On essaie de le résumer, mais si ça échoue, l'audio jouera quand même
+        // (juste sans le contrôle de volume via Web Audio API)
         if (audioContextRef.current?.state === 'suspended') {
-          console.log('[MediaSession] Resuming AudioContext');
-          await audioContextRef.current.resume();
+          console.log('[MediaSession] AudioContext suspended, trying to resume...');
+          try {
+            await audioContextRef.current.resume();
+            console.log('[MediaSession] AudioContext resumed successfully');
+          } catch (resumeError) {
+            // Sur iOS en background, resume() peut échouer sans interaction utilisateur
+            // L'audio jouera quand même via l'élément audio directement
+            console.log('[MediaSession] AudioContext resume failed (expected on iOS background):', resumeError);
+          }
         }
+
+        // Lancer la lecture - ceci fonctionne même si AudioContext est suspendu
+        // car l'élément audio peut jouer indépendamment
         await audio.play();
+        console.log('[MediaSession] audio.play() succeeded');
       } catch (e) {
         console.error('[MediaSession] play error:', e);
       }
