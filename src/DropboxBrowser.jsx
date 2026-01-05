@@ -46,7 +46,7 @@ const CONFIG = {
 
     // Animation
     BUTTON_ANIM_DURATION: 400,
-    MORPH_DURATION: 2000,
+    MORPH_DURATION: 300,
 
     // Transition entre phases (browse/import)
     PHASE_TRANSITION_DURATION: 300,
