@@ -1119,30 +1119,32 @@ const DropboxBrowser = ({
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget && !closingButton && morphProgress === 1) handleClose(); }}
             >
-                {/* Dialog principal avec animation morph */}
+                {/* Dialog principal - DEBUG: forced visible */}
                 <div
                     ref={dialogRef}
                     className="flex flex-col overflow-hidden"
                     style={{
-                        ...morphStyles,
+                        // DEBUG: Force simple centered display, ignore morph
+                        position: 'relative',
+                        width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
+                        height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
+                        borderRadius: '1rem',
                         paddingTop: '0.75rem',
                         paddingBottom: '0.75rem',
                         paddingLeft: 0,
                         paddingRight: 0,
                         background: SMARTIMPORT_CONFIG.DIALOG_BG_COLOR,
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-                        // Cacher le contenu pendant l'animation initiale (seulement si sourceRect existe)
-                        opacity: !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3),
+                        opacity: 1, // DEBUG: always visible
                     }}
                 >
-                    {/* PHASE BROWSE - Navigation Dropbox */}
+                    {/* PHASE BROWSE - Navigation Dropbox - DEBUG: forced visible */}
                     <div
                         className="absolute inset-0 flex flex-col"
                         style={{
-                            opacity: phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0,
-                            transform: phase === 'browse' ? (phaseTransition === 'to-import' ? 'translateX(-20px)' : 'translateX(0)') : 'translateX(-20px)',
-                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
-                            pointerEvents: phase === 'browse' ? 'auto' : 'none',
+                            opacity: 1, // DEBUG: always visible
+                            transform: 'translateX(0)',
+                            pointerEvents: 'auto',
                             paddingTop: '0.75rem',
                             paddingBottom: '0.75rem',
                         }}
