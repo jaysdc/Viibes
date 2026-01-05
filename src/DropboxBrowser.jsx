@@ -46,7 +46,7 @@ const CONFIG = {
 
     // Animation
     BUTTON_ANIM_DURATION: 400,
-    MORPH_DURATION: 300,
+    MORPH_DURATION: 400,
 
     // Transition entre phases (browse/import)
     PHASE_TRANSITION_DURATION: 300,
@@ -131,16 +131,13 @@ const DropboxBrowser = ({
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
-    sourceRect: _sourceRect, // Position du bouton source pour l'animation morph
+    sourceRect, // Position du bouton source pour l'animation morph
     // Props pour la phase import
     playlists,
     vibeColorIndices,
     getGradientByIndex,
     getGradientName,
 }) => {
-    // Utiliser le vrai sourceRect
-    const sourceRect = _sourceRect;
-
     // États
     const [currentPath, setCurrentPath] = useState('');
     const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
@@ -190,8 +187,6 @@ const DropboxBrowser = ({
 
     const listRef = useRef(null);
     const importListRef = useRef(null);
-    const abortControllerRef = useRef(null); // Pour annuler les requêtes en cours
-    const loadingPathRef = useRef(null); // Pour tracker quel path est en cours de chargement
     const dialogRef = useRef(null);
     const animationRef = useRef(null);
     const scrubZoneRef = useRef(null);
@@ -361,28 +356,10 @@ const DropboxBrowser = ({
 
     // Charger le contenu d'un dossier
     const loadFolder = async (path) => {
-        // Annuler toute requête précédente en cours
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-
-        // Créer un nouveau AbortController pour cette requête
-        const abortController = new AbortController();
-        abortControllerRef.current = abortController;
-        loadingPathRef.current = path;
-
         setLoading(true);
-        setFiles([]); // Vider les fichiers immédiatement pour éviter d'afficher l'ancien contenu
-
         try {
             let token = await getValidDropboxToken();
             if (!token) token = dropboxToken;
-
-            // Vérifier si cette requête a été annulée
-            if (abortController.signal.aborted) {
-                console.log('[DropboxBrowser] Request aborted for path:', path);
-                return;
-            }
 
             let allEntries = [];
             let hasMore = true;
@@ -400,7 +377,6 @@ const DropboxBrowser = ({
                     include_deleted: false,
                     limit: 2000,
                 }),
-                signal: abortController.signal,
             });
 
             if (firstResponse.status === 401) {
@@ -418,12 +394,6 @@ const DropboxBrowser = ({
 
             let data = await firstResponse.json();
 
-            // Vérifier si cette requête a été annulée ou si le path a changé
-            if (abortController.signal.aborted || loadingPathRef.current !== path) {
-                console.log('[DropboxBrowser] Request superseded for path:', path);
-                return;
-            }
-
             if (data.entries) {
                 allEntries = [...data.entries];
                 hasMore = data.has_more;
@@ -431,12 +401,6 @@ const DropboxBrowser = ({
             }
 
             while (hasMore && cursor) {
-                // Vérifier avant chaque requête de pagination
-                if (abortController.signal.aborted || loadingPathRef.current !== path) {
-                    console.log('[DropboxBrowser] Pagination aborted for path:', path);
-                    return;
-                }
-
                 const continueResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder/continue', {
                     method: 'POST',
                     headers: {
@@ -444,7 +408,6 @@ const DropboxBrowser = ({
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ cursor }),
-                    signal: abortController.signal,
                 });
 
                 const continueData = await continueResponse.json();
@@ -458,12 +421,6 @@ const DropboxBrowser = ({
                 }
             }
 
-            // Vérification finale avant de mettre à jour l'état
-            if (abortController.signal.aborted || loadingPathRef.current !== path) {
-                console.log('[DropboxBrowser] Final check failed for path:', path);
-                return;
-            }
-
             // Trier : dossiers d'abord, puis fichiers MP3
             const sorted = allEntries
                 .filter(f => f['.tag'] === 'folder' || f.name.toLowerCase().endsWith('.mp3'))
@@ -474,21 +431,12 @@ const DropboxBrowser = ({
                 });
 
             setFiles(sorted);
-            setLoading(false);
 
         } catch (error) {
-            // Ignorer les erreurs d'abort (c'est normal)
-            if (error.name === 'AbortError') {
-                console.log('[DropboxBrowser] Fetch aborted for path:', path);
-                return;
-            }
             console.error('Erreur Dropbox:', error);
-            // Ne pas afficher d'alerte si la requête a été annulée
-            if (!abortController.signal.aborted) {
-                alert('Erreur de connexion à Dropbox');
-            }
-            setLoading(false);
+            alert('Erreur de connexion à Dropbox');
         }
+        setLoading(false);
     };
 
     // Helper: liste un dossier Dropbox (avec pagination)
@@ -799,12 +747,6 @@ const DropboxBrowser = ({
     // Charger la racine au montage et lancer l'animation morph
     useEffect(() => {
         if (isVisible) {
-            // IMPORTANT: Annuler toute animation précédente AVANT de commencer
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-                animationRef.current = null;
-            }
-
             // Reset tous les états immédiatement
             setIsFadingOut(false);
             setClosingButton(null);
@@ -822,6 +764,9 @@ const DropboxBrowser = ({
             setPhaseTransition(null);
             setImportData(null);
             setImportBtnIgniting(null);
+            // Reset morph states - IMPORTANT pour éviter le bug du blur seul
+            setMorphProgress(0);
+            setBackdropVisible(false);
             loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
@@ -843,44 +788,42 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // Animation morph
-            setMorphProgress(0);
-            setBackdropVisible(false);
+            // Lancer l'animation morph si on a un sourceRect
+            if (sourceRect) {
+                setMorphProgress(0);
+                setBackdropVisible(true);
 
-            requestAnimationFrame(() => {
-                if (sourceRect) {
-                    setBackdropVisible(true);
-                    requestAnimationFrame(() => {
-                        const startTime = performance.now();
-                        const animate = (currentTime) => {
-                            const elapsed = currentTime - startTime;
-                            const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
-                            const eased = progress < 0.5
-                                ? 4 * progress * progress * progress
-                                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-                            setMorphProgress(eased);
-                            if (progress < 1) {
-                                animationRef.current = requestAnimationFrame(animate);
-                            } else {
-                                animationRef.current = null;
-                            }
-                        };
-                        animationRef.current = requestAnimationFrame(animate);
-                    });
-                } else {
-                    // Pas de sourceRect, affichage direct
-                    setMorphProgress(1);
-                    setBackdropVisible(true);
-                }
-            });
+                requestAnimationFrame(() => {
+                    const startTime = performance.now();
+                    const animate = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
+                        // Easing cubic ease-in-out
+                        const eased = progress < 0.5
+                            ? 4 * progress * progress * progress
+                            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                        setMorphProgress(eased);
+                        if (progress < 1) {
+                            animationRef.current = requestAnimationFrame(animate);
+                        } else {
+                            animationRef.current = null;
+                        }
+                    };
+                    animationRef.current = requestAnimationFrame(animate);
+                });
+            } else {
+                // Pas de sourceRect, affichage direct
+                setMorphProgress(1);
+                setBackdropVisible(true);
+            }
         } else {
             // Reset quand on ferme
+            setMorphProgress(0);
+            setBackdropVisible(false);
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
                 animationRef.current = null;
             }
-            setMorphProgress(0);
-            setBackdropVisible(false);
         }
     }, [isVisible]);
 
@@ -1003,7 +946,7 @@ const DropboxBrowser = ({
         }
     }, [loading, pendingScrollRestore]);
 
-    // NOTE: Le return null est maintenant juste avant le JSX, plus bas
+    if (!isVisible) return null;
 
     const isAtRoot = !currentPath;
     const canImport = !isAtRoot && !loading && !scanning;
@@ -1015,27 +958,13 @@ const DropboxBrowser = ({
 
     // Calculer les dimensions interpolées pour le morph
     const getMorphStyles = () => {
-        if (!sourceRect) {
-            // Pas de sourceRect = pas d'animation morph, affichage centré
+        if (!sourceRect || !dialogDimensions) {
+            // Pas d'animation morph, retourner les styles normaux (en % de l'écran)
             return {
                 position: 'relative',
                 width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
                 height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
                 borderRadius: '1rem',
-            };
-        }
-
-        if (!dialogDimensions) {
-            // sourceRect existe mais dialogDimensions pas encore calculé
-            // Retourner le dialog à la position du bouton source (invisible, en attente)
-            return {
-                position: 'fixed',
-                left: sourceRect.left,
-                top: sourceRect.top,
-                width: sourceRect.width,
-                height: sourceRect.height,
-                borderRadius: sourceRect.height / 2,
-                opacity: 0, // Invisible jusqu'à ce que l'animation commence
             };
         }
 
@@ -1073,23 +1002,9 @@ const DropboxBrowser = ({
 
     const morphStyles = getMorphStyles();
 
-    // DEBUG OVERLAY
-    const dialogOpacity = !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3);
-    const browseOpacity = phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0;
-    const debugInfo = {
-        line1: `W:${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw H:${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
-        line2: `bg:${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR || 'UNDEF'}`,
-        line3: `files:${files.length} | loading:${loading ? 'Y' : 'N'}`,
-        line4: `dialogRef:${dialogRef.current ? 'SET' : 'NULL'}`,
-    };
-
-    // DEBUG: Version ultra simplifiée sans animations
-    if (!isVisible) return null;
-
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* Backdrop */}
             <div
                 className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
                 style={{
@@ -1099,7 +1014,7 @@ const DropboxBrowser = ({
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget && !closingButton && morphProgress === 1) handleClose(); }}
             >
-                {/* Dialog principal - avec animation morph */}
+                {/* Dialog principal avec animation morph */}
                 <div
                     ref={dialogRef}
                     className="flex flex-col overflow-hidden"
@@ -1111,17 +1026,18 @@ const DropboxBrowser = ({
                         paddingRight: 0,
                         background: SMARTIMPORT_CONFIG.DIALOG_BG_COLOR,
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-                        opacity: dialogOpacity,
+                        // Cacher le contenu pendant l'animation initiale (seulement si sourceRect existe)
+                        opacity: !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3),
                     }}
                 >
                     {/* PHASE BROWSE - Navigation Dropbox */}
                     <div
                         className="absolute inset-0 flex flex-col"
                         style={{
-                            opacity: browseOpacity,
-                            transform: `translateX(${phaseTransition === 'to-import' ? '-100%' : '0'})`,
+                            opacity: phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0,
+                            transform: phase === 'browse' ? (phaseTransition === 'to-import' ? 'translateX(-20px)' : 'translateX(0)') : 'translateX(-20px)',
                             transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
-                            pointerEvents: phase === 'browse' && !phaseTransition ? 'auto' : 'none',
+                            pointerEvents: phase === 'browse' ? 'auto' : 'none',
                             paddingTop: '0.75rem',
                             paddingBottom: '0.75rem',
                         }}
@@ -1148,14 +1064,9 @@ const DropboxBrowser = ({
                                     <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
                                 ) : (
                                     <button
-                                        onClick={() => !loading && navigateBack()}
+                                        onClick={navigateBack}
                                         className="flex items-center justify-center -ml-1 mr-1"
-                                        style={{
-                                            color: CONFIG.DROPBOX_BLUE,
-                                            opacity: loading ? 0.5 : 1,
-                                            pointerEvents: loading ? 'none' : 'auto',
-                                        }}
-                                        disabled={loading}
+                                        style={{ color: CONFIG.DROPBOX_BLUE }}
                                     >
                                         <ChevronLeft size={18} strokeWidth={2.5} />
                                     </button>
@@ -1215,7 +1126,7 @@ const DropboxBrowser = ({
                                                     return (
                                                         <div
                                                             key={file.path_lower || index}
-                                                            onClick={() => !loading && navigateToFolder(file.path_lower, file.name)}
+                                                            onClick={() => navigateToFolder(file.path_lower, file.name)}
                                                             className="flex items-center pl-3 pr-2 cursor-pointer"
                                                             style={{
                                                                 height: CONFIG.CARD_HEIGHT,
@@ -1223,8 +1134,6 @@ const DropboxBrowser = ({
                                                                 borderRadius: CONFIG.CARD_RADIUS,
                                                                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                                                                 marginBottom: CONFIG.CARD_GAP,
-                                                                opacity: loading ? 0.5 : 1,
-                                                                pointerEvents: loading ? 'none' : 'auto',
                                                             }}
                                                         >
                                                             <span
