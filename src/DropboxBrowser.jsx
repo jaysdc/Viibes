@@ -1078,7 +1078,8 @@ const DropboxBrowser = ({
     // DEBUG OVERLAY
     const debugInfo = {
         sourceRect: sourceRect ? `L:${Math.round(sourceRect.left)} T:${Math.round(sourceRect.top)} W:${Math.round(sourceRect.width)} H:${Math.round(sourceRect.height)}` : 'NULL',
-        dialogDimensions: dialogDimensions ? `OK` : 'NULL',
+        dialogDimensions: dialogDimensions ? `L:${Math.round(dialogDimensions.finalLeft)} T:${Math.round(dialogDimensions.finalTop)} W:${Math.round(dialogDimensions.finalWidth)} H:${Math.round(dialogDimensions.finalHeight)}` : 'NULL',
+        morphStyles: `L:${Math.round(morphStyles.left || 0)} T:${Math.round(morphStyles.top || 0)} W:${typeof morphStyles.width === 'number' ? Math.round(morphStyles.width) : morphStyles.width} H:${typeof morphStyles.height === 'number' ? Math.round(morphStyles.height) : morphStyles.height}`,
         morphProgress: morphProgress.toFixed(2),
         backdropVisible: backdropVisible ? 'Y' : 'N',
     };
@@ -1102,8 +1103,8 @@ const DropboxBrowser = ({
             }}>
                 <div>srcRect: {debugInfo.sourceRect}</div>
                 <div>dlgDim: {debugInfo.dialogDimensions}</div>
-                <div>morph: {debugInfo.morphProgress}</div>
-                <div>backdrop: {debugInfo.backdropVisible}</div>
+                <div>morphStyles: {debugInfo.morphStyles}</div>
+                <div>morph: {debugInfo.morphProgress} | backdrop: {debugInfo.backdropVisible}</div>
             </div>
             <div
                 className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
