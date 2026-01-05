@@ -46,7 +46,7 @@ const CONFIG = {
 
     // Animation
     BUTTON_ANIM_DURATION: 400,
-    MORPH_DURATION: 400,
+    MORPH_DURATION: 2000,
 
     // Transition entre phases (browse/import)
     PHASE_TRANSITION_DURATION: 300,
@@ -1076,12 +1076,13 @@ const DropboxBrowser = ({
     const morphStyles = getMorphStyles();
 
     // DEBUG OVERLAY
+    const dialogOpacity = !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3);
+    const browseOpacity = phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0;
     const debugInfo = {
         sourceRect: sourceRect ? `L:${Math.round(sourceRect.left)} T:${Math.round(sourceRect.top)} W:${Math.round(sourceRect.width)} H:${Math.round(sourceRect.height)}` : 'NULL',
-        dialogDimensions: dialogDimensions ? `L:${Math.round(dialogDimensions.finalLeft)} T:${Math.round(dialogDimensions.finalTop)} W:${Math.round(dialogDimensions.finalWidth)} H:${Math.round(dialogDimensions.finalHeight)}` : 'NULL',
         morphStyles: `L:${Math.round(morphStyles.left || 0)} T:${Math.round(morphStyles.top || 0)} W:${typeof morphStyles.width === 'number' ? Math.round(morphStyles.width) : morphStyles.width} H:${typeof morphStyles.height === 'number' ? Math.round(morphStyles.height) : morphStyles.height}`,
-        morphProgress: morphProgress.toFixed(2),
-        backdropVisible: backdropVisible ? 'Y' : 'N',
+        opacities: `dlg:${dialogOpacity.toFixed(2)} browse:${browseOpacity}`,
+        phase: `${phase} | transition:${phaseTransition || 'none'}`,
     };
 
     return (
@@ -1102,9 +1103,9 @@ const DropboxBrowser = ({
                 fontFamily: 'monospace',
             }}>
                 <div>srcRect: {debugInfo.sourceRect}</div>
-                <div>dlgDim: {debugInfo.dialogDimensions}</div>
                 <div>morphStyles: {debugInfo.morphStyles}</div>
-                <div>morph: {debugInfo.morphProgress} | backdrop: {debugInfo.backdropVisible}</div>
+                <div>opacities: {debugInfo.opacities}</div>
+                <div>phase: {debugInfo.phase}</div>
             </div>
             <div
                 className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
