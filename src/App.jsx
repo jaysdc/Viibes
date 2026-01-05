@@ -563,6 +563,7 @@ const CONFIG = {
     HEADER_PADDING_TOP: 3,                // Padding entre l'encoche et le header (rem)
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
+    HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
     HEADER_Z_INDEX: 40,                   // Z-index du header sticky
@@ -5585,28 +5586,41 @@ const cancelKillVibe = () => {
 
     // Calculer la position ABSOLUE du bouton Dropbox basé sur les configs (pas de ref nécessaire)
     const computeDropboxButtonRect = () => {
-        // Fonction helper pour convertir rem/px en pixels
-        const remToPx = (rem) => rem * 16;
+        // Fonction helper pour convertir une valeur CSS (rem string ou number) en pixels
+        const cssToPixels = (value) => {
+            if (typeof value === 'string') {
+                // Créer un élément temporaire pour mesurer la valeur CSS
+                const div = document.createElement('div');
+                div.style.position = 'fixed';
+                div.style.visibility = 'hidden';
+                div.style.height = value;
+                document.body.appendChild(div);
+                const px = div.getBoundingClientRect().height;
+                document.body.removeChild(div);
+                return px;
+            }
+            // Si c'est un nombre, on assume que c'est en rem
+            return value * 16;
+        };
 
-        // Récupérer la safe area
-        const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0') || 0;
+        // Récupérer la safe area (en pixels CSS)
+        const safeAreaTop = cssToPixels('env(safe-area-inset-top, 0px)');
 
         // Largeur écran
         const screenWidth = window.innerWidth;
 
         // Calcul du TOP:
-        // safe-area + TITLE_MARGIN_TOP (0.3rem) + logo height + TITLE_MARGIN_BOTTOM (0.5rem)
-        // VibesLogo size={36} → VibesLogoVector size={36*3=108} → height={108*0.4=43.2}
-        const titleMarginTop = remToPx(0.3);
-        const logoHeight = 36 * 3 * 0.4; // 43.2px CSS
-        const titleMarginBottom = remToPx(0.5);
+        // safe-area + TITLE_MARGIN_TOP + logo height + TITLE_MARGIN_BOTTOM
+        const titleMarginTop = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP);
+        const logoHeight = CONFIG.HEADER_LOGO_SIZE * 3 * 0.4; // VibesLogo → VibesLogoVector
+        const titleMarginBottom = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM);
         const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
 
         // Calcul de la LARGEUR des boutons:
-        // Largeur disponible = écran - 2*padding (1.5rem chaque côté)
-        // 3 boutons avec 2 gaps de 1rem entre eux
-        const paddingX = remToPx(1.5);
-        const gap = remToPx(1);
+        // Largeur disponible = écran - 2*padding
+        // 3 boutons avec 2 gaps entre eux
+        const paddingX = cssToPixels(CONFIG.HEADER_PADDING_X + 'rem');
+        const gap = cssToPixels(CONFIG.HEADER_BUTTONS_GAP);
         const availableWidth = screenWidth - (2 * paddingX);
         const buttonWidth = (availableWidth - (2 * gap)) / 3;
 
@@ -5614,8 +5628,8 @@ const cancelKillVibe = () => {
         // padding gauche + largeur bouton NUKE + 1 gap
         const left = paddingX + buttonWidth + gap;
 
-        // Hauteur = CAPSULE_HEIGHT (2.0rem)
-        const height = remToPx(2.0);
+        // Hauteur = CAPSULE_HEIGHT
+        const height = cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT);
 
         return {
             left,
@@ -6258,17 +6272,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         {/* HEADER - Indépendant */}
         <div
-            className="px-6 bg-white border-b border-gray-200 safe-area-top"
+            className="bg-white border-b border-gray-200 safe-area-top"
             style={{
                 zIndex: CONFIG.HEADER_Z_INDEX,
                 paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                 paddingBottom: `${CONFIG.HEADER_PADDING_BOTTOM}rem`,
+                paddingLeft: `${CONFIG.HEADER_PADDING_X}rem`,
+                paddingRight: `${CONFIG.HEADER_PADDING_X}rem`,
             }}
         >
           
           {/* Logo centré */}
           <div className="flex justify-center items-center" style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}>
-             <VibesLogo size={36} />
+             <VibesLogo size={CONFIG.HEADER_LOGO_SIZE} />
              <span className="text-[10px] text-gray-300 ml-1 font-bold">v72</span>
           </div>
 
@@ -6559,6 +6575,50 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         />
                     </div>
                 )}
+
+                {/* DEBUG: Rectangle montrant où le bouton Dropbox DEVRAIT être */}
+                {(showImportMenu || importOverlayAnim !== 'none') && (() => {
+                    // Recalculer le rect pour le debug
+                    const cssToPixels = (value) => {
+                        if (typeof value === 'string') {
+                            const div = document.createElement('div');
+                            div.style.position = 'fixed';
+                            div.style.visibility = 'hidden';
+                            div.style.height = value;
+                            document.body.appendChild(div);
+                            const px = div.getBoundingClientRect().height;
+                            document.body.removeChild(div);
+                            return px;
+                        }
+                        return value * 16;
+                    };
+                    const safeAreaTop = cssToPixels('env(safe-area-inset-top, 0px)');
+                    const screenWidth = window.innerWidth;
+                    const titleMarginTop = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP);
+                    const logoHeight = CONFIG.HEADER_LOGO_SIZE * 3 * 0.4;
+                    const titleMarginBottom = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM);
+                    const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
+                    const paddingX = cssToPixels(CONFIG.HEADER_PADDING_X + 'rem');
+                    const gap = cssToPixels(CONFIG.HEADER_BUTTONS_GAP);
+                    const availableWidth = screenWidth - (2 * paddingX);
+                    const buttonWidth = (availableWidth - (2 * gap)) / 3;
+                    const left = paddingX + buttonWidth + gap;
+                    const height = cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT);
+
+                    return (
+                        <div style={{
+                            position: 'fixed',
+                            left: left,
+                            top: top,
+                            width: buttonWidth,
+                            height: height,
+                            backgroundColor: 'yellow',
+                            borderRadius: height / 2,
+                            pointerEvents: 'none',
+                            zIndex: 99999,
+                        }} />
+                    );
+                })()}
                 </>
             )}
           </div>
