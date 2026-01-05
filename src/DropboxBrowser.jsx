@@ -843,9 +843,36 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // DEBUG: Affichage direct sans animation
-            setMorphProgress(1);
-            setBackdropVisible(true);
+            // Animation morph
+            setMorphProgress(0);
+            setBackdropVisible(false);
+
+            requestAnimationFrame(() => {
+                if (sourceRect) {
+                    setBackdropVisible(true);
+                    requestAnimationFrame(() => {
+                        const startTime = performance.now();
+                        const animate = (currentTime) => {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
+                            const eased = progress < 0.5
+                                ? 4 * progress * progress * progress
+                                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                            setMorphProgress(eased);
+                            if (progress < 1) {
+                                animationRef.current = requestAnimationFrame(animate);
+                            } else {
+                                animationRef.current = null;
+                            }
+                        };
+                        animationRef.current = requestAnimationFrame(animate);
+                    });
+                } else {
+                    // Pas de sourceRect, affichage direct
+                    setMorphProgress(1);
+                    setBackdropVisible(true);
+                }
+            });
         } else {
             // Reset quand on ferme
             if (animationRef.current) {
