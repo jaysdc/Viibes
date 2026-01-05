@@ -143,7 +143,7 @@ const CONFIG = {
     // DÉGRADÉS & COULEURS
     // ══════════════════════════════════════════════════════════════════════════
     GRADIENT_OPACITY: 1,              // Opacité des dégradés (0 = transparent, 1 = opaque)
-    MAX_SWIPE_DISTANCE: 450,          // Distance max pour parcourir les 20 couleurs en swipant
+    MAX_SWIPE_DISTANCE: 350,          // Distance max pour parcourir les 20 couleurs en swipant
 
     // ══════════════════════════════════════════════════════════════════════════
     // VIBE CARDS (Dashboard)
@@ -5097,6 +5097,22 @@ const vibeSearchResults = () => {
   // MEDIA SESSION API - Contrôles écran de verrouillage iOS/Android
   // ══════════════════════════════════════════════════════════════════════════════
 
+  // Fonction pour mettre à jour la position (pour la barre de progression iOS)
+  const updatePositionState = useCallback(() => {
+    if (!('mediaSession' in navigator) || !audioRef.current) return;
+    if (!audioRef.current.duration || isNaN(audioRef.current.duration)) return;
+
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: audioRef.current.duration,
+        playbackRate: audioRef.current.playbackRate || 1,
+        position: audioRef.current.currentTime
+      });
+    } catch (e) {
+      // setPositionState peut échouer si les valeurs sont invalides
+    }
+  }, []);
+
   // Enregistrer les handlers UNE SEULE FOIS au montage
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
@@ -5151,19 +5167,33 @@ const vibeSearchResults = () => {
     navigator.mediaSession.setActionHandler('seekbackward', (details) => {
       console.log('[MediaSession] seekbackward handler called');
       if (audioRef.current) {
-        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
+        const skipTime = details.seekOffset || 10;
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - skipTime);
       }
     });
 
     navigator.mediaSession.setActionHandler('seekforward', (details) => {
       console.log('[MediaSession] seekforward handler called');
       if (audioRef.current) {
+        const skipTime = details.seekOffset || 10;
         audioRef.current.currentTime = Math.min(
           audioRef.current.duration || 0,
-          audioRef.current.currentTime + (details.seekOffset || 10)
+          audioRef.current.currentTime + skipTime
         );
       }
     });
+
+    // Handler seekto pour iOS - permet de seek via la barre de progression
+    try {
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        console.log('[MediaSession] seekto handler called', details);
+        if (audioRef.current && details.seekTime !== undefined) {
+          audioRef.current.currentTime = details.seekTime;
+        }
+      });
+    } catch (e) {
+      console.log('[MediaSession] seekto not supported');
+    }
 
     // Cleanup: retirer les handlers au démontage
     return () => {
@@ -5174,9 +5204,16 @@ const vibeSearchResults = () => {
         navigator.mediaSession.setActionHandler('nexttrack', null);
         navigator.mediaSession.setActionHandler('seekbackward', null);
         navigator.mediaSession.setActionHandler('seekforward', null);
+        try { navigator.mediaSession.setActionHandler('seekto', null); } catch (e) {}
       }
     };
   }, []); // Dépendances vides = une seule fois
+
+  // Mettre à jour playbackState quand isPlaying change
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [isPlaying]);
 
   // Mettre à jour les métadonnées quand la chanson change
   useEffect(() => {
@@ -5194,6 +5231,18 @@ const vibeSearchResults = () => {
       });
     }
   }, [currentSong]);
+
+  // Mettre à jour la position périodiquement pendant la lecture
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    // Mettre à jour immédiatement
+    updatePositionState();
+
+    // Puis toutes les secondes
+    const interval = setInterval(updatePositionState, 1000);
+    return () => clearInterval(interval);
+  }, [isPlaying, updatePositionState]);
 
   // Refs pour le préchargement du fichier Dropbox du morceau suivant
   const preloadedRef = useRef({ songId: null, link: null, audio: null });
