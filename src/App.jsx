@@ -2167,16 +2167,14 @@ const RecenterCapsule = ({ onClick }) => (
   </button>
 );
 
-// Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + Volume)
+// Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
   currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview,
   // RecenterCapsule props
   onRecenter,
-  // Volume props
-  volume, onVolumeTouchStart, onVolumeTouchMove, onVolumeTouchEnd,
-  // Overlay props
-  isVolumeActive, mainContainerRef, volumeMorphProgress, volumePreview, beaconNeonRef, capsuleHeightVh, volumeBeaconRect
+  // PlayPause props
+  isPlaying, onTogglePlay
 }) => {
     return (
         <div
@@ -2202,168 +2200,26 @@ const ControlBar = ({
             {!vibeSwipePreview && (
                 <>
                     <RecenterCapsule onClick={onRecenter} />
-                    <div
-                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm ${CONFIG.VOLUME_GLOW_ENABLED ? 'volume-glow' : ''}`}
+                    <button
+                        onClick={onTogglePlay}
+                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm"
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                          background: volume === 0 ? 'rgba(236, 72, 153, 0.15)' : '#fafafa',
-                          border: volume === 0
-                              ? '1px solid rgba(236, 72, 153, 0.3)'
-                              : CONFIG.VOLUME_NEON_ENABLED
-                                  ? `${CONFIG.VOLUME_NEON_WIDTH}px solid ${CONFIG.VOLUME_NEON_COLOR}`
-                                  : '1px solid rgb(229, 231, 235)',
+                          background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
+                          border: isPlaying
+                              ? '1px solid rgba(236, 72, 153, 1)'
+                              : '1px solid rgb(229, 231, 235)',
                           WebkitTapHighlightColor: 'transparent',
-                          transition: 'background 0.2s, border 0.2s'
+                          transition: 'background 0.3s, border 0.3s'
                       }}
-                        onTouchStart={onVolumeTouchStart}
-                        onTouchMove={onVolumeTouchMove}
-                        onTouchEnd={onVolumeTouchEnd}
                     >
-                        {volume === 0 ? <VolumeX size={20} className="text-pink-400" /> : <Volume2 size={20} className="text-gray-400" />}
-                    </div>
-                    
-                    {/* OVERLAY VOLUME SLIDER */}
-                    {isVolumeActive && ReactDOM.createPortal((() => {
-                        // Dimensions du tube : centré sur l'écran
-                        const tubeHeight = window.innerHeight * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
-                        const tubeWidth = window.innerWidth * CONFIG.VOLUME_BAR_WIDTH_PERCENT / 100;
-                        const tubeTop = (window.innerHeight - tubeHeight) / 2;
-                        const tubeLeft = (window.innerWidth - tubeWidth) / 2;
-
-                        // Coordonnées du beacon (point de départ du morph)
-                        const beaconHeight = volumeBeaconRect ? volumeBeaconRect.height : window.innerHeight * capsuleHeightVh / 100;
-                        const beaconWidth = volumeBeaconRect ? volumeBeaconRect.width : window.innerWidth * CONFIG.CAPSULE_WIDTH_PERCENT / 100;
-                        const beaconTop = volumeBeaconRect ? volumeBeaconRect.top : (window.innerHeight - beaconHeight) / 2;
-                        const beaconLeft = volumeBeaconRect ? volumeBeaconRect.left : (window.innerWidth - beaconWidth) / 2;
-                        
-                        const p = volumeMorphProgress;
-                        const currentWidth = beaconWidth + (tubeWidth - beaconWidth) * p;
-                        const currentHeight = beaconHeight + (tubeHeight - beaconHeight) * p;
-                        const currentTop = beaconTop + (tubeTop - beaconTop) * p;
-                        const currentLeft = beaconLeft + (tubeLeft - beaconLeft) * p;
-                        const currentRadius = Math.min(currentWidth, currentHeight) / 2;
-                        
-                        const fillHeight = 100 - (100 - volumePreview) * p;
-                        const thumbY = tubeTop + tubeHeight * (1 - volumePreview / 100);
-                        
-                        return (
-                            <div
-                                className="z-[100] flex items-center justify-center"
-                                style={{
-                                    position: 'fixed',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    backgroundColor: `rgba(0, 0, 0, ${CONFIG.VOLUME_OVERLAY_OPACITY * volumeMorphProgress})`,
-                                    transition: `background-color ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_OVERLAY_EASING}`,
-                                }}
-                                onTouchMove={onVolumeTouchMove}
-                                onTouchEnd={onVolumeTouchEnd}
-                                >
-                                <div
-                                    className={`absolute overflow-hidden ${CONFIG.VOLUME_TUBE_IGNITE_ENABLED ? 'animate-neon-ignite-yellow' : ''}`}
-                                    style={{
-                                        left: currentLeft,
-                                        top: currentTop,
-                                        width: currentWidth,
-                                        height: currentHeight,
-                                        backgroundColor: CONFIG.VOLUME_TUBE_BG_COLOR,
-                                        borderRadius: currentRadius,
-                                        border: CONFIG.VOLUME_TUBE_BORDER_ENABLED 
-                                            ? `${CONFIG.VOLUME_TUBE_BORDER_WIDTH}px solid ${CONFIG.VOLUME_TUBE_BORDER_COLOR}` 
-                                            : 'none',
-                                        boxShadow: CONFIG.VOLUME_TUBE_GLOW_ENABLED 
-                                            ? `0 0 ${CONFIG.VOLUME_TUBE_GLOW_SIZE}px ${CONFIG.VOLUME_TUBE_GLOW_COLOR}` 
-                                            : 'none',
-                                        transition: `left ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}, top ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}, width ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}, height ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}, border-radius ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}`,
-                                    }}
-                                >
-                                    {/* Masque cylindre sur le tube de fond */}
-                                    {CONFIG.VOLUME_CYLINDER_ENABLED && (
-                                        <div 
-                                            className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-row" 
-                                            style={{ 
-                                                borderRadius: currentRadius,
-                                                opacity: volumeMorphProgress,
-                                                transition: `opacity ${CONFIG.VOLUME_CYLINDER_FADE_DURATION}ms ease-out`,
-                                            }}
-                                        >
-                                            {CONFIG.VOLUME_CYLINDER_SLICES.map((opacity, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="flex-1 h-full"
-                                                    style={{
-                                                        backgroundColor: opacity > 0 
-                                                            ? `rgba(255, 255, 255, ${opacity * CONFIG.VOLUME_CYLINDER_INTENSITY})` 
-                                                            : opacity < 0 
-                                                                ? `rgba(0, 0, 0, ${Math.abs(opacity) * CONFIG.VOLUME_CYLINDER_INTENSITY})`
-                                                                : 'transparent'
-                                                    }}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                    <div
-                                        className={`absolute left-0 right-0 bottom-0 ${CONFIG.VOLUME_FILL_IGNITE_ENABLED ? 'animate-neon-ignite-cyan' : ''}`}
-                                        style={{
-                                            height: '100%',
-                                            backgroundColor: CONFIG.VOLUME_FILL_COLOR,
-                                            boxShadow: `0 0 ${CONFIG.VOLUME_FILL_GLOW_SIZE}px ${CONFIG.VOLUME_FILL_GLOW_COLOR}`,
-                                            borderRadius: currentRadius,
-                                            transformOrigin: 'bottom',
-                                            transform: `scaleY(${(volumeMorphProgress < 1 ? fillHeight : volumePreview) / 100}) translateZ(0)`,
-                                            transition: volumeMorphProgress < 1 ? `transform ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}` : 'none',
-                                            willChange: 'transform',
-                                        }}
-                                    >
-                                        {/* Masque cylindre sur le tube cyan */}
-                                        {CONFIG.VOLUME_CYLINDER_ENABLED && (
-                                            <div 
-                                                className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-row" 
-                                                style={{ 
-                                                    opacity: volumeMorphProgress,
-                                                    transition: `opacity ${CONFIG.VOLUME_CYLINDER_FADE_DURATION}ms ease-out`,
-                                                }}
-                                            >
-                                                {CONFIG.VOLUME_CYLINDER_SLICES.map((opacity, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="flex-1 h-full"
-                                                        style={{
-                                                            backgroundColor: opacity > 0 
-                                                                ? `rgba(255, 255, 255, ${opacity * CONFIG.VOLUME_CYLINDER_INTENSITY})` 
-                                                                : opacity < 0 
-                                                                    ? `rgba(0, 0, 0, ${Math.abs(opacity) * CONFIG.VOLUME_CYLINDER_INTENSITY})`
-                                                                    : 'transparent'
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                
-                                {CONFIG.VOLUME_THUMB_ENABLED && (
-                                    <div
-                                        className="absolute rounded-full"
-                                        style={{
-                                            left: '50%',
-                                            transform: 'translateX(-50%)',
-                                            top: thumbY - CONFIG.VOLUME_THUMB_SIZE / 2,
-                                            width: CONFIG.VOLUME_THUMB_SIZE,
-                                            height: CONFIG.VOLUME_THUMB_SIZE,
-                                            backgroundColor: CONFIG.VOLUME_THUMB_COLOR,
-                                            boxShadow: `0 0 ${CONFIG.VOLUME_THUMB_GLOW_SIZE}px ${CONFIG.VOLUME_THUMB_GLOW_COLOR}`,
-                                            opacity: volumeMorphProgress,
-                                            transition: `opacity ${CONFIG.VOLUME_MORPH_DURATION}ms ${CONFIG.VOLUME_MORPH_EASING}`,
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        );
-                    })(), document.body)}
+                        {isPlaying ? (
+                            <Disc3 size={20} className="text-white animate-spin-slow" />
+                        ) : (
+                            <Pause size={14} className="text-gray-400" />
+                        )}
+                    </button>
                 </>
             )}
         </div>
@@ -3978,24 +3834,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           );
         })(), effectivePortalRef.current)}
         
-        {/* Bouton Play/Pause - INDÉPENDANT pour z-index correct */}
-        <button 
-            onClick={() => togglePlay()} 
-            className={`absolute left-1/2 z-30 w-8 h-8 rounded-full flex items-center justify-center shadow-md border border-white transition-colors duration-300 ${isPlaying ? 'bg-pink-500 text-white' : 'bg-white text-gray-400 border-gray-200'}`} 
-            style={{ 
-                transform: 'translateX(-50%)',
-                top: `calc(50% - ${(isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH) / 2}vh - 16px)`
-            }}
-        >
-            {isPlaying ? (
-                <div className="w-5 h-5 flex items-center justify-center animate-spin-slow">
-                    <Disc3 size={20} />
-                </div>
-            ) : (
-                <Pause size={14} />
-            )}
-        </button>
-
         {/* Container scrollable avec mask CSS */}
         <div 
           ref={containerRef} 
@@ -6832,17 +6670,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmType={null}
                         vibeSwipePreview={vibeSwipePreview}
                         onRecenter={triggerRecenter}
-                        volume={volume}
-                        onVolumeTouchStart={handleVolumeTouchStart}
-                        onVolumeTouchMove={handleVolumeTouchMove}
-                        onVolumeTouchEnd={handleVolumeTouchEnd}
-                        isVolumeActive={isVolumeActive}
-                        mainContainerRef={mainContainerRef}
-                        volumeMorphProgress={volumeMorphProgress}
-                        volumePreview={volumePreview}
-                        beaconNeonRef={showFullPlayer ? beaconNeonRef : drawerBeaconRef}
-                        capsuleHeightVh={showFullPlayer ? CONFIG.CAPSULE_HEIGHT_VH : CONFIG.CAPSULE_HEIGHT_MINI_VH}
-                        volumeBeaconRect={volumeBeaconRect}
+                        isPlaying={isPlaying}
+                        onTogglePlay={() => setIsPlaying(!isPlaying)}
                      />
                     )}
                     
