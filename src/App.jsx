@@ -148,7 +148,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // VIBE CARDS (Dashboard)
     // ══════════════════════════════════════════════════════════════════════════
-    VIBECARD_HEIGHT_VH: 9,            // Hauteur des cartes (% de la hauteur écran)
+    VIBECARD_HEIGHT_VH: UNIFIED_CONFIG.VIBECARD_HEIGHT_VH,  // Hauteur des cartes (depuis Config.jsx)
+    VIBECARD_BUILDER_HEIGHT_VH: UNIFIED_CONFIG.VIBECARD_BUILDER_HEIGHT_VH,  // Hauteur carte VibeBuilder (depuis Config.jsx)
     VIBECARD_GAP_VH: 1.2,                 // Espacement entre les cartes (% de la hauteur écran)
     VIBECARD_STAGGER_DELAY: 80,           // Délai entre chaque carte (ms)
     VIBECARD_SLIDE_DURATION: 400,         // Durée de l'animation slide (ms)
@@ -7418,8 +7419,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onPlayNext={addToPlayNext}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
-                            height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
-                            heightPx: (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.VIBECARD_HEIGHT_VH / 100,
+                            height: `${CONFIG.VIBECARD_BUILDER_HEIGHT_VH}vh`,
+                            heightPx: (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.VIBECARD_BUILDER_HEIGHT_VH / 100,
                             gap: CONFIG.VIBECARD_GAP_VH,
                             liquidGlassBlur: CONFIG.LIQUID_GLASS_BLUR,
                             marqueeSpeed: CONFIG.MARQUEE_SPEED,
