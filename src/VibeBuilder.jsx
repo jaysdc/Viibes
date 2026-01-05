@@ -1805,7 +1805,8 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                             <Search style={{ width: CONFIG.HEADER_SEARCH_ICON_SIZE, height: CONFIG.HEADER_SEARCH_ICON_SIZE }} className="text-gray-400 mr-3" />
                                             <input
                                                 autoFocus
-                                                type="text"
+                                                type="search"
+                                                inputMode="search"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 placeholder=""
@@ -1814,7 +1815,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                                 autoCorrect="off"
                                                 autoCapitalize="off"
                                                 autoComplete="off"
-                                                enterKeyHint="done"
+                                                enterKeyHint="search"
                                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                             />
                                         </div>
@@ -2117,8 +2118,8 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                 </div>
                                 
                                 {/* Compteur dispo/pas dispo */}
-                                <span 
-                                    className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0" 
+                                <span
+                                    className="text-xs font-normal text-white/70 flex items-center gap-1.5 flex-shrink-0"
                                     style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
                                 >
                                     <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>

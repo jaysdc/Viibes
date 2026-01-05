@@ -1008,29 +1008,29 @@ const styles = `
     animation: pulse-pill-red 0.6s ease-in-out infinite;
   }
 
-  /* Animation ignite pour le curseur de confirmation pill - lime (kill vibe) */
+  /* Animation ignite pour KILL VIBE - Afterburner (jaune #facc15 → rouge #ef4444) */
   @keyframes ignite-pill-lime {
-    0% { box-shadow: 0 0 10px rgba(132, 204, 22, 0.4); }
-    15% { box-shadow: 0 0 25px rgba(132, 204, 22, 1), 0 0 50px rgba(132, 204, 22, 0.8); }
-    25% { box-shadow: 0 0 15px rgba(132, 204, 22, 0.5); }
-    40% { box-shadow: 0 0 35px rgba(132, 204, 22, 1), 0 0 70px rgba(132, 204, 22, 0.9); }
-    55% { box-shadow: 0 0 20px rgba(132, 204, 22, 0.6); }
-    70% { box-shadow: 0 0 30px rgba(132, 204, 22, 0.9), 0 0 60px rgba(132, 204, 22, 0.7); }
-    100% { box-shadow: 0 0 25px rgba(132, 204, 22, 0.7), 0 0 50px rgba(132, 204, 22, 0.5); }
+    0% { box-shadow: 0 0 10px rgba(250, 204, 21, 0.4), 0 0 20px rgba(239, 68, 68, 0.2); }
+    15% { box-shadow: 0 0 25px rgba(250, 204, 21, 1), 0 0 50px rgba(239, 68, 68, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.5), 0 0 30px rgba(239, 68, 68, 0.4); }
+    40% { box-shadow: 0 0 35px rgba(250, 204, 21, 1), 0 0 70px rgba(239, 68, 68, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.6), 0 0 40px rgba(239, 68, 68, 0.5); }
+    70% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.9), 0 0 60px rgba(239, 68, 68, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(250, 204, 21, 0.7), 0 0 50px rgba(239, 68, 68, 0.5); }
   }
   .animate-ignite-pill-lime {
     animation: ignite-pill-lime 0.5s ease-out forwards;
   }
 
-  /* Animation ignite pour le curseur de confirmation pill - red (nuke) */
+  /* Animation ignite pour NUKE ALL - Lava Flow (rose #f43f5e → rouge foncé #b91c1c) */
   @keyframes ignite-pill-red {
-    0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
-    15% { box-shadow: 0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8); }
-    25% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
-    40% { box-shadow: 0 0 35px rgba(239, 68, 68, 1), 0 0 70px rgba(239, 68, 68, 0.9); }
-    55% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
-    70% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.9), 0 0 60px rgba(239, 68, 68, 0.7); }
-    100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.7), 0 0 50px rgba(239, 68, 68, 0.5); }
+    0% { box-shadow: 0 0 10px rgba(244, 63, 94, 0.4), 0 0 20px rgba(185, 28, 28, 0.2); }
+    15% { box-shadow: 0 0 25px rgba(244, 63, 94, 1), 0 0 50px rgba(185, 28, 28, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), 0 0 30px rgba(185, 28, 28, 0.4); }
+    40% { box-shadow: 0 0 35px rgba(244, 63, 94, 1), 0 0 70px rgba(185, 28, 28, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.6), 0 0 40px rgba(185, 28, 28, 0.5); }
+    70% { box-shadow: 0 0 30px rgba(244, 63, 94, 0.9), 0 0 60px rgba(185, 28, 28, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.5); }
   }
   .animate-ignite-pill-red {
     animation: ignite-pill-red 0.5s ease-out forwards;
@@ -6277,7 +6277,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                         <input
                             autoFocus
-                            type="text"
+                            type="search"
+                            inputMode="search"
                             value={librarySearchQuery}
                             onChange={(e) => setLibrarySearchQuery(e.target.value)}
                             placeholder=""
@@ -6286,7 +6287,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             autoCorrect="off"
                             autoCapitalize="off"
                             autoComplete="off"
-                            enterKeyHint="done"
+                            enterKeyHint="search"
                             onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                         />
                     </div>
@@ -6535,7 +6536,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                 </>
             )}
-          </div>
 
             {/* Bouton VIBE THIS - Dans le header sticky, sous la search bar */}
             {isLibrarySearching && librarySearchQuery && librarySearchResults.length > 0 && (
@@ -6545,7 +6545,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const step = 100 / (gradientColors.length - 1);
                         const gradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
                         return (
-                            <button 
+                            <button
                                 onClick={() => {
                                     if (currentSong) {
                                         setPendingVibe('__SEARCH_RESULTS__');
@@ -6567,7 +6567,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     })()}
                 </div>
             )}
-            
+
+          </div>
+
             </div>
         {/* FIN HEADER */}
 
@@ -7261,7 +7263,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                                     <input
                                         autoFocus
-                                        type="text"
+                                        type="search"
+                                        inputMode="search"
                                         value={playerSearchQuery}
                                         onChange={(e) => setPlayerSearchQuery(e.target.value)}
                                         placeholder=""
@@ -7270,7 +7273,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         autoCorrect="off"
                                         autoCapitalize="off"
                                         autoComplete="off"
-                                        enterKeyHint="done"
+                                        enterKeyHint="search"
                                         onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                     />
                                 </div>
