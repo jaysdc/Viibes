@@ -1082,10 +1082,10 @@ const DropboxBrowser = ({
     const dialogOpacity = !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3);
     const browseOpacity = phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0;
     const debugInfo = {
-        sourceRect: sourceRect ? `L:${Math.round(sourceRect.left)} T:${Math.round(sourceRect.top)} W:${Math.round(sourceRect.width)} H:${Math.round(sourceRect.height)}` : 'NULL',
-        morphStyles: `L:${Math.round(morphStyles.left || 0)} T:${Math.round(morphStyles.top || 0)} W:${typeof morphStyles.width === 'number' ? Math.round(morphStyles.width) : morphStyles.width} H:${typeof morphStyles.height === 'number' ? Math.round(morphStyles.height) : morphStyles.height}`,
-        opacities: `dlg:${dialogOpacity.toFixed(2)} browse:${browseOpacity}`,
-        phase: `${phase} | transition:${phaseTransition || 'none'}`,
+        line1: `fade:${isFadingOut ? 'Y' : 'N'} | backdrop:${backdropVisible ? 'Y' : 'N'} | morph:${morphProgress.toFixed(2)}`,
+        line2: `phase:${phase} | trans:${phaseTransition || 'none'}`,
+        line3: `dlgOp:${dialogOpacity.toFixed(2)} | browseOp:${browseOpacity}`,
+        line4: `srcRect:${sourceRect ? 'SET' : 'NULL'} | dlgDim:${dialogDimensions ? 'SET' : 'NULL'}`,
     };
 
     return (
@@ -1105,10 +1105,10 @@ const DropboxBrowser = ({
                 fontSize: '10px',
                 fontFamily: 'monospace',
             }}>
-                <div>srcRect: {debugInfo.sourceRect}</div>
-                <div>morphStyles: {debugInfo.morphStyles}</div>
-                <div>opacities: {debugInfo.opacities}</div>
-                <div>phase: {debugInfo.phase}</div>
+                <div>{debugInfo.line1}</div>
+                <div>{debugInfo.line2}</div>
+                <div>{debugInfo.line3}</div>
+                <div>{debugInfo.line4}</div>
             </div>
             <div
                 className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
