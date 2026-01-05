@@ -138,8 +138,8 @@ const DropboxBrowser = ({
     getGradientByIndex,
     getGradientName,
 }) => {
-    // DEBUG: Force sourceRect to null to test if it's the problem
-    const sourceRect = null;
+    // Utiliser le vrai sourceRect
+    const sourceRect = _sourceRect;
 
     // États
     const [currentPath, setCurrentPath] = useState('');
