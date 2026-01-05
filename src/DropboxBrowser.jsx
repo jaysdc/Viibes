@@ -1075,9 +1075,36 @@ const DropboxBrowser = ({
 
     const morphStyles = getMorphStyles();
 
+    // DEBUG OVERLAY
+    const debugInfo = {
+        sourceRect: sourceRect ? `L:${Math.round(sourceRect.left)} T:${Math.round(sourceRect.top)} W:${Math.round(sourceRect.width)} H:${Math.round(sourceRect.height)}` : 'NULL',
+        dialogDimensions: dialogDimensions ? `OK` : 'NULL',
+        morphProgress: morphProgress.toFixed(2),
+        backdropVisible: backdropVisible ? 'Y' : 'N',
+    };
+
     return (
         <>
             <style>{dropboxStyles}</style>
+            {/* DEBUG OVERLAY */}
+            <div style={{
+                position: 'fixed',
+                top: 10,
+                left: 10,
+                right: 10,
+                background: 'rgba(255,0,0,0.9)',
+                color: 'white',
+                padding: '8px',
+                borderRadius: '8px',
+                zIndex: 99999,
+                fontSize: '10px',
+                fontFamily: 'monospace',
+            }}>
+                <div>srcRect: {debugInfo.sourceRect}</div>
+                <div>dlgDim: {debugInfo.dialogDimensions}</div>
+                <div>morph: {debugInfo.morphProgress}</div>
+                <div>backdrop: {debugInfo.backdropVisible}</div>
+            </div>
             <div
                 className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
                 style={{
