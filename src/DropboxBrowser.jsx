@@ -131,13 +131,16 @@ const DropboxBrowser = ({
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
-    sourceRect, // Position du bouton source pour l'animation morph
+    sourceRect: _sourceRect, // Position du bouton source pour l'animation morph
     // Props pour la phase import
     playlists,
     vibeColorIndices,
     getGradientByIndex,
     getGradientName,
 }) => {
+    // DEBUG: Force sourceRect to null to test if it's the problem
+    const sourceRect = null;
+
     // États
     const [currentPath, setCurrentPath] = useState('');
     const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
