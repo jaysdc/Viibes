@@ -71,27 +71,27 @@ export const UNIFIED_CONFIG = {
     ICON_SIZE_PERCENT: 50,              // Taille des icônes = 50% de la hauteur capsule
 
     // Roue du lecteur - hauteur des éléments (% hauteur écran)
-    WHEEL_ITEM_HEIGHT_MAIN_VH: 6.5,     // Taille élément roue lecteur principal
-    WHEEL_ITEM_HEIGHT_MINI_VH: 6.5,     // Taille élément roue lecteur dashboard
+    WHEEL_ITEM_HEIGHT_MAIN_VH: 7.0,     // Taille élément roue lecteur principal
+    WHEEL_ITEM_HEIGHT_MINI_VH: 7.0,     // Taille élément roue lecteur dashboard
 
     // Capsules beacon et contrôle (hauteur en % de l'écran)
-    PLAYER_CAPSULE_HEIGHT_VH: 6.5,      // Hauteur capsule beacon + capsule de lecture (unifié)
+    PLAYER_CAPSULE_HEIGHT_VH: 7.0,      // Hauteur capsule beacon + capsule de lecture (unifié)
 
     // LECTEUR PRINCIPAL : taille texte (px)
     WHEEL_TITLE_SIZE_MAIN: 18,          // Taille titre chanson sélectionnée (centre roue)
     WHEEL_ARTIST_SIZE_MAIN: 14,         // Taille artiste chanson sélectionnée (centre roue)
     WHEEL_TITLE_SIZE_MAIN_OTHER: 16,    // Taille titre autres chansons (hors centre)
     WHEEL_ARTIST_SIZE_MAIN_OTHER: 12,   // Taille artiste autres chansons (hors centre)
-    CAPSULE_TITLE_SIZE_MAIN: 19,        // Taille titre capsule cyan (mode principal)
-    CAPSULE_ARTIST_SIZE_MAIN: 15,       // Taille artiste capsule cyan (mode principal)
+    CAPSULE_TITLE_SIZE_MAIN: 20,        // Taille titre capsule cyan (mode principal)
+    CAPSULE_ARTIST_SIZE_MAIN: 16,       // Taille artiste capsule cyan (mode principal)
 
     // LECTEUR DASHBOARD : taille texte (px)
     WHEEL_TITLE_SIZE_MINI: 16,          // Taille titre chanson sélectionnée (centre roue)
     WHEEL_ARTIST_SIZE_MINI: 13,         // Taille artiste chanson sélectionnée (centre roue)
     WHEEL_TITLE_SIZE_MINI_OTHER: 14,    // Taille titre autres chansons (hors centre)
     WHEEL_ARTIST_SIZE_MINI_OTHER: 11,    // Taille artiste autres chansons (hors centre)
-    CAPSULE_TITLE_SIZE_DASHBOARD: 17,   // Taille titre capsule cyan (mode dashboard)
-    CAPSULE_ARTIST_SIZE_DASHBOARD: 14,  // Taille artiste capsule cyan (mode dashboard)
+    CAPSULE_TITLE_SIZE_DASHBOARD: 18,   // Taille titre capsule cyan (mode dashboard)
+    CAPSULE_ARTIST_SIZE_DASHBOARD: 15,  // Taille artiste capsule cyan (mode dashboard)
 
     // Titres (espace entre safe area iOS et le titre)
     TITLE_MARGIN_TOP: '1rem',           // Marge au-dessus du titre (après la safe area)
