@@ -1008,7 +1008,7 @@ const DropboxBrowser = ({
         }
     }, [loading, pendingScrollRestore]);
 
-    if (!isVisible) return null;
+    // NOTE: Le return null est maintenant juste avant le JSX, plus bas
 
     const isAtRoot = !currentPath;
     const canImport = !isAtRoot && !loading && !scanning;
@@ -1082,42 +1082,26 @@ const DropboxBrowser = ({
     const dialogOpacity = !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3);
     const browseOpacity = phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0;
     const debugInfo = {
-        line1: `fade:${isFadingOut ? 'Y' : 'N'} | backdrop:${backdropVisible ? 'Y' : 'N'} | morph:${morphProgress.toFixed(2)}`,
-        line2: `phase:${phase} | trans:${phaseTransition || 'none'}`,
+        line1: `W:${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw H:${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
+        line2: `bg:${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR || 'UNDEF'}`,
         line3: `files:${files.length} | loading:${loading ? 'Y' : 'N'}`,
-        line4: `isVisible:${isVisible ? 'Y' : 'N'} | vh:${window.innerHeight}`,
+        line4: `dialogRef:${dialogRef.current ? 'SET' : 'NULL'}`,
     };
+
+    // DEBUG: Version ultra simplifiée sans animations
+    if (!isVisible) return null;
 
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* DEBUG OVERLAY */}
-            <div style={{
-                position: 'fixed',
-                top: 10,
-                left: 10,
-                right: 10,
-                background: 'rgba(255,0,0,0.9)',
-                color: 'white',
-                padding: '8px',
-                borderRadius: '8px',
-                zIndex: 99999,
-                fontSize: '10px',
-                fontFamily: 'monospace',
-            }}>
-                <div>{debugInfo.line1}</div>
-                <div>{debugInfo.line2}</div>
-                <div>{debugInfo.line3}</div>
-                <div>{debugInfo.line4}</div>
-            </div>
+            {/* DEBUG: Backdrop simple */}
             <div
-                className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
+                className="fixed inset-0 z-[9999] flex items-center justify-center"
                 style={{
-                    backgroundColor: backdropVisible ? 'rgba(0, 0, 0, 0.85)' : 'transparent',
-                    backdropFilter: backdropVisible ? 'blur(8px)' : 'none',
-                    transition: `background-color ${CONFIG.MORPH_DURATION}ms, backdrop-filter ${CONFIG.MORPH_DURATION}ms`,
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    backdropFilter: 'blur(8px)',
                 }}
-                onClick={(e) => { if (e.target === e.currentTarget && !closingButton && morphProgress === 1) handleClose(); }}
+                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
                 {/* Dialog principal - DEBUG: forced visible */}
                 <div
