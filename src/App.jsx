@@ -547,7 +547,7 @@ const CONFIG = {
     // LIQUID GLASS (Effet bande horizontale)
     // ══════════════════════════════════════════════════════════════════════════
     LIQUID_GLASS_BLUR: 12,                // Blur de la capsule liquid glass des VibeCards
-    VIBECARD_MIN_OPACITY: 0.4,            // Opacité minimale d'une carte (quand 0 morceaux dispo)
+    VIBECARD_MIN_OPACITY: 0.3,            // Opacité minimale d'une carte (quand 0 morceaux dispo)
     VIBECARD_OPACITY_GRADIENT_WIDTH: 13,  // Largeur du dégradé d'opacité (% de la largeur de la carte)
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -728,19 +728,20 @@ const CONFIG = {
 
 // --- 1. STYLE CSS ---
 const styles = `
-  /* Orientation lock - bloque le mode paysage (TEMPORAIREMENT DÉSACTIVÉ)
+  /* Orientation lock - bloque le mode paysage */
   @media screen and (orientation: landscape) {
     .orientation-lock-overlay {
       display: flex !important;
     }
   }
-  */
 
   .orientation-lock-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: #000;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 99999;
     justify-content: center;
     align-items: center;

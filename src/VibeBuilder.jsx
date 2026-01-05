@@ -2014,10 +2014,10 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                             
                             {/* Bordure mobile pendant le swipe (pointillée si dégradé déjà utilisé) */}
                             {cardSwipeOffset !== 0 && (
-                                <div 
+                                <div
                                     className="absolute inset-0 pointer-events-none rounded-[10px]"
-                                    style={{ 
-                                        transform: `translateX(${cardSwipeOffset * 0.5}px)`,
+                                    style={{
+                                        transform: `translateX(${cardSwipeOffset}px)`,
                                         transition: 'none',
                                         border: `${CONFIG.DUPLICATE_BORDER_WIDTH}px ${isColorAlreadyUsed && !allColorsUsed ? 'dashed' : 'solid'} rgba(255,255,255,${CONFIG.DUPLICATE_BORDER_OPACITY})`
                                     }}
@@ -2058,10 +2058,10 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                             </div>
                             
                             {/* Capsule Liquid Glass - IDENTIQUE à App.txt */}
-                            <div 
+                            <div
                                 data-capsule
                                 className={`absolute rounded-full border shadow-lg flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
-                                style={{ 
+                                style={{
                                     paddingLeft: CONFIG.CAPSULE_PADDING_X,
                                     paddingRight: CONFIG.CAPSULE_PADDING_X,
                                     paddingTop: CONFIG.CAPSULE_PADDING_Y,
@@ -2072,7 +2072,8 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                     backdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
                                     WebkitBackdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
                                     background: isEditingName ? 'rgba(255,255,255,0.15)' : 'transparent',
-                                    transition: 'background 0.2s, border-color 0.2s'
+                                    transition: 'background 0.2s, border-color 0.2s',
+                                    transform: `translateZ(${displayGradientIndex * 0.001}px)`
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2086,21 +2087,25 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                         className={`whitespace-nowrap ${isNameLong && !isEditingName ? 'animate-marquee' : ''}`}
                                         style={{ '--marquee-speed': `${vibeCardConfig?.marqueeSpeed || 8}s` }}
                                     >
-                                        <input 
+                                        <input
                                             ref={nameInputRef}
-                                            type="text" 
-                                            value={vibeName} 
+                                            type="text"
+                                            value={vibeName}
                                             onChange={(e) => { setVibeName(e.target.value); setNameWasEdited(true); }}
                                             onFocus={() => setIsEditingName(true)}
                                             onBlur={() => setIsEditingName(false)}
-                                            readOnly={!isEditingName}
-                                            className={`bg-transparent border-none outline-none font-black leading-tight text-white placeholder-white/50 ${isEditingName ? '' : 'pointer-events-none'}`}
-                                            style={{ 
+                                            onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur(); } }}
+                                            className="bg-transparent border-none outline-none font-black leading-tight text-white"
+                                            style={{
                                                 fontSize: `${vibeCardConfig?.capsuleFontSize || 1.125}rem`,
                                                 textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                                                 width: `${Math.max(vibeName.length * CONFIG.NAME_WIDTH_FACTOR, parseFloat(CONFIG.NAME_MIN_WIDTH))}rem`
                                             }}
-                                            placeholder="Nom..."
+                                            spellCheck={false}
+                                            autoCorrect="off"
+                                            autoCapitalize="off"
+                                            autoComplete="off"
+                                            enterKeyHint="done"
                                         />
                                     </div>
                                 </div>
