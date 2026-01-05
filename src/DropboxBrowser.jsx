@@ -1098,23 +1098,19 @@ const DropboxBrowser = ({
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
-                {/* Dialog principal - DEBUG: forced visible */}
+                {/* Dialog principal - avec animation morph */}
                 <div
                     ref={dialogRef}
                     className="flex flex-col overflow-hidden"
                     style={{
-                        // DEBUG: Force simple centered display, ignore morph
-                        position: 'relative',
-                        width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
-                        height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
-                        borderRadius: '1rem',
+                        ...morphStyles,
                         paddingTop: '0.75rem',
                         paddingBottom: '0.75rem',
                         paddingLeft: 0,
                         paddingRight: 0,
                         background: SMARTIMPORT_CONFIG.DIALOG_BG_COLOR,
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-                        opacity: 1, // DEBUG: always visible
+                        opacity: dialogOpacity,
                     }}
                 >
                     {/* PHASE BROWSE - Navigation Dropbox - DEBUG: forced visible */}
