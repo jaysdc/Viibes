@@ -1040,6 +1040,24 @@ const DropboxBrowser = ({
     return (
         <>
             <style>{dropboxStyles}</style>
+            {/* DEBUG OVERLAY - affiche les coordonnées de sourceRect */}
+            <div style={{
+                position: 'fixed',
+                bottom: 10,
+                left: 10,
+                right: 10,
+                background: 'rgba(255,0,0,0.9)',
+                color: 'white',
+                padding: '8px',
+                borderRadius: '8px',
+                zIndex: 99999,
+                fontSize: '12px',
+                fontFamily: 'monospace',
+            }}>
+                <div>sourceRect: {sourceRect ? `left:${sourceRect.left.toFixed(0)} top:${sourceRect.top.toFixed(0)} w:${sourceRect.width.toFixed(0)} h:${sourceRect.height.toFixed(0)}` : 'NULL'}</div>
+                <div>storedSourceRect: {storedSourceRect ? `left:${storedSourceRect.left.toFixed(0)} top:${storedSourceRect.top.toFixed(0)} w:${storedSourceRect.width.toFixed(0)} h:${storedSourceRect.height.toFixed(0)}` : 'NULL'}</div>
+                <div>morphProgress: {morphProgress} | backdropVisible: {backdropVisible ? 'Y' : 'N'}</div>
+            </div>
             {/* Backdrop */}
             <div
                 className="fixed inset-0 z-[9999] flex items-center justify-center"
