@@ -6509,49 +6509,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     </div>
                 )}
 
-                {/* DEBUG: Rectangle montrant où le bouton Dropbox DEVRAIT être */}
-                {(showImportMenu || importOverlayAnim !== 'none') && (() => {
-                    // Recalculer le rect pour le debug
-                    const cssToPixels = (value) => {
-                        if (typeof value === 'string') {
-                            const div = document.createElement('div');
-                            div.style.position = 'fixed';
-                            div.style.visibility = 'hidden';
-                            div.style.height = value;
-                            document.body.appendChild(div);
-                            const px = div.getBoundingClientRect().height;
-                            document.body.removeChild(div);
-                            return px;
-                        }
-                        return value * 16;
-                    };
-                    const safeAreaTop = cssToPixels('env(safe-area-inset-top, 0px)');
-                    const screenWidth = window.innerWidth;
-                    const titleMarginTop = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP);
-                    const logoHeight = CONFIG.HEADER_LOGO_SIZE * 3 * 0.4;
-                    const titleMarginBottom = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM);
-                    const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
-                    const paddingX = cssToPixels(CONFIG.HEADER_PADDING_X + 'rem');
-                    const gap = cssToPixels(CONFIG.HEADER_BUTTONS_GAP);
-                    const availableWidth = screenWidth - (2 * paddingX);
-                    const buttonWidth = (availableWidth - (2 * gap)) / 3;
-                    const left = paddingX + buttonWidth + gap;
-                    const height = cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT);
-
-                    return (
-                        <div style={{
-                            position: 'fixed',
-                            left: left,
-                            top: top,
-                            width: buttonWidth,
-                            height: height,
-                            backgroundColor: 'yellow',
-                            borderRadius: height / 2,
-                            pointerEvents: 'none',
-                            zIndex: 99999,
-                        }} />
-                    );
-                })()}
                 </>
             )}
           </div>

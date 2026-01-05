@@ -1062,23 +1062,6 @@ const DropboxBrowser = ({
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* DEBUG OVERLAY - affiche les coordonnées */}
-            <div style={{
-                position: 'fixed',
-                bottom: 10,
-                left: 10,
-                right: 10,
-                background: 'rgba(255,0,0,0.9)',
-                color: 'white',
-                padding: '8px',
-                borderRadius: '8px',
-                zIndex: 99999,
-                fontSize: '12px',
-                fontFamily: 'monospace',
-            }}>
-                <div>dropboxButtonRect: left:{dropboxButtonRect.left.toFixed(0)} top:{dropboxButtonRect.top.toFixed(0)} w:{dropboxButtonRect.width.toFixed(0)} h:{dropboxButtonRect.height.toFixed(0)}</div>
-                <div>morphProgress: {morphProgress} | backdropVisible: {backdropVisible ? 'Y' : 'N'}</div>
-            </div>
             {/* Backdrop */}
             <div
                 className="fixed inset-0 z-[9999] flex items-center justify-center"
@@ -1107,9 +1090,10 @@ const DropboxBrowser = ({
                     <div
                         className="absolute inset-0 flex flex-col"
                         style={{
-                            opacity: 1,
-                            transform: 'translateX(0)',
-                            pointerEvents: 'auto',
+                            opacity: phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0,
+                            transform: phase === 'browse' ? (phaseTransition === 'to-import' ? 'translateX(-20px)' : 'translateX(0)') : 'translateX(-20px)',
+                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
+                            pointerEvents: phase === 'browse' ? 'auto' : 'none',
                             paddingTop: '0.75rem',
                             paddingBottom: '0.75rem',
                         }}
