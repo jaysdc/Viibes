@@ -138,7 +138,6 @@ const DropboxBrowser = ({
     getGradientByIndex,
     getGradientName,
 }) => {
-
     // États
     const [currentPath, setCurrentPath] = useState('');
     const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
@@ -841,9 +840,41 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // DEBUG: Affichage direct sans animation
-            setMorphProgress(1);
-            setBackdropVisible(true);
+            // Lancer l'animation morph - on utilise un délai minimal pour s'assurer
+            // que les états sont bien réinitialisés avant de démarrer l'animation
+            // Cela évite le bug où seul le blur s'affiche
+            setMorphProgress(0);
+            setBackdropVisible(false);
+
+            // Petit délai pour forcer React à flush les états avant l'animation
+            requestAnimationFrame(() => {
+                if (sourceRect) {
+                    setBackdropVisible(true);
+
+                    requestAnimationFrame(() => {
+                        const startTime = performance.now();
+                        const animate = (currentTime) => {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
+                            // Easing cubic ease-in-out
+                            const eased = progress < 0.5
+                                ? 4 * progress * progress * progress
+                                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                            setMorphProgress(eased);
+                            if (progress < 1) {
+                                animationRef.current = requestAnimationFrame(animate);
+                            } else {
+                                animationRef.current = null;
+                            }
+                        };
+                        animationRef.current = requestAnimationFrame(animate);
+                    });
+                } else {
+                    // Pas de sourceRect, affichage direct
+                    setMorphProgress(1);
+                    setBackdropVisible(true);
+                }
+            });
         } else {
             // Reset quand on ferme
             if (animationRef.current) {
@@ -974,7 +1005,7 @@ const DropboxBrowser = ({
         }
     }, [loading, pendingScrollRestore]);
 
-    // NOTE: Le return null est maintenant juste avant le JSX, plus bas
+    if (!isVisible) return null;
 
     const isAtRoot = !currentPath;
     const canImport = !isAtRoot && !loading && !scanning;
@@ -986,13 +1017,27 @@ const DropboxBrowser = ({
 
     // Calculer les dimensions interpolées pour le morph
     const getMorphStyles = () => {
-        if (!sourceRect || !dialogDimensions) {
-            // Pas d'animation morph, retourner les styles normaux (en % de l'écran)
+        if (!sourceRect) {
+            // Pas de sourceRect = pas d'animation morph, affichage centré
             return {
                 position: 'relative',
                 width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
                 height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
                 borderRadius: '1rem',
+            };
+        }
+
+        if (!dialogDimensions) {
+            // sourceRect existe mais dialogDimensions pas encore calculé
+            // Retourner le dialog à la position du bouton source (invisible, en attente)
+            return {
+                position: 'fixed',
+                left: sourceRect.left,
+                top: sourceRect.top,
+                width: sourceRect.width,
+                height: sourceRect.height,
+                borderRadius: sourceRect.height / 2,
+                opacity: 0, // Invisible jusqu'à ce que l'animation commence
             };
         }
 
@@ -1029,8 +1074,6 @@ const DropboxBrowser = ({
     };
 
     const morphStyles = getMorphStyles();
-
-    if (!isVisible) return null;
 
     return (
         <>
