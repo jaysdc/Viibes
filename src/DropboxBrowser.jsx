@@ -1089,14 +1089,15 @@ const DropboxBrowser = ({
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* Backdrop - test avec backdropVisible */}
+            {/* Backdrop */}
             <div
-                className="fixed inset-0 z-[9999] flex items-center justify-center"
+                className={`fixed inset-0 z-[9999] ${isFadingOut ? 'dropbox-fade-out' : ''} ${!sourceRect ? 'flex items-center justify-center' : ''}`}
                 style={{
                     backgroundColor: backdropVisible ? 'rgba(0, 0, 0, 0.85)' : 'transparent',
                     backdropFilter: backdropVisible ? 'blur(8px)' : 'none',
+                    transition: `background-color ${CONFIG.MORPH_DURATION}ms, backdrop-filter ${CONFIG.MORPH_DURATION}ms`,
                 }}
-                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+                onClick={(e) => { if (e.target === e.currentTarget && !closingButton && morphProgress === 1) handleClose(); }}
             >
                 {/* Dialog principal - avec animation morph */}
                 <div
@@ -1113,13 +1114,14 @@ const DropboxBrowser = ({
                         opacity: dialogOpacity,
                     }}
                 >
-                    {/* PHASE BROWSE - Navigation Dropbox - DEBUG: forced visible */}
+                    {/* PHASE BROWSE - Navigation Dropbox */}
                     <div
                         className="absolute inset-0 flex flex-col"
                         style={{
-                            opacity: 1, // DEBUG: always visible
-                            transform: 'translateX(0)',
-                            pointerEvents: 'auto',
+                            opacity: browseOpacity,
+                            transform: `translateX(${phaseTransition === 'to-import' ? '-100%' : '0'})`,
+                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
+                            pointerEvents: phase === 'browse' && !phaseTransition ? 'auto' : 'none',
                             paddingTop: '0.75rem',
                             paddingBottom: '0.75rem',
                         }}
