@@ -1066,7 +1066,7 @@ const DropboxBrowser = ({
             <div
                 className="fixed inset-0 z-[9999] flex items-center justify-center"
                 style={{
-                    backgroundColor: backdropVisible ? 'rgba(0, 0, 0, 0.85)' : 'transparent',
+                    backgroundColor: backdropVisible ? 'rgba(0, 0, 0, 0)' : 'transparent',
                     backdropFilter: backdropVisible ? 'blur(8px)' : 'none',
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -1403,7 +1403,7 @@ const DropboxBrowser = ({
                                 {/* Boutons Import */}
                                 <div className="relative" style={{ flexShrink: 0, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
                                     {swipePreview && (
-                                        <div className="absolute inset-0 rounded-full z-20 flex items-center justify-center" style={{ background: swipePreview.gradient, boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
+                                        <div className="absolute rounded-full z-20 flex items-center justify-center" style={{ left: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, right: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, top: 0, bottom: 0, background: swipePreview.gradient, boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
                                             <div className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                                 <ChevronLeft size={16} />
                                                 <span>{swipePreview.gradientName}</span>

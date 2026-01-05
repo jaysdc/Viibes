@@ -4564,12 +4564,20 @@ const vibeSearchResults = () => {
     // Nom de la vibe = titre de la première chanson (avant mélange)
     const vibeName = songsToPlay[0].artist;
 
-    // Créer la carte Vibe
+    // Créer la carte Vibe avec nom unique
     const vibeSongs = songsToPlay.map(s => ({...s, type: 'vibe'}));
-    setPlaylists(prev => ({ ...prev, [vibeName]: vibeSongs }));
+    let finalVibeName = vibeName;
+    setPlaylists(prev => {
+        let counter = 2;
+        while (prev[finalVibeName] !== undefined) {
+            finalVibeName = `${vibeName} (${counter})`;
+            counter++;
+        }
+        return { ...prev, [finalVibeName]: vibeSongs };
+    });
 
     // Attribuer le dégradé choisi à cette nouvelle vibe
-    setVibeColorIndices(prev => ({ ...prev, [vibeName]: vibeTheseGradientIndex }));
+    setVibeColorIndices(prev => ({ ...prev, [finalVibeName]: vibeTheseGradientIndex }));
 
     // Mélanger
     for (let i = songsToPlay.length - 1; i > 0; i--) {
@@ -6158,15 +6166,23 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     }
 };
   const triggerRecenter = () => { setScrollTrigger(prev => prev + 1); };
-  const saveNewVibe = (name, songs) => { 
-    const vibeSongs = songs.map(s => ({...s, type: 'vibe'})); 
-    setPlaylists(prev => ({ ...prev, [name]: vibeSongs })); 
+  const saveNewVibe = (name, songs) => {
+    const vibeSongs = songs.map(s => ({...s, type: 'vibe'}));
+    let finalName = name;
+    setPlaylists(prev => {
+      let counter = 2;
+      while (prev[finalName] !== undefined) {
+        finalName = `${name} (${counter})`;
+        counter++;
+      }
+      return { ...prev, [finalName]: vibeSongs };
+    });
     // Attribuer une couleur unique si cette vibe n'en a pas encore
     setVibeColorIndices(prev => {
-      if (prev[name] === undefined) {
+      if (prev[finalName] === undefined) {
         initializeGradientUsage(null);
         Object.values(prev).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
-        return { ...prev, [name]: getNextAvailableGradientIndex() };
+        return { ...prev, [finalName]: getNextAvailableGradientIndex() };
       }
       return prev;
     });
@@ -6861,31 +6877,39 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const colorIndex = folderGradients?.[folderName] ?? 0;
                     const normalizedIndex = ((colorIndex % 20) + 20) % 20;
 
-                    // Créer ou mettre à jour la vibe avec le bon format pour Dropbox
-                    setPlaylists(prev => ({
-                        ...prev,
-                        [folderName]: files.map(f => {
-                            const fileName = f.name || f;
-                            const nameWithoutExt = fileName.replace(/\.mp3$/i, '');
-                            const parts = nameWithoutExt.split(' - ');
-                            const title = parts.length > 1 ? parts.slice(1).join(' - ') : nameWithoutExt;
-                            const artist = parts.length > 1 ? parts[0] : '';
-                            return {
-                                id: `dropbox-${f.path_lower || fileName}-${Date.now()}`,
-                                title: title,
-                                artist: artist,
-                                playCount: 0,
-                                file: null,
-                                dropboxPath: f.path_lower,
-                                fileSignature: `dropbox:${f.path_lower}:${f.size || 0}`,
-                                type: 'dropbox'
-                            };
-                        })
-                    }));
+                    // Créer la vibe avec nom unique (évite d'écraser une vibe existante)
+                    let finalName = folderName;
+                    setPlaylists(prev => {
+                        let counter = 2;
+                        while (prev[finalName] !== undefined) {
+                            finalName = `${folderName} (${counter})`;
+                            counter++;
+                        }
+                        return {
+                            ...prev,
+                            [finalName]: files.map(f => {
+                                const fileName = f.name || f;
+                                const nameWithoutExt = fileName.replace(/\.mp3$/i, '');
+                                const parts = nameWithoutExt.split(' - ');
+                                const title = parts.length > 1 ? parts.slice(1).join(' - ') : nameWithoutExt;
+                                const artist = parts.length > 1 ? parts[0] : '';
+                                return {
+                                    id: `dropbox-${f.path_lower || fileName}-${Date.now()}`,
+                                    title: title,
+                                    artist: artist,
+                                    playCount: 0,
+                                    file: null,
+                                    dropboxPath: f.path_lower,
+                                    fileSignature: `dropbox:${f.path_lower}:${f.size || 0}`,
+                                    type: 'dropbox'
+                                };
+                            })
+                        };
+                    });
 
                     setVibeColorIndices(prev => ({
                         ...prev,
-                        [folderName]: normalizedIndex
+                        [finalName]: normalizedIndex
                     }));
                 });
 
