@@ -46,7 +46,7 @@ const CONFIG = {
 
     // Animation
     BUTTON_ANIM_DURATION: 400,
-    MORPH_DURATION: 2000,
+    MORPH_DURATION: 400,
 
     // Transition entre phases (browse/import)
     PHASE_TRANSITION_DURATION: 300,
@@ -131,16 +131,13 @@ const DropboxBrowser = ({
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
-    sourceRect: _sourceRect, // Position du bouton source pour l'animation morph
+    sourceRect, // Position du bouton source pour l'animation morph (capturé une seule fois au tap)
     // Props pour la phase import
     playlists,
     vibeColorIndices,
     getGradientByIndex,
     getGradientName,
 }) => {
-    // DEBUG: Force sourceRect to null to test if it's the problem
-    const sourceRect = null;
-
     // États
     const [currentPath, setCurrentPath] = useState('');
     const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
@@ -168,6 +165,7 @@ const DropboxBrowser = ({
     const [morphProgress, setMorphProgress] = useState(0); // 0 = bouton, 1 = dialog
     const [backdropVisible, setBackdropVisible] = useState(false);
     const [dialogDimensions, setDialogDimensions] = useState(null);
+    const [storedSourceRect, setStoredSourceRect] = useState(null); // Position stockée une seule fois au tap
 
     // États pour la phase import
     const [phase, setPhase] = useState('browse'); // 'browse' | 'import'
@@ -843,9 +841,19 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // DEBUG: Affichage direct sans animation
-            setMorphProgress(1);
+            // Stocker sourceRect une seule fois au moment du tap
+            if (sourceRect) {
+                setStoredSourceRect({ ...sourceRect });
+            }
+
+            // Afficher immédiatement le backdrop et le dialog à position initiale
             setBackdropVisible(true);
+            setMorphProgress(0);
+
+            // Lancer l'animation après un micro-délai pour que le DOM soit prêt
+            requestAnimationFrame(() => {
+                setMorphProgress(1);
+            });
         } else {
             // Reset quand on ferme
             if (animationRef.current) {
@@ -854,6 +862,7 @@ const DropboxBrowser = ({
             }
             setMorphProgress(0);
             setBackdropVisible(false);
+            setStoredSourceRect(null);
         }
     }, [isVisible]);
 
@@ -986,10 +995,10 @@ const DropboxBrowser = ({
     const folderCount = files.filter(f => f['.tag'] === 'folder').length;
     const mp3Count = files.filter(f => f['.tag'] === 'file').length;
 
-    // Calculer les dimensions interpolées pour le morph
+    // Calculer les styles pour le morph - utilise CSS transition au lieu de JS animation
     const getMorphStyles = () => {
-        if (!sourceRect) {
-            // Pas de sourceRect = pas d'animation morph, affichage centré
+        if (!storedSourceRect || !dialogDimensions) {
+            // Pas d'animation morph, affichage centré direct
             return {
                 position: 'relative',
                 width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
@@ -998,71 +1007,40 @@ const DropboxBrowser = ({
             };
         }
 
-        if (!dialogDimensions) {
-            // sourceRect existe mais dialogDimensions pas encore calculé
-            // Retourner le dialog à la position du bouton source (invisible, en attente)
+        // morphProgress: 0 = position capsule, 1 = position dialog final
+        if (morphProgress === 0) {
+            // Position initiale = capsule
             return {
                 position: 'fixed',
-                left: sourceRect.left,
-                top: sourceRect.top,
-                width: sourceRect.width,
-                height: sourceRect.height,
-                borderRadius: sourceRect.height / 2,
-                opacity: 0, // Invisible jusqu'à ce que l'animation commence
+                left: storedSourceRect.left,
+                top: storedSourceRect.top,
+                width: storedSourceRect.width,
+                height: storedSourceRect.height,
+                borderRadius: storedSourceRect.height / 2,
+                transition: `all ${CONFIG.MORPH_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            };
+        } else {
+            // Position finale = dialog centré
+            return {
+                position: 'fixed',
+                left: dialogDimensions.finalLeft,
+                top: dialogDimensions.finalTop,
+                width: dialogDimensions.finalWidth,
+                height: dialogDimensions.finalHeight,
+                borderRadius: 16,
+                transition: `all ${CONFIG.MORPH_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             };
         }
-
-        const p = morphProgress;
-
-        // Position et taille de départ (bouton)
-        const startLeft = sourceRect.left;
-        const startTop = sourceRect.top;
-        const startWidth = sourceRect.width;
-        const startHeight = sourceRect.height;
-
-        // Position et taille finale (dialog centré)
-        const { finalLeft, finalTop, finalWidth, finalHeight } = dialogDimensions;
-
-        // Interpolation
-        const currentLeft = startLeft + (finalLeft - startLeft) * p;
-        const currentTop = startTop + (finalTop - startTop) * p;
-        const currentWidth = startWidth + (finalWidth - startWidth) * p;
-        const currentHeight = startHeight + (finalHeight - startHeight) * p;
-
-        // BorderRadius: de capsule (height/2) vers dialog radius (16px)
-        const startRadius = startHeight / 2;
-        const finalRadius = 16;
-        const currentRadius = startRadius + (finalRadius - startRadius) * p;
-
-        return {
-            position: 'fixed',
-            left: currentLeft,
-            top: currentTop,
-            width: currentWidth,
-            height: currentHeight,
-            borderRadius: currentRadius,
-        };
     };
 
     const morphStyles = getMorphStyles();
 
-    // DEBUG OVERLAY
-    const dialogOpacity = !sourceRect ? 1 : (morphProgress > 0.3 ? 1 : morphProgress / 0.3);
-    const browseOpacity = phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0;
-    const debugInfo = {
-        line1: `W:${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw H:${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
-        line2: `bg:${SMARTIMPORT_CONFIG.DIALOG_BG_COLOR || 'UNDEF'}`,
-        line3: `files:${files.length} | loading:${loading ? 'Y' : 'N'}`,
-        line4: `dialogRef:${dialogRef.current ? 'SET' : 'NULL'}`,
-    };
-
-    // DEBUG: Version ultra simplifiée sans animations
     if (!isVisible) return null;
 
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* Backdrop - test avec backdropVisible */}
+            {/* Backdrop */}
             <div
                 className="fixed inset-0 z-[9999] flex items-center justify-center"
                 style={{
@@ -1071,30 +1049,26 @@ const DropboxBrowser = ({
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
-                {/* Dialog principal - DEBUG: forced visible */}
+                {/* Dialog principal avec animation morph CSS */}
                 <div
                     ref={dialogRef}
                     className="flex flex-col overflow-hidden"
                     style={{
-                        // DEBUG: Force simple centered display, ignore morph
-                        position: 'relative',
-                        width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
-                        height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
-                        borderRadius: '1rem',
+                        ...morphStyles,
                         paddingTop: '0.75rem',
                         paddingBottom: '0.75rem',
                         paddingLeft: 0,
                         paddingRight: 0,
                         background: SMARTIMPORT_CONFIG.DIALOG_BG_COLOR,
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-                        opacity: 1, // DEBUG: always visible
+                        opacity: 1,
                     }}
                 >
-                    {/* PHASE BROWSE - Navigation Dropbox - DEBUG: forced visible */}
+                    {/* PHASE BROWSE - Navigation Dropbox */}
                     <div
                         className="absolute inset-0 flex flex-col"
                         style={{
-                            opacity: 1, // DEBUG: always visible
+                            opacity: 1,
                             transform: 'translateX(0)',
                             pointerEvents: 'auto',
                             paddingTop: '0.75rem',
