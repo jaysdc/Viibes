@@ -280,6 +280,13 @@ const CONFIG = {
     RECENTER_GLOW_INTENSITY: 0.5,         // Intensité max du glow (0-1)
     RECENTER_GLOW_SPEED: 2,               // Vitesse du pulse (secondes)
 
+    // PLAYPAUSE BUTTON - Glow rose
+    PLAYPAUSE_GLOW_ENABLED: true,         // Activer le glow pulsant
+    PLAYPAUSE_GLOW_COLOR: '236, 72, 153', // Couleur glow rose (RGB)
+    PLAYPAUSE_GLOW_SIZE: 8,               // Taille du glow (px)
+    PLAYPAUSE_GLOW_INTENSITY: 0.6,        // Intensité max du glow (0-1)
+    PLAYPAUSE_GLOW_SPEED: 2,              // Vitesse du pulse (secondes)
+
     // TIMECAPSULE - Bordure et glow rose
     TIMECAPSULE_NEON_ENABLED: true,       // Activer la bordure rose
     TIMECAPSULE_NEON_WIDTH: 1,            // Épaisseur de la bordure (px)
@@ -828,7 +835,20 @@ const styles = `
   .recenter-glow {
     animation: recenter-glow-pulse ${CONFIG.RECENTER_GLOW_SPEED}s ease-in-out infinite;
   }
-  
+
+  @keyframes playpause-glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 ${CONFIG.PLAYPAUSE_GLOW_SIZE * 0.5}px rgba(${CONFIG.PLAYPAUSE_GLOW_COLOR}, ${CONFIG.PLAYPAUSE_GLOW_INTENSITY * 0.3});
+    }
+    50% {
+      box-shadow: 0 0 ${CONFIG.PLAYPAUSE_GLOW_SIZE}px rgba(${CONFIG.PLAYPAUSE_GLOW_COLOR}, ${CONFIG.PLAYPAUSE_GLOW_INTENSITY});
+    }
+  }
+
+  .playpause-glow {
+    animation: playpause-glow-pulse ${CONFIG.PLAYPAUSE_GLOW_SPEED}s ease-in-out infinite;
+  }
+
   @keyframes timecapsule-glow-pulse {
     0%, 100% { 
       box-shadow: 0 0 ${CONFIG.TIMECAPSULE_GLOW_SIZE * 0.5}px rgba(${CONFIG.TIMECAPSULE_GLOW_COLOR}, ${CONFIG.TIMECAPSULE_GLOW_INTENSITY * 0.3});
@@ -2202,7 +2222,7 @@ const ControlBar = ({
                     <RecenterCapsule onClick={onRecenter} />
                     <button
                         onClick={onTogglePlay}
-                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm"
+                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
