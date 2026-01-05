@@ -5583,22 +5583,50 @@ const cancelKillVibe = () => {
     console.log('Token from localStorage:', token); // DEBUG
     console.log('dropboxToken state:', dropboxToken); // DEBUG
 
-    // Capturer la position du bouton pour l'animation morph (seulement si token existe)
-    const captureButtonRect = () => {
-        if (dropboxButtonRef.current) {
-            const rect = dropboxButtonRef.current.getBoundingClientRect();
-            setDropboxSourceRect({
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height
-            });
-        }
+    // Calculer la position ABSOLUE du bouton Dropbox basé sur les configs (pas de ref nécessaire)
+    const computeDropboxButtonRect = () => {
+        // Fonction helper pour convertir rem/px en pixels
+        const remToPx = (rem) => rem * 16;
+
+        // Récupérer la safe area
+        const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0') || 0;
+
+        // Largeur écran
+        const screenWidth = window.innerWidth;
+
+        // Calcul du TOP:
+        // safe-area + TITLE_MARGIN_TOP (0.3rem) + logo (36px) + TITLE_MARGIN_BOTTOM (0.5rem)
+        const titleMarginTop = remToPx(0.3);
+        const logoHeight = 36; // 36px fixe
+        const titleMarginBottom = remToPx(0.5);
+        const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
+
+        // Calcul de la LARGEUR des boutons:
+        // Largeur disponible = écran - 2*padding (1.5rem chaque côté)
+        // 3 boutons avec 2 gaps de 1rem entre eux
+        const paddingX = remToPx(1.5);
+        const gap = remToPx(1);
+        const availableWidth = screenWidth - (2 * paddingX);
+        const buttonWidth = (availableWidth - (2 * gap)) / 3;
+
+        // Calcul du LEFT du bouton DROPBOX (2ème bouton):
+        // padding gauche + largeur bouton NUKE + 1 gap
+        const left = paddingX + buttonWidth + gap;
+
+        // Hauteur = CAPSULE_HEIGHT (2.0rem)
+        const height = remToPx(2.0);
+
+        return {
+            left,
+            top,
+            width: buttonWidth,
+            height
+        };
     };
 
     if (token) {
-        // Déjà connecté, capturer le rect et ouvrir le browser avec animation morph
-        captureButtonRect();
+        // Déjà connecté, calculer le rect en absolu et ouvrir le browser avec animation morph
+        setDropboxSourceRect(computeDropboxButtonRect());
         setDropboxToken(token);
         setDropboxPath('');
         setShowDropboxBrowser(true);
@@ -5607,8 +5635,8 @@ const cancelKillVibe = () => {
         // Token expiré mais refresh token disponible
         const refreshed = await refreshDropboxToken();
         if (refreshed) {
-            // Après refresh réussi, capturer le rect et ouvrir avec morph
-            captureButtonRect();
+            // Après refresh réussi, calculer le rect en absolu et ouvrir avec morph
+            setDropboxSourceRect(computeDropboxButtonRect());
             const newToken = getDropboxAccessToken();
             setDropboxToken(newToken);
             setDropboxPath('');
