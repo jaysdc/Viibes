@@ -843,41 +843,9 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // Lancer l'animation morph - on utilise un délai minimal pour s'assurer
-            // que les états sont bien réinitialisés avant de démarrer l'animation
-            // Cela évite le bug où seul le blur s'affiche
-            setMorphProgress(0);
-            setBackdropVisible(false);
-
-            // Petit délai pour forcer React à flush les états avant l'animation
-            requestAnimationFrame(() => {
-                if (sourceRect) {
-                    setBackdropVisible(true);
-
-                    requestAnimationFrame(() => {
-                        const startTime = performance.now();
-                        const animate = (currentTime) => {
-                            const elapsed = currentTime - startTime;
-                            const progress = Math.min(elapsed / CONFIG.MORPH_DURATION, 1);
-                            // Easing cubic ease-in-out
-                            const eased = progress < 0.5
-                                ? 4 * progress * progress * progress
-                                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-                            setMorphProgress(eased);
-                            if (progress < 1) {
-                                animationRef.current = requestAnimationFrame(animate);
-                            } else {
-                                animationRef.current = null;
-                            }
-                        };
-                        animationRef.current = requestAnimationFrame(animate);
-                    });
-                } else {
-                    // Pas de sourceRect, affichage direct
-                    setMorphProgress(1);
-                    setBackdropVisible(true);
-                }
-            });
+            // DEBUG: Affichage direct sans animation
+            setMorphProgress(1);
+            setBackdropVisible(true);
         } else {
             // Reset quand on ferme
             if (animationRef.current) {
@@ -1094,12 +1062,12 @@ const DropboxBrowser = ({
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* DEBUG: Backdrop simple */}
+            {/* Backdrop - test avec backdropVisible */}
             <div
                 className="fixed inset-0 z-[9999] flex items-center justify-center"
                 style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    backdropFilter: 'blur(8px)',
+                    backgroundColor: backdropVisible ? 'rgba(0, 0, 0, 0.85)' : 'transparent',
+                    backdropFilter: backdropVisible ? 'blur(8px)' : 'none',
                 }}
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
