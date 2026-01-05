@@ -1803,13 +1803,19 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                         >
                                             <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-l-full" />
                                             <Search style={{ width: CONFIG.HEADER_SEARCH_ICON_SIZE, height: CONFIG.HEADER_SEARCH_ICON_SIZE }} className="text-gray-400 mr-3" />
-                                            <input 
+                                            <input
                                                 autoFocus
-                                                type="text" 
-                                                value={searchQuery} 
-                                                onChange={(e) => setSearchQuery(e.target.value)} 
-                                                placeholder="" 
-                                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none" 
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                placeholder=""
+                                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none"
+                                                spellCheck={false}
+                                                autoCorrect="off"
+                                                autoCapitalize="off"
+                                                autoComplete="off"
+                                                enterKeyHint="done"
+                                                onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                             />
                                         </div>
                                         <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.CLOSE_BTN_FLEX }}>

@@ -1271,11 +1271,13 @@ const DropboxBrowser = ({
                                     {closingButton === 'disconnect' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
                                     <button onClick={handleDisconnect} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'disconnect' ? 'white' : '#ef4444' }}>
                                         <LogOut size={14} />
+                                        <span>LOGOUT</span>
                                     </button>
                                 </div>
                                 <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     <button onClick={handleImport} disabled={!canImport || !!closingButton} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: scanPhase === 'counting' ? 'white' : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'), border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none', color: scanPhase === 'counting' ? CONFIG.DROPBOX_BLUE : (canImport ? 'white' : '#9CA3AF'), opacity: canImport || scanning ? 1 : 0.4, boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none' }}>
                                         {scanPhase === 'counting' ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}
+                                        <span>IMPORT</span>
                                     </button>
                                 </div>
                             </div>
@@ -1422,13 +1424,14 @@ const DropboxBrowser = ({
                                             {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', border: '1px solid #FF6B00', zIndex: 0 }} />}
                                             <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)', color: importBtnIgniting === 'fusion' ? 'white' : '#6b7280' }}>
                                                 <Layers size={14} />
+                                                <span>FUSION</span>
                                             </button>
                                         </div>
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                             {importBtnIgniting === 'vibes' && <div className="absolute inset-0 rounded-full dropbox-ignite-pink" style={{ background: '#ec4899', zIndex: 0 }} />}
                                             <button onClick={() => handleImportAction('vibes')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'vibes' ? 'transparent' : '#ec4899', color: 'white', boxShadow: '0 0 15px rgba(236, 72, 153, 0.4)' }}>
                                                 <Flame size={14} />
-                                                <span>{Object.keys(importData.folders).length}</span>
+                                                <span>{Object.keys(importData.folders).length} VIBES</span>
                                             </button>
                                         </div>
                                     </div>

@@ -568,7 +568,7 @@ const CONFIG = {
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
     HEADER_Z_INDEX: 40,                   // Z-index du header sticky
-    HEADER_VIBETHIS_MARGIN_TOP: 0,      // Marge au-dessus du bouton VIBE THIS (rem)
+    HEADER_VIBETHIS_MARGIN_TOP: 13,      // Marge au-dessus du bouton VIBE THIS (px) - même que ADDALL_PADDING_TOP du VibeBuilder
     HEADER_CARDS_GAP: 0.5,              // Espace entre le bas du header et la première carte (rem)
     HEADER_BUTTONS_HEIGHT: UNIFIED_CONFIG.CAPSULE_HEIGHT,   // Hauteur des boutons du header (unifiée)
     HEADER_BUTTONS_GAP: '1rem',       // Espace entre les boutons
@@ -6275,13 +6275,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         }}
                     >
                         <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
-                        <input 
-                            autoFocus 
-                            type="text" 
-                            value={librarySearchQuery} 
-                            onChange={(e) => setLibrarySearchQuery(e.target.value)} 
-                            placeholder="" 
-                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none" 
+                        <input
+                            autoFocus
+                            type="text"
+                            value={librarySearchQuery}
+                            onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                            placeholder=""
+                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none"
+                            spellCheck={false}
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            autoComplete="off"
+                            enterKeyHint="done"
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                         />
                     </div>
                     <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX }}>
@@ -6533,7 +6539,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
             {/* Bouton VIBE THIS - Dans le header sticky, sous la search bar */}
             {isLibrarySearching && librarySearchQuery && librarySearchResults.length > 0 && (
-                <div style={{ marginTop: `${CONFIG.HEADER_VIBETHIS_MARGIN_TOP}rem` }}>
+                <div style={{ marginTop: `${CONFIG.HEADER_VIBETHIS_MARGIN_TOP}px` }}>
                     {(() => {
                         const gradientColors = getGradientByIndex(vibeTheseGradientIndex);
                         const step = 100 / (gradientColors.length - 1);
@@ -6555,7 +6561,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             >
                                 <Flame size={18} className="fill-white" />
                                 <span>VIBE THESE</span>
-                                <span className="font-normal opacity-70">({librarySearchResults.length})</span>
+                                <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
                             </button>
                         );
                     })()}
@@ -6806,11 +6812,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <div
                                         className="absolute inset-0 rounded-full flex items-center justify-center border"
                                         style={{
-                                            backgroundColor: pendingVibe ? '#FF6700' : '#FF073A',
+                                            background: pendingVibe
+                                                ? 'linear-gradient(135deg, #facc15 0%, #ef4444 100%)'  // Afterburner
+                                                : 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)', // Lava Flow
                                             borderColor: pendingVibe ? '#CC5200' : '#CC0530',
                                             boxShadow: pendingVibe
-                                                ? '0 0 25px rgba(255, 103, 0, 0.7), 0 0 50px rgba(255, 103, 0, 0.4)'
-                                                : '0 0 25px rgba(255, 7, 58, 0.7), 0 0 50px rgba(255, 7, 58, 0.4)'
+                                                ? '0 0 25px rgba(250, 204, 21, 0.7), 0 0 50px rgba(239, 68, 68, 0.4)'
+                                                : '0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.4)'
                                         }}
                                     >
                                         <div className="flex items-center gap-2 text-white font-black tracking-widest text-xs">
@@ -7251,13 +7259,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     }}
                                 >
                                     <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
-                                    <input 
-                                        autoFocus 
-                                        type="text" 
-                                        value={playerSearchQuery} 
-                                        onChange={(e) => setPlayerSearchQuery(e.target.value)} 
-                                        placeholder="" 
-                                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none" 
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        value={playerSearchQuery}
+                                        onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                                        placeholder=""
+                                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none"
+                                        spellCheck={false}
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        autoComplete="off"
+                                        enterKeyHint="done"
+                                        onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                     />
                                 </div>
                                 {/* Bouton X */}
