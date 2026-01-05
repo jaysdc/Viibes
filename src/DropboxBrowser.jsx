@@ -187,6 +187,8 @@ const DropboxBrowser = ({
 
     const listRef = useRef(null);
     const importListRef = useRef(null);
+    const abortControllerRef = useRef(null); // Pour annuler les requêtes en cours
+    const loadingPathRef = useRef(null); // Pour tracker quel path est en cours de chargement
     const dialogRef = useRef(null);
     const animationRef = useRef(null);
     const scrubZoneRef = useRef(null);
@@ -356,10 +358,28 @@ const DropboxBrowser = ({
 
     // Charger le contenu d'un dossier
     const loadFolder = async (path) => {
+        // Annuler toute requête précédente en cours
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // Créer un nouveau AbortController pour cette requête
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+        loadingPathRef.current = path;
+
         setLoading(true);
+        setFiles([]); // Vider les fichiers immédiatement pour éviter d'afficher l'ancien contenu
+
         try {
             let token = await getValidDropboxToken();
             if (!token) token = dropboxToken;
+
+            // Vérifier si cette requête a été annulée
+            if (abortController.signal.aborted) {
+                console.log('[DropboxBrowser] Request aborted for path:', path);
+                return;
+            }
 
             let allEntries = [];
             let hasMore = true;
@@ -377,6 +397,7 @@ const DropboxBrowser = ({
                     include_deleted: false,
                     limit: 2000,
                 }),
+                signal: abortController.signal,
             });
 
             if (firstResponse.status === 401) {
@@ -394,6 +415,12 @@ const DropboxBrowser = ({
 
             let data = await firstResponse.json();
 
+            // Vérifier si cette requête a été annulée ou si le path a changé
+            if (abortController.signal.aborted || loadingPathRef.current !== path) {
+                console.log('[DropboxBrowser] Request superseded for path:', path);
+                return;
+            }
+
             if (data.entries) {
                 allEntries = [...data.entries];
                 hasMore = data.has_more;
@@ -401,6 +428,12 @@ const DropboxBrowser = ({
             }
 
             while (hasMore && cursor) {
+                // Vérifier avant chaque requête de pagination
+                if (abortController.signal.aborted || loadingPathRef.current !== path) {
+                    console.log('[DropboxBrowser] Pagination aborted for path:', path);
+                    return;
+                }
+
                 const continueResponse = await fetch('https://api.dropboxapi.com/2/files/list_folder/continue', {
                     method: 'POST',
                     headers: {
@@ -408,6 +441,7 @@ const DropboxBrowser = ({
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ cursor }),
+                    signal: abortController.signal,
                 });
 
                 const continueData = await continueResponse.json();
@@ -421,6 +455,12 @@ const DropboxBrowser = ({
                 }
             }
 
+            // Vérification finale avant de mettre à jour l'état
+            if (abortController.signal.aborted || loadingPathRef.current !== path) {
+                console.log('[DropboxBrowser] Final check failed for path:', path);
+                return;
+            }
+
             // Trier : dossiers d'abord, puis fichiers MP3
             const sorted = allEntries
                 .filter(f => f['.tag'] === 'folder' || f.name.toLowerCase().endsWith('.mp3'))
@@ -431,12 +471,21 @@ const DropboxBrowser = ({
                 });
 
             setFiles(sorted);
+            setLoading(false);
 
         } catch (error) {
+            // Ignorer les erreurs d'abort (c'est normal)
+            if (error.name === 'AbortError') {
+                console.log('[DropboxBrowser] Fetch aborted for path:', path);
+                return;
+            }
             console.error('Erreur Dropbox:', error);
-            alert('Erreur de connexion à Dropbox');
+            // Ne pas afficher d'alerte si la requête a été annulée
+            if (!abortController.signal.aborted) {
+                alert('Erreur de connexion à Dropbox');
+            }
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     // Helper: liste un dossier Dropbox (avec pagination)
@@ -1074,9 +1123,14 @@ const DropboxBrowser = ({
                                     <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
                                 ) : (
                                     <button
-                                        onClick={navigateBack}
+                                        onClick={() => !loading && navigateBack()}
                                         className="flex items-center justify-center -ml-1 mr-1"
-                                        style={{ color: CONFIG.DROPBOX_BLUE }}
+                                        style={{
+                                            color: CONFIG.DROPBOX_BLUE,
+                                            opacity: loading ? 0.5 : 1,
+                                            pointerEvents: loading ? 'none' : 'auto',
+                                        }}
+                                        disabled={loading}
                                     >
                                         <ChevronLeft size={18} strokeWidth={2.5} />
                                     </button>
@@ -1136,7 +1190,7 @@ const DropboxBrowser = ({
                                                     return (
                                                         <div
                                                             key={file.path_lower || index}
-                                                            onClick={() => navigateToFolder(file.path_lower, file.name)}
+                                                            onClick={() => !loading && navigateToFolder(file.path_lower, file.name)}
                                                             className="flex items-center pl-3 pr-2 cursor-pointer"
                                                             style={{
                                                                 height: CONFIG.CARD_HEIGHT,
@@ -1144,6 +1198,8 @@ const DropboxBrowser = ({
                                                                 borderRadius: CONFIG.CARD_RADIUS,
                                                                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                                                                 marginBottom: CONFIG.CARD_GAP,
+                                                                opacity: loading ? 0.5 : 1,
+                                                                pointerEvents: loading ? 'none' : 'auto',
                                                             }}
                                                         >
                                                             <span
