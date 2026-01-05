@@ -4122,7 +4122,6 @@ const handlePlayerTouchEnd = () => {
     };
 
     const dropboxButtonRef = useRef(null);
-    const [dropboxSourceRect, setDropboxSourceRect] = useState(null);
     const [showVolumeOverlay, setShowVolumeOverlay] = useState(false);
     const [dashboardHeight, setDashboardHeight] = useState(0);
     const [showMainPlayerTrigger, setShowMainPlayerTrigger] = useState(false);
@@ -5578,70 +5577,10 @@ const cancelKillVibe = () => {
   };
 
   const handleDropboxAuth = async () => {
-    console.log('handleDropboxAuth appelé !'); // DEBUG
-    // Toujours relire depuis localStorage pour avoir la valeur à jour
     const token = getDropboxAccessToken();
-    console.log('Token from localStorage:', token); // DEBUG
-    console.log('dropboxToken state:', dropboxToken); // DEBUG
-
-    // Calculer la position ABSOLUE du bouton Dropbox basé sur les configs (pas de ref nécessaire)
-    const computeDropboxButtonRect = () => {
-        // Fonction helper pour convertir une valeur CSS (rem string ou number) en pixels
-        const cssToPixels = (value) => {
-            if (typeof value === 'string') {
-                // Créer un élément temporaire pour mesurer la valeur CSS
-                const div = document.createElement('div');
-                div.style.position = 'fixed';
-                div.style.visibility = 'hidden';
-                div.style.height = value;
-                document.body.appendChild(div);
-                const px = div.getBoundingClientRect().height;
-                document.body.removeChild(div);
-                return px;
-            }
-            // Si c'est un nombre, on assume que c'est en rem
-            return value * 16;
-        };
-
-        // Récupérer la safe area (en pixels CSS)
-        const safeAreaTop = cssToPixels('env(safe-area-inset-top, 0px)');
-
-        // Largeur écran
-        const screenWidth = window.innerWidth;
-
-        // Calcul du TOP:
-        // safe-area + TITLE_MARGIN_TOP + logo height + TITLE_MARGIN_BOTTOM
-        const titleMarginTop = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP);
-        const logoHeight = CONFIG.HEADER_LOGO_SIZE * 3 * 0.4; // VibesLogo → VibesLogoVector
-        const titleMarginBottom = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM);
-        const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
-
-        // Calcul de la LARGEUR des boutons:
-        // Largeur disponible = écran - 2*padding
-        // 3 boutons avec 2 gaps entre eux
-        const paddingX = cssToPixels(CONFIG.HEADER_PADDING_X + 'rem');
-        const gap = cssToPixels(CONFIG.HEADER_BUTTONS_GAP);
-        const availableWidth = screenWidth - (2 * paddingX);
-        const buttonWidth = (availableWidth - (2 * gap)) / 3;
-
-        // Calcul du LEFT du bouton DROPBOX (2ème bouton):
-        // padding gauche + largeur bouton NUKE + 1 gap
-        const left = paddingX + buttonWidth + gap;
-
-        // Hauteur = CAPSULE_HEIGHT
-        const height = cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT);
-
-        return {
-            left,
-            top,
-            width: buttonWidth,
-            height
-        };
-    };
 
     if (token) {
-        // Déjà connecté, calculer le rect en absolu et ouvrir le browser avec animation morph
-        setDropboxSourceRect(computeDropboxButtonRect());
+        // Déjà connecté, ouvrir le browser
         setDropboxToken(token);
         setDropboxPath('');
         setShowDropboxBrowser(true);
@@ -5650,21 +5589,15 @@ const cancelKillVibe = () => {
         // Token expiré mais refresh token disponible
         const refreshed = await refreshDropboxToken();
         if (refreshed) {
-            // Après refresh réussi, calculer le rect en absolu et ouvrir avec morph
-            setDropboxSourceRect(computeDropboxButtonRect());
             const newToken = getDropboxAccessToken();
             setDropboxToken(newToken);
             setDropboxPath('');
             setShowDropboxBrowser(true);
             loadDropboxFolder('', newToken);
         } else {
-            // Refresh échoué, relancer OAuth (pas de morph car on quitte l'app)
-            setDropboxSourceRect(null);
             startDropboxOAuth();
         }
     } else {
-        // Pas de token, lancer OAuth PKCE (pas de morph car on quitte l'app)
-        setDropboxSourceRect(null);
         startDropboxOAuth();
     }
   };
@@ -6952,22 +6885,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         )}
 
         {/* DROPBOX BROWSER */}
-        <DropboxBrowser
-            isVisible={showDropboxBrowser}
+        {showDropboxBrowser && <DropboxBrowser
+            isVisible={true}
             onClose={() => {
                 setShowDropboxBrowser(false);
-                setDropboxSourceRect(null);
             }}
             onDisconnect={() => {
                 clearDropboxTokens();
                 setDropboxToken(null);
-                setDropboxSourceRect(null);
             }}
             onImportComplete={(folders, mode, folderGradients, fromDropbox) => {
                 // Mode: 'fusion' = une seule vibe, 'vibes' = vibes séparées
                 // folderGradients: { folderName: gradientIndex }
                 setShowDropboxBrowser(false);
-                setDropboxSourceRect(null);
 
                 // Importer les vibes avec les gradients choisis
                 Object.entries(folders).forEach(([folderName, files]) => {
@@ -7018,12 +6948,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             getValidDropboxToken={getValidDropboxToken}
             refreshDropboxToken={refreshDropboxToken}
             clearDropboxTokens={clearDropboxTokens}
-            sourceRect={dropboxSourceRect}
             playlists={playlists}
             vibeColorIndices={vibeColorIndices}
             getGradientByIndex={getGradientByIndex}
             getGradientName={getGradientName}
-        />
+            headerLogoSize={CONFIG.HEADER_LOGO_SIZE}
+            headerPaddingX={CONFIG.HEADER_PADDING_X}
+            headerButtonsGap={CONFIG.HEADER_BUTTONS_GAP}
+        />}
 
         {/* CONFIRMATION PILL (slide to confirm) */}
         {(pendingVibe || nukeConfirmMode) && mainContainerRef.current && (() => {

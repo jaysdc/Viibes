@@ -50,6 +50,7 @@ const CONFIG = {
 
     // Transition entre phases (browse/import)
     PHASE_TRANSITION_DURATION: 300,
+
 };
 
 // Styles CSS pour les animations (réutilise le style SmartImport)
@@ -131,13 +132,51 @@ const DropboxBrowser = ({
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
-    sourceRect, // Position du bouton source pour l'animation morph (capturé une seule fois au tap)
     // Props pour la phase import
     playlists,
     vibeColorIndices,
     getGradientByIndex,
     getGradientName,
+    // Props pour calculer la position du bouton Dropbox (vient de App.jsx CONFIG)
+    headerLogoSize,
+    headerPaddingX,
+    headerButtonsGap,
 }) => {
+    // Calculer la position du bouton Dropbox (constante basée sur la config)
+    const computeDropboxButtonRect = () => {
+        const cssToPixels = (value) => {
+            if (typeof value === 'string') {
+                const div = document.createElement('div');
+                div.style.position = 'fixed';
+                div.style.visibility = 'hidden';
+                div.style.height = value;
+                document.body.appendChild(div);
+                const px = div.getBoundingClientRect().height;
+                document.body.removeChild(div);
+                return px;
+            }
+            return value * 16;
+        };
+
+        const safeAreaTop = cssToPixels('env(safe-area-inset-top, 0px)');
+        const screenWidth = window.innerWidth;
+        const titleMarginTop = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_TOP);
+        const logoHeight = headerLogoSize * 3 * 0.4;
+        const titleMarginBottom = cssToPixels(UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM);
+        const top = safeAreaTop + titleMarginTop + logoHeight + titleMarginBottom;
+
+        const paddingX = cssToPixels(headerPaddingX + 'rem');
+        const gap = cssToPixels(headerButtonsGap);
+        const availableWidth = screenWidth - (2 * paddingX);
+        const buttonWidth = (availableWidth - (2 * gap)) / 3;
+        const left = paddingX + buttonWidth + gap;
+        const height = cssToPixels(UNIFIED_CONFIG.CAPSULE_HEIGHT);
+
+        return { left, top, width: buttonWidth, height };
+    };
+
+    const dropboxButtonRect = computeDropboxButtonRect();
+
     // États
     const [currentPath, setCurrentPath] = useState('');
     const [currentFolderDisplayName, setCurrentFolderDisplayName] = useState(''); // Nom avec casse originale
@@ -165,7 +204,6 @@ const DropboxBrowser = ({
     const [morphProgress, setMorphProgress] = useState(0); // 0 = bouton, 1 = dialog
     const [backdropVisible, setBackdropVisible] = useState(false);
     const [dialogDimensions, setDialogDimensions] = useState(null);
-    const [storedSourceRect, setStoredSourceRect] = useState(null); // Position stockée une seule fois au tap
 
     // États pour la phase import
     const [phase, setPhase] = useState('browse'); // 'browse' | 'import'
@@ -841,11 +879,6 @@ const DropboxBrowser = ({
                 finalHeight: dialogHeight
             });
 
-            // Stocker sourceRect une seule fois au moment du tap
-            if (sourceRect) {
-                setStoredSourceRect({ ...sourceRect });
-            }
-
             // Afficher immédiatement le backdrop et le dialog à position initiale
             setBackdropVisible(true);
             setMorphProgress(0);
@@ -862,7 +895,6 @@ const DropboxBrowser = ({
             }
             setMorphProgress(0);
             setBackdropVisible(false);
-            setStoredSourceRect(null);
         }
     }, [isVisible]);
 
@@ -997,26 +1029,16 @@ const DropboxBrowser = ({
 
     // Calculer les styles pour le morph - utilise CSS transition au lieu de JS animation
     const getMorphStyles = () => {
-        if (!storedSourceRect || !dialogDimensions) {
-            // Pas d'animation morph, affichage centré direct
-            return {
-                position: 'relative',
-                width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
-                height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
-                borderRadius: '1rem',
-            };
-        }
-
         // morphProgress: 0 = position capsule, 1 = position dialog final
         if (morphProgress === 0) {
-            // Position initiale = capsule
+            // Position initiale = capsule (utilise dropboxButtonRect calculé au début)
             return {
                 position: 'fixed',
-                left: storedSourceRect.left,
-                top: storedSourceRect.top,
-                width: storedSourceRect.width,
-                height: storedSourceRect.height,
-                borderRadius: storedSourceRect.height / 2,
+                left: dropboxButtonRect.left,
+                top: dropboxButtonRect.top,
+                width: dropboxButtonRect.width,
+                height: dropboxButtonRect.height,
+                borderRadius: dropboxButtonRect.height / 2,
                 transition: `all ${CONFIG.MORPH_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             };
         } else {
@@ -1040,7 +1062,7 @@ const DropboxBrowser = ({
     return (
         <>
             <style>{dropboxStyles}</style>
-            {/* DEBUG OVERLAY - affiche les coordonnées de sourceRect */}
+            {/* DEBUG OVERLAY - affiche les coordonnées */}
             <div style={{
                 position: 'fixed',
                 bottom: 10,
@@ -1054,8 +1076,7 @@ const DropboxBrowser = ({
                 fontSize: '12px',
                 fontFamily: 'monospace',
             }}>
-                <div>sourceRect: {sourceRect ? `left:${sourceRect.left.toFixed(0)} top:${sourceRect.top.toFixed(0)} w:${sourceRect.width.toFixed(0)} h:${sourceRect.height.toFixed(0)}` : 'NULL'}</div>
-                <div>storedSourceRect: {storedSourceRect ? `left:${storedSourceRect.left.toFixed(0)} top:${storedSourceRect.top.toFixed(0)} w:${storedSourceRect.width.toFixed(0)} h:${storedSourceRect.height.toFixed(0)}` : 'NULL'}</div>
+                <div>dropboxButtonRect: left:{dropboxButtonRect.left.toFixed(0)} top:{dropboxButtonRect.top.toFixed(0)} w:{dropboxButtonRect.width.toFixed(0)} h:{dropboxButtonRect.height.toFixed(0)}</div>
                 <div>morphProgress: {morphProgress} | backdropVisible: {backdropVisible ? 'Y' : 'N'}</div>
             </div>
             {/* Backdrop */}
