@@ -1084,8 +1084,8 @@ const DropboxBrowser = ({
     const debugInfo = {
         line1: `fade:${isFadingOut ? 'Y' : 'N'} | backdrop:${backdropVisible ? 'Y' : 'N'} | morph:${morphProgress.toFixed(2)}`,
         line2: `phase:${phase} | trans:${phaseTransition || 'none'}`,
-        line3: `dlgOp:${dialogOpacity.toFixed(2)} | browseOp:${browseOpacity}`,
-        line4: `srcRect:${sourceRect ? 'SET' : 'NULL'} | dlgDim:${dialogDimensions ? 'SET' : 'NULL'}`,
+        line3: `files:${files.length} | loading:${loading ? 'Y' : 'N'}`,
+        line4: `isVisible:${isVisible ? 'Y' : 'N'} | vh:${window.innerHeight}`,
     };
 
     return (
