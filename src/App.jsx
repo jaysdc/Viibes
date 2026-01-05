@@ -5113,119 +5113,119 @@ const vibeSearchResults = () => {
     }
   }, []);
 
-  // Enregistrer les handlers UNE SEULE FOIS au montage
+  // Enregistrer les handlers ET les listeners audio
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // === ACTION HANDLERS (contrôles du widget) ===
 
     // Play: appeler directement .play() sur l'audio
     navigator.mediaSession.setActionHandler('play', async () => {
       console.log('[MediaSession] play handler called');
-      if (audioRef.current) {
-        try {
-          // Résumer l'AudioContext s'il est suspendu (requis sur iOS)
-          if (audioContextRef.current?.state === 'suspended') {
-            console.log('[MediaSession] Resuming AudioContext');
-            await audioContextRef.current.resume();
-          }
-          // S'assurer que le volume est appliqué
-          if (gainNodeRef.current) {
-            // Le volume est déjà géré par le state, pas besoin de le re-set
-          } else if (audioRef.current) {
-            // Fallback si pas de Web Audio API
-            audioRef.current.volume = 1;
-          }
-          await audioRef.current.play();
-          setIsPlaying(true);
-        } catch (e) {
-          console.error('[MediaSession] play error:', e);
+      try {
+        // Résumer l'AudioContext s'il est suspendu (requis sur iOS)
+        if (audioContextRef.current?.state === 'suspended') {
+          console.log('[MediaSession] Resuming AudioContext');
+          await audioContextRef.current.resume();
         }
+        await audio.play();
+      } catch (e) {
+        console.error('[MediaSession] play error:', e);
       }
     });
 
     // Pause: appeler directement .pause() sur l'audio
     navigator.mediaSession.setActionHandler('pause', () => {
       console.log('[MediaSession] pause handler called');
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
+      audio.pause();
     });
 
+    // Previous track
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       console.log('[MediaSession] previoustrack handler called');
-      if (audioRef.current && audioRef.current.currentTime > 3) {
-        audioRef.current.currentTime = 0;
+      if (audio.currentTime > 3) {
+        audio.currentTime = 0;
       } else {
         const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
         if (currentIndex > 0) {
           setCurrentSong(queueRef.current[currentIndex - 1]);
-        } else if (audioRef.current) {
-          audioRef.current.currentTime = 0;
+        } else {
+          audio.currentTime = 0;
         }
       }
     });
 
+    // Next track
     navigator.mediaSession.setActionHandler('nexttrack', () => {
       console.log('[MediaSession] nexttrack handler called');
       const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
       if (currentIndex < queueRef.current.length - 1) {
         setCurrentSong(queueRef.current[currentIndex + 1]);
       } else {
-        if (audioRef.current) audioRef.current.pause();
+        audio.pause();
         setIsPlaying(false);
       }
     });
 
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-      console.log('[MediaSession] seekbackward handler called');
-      if (audioRef.current) {
-        const skipTime = details.seekOffset || 10;
-        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - skipTime);
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
-      console.log('[MediaSession] seekforward handler called');
-      if (audioRef.current) {
-        const skipTime = details.seekOffset || 10;
-        audioRef.current.currentTime = Math.min(
-          audioRef.current.duration || 0,
-          audioRef.current.currentTime + skipTime
-        );
-      }
-    });
-
-    // Handler seekto pour iOS - permet de seek via la barre de progression
+    // NOTE: On n'utilise PAS seekbackward/seekforward car sur iOS ça cache les boutons Previous/Next
+    // À la place, on utilise seekto pour la barre de progression
     try {
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         console.log('[MediaSession] seekto handler called', details);
-        if (audioRef.current && details.seekTime !== undefined) {
-          audioRef.current.currentTime = details.seekTime;
+        if (details.seekTime !== undefined) {
+          if (details.fastSeek && 'fastSeek' in audio) {
+            audio.fastSeek(details.seekTime);
+          } else {
+            audio.currentTime = details.seekTime;
+          }
+          updatePositionState();
         }
       });
     } catch (e) {
       console.log('[MediaSession] seekto not supported');
     }
 
-    // Cleanup: retirer les handlers au démontage
+    // === LISTENERS SUR L'ÉLÉMENT AUDIO (sync iOS) ===
+    // iOS a besoin de ces listeners pour synchroniser l'état du widget
+
+    const handlePlay = () => {
+      console.log('[MediaSession] audio play event');
+      navigator.mediaSession.playbackState = 'playing';
+      setIsPlaying(true);
+      updatePositionState();
+    };
+
+    const handlePause = () => {
+      console.log('[MediaSession] audio pause event');
+      navigator.mediaSession.playbackState = 'paused';
+      setIsPlaying(false);
+    };
+
+    const handleLoadedMetadata = () => {
+      console.log('[MediaSession] loadedmetadata event');
+      updatePositionState();
+    };
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    // Cleanup
     return () => {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', null);
         navigator.mediaSession.setActionHandler('pause', null);
         navigator.mediaSession.setActionHandler('previoustrack', null);
         navigator.mediaSession.setActionHandler('nexttrack', null);
-        navigator.mediaSession.setActionHandler('seekbackward', null);
-        navigator.mediaSession.setActionHandler('seekforward', null);
         try { navigator.mediaSession.setActionHandler('seekto', null); } catch (e) {}
       }
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
   }, []); // Dépendances vides = une seule fois
-
-  // Mettre à jour playbackState quand isPlaying change
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-  }, [isPlaying]);
 
   // Mettre à jour les métadonnées quand la chanson change
   useEffect(() => {
@@ -5235,12 +5235,15 @@ const vibeSearchResults = () => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentSong.title || 'Unknown Title',
         artist: currentSong.artist || 'Unknown Artist',
-        album: currentSong.vibeId || 'Vibes',
+        // NOTE: Sur iOS, l'album n'apparaît pas si artist est défini
         artwork: [
+          // iOS préfère les petites images en premier (96x96 ou 128x128)
+          { src: '/icon-192.png', sizes: '96x96', type: 'image/png' },
           { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
         ]
       });
+      console.log('[MediaSession] metadata updated:', currentSong.title);
     }
   }, [currentSong]);
 
