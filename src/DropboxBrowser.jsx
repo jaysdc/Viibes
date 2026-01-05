@@ -1017,13 +1017,27 @@ const DropboxBrowser = ({
 
     // Calculer les dimensions interpolées pour le morph
     const getMorphStyles = () => {
-        if (!sourceRect || !dialogDimensions) {
-            // Pas d'animation morph, retourner les styles normaux (en % de l'écran)
+        if (!sourceRect) {
+            // Pas de sourceRect = pas d'animation morph, affichage centré
             return {
                 position: 'relative',
                 width: `${UNIFIED_CONFIG.IMPORT_SCREEN_WIDTH}vw`,
                 height: `${UNIFIED_CONFIG.IMPORT_SCREEN_HEIGHT}vh`,
                 borderRadius: '1rem',
+            };
+        }
+
+        if (!dialogDimensions) {
+            // sourceRect existe mais dialogDimensions pas encore calculé
+            // Retourner le dialog à la position du bouton source (invisible, en attente)
+            return {
+                position: 'fixed',
+                left: sourceRect.left,
+                top: sourceRect.top,
+                width: sourceRect.width,
+                height: sourceRect.height,
+                borderRadius: sourceRect.height / 2,
+                opacity: 0, // Invisible jusqu'à ce que l'animation commence
             };
         }
 
