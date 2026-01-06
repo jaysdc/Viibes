@@ -6061,17 +6061,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     // Callback quand l'animation ignite est terminée
     const onConfirmAnimationComplete = () => {
         if (confirmFeedback?.type === 'kill') {
-            const vibeToLaunch = pendingVibe;
-            setConfirmOverlayVisible(false);
-            setPendingVibe(null);
-            setConfirmFeedback(null);
-            setConfirmSwipeX(0);
-            doLaunchVibe(vibeToLaunch);
+            doLaunchVibe(pendingVibe);
         } else if (confirmFeedback?.type === 'nuke') {
-            setConfirmOverlayVisible(false);
-            setNukeConfirmMode(false);
-            setConfirmFeedback(null);
-            setConfirmSwipeX(0);
             setPlaylists({});
             localStorage.removeItem('vibes_playlists');
             setVibeColorIndices({});
@@ -6081,6 +6072,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             setIsPlaying(false);
             setActiveVibeName(null);
         }
+        setConfirmOverlayVisible(false);
+        setPendingVibe(null);
+        setNukeConfirmMode(false);
+        setConfirmFeedback(null);
+        setConfirmSwipeX(0);
     };
   
     const playNext = () => { const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex < queue.length - 1) { setCurrentSong(queue[currentIndex + 1]); setScrollTrigger(t => t + 1); } else setIsPlaying(false); };
