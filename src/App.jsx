@@ -979,29 +979,30 @@ const styles = `
     color: #ef4444 !important;
   }
 
-  /* Animation pulse pour le pill de confirmation - grossit jusqu'au diamètre du tube */
+  /* Animation pulse pour KILL VIBE - Fuchsia Overdose (#ec4899 → #ff07a3) */
   @keyframes pulse-pill-lime {
     0%, 100% {
       transform: scale(var(--pulse-scale-min, 1));
-      box-shadow: 0 0 15px rgba(132, 204, 22, 0.6);
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.6), 0 0 25px rgba(255, 7, 163, 0.3);
     }
     50% {
       transform: scale(var(--pulse-scale-max, 1.25));
-      box-shadow: 0 0 30px rgba(132, 204, 22, 1);
+      box-shadow: 0 0 30px rgba(236, 72, 153, 1), 0 0 50px rgba(255, 7, 163, 0.6);
     }
   }
   .animate-pulse-pill-lime {
     animation: pulse-pill-lime 0.6s ease-in-out infinite;
   }
 
+  /* Animation pulse pour NUKE ALL - Lava Flow (#f43f5e → #b91c1c) */
   @keyframes pulse-pill-red {
     0%, 100% {
       transform: scale(var(--pulse-scale-min, 1));
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.6), 0 0 25px rgba(185, 28, 28, 0.3);
     }
     50% {
       transform: scale(var(--pulse-scale-max, 1.25));
-      box-shadow: 0 0 30px rgba(239, 68, 68, 1);
+      box-shadow: 0 0 30px rgba(244, 63, 94, 1), 0 0 50px rgba(185, 28, 28, 0.6);
     }
   }
   .animate-pulse-pill-red {
@@ -1870,7 +1871,7 @@ const VibeCard = ({ folderName, availableCount, unavailableCount, isVibe, onClic
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         const diffX = clientX - touchStartX;
         const diffY = clientY - touchStartY;
-        
+
         // Déterminer la direction au premier mouvement significatif
         if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
             if (Math.abs(diffX) > Math.abs(diffY)) {
@@ -1879,27 +1880,30 @@ const VibeCard = ({ folderName, availableCount, unavailableCount, isVibe, onClic
                 setSwipeDirection('vertical');
             }
         }
-        
+
         // Si c'est un swipe vertical, on ignore (laisser le scroll se faire)
         if (swipeDirection === 'vertical') return;
-        
-        // Si direction pas encore déterminée ou si c'est horizontal, on gère le swipe couleur
+
+        // Si c'est horizontal, bloquer le scroll vertical et gérer le swipe couleur
         if (swipeDirection === 'horizontal') {
+            // Bloquer le scroll vertical quand on swipe horizontalement
+            e.preventDefault();
+
             if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
                 setSwipeOffset(diffX);
-                
+
                 if (Math.abs(diffX) > 10 && onSwipeProgress) {
                     const direction = diffX > 0 ? 1 : -1;
-                    
+
                     // Calculer combien de couleurs on a parcouru (0 à 19)
                     const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
                     const currentIdx = colorIndex !== undefined ? colorIndex : getInitialGradientIndex(folderName);
                     const previewIdx = currentIdx + (direction * colorsTraversed);
                     const previewGradient = getGradientByIndex(previewIdx);
-                    
+
                     // Progress pour l'opacité (0 à 1)
                     const progress = Math.min(Math.abs(diffX) / 50, 1);
-                    
+
                     onSwipeProgress({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: ((previewIdx % 20) + 20) % 20 });
                 }
             }
@@ -7078,9 +7082,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 height: cursorSize,
                                 borderRadius: '50%',
                                 backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel'
-                                    ? 'rgba(239, 68, 68, 0.9)'
+                                    ? 'rgba(244, 63, 94, 0.9)'  // Lava Flow (rose #f43f5e)
                                     : isAtRightThreshold || confirmFeedback?.type === 'kill'
-                                        ? 'rgba(132, 204, 22, 0.9)'
+                                        ? 'rgba(236, 72, 153, 0.9)'  // Fuchsia Overdose (pink #ec4899)
                                         : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
