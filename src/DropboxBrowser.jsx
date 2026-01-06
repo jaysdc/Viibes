@@ -73,14 +73,15 @@ const dropboxStyles = `
     70% { opacity: 1; box-shadow: 0 0 14px rgba(239, 68, 68, 0.7); }
     100% { opacity: 1; box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
   }
+  /* Fuchsia Overdose gradient (#ec4899 → #ff07a3) */
   @keyframes dropbox-neon-ignite-pink {
-    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(236, 72, 153, 0.2); }
-    15% { opacity: 1; box-shadow: 0 0 15px rgba(236, 72, 153, 0.8); }
-    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(236, 72, 153, 0.3); }
-    40% { opacity: 1; box-shadow: 0 0 18px rgba(236, 72, 153, 0.9); }
-    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5); }
-    70% { opacity: 1; box-shadow: 0 0 14px rgba(236, 72, 153, 0.7); }
-    100% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5); }
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(236, 72, 153, 0.2), 0 0 16px rgba(255, 7, 163, 0.1); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(236, 72, 153, 0.8), 0 0 30px rgba(255, 7, 163, 0.6); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(236, 72, 153, 0.3), 0 0 20px rgba(255, 7, 163, 0.2); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(236, 72, 153, 0.9), 0 0 36px rgba(255, 7, 163, 0.7); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5), 0 0 24px rgba(255, 7, 163, 0.4); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(236, 72, 153, 0.7), 0 0 28px rgba(255, 7, 163, 0.5); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5), 0 0 24px rgba(255, 7, 163, 0.4); }
   }
   @keyframes dropbox-fade-out {
     from { opacity: 1; }
@@ -1422,14 +1423,14 @@ const DropboxBrowser = ({
                                         </div>
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                             {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', border: '1px solid #FF6B00', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)', color: importBtnIgniting === 'fusion' ? 'white' : '#6b7280' }}>
+                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', color: 'white', boxShadow: '0 0 15px rgba(255, 107, 0, 0.4)' }}>
                                                 <Layers size={14} />
                                                 <span>FUSION</span>
                                             </button>
                                         </div>
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                            {importBtnIgniting === 'vibes' && <div className="absolute inset-0 rounded-full dropbox-ignite-pink" style={{ background: '#ec4899', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('vibes')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'vibes' ? 'transparent' : '#ec4899', color: 'white', boxShadow: '0 0 15px rgba(236, 72, 153, 0.4)' }}>
+                                            {importBtnIgniting === 'vibes' && <div className="absolute inset-0 rounded-full dropbox-ignite-pink" style={{ background: 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)', zIndex: 0 }} />}
+                                            <button onClick={() => handleImportAction('vibes')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)', color: 'white', boxShadow: '0 0 15px rgba(236, 72, 153, 0.4), 0 0 25px rgba(255, 7, 163, 0.3)' }}>
                                                 <Flame size={14} />
                                                 <span>{Object.keys(importData.folders).length} VIBES</span>
                                             </button>
