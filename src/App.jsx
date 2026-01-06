@@ -593,7 +593,7 @@ const CONFIG = {
     CARD_ANIM_ORIGIN_Y: '120%',              // Point Y d'origine de la rotation (100% = bas de l'écran, 150% = en dessous)
 
     // PLAYER - Swipe down pour fermer
-    PLAYER_SWIPE_CLOSE_THRESHOLD_PERCENT: 20, // % de l'écran à swiper pour fermer
+    PLAYER_SWIPE_CLOSE_THRESHOLD_PERCENT: 15, // % de l'écran à swiper pour fermer
     PLAYER_SLIDE_DURATION: 400,               // Durée de l'animation slide (ms)
     PLAYER_FADE_OUT_ENABLED: true,            // Activer le fade out à la fermeture
     PLAYER_FADE_OUT_DURATION: 500,            // Durée du fade out (ms)
@@ -4334,7 +4334,11 @@ useEffect(() => {
 
     // Annuler tout fade précédent
     if (fadeInterval.current) {
-        clearTimeout(fadeInterval.current);
+        if (fadeInterval.current.cancel) {
+            fadeInterval.current.cancel();
+        } else {
+            clearTimeout(fadeInterval.current);
+        }
         fadeInterval.current = null;
     }
 
@@ -4352,65 +4356,42 @@ useEffect(() => {
         onComplete?.();
     };
 
-    // Utiliser Web Audio API si disponible (fade lisse natif)
+    // Utiliser Web Audio API avec requestAnimationFrame pour iOS
     if (audioContextRef.current && gainNodeRef.current) {
-        const ctx = audioContextRef.current;
         const gain = gainNodeRef.current.gain;
 
         // Annuler tout scheduling précédent
-        gain.cancelScheduledValues(ctx.currentTime);
-        // Définir la valeur actuelle comme point de départ
+        gain.cancelScheduledValues(audioContextRef.current.currentTime);
+
         const startValue = gain.value;
-        const startTime = ctx.currentTime;
-        gain.setValueAtTime(startValue, startTime);
-        // Faire le ramp vers 0
-        gain.linearRampToValueAtTime(0, startTime + FADE_OUT_DURATION_SEC);
+        const startTime = performance.now();
+        const duration = FADE_OUT_DURATION_SEC * 1000; // en ms
+        let rafId = null;
 
-        // Surveiller le volume en temps réel et lancer la lecture quand = 0
-        let checkVolumeInterval = null;
-        let safetyTimeout = null;
+        const animateFade = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
 
-        const cleanup = () => {
-            if (checkVolumeInterval) {
-                clearInterval(checkVolumeInterval);
-                checkVolumeInterval = null;
-            }
-            if (safetyTimeout) {
-                clearTimeout(safetyTimeout);
-                safetyTimeout = null;
-            }
-            fadeInterval.current = null;
-        };
+            // Calculer le nouveau gain (linéaire de startValue à 0)
+            const newGain = startValue * (1 - progress);
+            gain.value = Math.max(0, newGain);
 
-        checkVolumeInterval = setInterval(() => {
-            const currentGain = gain.value;
-
-            // Quand le volume atteint 0, arrêter le check et lancer la suite
-            if (currentGain <= 0.001) {
-                cleanup();
-
-                // Pause l'audio actuel
+            if (progress < 1) {
+                rafId = requestAnimationFrame(animateFade);
+            } else {
+                // Fade terminé
+                gain.value = 0;
                 audioRef.current.pause();
-
-                // Garder le gain à 0, il sera restauré après chargement nouvelle source
-                gain.cancelScheduledValues(ctx.currentTime);
-                gain.setValueAtTime(0, ctx.currentTime);
-
+                fadeInterval.current = null;
                 complete();
             }
-        }, 25); // Check toutes les 25ms pour fade court
+        };
 
-        // Timeout de sécurité
-        safetyTimeout = setTimeout(() => {
-            cleanup();
-            audioRef.current.pause();
-            gain.cancelScheduledValues(ctx.currentTime);
-            gain.setValueAtTime(0, ctx.currentTime);
-            complete();
-        }, FADE_OUT_DURATION_SEC * 1000 + 100);
+        // Démarrer l'animation
+        rafId = requestAnimationFrame(animateFade);
 
-        // Stocker le timeout pour pouvoir l'annuler si besoin
-        fadeInterval.current = safetyTimeout;
+        // Stocker pour pouvoir annuler
+        fadeInterval.current = { cancel: () => cancelAnimationFrame(rafId) };
     } else {
         // Fallback sans Web Audio API (fade par steps)
         const intervalTime = 20;
@@ -4442,13 +4423,19 @@ useEffect(() => {
 
     // Annuler tout fade précédent
     if (fadeInterval.current) {
-        clearTimeout(fadeInterval.current);
+        if (fadeInterval.current.cancel) {
+            fadeInterval.current.cancel();
+        } else {
+            clearTimeout(fadeInterval.current);
+        }
         fadeInterval.current = null;
     }
 
-    // Utiliser Web Audio API si disponible
+    // Mettre isPlaying à false immédiatement (l'UI répond tout de suite)
+    setIsPlaying(false);
+
+    // Utiliser Web Audio API avec requestAnimationFrame pour iOS
     if (audioContextRef.current && gainNodeRef.current) {
-        const ctx = audioContextRef.current;
         const gain = gainNodeRef.current.gain;
 
         // Sauvegarder le volume actuel AVANT de changer quoi que ce soit
@@ -4458,24 +4445,38 @@ useEffect(() => {
         }
 
         // Annuler tout scheduling précédent
-        gain.cancelScheduledValues(ctx.currentTime);
-        gain.setValueAtTime(currentGain, ctx.currentTime);
-        // Faire le ramp vers 0
-        gain.linearRampToValueAtTime(0, ctx.currentTime + PAUSE_FADE_DURATION_SEC);
+        gain.cancelScheduledValues(audioContextRef.current.currentTime);
 
-        // Quand le fade est fini, pauser l'audio
-        fadeInterval.current = setTimeout(() => {
-            fadeInterval.current = null;
-            if (audioRef.current) {
-                audioRef.current.pause();
+        const startValue = currentGain;
+        const startTime = performance.now();
+        const duration = PAUSE_FADE_DURATION_SEC * 1000; // en ms
+        let rafId = null;
+
+        const animateFade = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Calculer le nouveau gain (linéaire de startValue à 0)
+            const newGain = startValue * (1 - progress);
+            gain.value = Math.max(0, newGain);
+
+            if (progress < 1) {
+                rafId = requestAnimationFrame(animateFade);
+            } else {
+                // Fade terminé
+                gain.value = 0;
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                }
+                fadeInterval.current = null;
             }
-            // Forcer gain à 0 immédiatement
-            gain.cancelScheduledValues(ctx.currentTime);
-            gain.setValueAtTime(0, ctx.currentTime);
-        }, PAUSE_FADE_DURATION_SEC * 1000);
+        };
 
-        // Mettre isPlaying à false immédiatement (l'UI répond tout de suite)
-        setIsPlaying(false);
+        // Démarrer l'animation
+        rafId = requestAnimationFrame(animateFade);
+
+        // Stocker pour pouvoir annuler
+        fadeInterval.current = { cancel: () => cancelAnimationFrame(rafId) };
     } else {
         // Fallback sans Web Audio API
         const startVol = audioRef.current.volume;
@@ -4485,9 +4486,6 @@ useEffect(() => {
         const intervalTime = 20;
         const totalSteps = (PAUSE_FADE_DURATION_SEC * 1000) / intervalTime;
         const step = startVol / totalSteps;
-
-        // Mettre isPlaying à false immédiatement
-        setIsPlaying(false);
 
         const doFade = () => {
             if (!audioRef.current) return;
