@@ -4446,33 +4446,46 @@ useEffect(() => {
         const ctx = audioContextRef.current;
         const gain = gainNodeRef.current.gain;
 
-        // Sauvegarder le volume actuel
-        savedVolume.current = gain.value;
+        // Sauvegarder le volume actuel AVANT de changer quoi que ce soit
+        const currentGain = gain.value;
+        if (currentGain > 0.01) {
+            savedVolume.current = currentGain;
+        }
 
         // Annuler tout scheduling précédent
         gain.cancelScheduledValues(ctx.currentTime);
-        gain.setValueAtTime(gain.value, ctx.currentTime);
+        gain.setValueAtTime(currentGain, ctx.currentTime);
         // Faire le ramp vers 0
         gain.linearRampToValueAtTime(0, ctx.currentTime + PAUSE_FADE_DURATION_SEC);
 
-        // Quand le fade est fini, pauser
+        // Quand le fade est fini, pauser l'audio
         fadeInterval.current = setTimeout(() => {
             fadeInterval.current = null;
-            audioRef.current.pause();
-            // Garder gain à 0, sera restauré au play
+            if (audioRef.current) {
+                audioRef.current.pause();
+            }
+            // Forcer gain à 0 immédiatement
             gain.cancelScheduledValues(ctx.currentTime);
             gain.setValueAtTime(0, ctx.currentTime);
-            setIsPlaying(false);
         }, PAUSE_FADE_DURATION_SEC * 1000);
+
+        // Mettre isPlaying à false immédiatement (l'UI répond tout de suite)
+        setIsPlaying(false);
     } else {
         // Fallback sans Web Audio API
         const startVol = audioRef.current.volume;
-        savedVolume.current = startVol;
+        if (startVol > 0.01) {
+            savedVolume.current = startVol;
+        }
         const intervalTime = 20;
         const totalSteps = (PAUSE_FADE_DURATION_SEC * 1000) / intervalTime;
         const step = startVol / totalSteps;
 
+        // Mettre isPlaying à false immédiatement
+        setIsPlaying(false);
+
         const doFade = () => {
+            if (!audioRef.current) return;
             const currentVol = audioRef.current.volume;
             if (currentVol > step) {
                 audioRef.current.volume = currentVol - step;
@@ -4481,7 +4494,6 @@ useEffect(() => {
                 audioRef.current.volume = 0;
                 audioRef.current.pause();
                 fadeInterval.current = null;
-                setIsPlaying(false);
             }
         };
         doFade();
@@ -5003,26 +5015,29 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
-              // Restaurer le volume si on vient d'un fadeOut (gain était à 0)
-              // On utilise volume/100 car volume est en % (0-100) et gain en (0-1)
+              // Annuler tout fade en cours (si on appuie play pendant un fade out)
+              if (fadeInterval.current) {
+                  clearTimeout(fadeInterval.current);
+                  fadeInterval.current = null;
+              }
+
+              // Restaurer le volume si on vient d'un fadeOut
               if (gainNodeRef.current && audioContextRef.current) {
                   const ctx = audioContextRef.current;
                   const gain = gainNodeRef.current.gain;
-                  const targetGain = volume / 100;
-                  // Si le gain est proche de 0, on vient d'un fade - restaurer
-                  if (gain.value < 0.01) {
-                      gain.cancelScheduledValues(ctx.currentTime);
-                      gain.setValueAtTime(targetGain, ctx.currentTime);
-                  }
+                  // Annuler tout scheduling (ramp en cours)
+                  gain.cancelScheduledValues(ctx.currentTime);
+                  // Utiliser le volume sauvegardé ou le volume par défaut
+                  const targetGain = savedVolume.current > 0.01 ? savedVolume.current : volume / 100;
+                  gain.setValueAtTime(targetGain, ctx.currentTime);
               }
-              // Ne jouer que si l'audio est vraiment en pause (évite stutter sur resume)
-              if (audio.paused) {
-                  const playPromise = audio.play();
-                  if (playPromise !== undefined) {
-                      playPromise.catch(error => {
-                          if (error.name !== 'AbortError') console.error("Playback error:", error);
-                      });
-                  }
+
+              // Jouer l'audio
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                  playPromise.catch(error => {
+                      if (error.name !== 'AbortError') console.error("Playback error:", error);
+                  });
               }
         } else {
             // Ne pauser que si l'audio joue vraiment (évite stutter)
