@@ -1008,15 +1008,15 @@ const styles = `
     animation: pulse-pill-red 0.6s ease-in-out infinite;
   }
 
-  /* Animation ignite pour KILL VIBE - Afterburner (jaune #facc15 → rouge #ef4444) */
+  /* Animation ignite pour KILL VIBE - Fuchsia Overdose (pink #ec4899 → fuchsia #ff07a3) */
   @keyframes ignite-pill-lime {
-    0% { box-shadow: 0 0 10px rgba(250, 204, 21, 0.4), 0 0 20px rgba(239, 68, 68, 0.2); }
-    15% { box-shadow: 0 0 25px rgba(250, 204, 21, 1), 0 0 50px rgba(239, 68, 68, 0.8); }
-    25% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.5), 0 0 30px rgba(239, 68, 68, 0.4); }
-    40% { box-shadow: 0 0 35px rgba(250, 204, 21, 1), 0 0 70px rgba(239, 68, 68, 0.9); }
-    55% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.6), 0 0 40px rgba(239, 68, 68, 0.5); }
-    70% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.9), 0 0 60px rgba(239, 68, 68, 0.7); }
-    100% { box-shadow: 0 0 25px rgba(250, 204, 21, 0.7), 0 0 50px rgba(239, 68, 68, 0.5); }
+    0% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.4), 0 0 20px rgba(255, 7, 163, 0.2); }
+    15% { box-shadow: 0 0 25px rgba(236, 72, 153, 1), 0 0 50px rgba(255, 7, 163, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), 0 0 30px rgba(255, 7, 163, 0.4); }
+    40% { box-shadow: 0 0 35px rgba(236, 72, 153, 1), 0 0 70px rgba(255, 7, 163, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.6), 0 0 40px rgba(255, 7, 163, 0.5); }
+    70% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.9), 0 0 60px rgba(255, 7, 163, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.5); }
   }
   .animate-ignite-pill-lime {
     animation: ignite-pill-lime 0.5s ease-out forwards;
@@ -1716,21 +1716,21 @@ const ALL_GRADIENTS = [
     ['#67e8f9', '#4ade80'],
     // 10. 8-bit Dream
     ['#38bdf8', '#a855f7'],
+    // 11. Fuchsia Overdose
+    ['#ec4899', '#ff07a3 ',
     // ===== TRICOLORES =====
-    // 11. Solar Flare
+    // 12. Solar Flare
     ['#facc15', '#f97316', '#dc2626'],
-    // 12. Cosmic Twilight
+    // 13. Cosmic Twilight
     ['#ec4899', '#9333ea', '#3730a3'],
-    // 13. Jungle Rave
+    // 14. Jungle Rave
     ['#a3e635', '#22c55e', '#0d9488'],
-    // 14. Electric Lagoon
+    // 15. Electric Lagoon
     ['#01ffe5', '#57a9ed', '#a855f7'],
-    // 15. Synthwave Dream
+    // 16. Synthwave Dream
     ['#c026d3', '#7e22ce', '#fb923c'],
-    // 16. Aurora Borealis
+    // 17. Aurora Borealis
     ['#0f766e', '#06b6d4', '#c084fc'],
-    // 17. Fuchsia Sunrise
-    ['#ec4899', '#d946ef', '#f97316'],
     // 18. Neo-Tokyo Nights
     ['#3b82f6', '#d946ef', '#f97316'],
     // 19. Circuit Grid
@@ -1752,13 +1752,13 @@ const GRADIENT_NAMES = [
     'Overload',
     'Bio-Luminescence',
     '8-bit Dream',
+    'Fuchsia Overdose',
     'Solar Flare',
     'Cosmic Twilight',
     'Jungle Rave',
     'Electric Lagoon',
     'Synthwave Dream',
     'Aurora Borealis',
-    'Fuchsia Sunrise',
     'Neo-Tokyo Nights',
     'Circuit Grid',
     'Dawn Sky',
@@ -6815,11 +6815,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         className="absolute inset-0 rounded-full flex items-center justify-center border"
                                         style={{
                                             background: pendingVibe
-                                                ? 'linear-gradient(135deg, #facc15 0%, #ef4444 100%)'  // Afterburner
+                                                ? 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)'  // Fuchsia Overdose
                                                 : 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)', // Lava Flow
-                                            borderColor: pendingVibe ? '#CC5200' : '#CC0530',
+                                            borderColor: pendingVibe ? '#d946ef' : '#CC0530',
                                             boxShadow: pendingVibe
-                                                ? '0 0 25px rgba(250, 204, 21, 0.7), 0 0 50px rgba(239, 68, 68, 0.4)'
+                                                ? '0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.4)'
                                                 : '0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.4)'
                                         }}
                                     >
