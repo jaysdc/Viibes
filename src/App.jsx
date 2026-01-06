@@ -580,6 +580,7 @@ const CONFIG = {
     BACK_TO_VIBES_START_PERCENT: 25,      // % depuis le HAUT de l'écran où on COMMENCE à afficher (opacité 0)
     BACK_TO_VIBES_FULL_PERCENT: 8,        // % depuis le HAUT de l'écran où opacité = 100%
     BACK_TO_VIBES_TRIGGER_PERCENT: 17,    // % depuis le HAUT de l'écran où on switch au lecteur principal
+    DRAWER_INERTIA_MULTIPLIER: 15,        // Multiplicateur de vélocité pour l'inertie du tiroir
 
     // CARD ANIMATION - Animation éventail (Player, Tweaker, etc.)
     CARD_ANIM_OPEN_DURATION: 800,            // Durée de l'animation d'ouverture (ms)
@@ -4934,11 +4935,12 @@ const vibeSearchResults = () => {
         } else if (dashboardRef.current && Math.abs(dragVelocity.current) > 0.3) {
           // Appliquer l'inertie si vélocité suffisante (> 0.3 px/ms)
           const containerHeight = mainContainerRef.current.offsetHeight;
+          const footerHeight = getFooterHeight();
           const handleHeight = containerHeight * (CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100);
           const minHeight = handleHeight - CONFIG.DRAWER_SEPARATOR_HEIGHT;
           const maxHeight = containerHeight - CONFIG.DRAWER_TOP_MARGIN;
           let currentHeight = dashboardRef.current.offsetHeight;
-          let velocity = dragVelocity.current * 15; // Amplifier la vélocité initiale
+          let velocity = dragVelocity.current * CONFIG.DRAWER_INERTIA_MULTIPLIER;
           const friction = 0.92; // Friction pour décélération
 
           const animateInertia = () => {
@@ -4955,6 +4957,18 @@ const vibeSearchResults = () => {
               velocity = 0;
             }
 
+            // Calculer la position du haut du tiroir en % de l'écran
+            const drawerTopY = containerHeight - footerHeight - currentHeight;
+            const topPositionPercent = (drawerTopY / containerHeight) * 100;
+
+            // Si le tiroir atteint le haut de l'écran (maxHeight), ouvrir le player
+            if (currentHeight >= maxHeight) {
+              inertiaRafRef.current = null;
+              openFullPlayer(drawerTopY);
+              setDashboardHeight(containerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+              return;
+            }
+
             dashboardRef.current.style.height = `${currentHeight}px`;
             setDashboardHeight(currentHeight);
 
@@ -4962,7 +4976,12 @@ const vibeSearchResults = () => {
             if (Math.abs(velocity) > 0.5) {
               inertiaRafRef.current = requestAnimationFrame(animateInertia);
             } else {
+              // Inertie terminée - vérifier si on est dans la zone de trigger
               inertiaRafRef.current = null;
+              if (topPositionPercent <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) {
+                openFullPlayer(drawerTopY);
+                setDashboardHeight(containerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+              }
             }
           };
           inertiaRafRef.current = requestAnimationFrame(animateInertia);
