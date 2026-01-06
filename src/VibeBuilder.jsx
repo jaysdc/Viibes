@@ -1873,7 +1873,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                 >
                                     <div className={`flex items-center gap-2 ${isAnimatingAddAll ? 'animate-blink' : ''}`}>
                                         <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>ADD ALL</span>
-                                        <span className="font-normal opacity-80" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>( {displaySongs.length} <Music2 style={{ width: CONFIG.ADDALL_ICON_SIZE, height: CONFIG.ADDALL_ICON_SIZE }} className="inline -mt-0.5" /> )</span>
+                                        <span className="font-normal opacity-70 text-xs" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>({displaySongs.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
                                     </div>
                                 </button>
                             );

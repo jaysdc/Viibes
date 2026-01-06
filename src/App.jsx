@@ -1717,7 +1717,7 @@ const ALL_GRADIENTS = [
     // 10. 8-bit Dream
     ['#38bdf8', '#a855f7'],
     // 11. Fuchsia Overdose
-    ['#ec4899', '#ff07a3 ',
+    ['#ec4899', '#ff07a3'],
     // ===== TRICOLORES =====
     // 12. Solar Flare
     ['#facc15', '#f97316', '#dc2626'],
@@ -6539,7 +6539,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
             {/* Bouton VIBE THIS - Dans le header sticky, sous la search bar */}
             {isLibrarySearching && librarySearchQuery && librarySearchResults.length > 0 && (
-                <div style={{ marginTop: `${CONFIG.HEADER_VIBETHIS_MARGIN_TOP}px` }}>
+                <div className="w-full" style={{ marginTop: `${CONFIG.HEADER_VIBETHIS_MARGIN_TOP}px` }}>
                     {(() => {
                         const gradientColors = getGradientByIndex(vibeTheseGradientIndex);
                         const step = 100 / (gradientColors.length - 1);
