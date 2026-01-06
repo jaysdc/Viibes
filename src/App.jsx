@@ -622,7 +622,7 @@ const CONFIG = {
     NEON_COLOR_LIME: '192, 255, 0',       // Vert lime (BACK TO VIBES, Check)
     NEON_COLOR_EMERALD: '16, 185, 129',   // Vert émeraude (PLAY NEXT)
     NEON_COLOR_ROSE: '244, 63, 94',       // Rose (ARCHIVE)
-    NEON_COLOR_ORANGE: '255, 103, 0',     // Orange (KILL VIBE)
+    NEON_COLOR_FUCHSIA: '236, 72, 153',   // Fuchsia Overdose (KILL VIBE) - #ec4899
     NEON_COLOR_RED: '255, 7, 58',         // Rouge (NUKE ALL)
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -2435,15 +2435,16 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     // MODE CONFIRMATION - priorité maximale
     if (confirmMode) {
         const isKill = confirmType === 'kill';
-        const bgColor = isKill ? '#FF6700' : '#FF073A';
-        const borderColor = isKill ? '#CC5200' : '#CC0530';
-        const glowColor = isKill ? 'rgba(255, 103, 0, 0.7)' : 'rgba(255, 7, 58, 0.7)';
-        const glowColor2 = isKill ? 'rgba(255, 103, 0, 0.4)' : 'rgba(255, 7, 58, 0.4)';
+        // Fuchsia Overdose (#ec4899 → #ff07a3) pour KILL, Lava Flow (#f43f5e → #b91c1c) pour NUKE
+        const bgColor = isKill ? '#ec4899' : '#f43f5e';
+        const borderColor = isKill ? '#db2777' : '#be123c';
+        const glowColor = isKill ? 'rgba(236, 72, 153, 0.7)' : 'rgba(244, 63, 94, 0.7)';
+        const glowColor2 = isKill ? 'rgba(255, 7, 163, 0.4)' : 'rgba(185, 28, 28, 0.4)';
         const text = isKill ? 'KILL CURRENT VIBE?!' : 'NUKE ALL???';
         const Icon = isKill ? Skull : Radiation;
         const isAnimating = feedback && (feedback.type === 'kill' || feedback.type === 'nuke');
         const animClass = isAnimating ? 'animate-neon-glow' : '';
-        const neonColor = isKill ? '255, 103, 0' : '255, 7, 58';
+        const neonColor = isKill ? '236, 72, 153' : '244, 63, 94';
         
         return (
             <div
@@ -6757,9 +6758,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <FeedbackOverlay
                                         feedback={confirmFeedback}
                                         onAnimationComplete={onConfirmAnimationComplete}
-                                        neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_ORANGE : CONFIG.NEON_COLOR_RED}
-                                        bgClass={confirmFeedback.type === 'kill' ? 'bg-orange-500' : 'bg-red-500'}
-                                        borderClass={confirmFeedback.type === 'kill' ? 'border-orange-600' : 'border-red-600'}
+                                        neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_FUCHSIA : CONFIG.NEON_COLOR_RED}
+                                        bgClass={confirmFeedback.type === 'kill' ? 'bg-pink-500' : 'bg-red-500'}
+                                        borderClass={confirmFeedback.type === 'kill' ? 'border-pink-600' : 'border-red-600'}
                                     >
                                         {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
                                         <span>{confirmFeedback.text}</span>
