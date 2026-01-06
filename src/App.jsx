@@ -4318,7 +4318,7 @@ useEffect(() => {
 
   // AUDIO FADING UTILS
   // Durée du fade out pour kill vibe (en secondes pour Web Audio API)
-  const FADE_OUT_DURATION_SEC = 0.25;
+  const FADE_OUT_DURATION_SEC = 0.5;
 
   // Fade out avec callback quand terminé (utilise Web Audio API pour un fade lisse)
   const fadeOutAndStop = (onComplete) => {
