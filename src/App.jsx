@@ -7,7 +7,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
@@ -576,7 +576,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // BACK TO VIBES (Overlay quand on étire le tiroir)
     // ══════════════════════════════════════════════════════════════════════════
-    BACK_TO_VIBES_BG_OPACITY: 0.95,       // Opacité du fond noir (0-1)
+    BACK_TO_VIBES_MAX_BLUR: 20,           // Blur maximum en pixels (à opacité 100%)
     BACK_TO_VIBES_START_PERCENT: 25,      // % depuis le HAUT de l'écran où on COMMENCE à afficher (opacité 0)
     BACK_TO_VIBES_FULL_PERCENT: 8,        // % depuis le HAUT de l'écran où opacité = 100%
     BACK_TO_VIBES_TRIGGER_PERCENT: 17,    // % depuis le HAUT de l'écran où on switch au lecteur principal
@@ -1692,89 +1692,8 @@ const VibingTitle = ({ size = 24 }) => (
     </div>
 );
 
-// ========== LES 20 DÉGRADÉS FIXES ==========
-// Bicolores : [couleur1, couleur2] - Le code gère automatiquement 2, 3 ou + couleurs
-// L'ordre est fixe et le cycle revient au début après le dernier
-const ALL_GRADIENTS = [
-    // ===== BICOLORES =====
-    // 1. Miami Vice
-    ['#f472b6', '#fb923c'],
-    // 2. Lava Flow
-    ['#f43f5e', '#b91c1c'],
-    // 3. Afterburner
-    ['#facc15', '#ef4444'],
-    // 4. Glitch City
-    ['#1d4ed8', '#22d3ee'],
-    // 5. Galactic Haze
-    ['#a21caf', '#312e81'],
-    // 6. Arcade Glow
-    ['#a855f7', '#3b82f6'],
-    // 7. Radioactive Pulse
-    ['#4ade80', '#fde047'],
-    // 8. Overload
-    ['#00FFFF', '#FF00FF'],
-    // 9. Bio-Luminescence
-    ['#67e8f9', '#4ade80'],
-    // 10. 8-bit Dream
-    ['#38bdf8', '#a855f7'],
-    // 11. Fuchsia Overdose
-    ['#ec4899', '#ff07a3'],
-    // ===== TRICOLORES =====
-    // 12. Solar Flare
-    ['#facc15', '#f97316', '#dc2626'],
-    // 13. Cosmic Twilight
-    ['#ec4899', '#9333ea', '#3730a3'],
-    // 14. Jungle Rave
-    ['#a3e635', '#22c55e', '#0d9488'],
-    // 15. Electric Lagoon
-    ['#01ffe5', '#57a9ed', '#a855f7'],
-    // 16. Synthwave Dream
-    ['#c026d3', '#7e22ce', '#fb923c'],
-    // 17. Aurora Borealis
-    ['#0f766e', '#06b6d4', '#c084fc'],
-    // 18. Neo-Tokyo Nights
-    ['#3b82f6', '#d946ef', '#f97316'],
-    // 19. Circuit Grid
-    ['#7e22ce', '#22d3ee', '#84cc16'],
-    // ===== 5-COLORS =====
-    // 20. Dawn Sky
-    ['#1e3a8a', '#60a5fa', '#f9a8d4', '#fde047', '#fed7aa'],
-];
-
-// Noms des dégradés (même ordre que ALL_GRADIENTS)
-const GRADIENT_NAMES = [
-    'Miami Vice',
-    'Lava Flow',
-    'Afterburner',
-    'Glitch City',
-    'Galactic Haze',
-    'Arcade Glow',
-    'Radioactive Pulse',
-    'Overload',
-    'Bio-Luminescence',
-    '8-bit Dream',
-    'Fuchsia Overdose',
-    'Solar Flare',
-    'Cosmic Twilight',
-    'Jungle Rave',
-    'Electric Lagoon',
-    'Synthwave Dream',
-    'Aurora Borealis',
-    'Neo-Tokyo Nights',
-    'Circuit Grid',
-    'Dawn Sky',
-];
-
-const getGradientByIndex = (index) => {
-    // Cycle entre 0 et 18 (19 dégradés)
-    const safeIndex = ((index % ALL_GRADIENTS.length) + ALL_GRADIENTS.length) % ALL_GRADIENTS.length;
-    return ALL_GRADIENTS[safeIndex];
-};
-
-const getGradientName = (index) => {
-    const safeIndex = ((index % GRADIENT_NAMES.length) + GRADIENT_NAMES.length) % GRADIENT_NAMES.length;
-    return GRADIENT_NAMES[safeIndex];
-};
+// ========== DÉGRADÉS ==========
+// NOTE: ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName sont importés de Config.jsx
 
 // Compteur d'utilisation des dégradés (sera mis à jour par App)
 let gradientUsageCount = new Array(ALL_GRADIENTS.length).fill(0);
@@ -6853,20 +6772,29 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
-            <div 
-                className="absolute inset-0 z-[100] flex flex-col items-center justify-center text-white pointer-events-none"
-                style={{ 
-                    backgroundColor: `rgba(0, 0, 0, ${CONFIG.BACK_TO_VIBES_BG_OPACITY})`,
-                    opacity: mainPlayerTriggerOpacity 
+            <div
+                className="absolute inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
+                style={{
+                    backgroundColor: `rgba(255, 255, 255, ${mainPlayerTriggerOpacity * 0.3})`,
+                    backdropFilter: `blur(${mainPlayerTriggerOpacity * CONFIG.BACK_TO_VIBES_MAX_BLUR}px)`,
+                    WebkitBackdropFilter: `blur(${mainPlayerTriggerOpacity * CONFIG.BACK_TO_VIBES_MAX_BLUR}px)`,
                 }}
             >
-                <Maximize2 
-                    size={isInTriggerZone ? 64 : 48} 
+                <Maximize2
+                    size={isInTriggerZone ? 64 : 48}
                     className={`mb-4 transition-all duration-150 ${isInTriggerZone ? 'animate-bounce-neon-lime' : ''}`}
+                    style={{
+                        color: `rgba(0, 0, 0, ${0.5 + mainPlayerTriggerOpacity * 0.5})`,
+                        filter: isInTriggerZone ? 'drop-shadow(0 0 8px rgba(192, 255, 0, 0.8))' : 'none'
+                    }}
                 />
-                <span 
+                <span
                     className={`font-black tracking-widest transition-all duration-150 ${isInTriggerZone ? 'animate-neon-lime' : ''}`}
-                    style={{ fontSize: isInTriggerZone ? '1.66rem' : '1.25rem' }}
+                    style={{
+                        fontSize: isInTriggerZone ? '1.66rem' : '1.25rem',
+                        color: `rgba(0, 0, 0, ${0.5 + mainPlayerTriggerOpacity * 0.5})`,
+                        textShadow: isInTriggerZone ? '0 0 10px rgba(192, 255, 0, 0.8)' : 'none'
+                    }}
                 >
                     BACK TO VIBES
                 </span>

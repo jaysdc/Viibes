@@ -1,6 +1,92 @@
 import React from 'react';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║              DÉGRADÉS (GRADIENTS) - Liste complète                        ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+export const ALL_GRADIENTS = [
+    // ===== BICOLORES =====
+    // 1. Miami Vice
+    ['#f472b6', '#fb923c'],
+    // 2. Lava Flow
+    ['#f43f5e', '#b91c1c'],
+    // 3. Afterburner
+    ['#facc15', '#ef4444'],
+    // 4. Glitch City
+    ['#1d4ed8', '#22d3ee'],
+    // 5. Galactic Haze
+    ['#a21caf', '#312e81'],
+    // 6. Arcade Glow
+    ['#a855f7', '#3b82f6'],
+    // 7. Radioactive Pulse
+    ['#4ade80', '#fde047'],
+    // 8. Overload
+    ['#00FFFF', '#FF00FF'],
+    // 9. Bio-Luminescence
+    ['#67e8f9', '#4ade80'],
+    // 10. 8-bit Dream
+    ['#38bdf8', '#a855f7'],
+    // 11. Fuchsia Overdose
+    ['#ec4899', '#ff07a3'],
+    // ===== TRICOLORES =====
+    // 12. Solar Flare
+    ['#facc15', '#f97316', '#dc2626'],
+    // 13. Cosmic Twilight
+    ['#ec4899', '#9333ea', '#3730a3'],
+    // 14. Jungle Rave
+    ['#a3e635', '#22c55e', '#0d9488'],
+    // 15. Electric Lagoon
+    ['#01ffe5', '#57a9ed', '#a855f7'],
+    // 16. Synthwave Dream
+    ['#c026d3', '#7e22ce', '#fb923c'],
+    // 17. Aurora Borealis
+    ['#0f766e', '#06b6d4', '#c084fc'],
+    // 18. Neo-Tokyo Nights
+    ['#3b82f6', '#d946ef', '#f97316'],
+    // 19. Circuit Grid
+    ['#7e22ce', '#22d3ee', '#84cc16'],
+    // ===== 5-COLORS =====
+    // 20. Dawn Sky
+    ['#1e3a8a', '#60a5fa', '#f9a8d4', '#fde047', '#fed7aa'],
+];
+
+// Noms des dégradés (même ordre que ALL_GRADIENTS)
+export const GRADIENT_NAMES = [
+    'Miami Vice',
+    'Lava Flow',
+    'Afterburner',
+    'Glitch City',
+    'Galactic Haze',
+    'Arcade Glow',
+    'Radioactive Pulse',
+    'Overload',
+    'Bio-Luminescence',
+    '8-bit Dream',
+    'Fuchsia Overdose',
+    'Solar Flare',
+    'Cosmic Twilight',
+    'Jungle Rave',
+    'Electric Lagoon',
+    'Synthwave Dream',
+    'Aurora Borealis',
+    'Neo-Tokyo Nights',
+    'Circuit Grid',
+    'Dawn Sky',
+];
+
+// Fonction pour obtenir un gradient par index (avec wrapping)
+export const getGradientByIndex = (index) => {
+    const safeIndex = ((index % ALL_GRADIENTS.length) + ALL_GRADIENTS.length) % ALL_GRADIENTS.length;
+    return ALL_GRADIENTS[safeIndex];
+};
+
+// Fonction pour obtenir le nom d'un gradient par index
+export const getGradientName = (index) => {
+    const safeIndex = ((index % GRADIENT_NAMES.length) + GRADIENT_NAMES.length) % GRADIENT_NAMES.length;
+    return GRADIENT_NAMES[safeIndex];
+};
+
+// ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              SAFE AREA INSETS (lus au démarrage via JavaScript)            ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
