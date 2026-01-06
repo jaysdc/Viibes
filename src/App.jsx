@@ -6061,40 +6061,25 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     // Callback quand l'animation ignite est terminée
     const onConfirmAnimationComplete = () => {
         if (confirmFeedback?.type === 'kill') {
-            // KILL VIBE - lancer la vibe DIRECTEMENT (pas d'animation sur la carte vibe)
+            const vibeToLaunch = pendingVibe;
             setConfirmOverlayVisible(false);
-            setTimeout(() => {
-                const vibeToLaunch = pendingVibe;
-                setPendingVibe(null);
-                setConfirmFeedback(null);
-                setConfirmSwipeX(0); // Reset position curseur pour la prochaine fois
-                // Lancer directement la vibe sans animation de carte
-                launchVibe(vibeToLaunch);
-            }, 150);
+            setPendingVibe(null);
+            setConfirmFeedback(null);
+            setConfirmSwipeX(0);
+            doLaunchVibe(vibeToLaunch);
         } else if (confirmFeedback?.type === 'nuke') {
-            // NUKE ALL - tout supprimer puis retour dashboard
             setConfirmOverlayVisible(false);
-            setTimeout(() => {
-                setNukeConfirmMode(false);
-                setConfirmFeedback(null);
-                setConfirmSwipeX(0); // Reset position curseur pour la prochaine fois
-                setPlaylists({});
-                localStorage.removeItem('vibes_playlists');
-                setVibeColorIndices({});
-                localStorage.removeItem('vibes_color_indices');
-                setCurrentSong(null);
-                setQueue([]);
-                setIsPlaying(false);
-                setActiveVibeName(null);
-                setIsLibrarySearching(false);
-                setLibrarySearchQuery('');
-                setIsPlayerSearching(false);
-                setPlayerSearchQuery('');
-                // Fade out audio si en cours
-                if (audioRef.current && !audioRef.current.paused) {
-                    fadeOutAndStop();
-                }
-            }, 150);
+            setNukeConfirmMode(false);
+            setConfirmFeedback(null);
+            setConfirmSwipeX(0);
+            setPlaylists({});
+            localStorage.removeItem('vibes_playlists');
+            setVibeColorIndices({});
+            localStorage.removeItem('vibes_color_indices');
+            setCurrentSong(null);
+            setQueue([]);
+            setIsPlaying(false);
+            setActiveVibeName(null);
         }
     };
   
