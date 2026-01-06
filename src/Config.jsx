@@ -87,7 +87,7 @@ export const getGradientName = (index) => {
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║              SAFE AREA INSETS (lus au démarrage via JavaScript)            ║
+// ║              SAFE AREA INSETS (lus au démarrage via JavaScript)           ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 // Fonction pour lire env(safe-area-inset-bottom) en VRAIS pixels

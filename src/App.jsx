@@ -580,7 +580,7 @@ const CONFIG = {
     BACK_TO_VIBES_START_PERCENT: 25,      // % depuis le HAUT de l'écran où on COMMENCE à afficher (opacité 0)
     BACK_TO_VIBES_FULL_PERCENT: 8,        // % depuis le HAUT de l'écran où opacité = 100%
     BACK_TO_VIBES_TRIGGER_PERCENT: 17,    // % depuis le HAUT de l'écran où on switch au lecteur principal
-    DRAWER_INERTIA_MULTIPLIER: 15,        // Multiplicateur de vélocité pour l'inertie du tiroir
+    DRAWER_INERTIA_MULTIPLIER: 20,        // Multiplicateur de vélocité pour l'inertie du tiroir
 
     // CARD ANIMATION - Animation éventail (Player, Tweaker, etc.)
     CARD_ANIM_OPEN_DURATION: 800,            // Durée de l'animation d'ouverture (ms)
@@ -593,7 +593,7 @@ const CONFIG = {
     CARD_ANIM_ORIGIN_Y: '120%',              // Point Y d'origine de la rotation (100% = bas de l'écran, 150% = en dessous)
 
     // PLAYER - Swipe down pour fermer
-    PLAYER_SWIPE_CLOSE_THRESHOLD_PERCENT: 25, // % de l'écran à swiper pour fermer
+    PLAYER_SWIPE_CLOSE_THRESHOLD_PERCENT: 20, // % de l'écran à swiper pour fermer
     PLAYER_SLIDE_DURATION: 400,               // Durée de l'animation slide (ms)
     PLAYER_FADE_OUT_ENABLED: true,            // Activer le fade out à la fermeture
     PLAYER_FADE_OUT_DURATION: 500,            // Durée du fade out (ms)
@@ -7161,6 +7161,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation ignite
                                 if (pendingVibe) {
                                     setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                                    // Fade out audio pendant l'animation ignite
+                                    if (audioRef.current && !audioRef.current.paused) {
+                                        fadeOutAndStop();
+                                    }
                                 } else {
                                     setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
                                 }
