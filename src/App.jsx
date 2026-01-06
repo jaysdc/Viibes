@@ -4176,6 +4176,10 @@ const handlePlayerTouchEnd = () => {
     const startHeight = useRef(0);
     const drawerRafRef = useRef(null);
     const pendingDrawerHeight = useRef(null);
+    const lastDragY = useRef(null);
+    const lastDragTime = useRef(null);
+    const dragVelocity = useRef(0);
+    const inertiaRafRef = useRef(null);
     const mainContainerRef = useRef(null);
     const dashboardRef = useRef(null);
     const beaconNeonRef = useRef(null);
@@ -4834,19 +4838,39 @@ const vibeSearchResults = () => {
     setFeedback({ text: `Import Dropbox terminé`, type: 'confirm', triggerValidation: Date.now() });
   };
 
-    const handleDashTouchStart = (e) => { 
-      dragStartY.current = e.touches[0].clientY; 
-      if (dashboardRef.current) { 
-        startHeight.current = dashboardRef.current.offsetHeight; 
+    const handleDashTouchStart = (e) => {
+      dragStartY.current = e.touches[0].clientY;
+      lastDragY.current = e.touches[0].clientY;
+      lastDragTime.current = Date.now();
+      dragVelocity.current = 0;
+      if (inertiaRafRef.current) {
+        cancelAnimationFrame(inertiaRafRef.current);
+        inertiaRafRef.current = null;
+      }
+      if (dashboardRef.current) {
+        startHeight.current = dashboardRef.current.offsetHeight;
         isDraggingDrawer.current = true;
         setIsDrawerAnimating(false);
-      } 
+      }
     };
-      const handleDashTouchMove = (e) => { 
-        if (dragStartY.current === null || !mainContainerRef.current || !dashboardRef.current) return; 
-        
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY; 
-        const diff = dragStartY.current - clientY; 
+      const handleDashTouchMove = (e) => {
+        if (dragStartY.current === null || !mainContainerRef.current || !dashboardRef.current) return;
+
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const now = Date.now();
+
+        // Calculer la vélocité (pixels par ms, positif = vers le haut = augmente height)
+        if (lastDragY.current !== null && lastDragTime.current !== null) {
+            const dt = now - lastDragTime.current;
+            if (dt > 0) {
+                const dy = lastDragY.current - clientY; // positif si on monte
+                dragVelocity.current = dy / dt;
+            }
+        }
+        lastDragY.current = clientY;
+        lastDragTime.current = now;
+
+        const diff = dragStartY.current - clientY;
         let newHeight = startHeight.current + diff; 
         const containerHeight = mainContainerRef.current.offsetHeight; 
         const handleHeight = containerHeight * (CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100);
@@ -4894,28 +4918,63 @@ const vibeSearchResults = () => {
             lastOpacityRef.current = 0;
         } 
     };
-    const handleDashTouchEnd = (e) => { 
-        if (dragStartY.current === null || !mainContainerRef.current) return; 
-        
+    const handleDashTouchEnd = (e) => {
+        if (dragStartY.current === null || !mainContainerRef.current) return;
+
         isDraggingDrawer.current = false;
-        
+
         if (showMainPlayerTrigger && drawerTopPercentRef.current <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) {
-          // Calculer la position Y du haut du tiroir (là où le player doit commencer)
+          // Ouvrir le player
           const containerHeight = mainContainerRef.current.offsetHeight;
           const footerHeight = getFooterHeight();
           const currentDrawerHeight = dashboardRef.current?.offsetHeight || dashboardHeight;
           const drawerTopY = containerHeight - footerHeight - currentDrawerHeight;
-          
-          openFullPlayer(drawerTopY); 
-            setDashboardHeight(mainContainerRef.current.offsetHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+          openFullPlayer(drawerTopY);
+          setDashboardHeight(mainContainerRef.current.offsetHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+        } else if (dashboardRef.current && Math.abs(dragVelocity.current) > 0.3) {
+          // Appliquer l'inertie si vélocité suffisante (> 0.3 px/ms)
+          const containerHeight = mainContainerRef.current.offsetHeight;
+          const handleHeight = containerHeight * (CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100);
+          const minHeight = handleHeight - CONFIG.DRAWER_SEPARATOR_HEIGHT;
+          const maxHeight = containerHeight - CONFIG.DRAWER_TOP_MARGIN;
+          let currentHeight = dashboardRef.current.offsetHeight;
+          let velocity = dragVelocity.current * 15; // Amplifier la vélocité initiale
+          const friction = 0.92; // Friction pour décélération
+
+          const animateInertia = () => {
+            velocity *= friction;
+            currentHeight += velocity;
+
+            // Limites
+            if (currentHeight < minHeight) {
+              currentHeight = minHeight;
+              velocity = 0;
+            }
+            if (currentHeight > maxHeight) {
+              currentHeight = maxHeight;
+              velocity = 0;
+            }
+
+            dashboardRef.current.style.height = `${currentHeight}px`;
+            setDashboardHeight(currentHeight);
+
+            // Continuer si vélocité encore significative
+            if (Math.abs(velocity) > 0.5) {
+              inertiaRafRef.current = requestAnimationFrame(animateInertia);
+            } else {
+              inertiaRafRef.current = null;
+            }
+          };
+          inertiaRafRef.current = requestAnimationFrame(animateInertia);
         } else if (dashboardRef.current) {
-          // Synchroniser le state avec la hauteur DOM actuelle
           setDashboardHeight(dashboardRef.current.offsetHeight);
         }
-        
-        dragStartY.current = null; 
-        setShowMainPlayerTrigger(false); 
-        setIsInTriggerZone(false); 
+
+        dragStartY.current = null;
+        lastDragY.current = null;
+        lastDragTime.current = null;
+        setShowMainPlayerTrigger(false);
+        setIsInTriggerZone(false);
         drawerTopPercentRef.current = 100;
         lastOpacityRef.current = 0;
       };
