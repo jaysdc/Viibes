@@ -961,6 +961,38 @@ const styles = `
     color: #C0FF00 !important;
   }
 
+  /* Fuchsia Overdose (#ec4899 → #ff07a3) pour BACK TO VIBES */
+  @keyframes neon-pulse-fuchsia {
+    0%, 100% {
+      text-shadow: 0 0 10px rgba(236, 72, 153, 0.6), 0 0 20px rgba(255, 7, 163, 0.4);
+    }
+    50% {
+      text-shadow: 0 0 20px rgba(236, 72, 153, 1), 0 0 40px rgba(255, 7, 163, 0.8);
+    }
+  }
+  .animate-neon-fuchsia {
+    animation: neon-pulse-fuchsia 0.5s ease-in-out infinite;
+    color: #ec4899 !important;
+  }
+
+  @keyframes bounce-neon-fuchsia {
+    0%, 100% {
+      transform: translateY(-25%);
+      filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 20px rgba(255, 7, 163, 0.3)) brightness(1);
+    }
+    25%, 75% {
+      filter: drop-shadow(0 0 30px rgba(236, 72, 153, 1)) drop-shadow(0 0 50px rgba(255, 7, 163, 0.6)) brightness(1.2);
+    }
+    50% {
+      transform: translateY(0);
+      filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 20px rgba(255, 7, 163, 0.3)) brightness(1);
+    }
+  }
+  .animate-bounce-neon-fuchsia {
+    animation: bounce-neon-fuchsia 1s ease-in-out infinite;
+    color: #ec4899 !important;
+  }
+
   @keyframes bounce-neon-red {
     0%, 100% {
       transform: translateY(-25%);
@@ -4378,6 +4410,76 @@ useEffect(() => {
     }
   };
 
+  // Fade out rapide pour pause (garde le volume sauvegardé pour la reprise)
+  const PAUSE_FADE_DURATION_SEC = 0.15;
+
+  const fadeOutAndPause = () => {
+    if (!audioRef.current || audioRef.current.paused) return;
+
+    // Annuler tout fade précédent
+    if (fadeInterval.current) {
+        clearTimeout(fadeInterval.current);
+        fadeInterval.current = null;
+    }
+
+    // Utiliser Web Audio API si disponible
+    if (audioContextRef.current && gainNodeRef.current) {
+        const ctx = audioContextRef.current;
+        const gain = gainNodeRef.current.gain;
+
+        // Sauvegarder le volume actuel
+        savedVolume.current = gain.value;
+
+        // Annuler tout scheduling précédent
+        gain.cancelScheduledValues(ctx.currentTime);
+        gain.setValueAtTime(gain.value, ctx.currentTime);
+        // Faire le ramp vers 0
+        gain.linearRampToValueAtTime(0, ctx.currentTime + PAUSE_FADE_DURATION_SEC);
+
+        // Quand le fade est fini, pauser
+        fadeInterval.current = setTimeout(() => {
+            fadeInterval.current = null;
+            audioRef.current.pause();
+            // Garder gain à 0, sera restauré au play
+            gain.cancelScheduledValues(ctx.currentTime);
+            gain.setValueAtTime(0, ctx.currentTime);
+            setIsPlaying(false);
+        }, PAUSE_FADE_DURATION_SEC * 1000);
+    } else {
+        // Fallback sans Web Audio API
+        const startVol = audioRef.current.volume;
+        savedVolume.current = startVol;
+        const intervalTime = 20;
+        const totalSteps = (PAUSE_FADE_DURATION_SEC * 1000) / intervalTime;
+        const step = startVol / totalSteps;
+
+        const doFade = () => {
+            const currentVol = audioRef.current.volume;
+            if (currentVol > step) {
+                audioRef.current.volume = currentVol - step;
+                fadeInterval.current = setTimeout(doFade, intervalTime);
+            } else {
+                audioRef.current.volume = 0;
+                audioRef.current.pause();
+                fadeInterval.current = null;
+                setIsPlaying(false);
+            }
+        };
+        doFade();
+    }
+  };
+
+  // Toggle play avec fade out sur pause (pas de fade in sur play)
+  const togglePlayWithFade = () => {
+    if (isPlaying) {
+        // Fade out puis pause
+        fadeOutAndPause();
+    } else {
+        // Play direct (le useEffect restaurera le volume si nécessaire)
+        setIsPlaying(true);
+    }
+  };
+
   // Ancienne fonction pour les autres cas (duck, fade in)
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
@@ -6666,9 +6768,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         <SongWheel 
                                 queue={queue} 
                                 currentSong={currentSong} 
-                                onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); }} 
-                                isPlaying={isPlaying} 
-                                togglePlay={() => setIsPlaying(!isPlaying)} 
+                                onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); }}
+                                isPlaying={isPlaying}
+                                togglePlay={togglePlayWithFade}
                                 playPrev={playPrev} 
                                 playNext={playNext} 
                                 onReorder={handleReorder} 
@@ -6712,7 +6814,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         vibeSwipePreview={vibeSwipePreview}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
-                        onTogglePlay={() => setIsPlaying(!isPlaying)}
+                        onTogglePlay={togglePlayWithFade}
                      />
                     )}
                     
@@ -6783,18 +6885,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             >
                 <Maximize2
                     size={isInTriggerZone ? 64 : 48}
-                    className={`mb-4 transition-all duration-150 ${isInTriggerZone ? 'animate-bounce-neon-lime' : ''}`}
+                    className={`mb-4 transition-all duration-150 ${isInTriggerZone ? 'animate-bounce-neon-fuchsia' : ''}`}
                     style={{
                         color: `rgba(0, 0, 0, ${0.5 + mainPlayerTriggerOpacity * 0.5})`,
-                        filter: isInTriggerZone ? 'drop-shadow(0 0 8px rgba(192, 255, 0, 0.8))' : 'none'
+                        filter: isInTriggerZone ? 'drop-shadow(0 0 8px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 16px rgba(255, 7, 163, 0.5))' : 'none'
                     }}
                 />
                 <span
-                    className={`font-black tracking-widest transition-all duration-150 ${isInTriggerZone ? 'animate-neon-lime' : ''}`}
+                    className={`font-black tracking-widest transition-all duration-150 ${isInTriggerZone ? 'animate-neon-fuchsia' : ''}`}
                     style={{
                         fontSize: isInTriggerZone ? '1.66rem' : '1.25rem',
                         color: `rgba(0, 0, 0, ${0.5 + mainPlayerTriggerOpacity * 0.5})`,
-                        textShadow: isInTriggerZone ? '0 0 10px rgba(192, 255, 0, 0.8)' : 'none'
+                        textShadow: isInTriggerZone ? '0 0 10px rgba(236, 72, 153, 0.8), 0 0 20px rgba(255, 7, 163, 0.5)' : 'none'
                     }}
                 >
                     BACK TO VIBES
@@ -7279,7 +7381,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={() => setIsPlaying(!isPlaying)} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
                   </div>
                 )}
         
