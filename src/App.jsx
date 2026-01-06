@@ -4339,6 +4339,14 @@ useEffect(() => {
         : audioRef.current.volume;
     savedVolume.current = volumeBeforeFade;
 
+    // Flag pour éviter double appel de onComplete
+    let completed = false;
+    const complete = () => {
+        if (completed) return;
+        completed = true;
+        onComplete?.();
+    };
+
     // Utiliser Web Audio API si disponible (fade lisse natif)
     if (audioContextRef.current && gainNodeRef.current) {
         const ctx = audioContextRef.current;
@@ -4354,16 +4362,27 @@ useEffect(() => {
         gain.linearRampToValueAtTime(0, startTime + FADE_OUT_DURATION_SEC);
 
         // Surveiller le volume en temps réel et lancer la lecture quand = 0
-        const checkVolume = setInterval(() => {
+        let checkVolumeInterval = null;
+        let safetyTimeout = null;
+
+        const cleanup = () => {
+            if (checkVolumeInterval) {
+                clearInterval(checkVolumeInterval);
+                checkVolumeInterval = null;
+            }
+            if (safetyTimeout) {
+                clearTimeout(safetyTimeout);
+                safetyTimeout = null;
+            }
+            fadeInterval.current = null;
+        };
+
+        checkVolumeInterval = setInterval(() => {
             const currentGain = gain.value;
 
             // Quand le volume atteint 0, arrêter le check et lancer la suite
             if (currentGain <= 0.001) {
-                clearInterval(checkVolume);
-                if (fadeInterval.current) {
-                    clearTimeout(fadeInterval.current);
-                    fadeInterval.current = null;
-                }
+                cleanup();
 
                 // Pause l'audio actuel
                 audioRef.current.pause();
@@ -4372,21 +4391,21 @@ useEffect(() => {
                 gain.cancelScheduledValues(ctx.currentTime);
                 gain.setValueAtTime(0, ctx.currentTime);
 
-                onComplete?.();
+                complete();
             }
         }, 25); // Check toutes les 25ms pour fade court
 
         // Timeout de sécurité
-        fadeInterval.current = setTimeout(() => {
-            if (fadeInterval.current) {
-                fadeInterval.current = null;
-                clearInterval(checkVolume);
-                audioRef.current.pause();
-                gain.cancelScheduledValues(ctx.currentTime);
-                gain.setValueAtTime(0, ctx.currentTime);
-                onComplete?.();
-            }
+        safetyTimeout = setTimeout(() => {
+            cleanup();
+            audioRef.current.pause();
+            gain.cancelScheduledValues(ctx.currentTime);
+            gain.setValueAtTime(0, ctx.currentTime);
+            complete();
         }, FADE_OUT_DURATION_SEC * 1000 + 100);
+
+        // Stocker le timeout pour pouvoir l'annuler si besoin
+        fadeInterval.current = safetyTimeout;
     } else {
         // Fallback sans Web Audio API (fade par steps)
         const intervalTime = 20;
@@ -4403,7 +4422,7 @@ useEffect(() => {
                 audioRef.current.pause();
                 fadeInterval.current = null;
                 audioRef.current.volume = volumeBeforeFade;
-                onComplete?.();
+                complete();
             }
         };
         doFade();
