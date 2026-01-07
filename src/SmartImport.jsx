@@ -144,13 +144,13 @@ const smartImportStyles = `
   }
 
   @keyframes smartimport-neon-ignite-orange {
-    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(255, 107, 0, 0.2), 0 4px 8px rgba(255, 107, 0, 0.2); }
-    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(255, 107, 0, 0.8), 0 7px 15px rgba(255, 107, 0, 0.8); }
-    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(255, 107, 0, 0.3), 0 5px 10px rgba(255, 107, 0, 0.3); }
-    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(255, 107, 0, 0.9), 0 8px 18px rgba(255, 107, 0, 0.9); }
-    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(255, 107, 0, 0.5), 0 6px 12px rgba(255, 107, 0, 0.5); }
-    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(255, 107, 0, 0.7), 0 7px 14px rgba(255, 107, 0, 0.7); }
-    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(255, 107, 0, 0.5), 0 7px 12px rgba(255, 107, 0, 0.5); }
+    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(249, 115, 22, 0.2), 0 4px 8px rgba(220, 38, 38, 0.2); }
+    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(249, 115, 22, 0.8), 0 7px 15px rgba(220, 38, 38, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(249, 115, 22, 0.3), 0 5px 10px rgba(220, 38, 38, 0.3); }
+    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(249, 115, 22, 0.9), 0 8px 18px rgba(220, 38, 38, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(249, 115, 22, 0.5), 0 6px 12px rgba(220, 38, 38, 0.5); }
+    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(249, 115, 22, 0.7), 0 7px 14px rgba(220, 38, 38, 0.7); }
+    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(249, 115, 22, 0.5), 0 7px 12px rgba(220, 38, 38, 0.5); }
   }
 
   @keyframes smartimport-neon-ignite-red {
@@ -1240,8 +1240,8 @@ const SmartImport = ({
                                         <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-orange"
                                             style={{
-                                                background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)',
-                                                border: '1px solid #FF6B00',
+                                                background: 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
+                                                border: '1px solid #dc2626',
                                                 zIndex: 0
                                             }}
                                         />

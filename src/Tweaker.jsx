@@ -682,7 +682,7 @@ const Tweaker = ({
                                 isActive={undoFeedback}
                                 onAnimationComplete={handleUndoAnimationComplete}
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_ORANGE}
-                                bgGradient="linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)"
+                                bgGradient="linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)"
                                 borderClass="border-orange-600"
                             >
                                 <Undo2 size={18} strokeWidth={3} />
@@ -719,10 +719,10 @@ const Tweaker = ({
                     className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: undoFeedback ? 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)' : '#F3F4F6',
+                        background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : '#F3F4F6',
                         color: undoFeedback ? 'white' : '#9CA3AF',
-                        boxShadow: undoFeedback 
-                            ? '0 0 20px rgba(255, 214, 0, 0.5), 0 0 40px rgba(255, 107, 0, 0.3)' 
+                        boxShadow: undoFeedback
+                            ? '0 0 20px rgba(250, 204, 21, 0.5), 0 0 40px rgba(220, 38, 38, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >

@@ -10,8 +10,8 @@ export const ALL_GRADIENTS = [
     ['#f472b6', '#fb923c'],
     // 2. Lava Flow
     ['#f43f5e', '#b91c1c'],
-    // 3. Afterburner
-    ['#facc15', '#ef4444'],
+    // 3. Coral Neon
+    ['#ff07a3', '#fffC00'],
     // 4. Glitch City
     ['#1d4ed8', '#22d3ee'],
     // 5. Galactic Haze

@@ -4864,23 +4864,17 @@ const vibeSearchResults = () => {
         });
     }
 
-    // Créer une map nom -> vibeId pour trouver les vibes existantes par nom
-    const nameToVibeIdMap = new Map();
-    Object.keys(newPlaylists).forEach(vibeId => {
-        const vibe = newPlaylists[vibeId];
-        if (vibe.name) {
-            nameToVibeIdMap.set(vibe.name, vibeId);
-        }
-    });
-
     // Stocker les nouveaux vibeIds créés
     const newVibeIds = [];
+
+    // Map pour tracker les vibes créées pendant CET import (pour regrouper les fichiers du même artiste)
+    const importNameToVibeIdMap = new Map();
 
     // On traite chaque dossier trouvé dans l'import
     Object.keys(folders).forEach(folderName => {
       const filesInFolder = folders[folderName];
 
-      const newSongsForThisFolder = filesInFolder.map((file, index) => {
+      const newSongsForThisFolder = filesInFolder.map((file) => {
         // Créer une signature unique basée sur le fichier (taille + extension)
         const extension = file.name.split('.').pop().toLowerCase();
         const fileSignature = `${file.size}-${extension}`;
@@ -4913,13 +4907,14 @@ const vibeSearchResults = () => {
         };
       });
 
-      // Chercher si une vibe avec ce nom existe déjà
-      const existingVibeId = nameToVibeIdMap.get(folderName);
-      if (existingVibeId) {
-        // Mettre à jour la vibe existante
-        newPlaylists[existingVibeId] = {
-          ...newPlaylists[existingVibeId],
-          songs: newSongsForThisFolder
+      // Toujours créer une nouvelle vibe (ne jamais écraser les existantes)
+      // Mais regrouper les fichiers du même artiste importés en même temps
+      const existingImportVibeId = importNameToVibeIdMap.get(folderName);
+      if (existingImportVibeId) {
+        // Ajouter les chansons à la vibe créée pendant cet import
+        newPlaylists[existingImportVibeId] = {
+          ...newPlaylists[existingImportVibeId],
+          songs: [...newPlaylists[existingImportVibeId].songs, ...newSongsForThisFolder]
         };
       } else {
         // Créer une nouvelle vibe avec un ID unique
@@ -4929,7 +4924,7 @@ const vibeSearchResults = () => {
           songs: newSongsForThisFolder
         };
         newVibeIds.push(newVibeId);
-        nameToVibeIdMap.set(folderName, newVibeId);
+        importNameToVibeIdMap.set(folderName, newVibeId);
       }
     });
 

@@ -105,13 +105,13 @@ const dropboxStyles = `
   .dropbox-beacon-pulse { animation: dropbox-beacon-pulse 1.5s ease-in-out infinite; }
 
   @keyframes dropbox-neon-ignite-orange {
-    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(255, 107, 0, 0.2); }
-    15% { opacity: 1; box-shadow: 0 0 15px rgba(255, 107, 0, 0.8); }
-    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(255, 107, 0, 0.3); }
-    40% { opacity: 1; box-shadow: 0 0 18px rgba(255, 107, 0, 0.9); }
-    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(255, 107, 0, 0.5); }
-    70% { opacity: 1; box-shadow: 0 0 14px rgba(255, 107, 0, 0.7); }
-    100% { opacity: 1; box-shadow: 0 0 12px rgba(255, 107, 0, 0.5); }
+    0% { opacity: 0.3; box-shadow: 0 0 8px rgba(249, 115, 22, 0.2), 0 0 8px rgba(220, 38, 38, 0.2); }
+    15% { opacity: 1; box-shadow: 0 0 15px rgba(249, 115, 22, 0.8), 0 0 15px rgba(220, 38, 38, 0.6); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px rgba(249, 115, 22, 0.3), 0 0 10px rgba(220, 38, 38, 0.3); }
+    40% { opacity: 1; box-shadow: 0 0 18px rgba(249, 115, 22, 0.9), 0 0 18px rgba(220, 38, 38, 0.7); }
+    55% { opacity: 0.7; box-shadow: 0 0 12px rgba(249, 115, 22, 0.5), 0 0 12px rgba(220, 38, 38, 0.5); }
+    70% { opacity: 1; box-shadow: 0 0 14px rgba(249, 115, 22, 0.7), 0 0 14px rgba(220, 38, 38, 0.6); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(249, 115, 22, 0.5), 0 0 12px rgba(220, 38, 38, 0.5); }
   }
 
   @keyframes dropbox-header-marquee {
@@ -1435,8 +1435,8 @@ const DropboxBrowser = ({
                                             </button>
                                         </div>
                                         <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                            {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', border: '1px solid #FF6B00', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #FFD600 0%, #FF6B00 100%)', color: 'white', boxShadow: '0 0 15px rgba(255, 107, 0, 0.4)' }}>
+                                            {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)', border: '1px solid #dc2626', zIndex: 0 }} />}
+                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)', color: 'white', boxShadow: '0 0 15px rgba(220, 38, 38, 0.4)' }}>
                                                 <Layers size={14} />
                                                 <span>FUSION</span>
                                             </button>
