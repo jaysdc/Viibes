@@ -660,6 +660,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     DRAWER_DEFAULT_HEIGHT_PERCENT: 28,    // Hauteur par défaut du drawer (% de l'écran)
     DRAWER_RECENTER_HEIGHT_PERCENT: 70,   // Hauteur du drawer quand on tap sur recenter depuis état fermé (% de l'écran)
+    DRAWER_RECENTER_ANIMATION_DURATION: 400, // Durée de l'animation d'ouverture via recenter (ms)
     DRAWER_TWEAKER_HEIGHT_PERCENT: 0,    // Hauteur du drawer quand Tweaker ouvert (% de l'écran)
     DRAWER_TOP_SPACING: 32,               // Espacement entre la dernière carte et le haut du tiroir (px)
     FOOTER_TOP_SPACING: 32,               // Espacement entre la dernière carte et le haut du footer (px)
@@ -4239,15 +4240,15 @@ const handlePlayerTouchEnd = () => {
     const [confirmSwipeX, setConfirmSwipeX] = useState(0); // Swipe X position for confirmation overlay
     const [confirmSwipeStart, setConfirmSwipeStart] = useState(null); // Touch start X
     const [showTweaker, setShowTweaker] = useState(false);
-    const [isDrawerAnimating, setIsDrawerAnimating] = useState(false);
+    const [drawerAnimationDuration, setDrawerAnimationDuration] = useState(0);
     
     // Quand le Tweaker s'ouvre, animer le drawer vers sa hauteur Tweaker
     useEffect(() => {
       if (showTweaker && mainContainerRef.current) {
-          setIsDrawerAnimating(true);
+          setDrawerAnimationDuration(CONFIG.DRAWER_TWEAKER_ANIMATION_DURATION);
           setDashboardHeight(mainContainerRef.current.offsetHeight * (CONFIG.DRAWER_TWEAKER_HEIGHT_PERCENT / 100));
           setTimeout(() => {
-            setIsDrawerAnimating(false);
+            setDrawerAnimationDuration(0);
         }, CONFIG.DRAWER_TWEAKER_ANIMATION_DURATION);
       }
   }, [showTweaker]);
@@ -5076,7 +5077,7 @@ const vibeSearchResults = () => {
       if (dashboardRef.current) {
         startHeight.current = dashboardRef.current.offsetHeight;
         isDraggingDrawer.current = true;
-        setIsDrawerAnimating(false);
+        setDrawerAnimationDuration(0);
       }
     };
       const handleDashTouchMove = (e) => {
@@ -6540,7 +6541,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         // Si le drawer est proche de sa hauteur minimale (handle seul), l'ouvrir à 70%
         if (currentHeight < handleHeight * 1.2) {
             const recenterHeight = containerHeight * CONFIG.DRAWER_RECENTER_HEIGHT_PERCENT / 100;
+            setDrawerAnimationDuration(CONFIG.DRAWER_RECENTER_ANIMATION_DURATION);
             setDashboardHeight(recenterHeight);
+            setTimeout(() => {
+                setDrawerAnimationDuration(0);
+            }, CONFIG.DRAWER_RECENTER_ANIMATION_DURATION);
         }
     }
     // Dans tous les cas, recentrer le scroll
@@ -7092,8 +7097,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           : `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}px`,
                       minHeight: `${(mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100 - CONFIG.DRAWER_SEPARATOR_HEIGHT}px`,
                       bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
-                      transition: isDrawerAnimating 
-                          ? `height ${CONFIG.DRAWER_TWEAKER_ANIMATION_DURATION}ms cubic-bezier(0, ${CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, ${1 - CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, 1)` 
+                      transition: drawerAnimationDuration > 0 
+                          ? `height ${drawerAnimationDuration}ms cubic-bezier(0, ${CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, ${1 - CONFIG.DRAWER_TWEAKER_ANIMATION_DECEL}, 1)` 
                           : 'none'
                   }}
                 >
