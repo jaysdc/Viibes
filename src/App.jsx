@@ -229,11 +229,15 @@ const CONFIG = {
     WHEEL_CYLINDER_SIDE_INSET: 12,      // Déplacement max des colonnes latérales vers le centre (px)
     WHEEL_CYLINDER_SIDE_ROTATE_Y: 25,   // Rotation Y max des colonnes latérales (degrés)
 
-    // MASQUE DE FONDU (haut/bas de la roue)
+    // MASQUE DE FONDU (haut/bas de la roue) - effet opacité sur éléments
     WHEEL_MASK_ENABLED: false,          // Masque de fondu désactivé
     WHEEL_MASK_EDGE_OPACITY: 0.5,      // Opacité aux bords (0 = invisible, 1 = visible)
     WHEEL_MASK_CENTER_SIZE: 70,         // Taille zone centrale 100% opaque (% de la hauteur)
     WHEEL_MASK_CURVE: 2,                // Courbe du fondu (1 = linéaire, 2+ = reste net plus longtemps au centre)
+
+    // FADE BLANC (dégradé blanc en haut/bas pour indiquer scroll)
+    WHEEL_FADE_HEIGHT_PERCENT: 15,      // Hauteur du fade en % de la zone (haut + bas)
+    WHEEL_FADE_OPACITY: 0.95,           // Puissance du fade (opacité max du blanc)
 
     // VIRTUALISATION (performance)
     WHEEL_VIRTUALIZATION_BUFFER: 5,     // Nombre d'éléments à rendre au-dessus/en-dessous du visible
@@ -3893,6 +3897,22 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           })()}
           </div>
         </div>
+
+        {/* FADE BLANC - Dégradé en haut et en bas pour indiquer le scroll */}
+        <div
+          className="absolute left-0 right-0 top-0 pointer-events-none z-10"
+          style={{
+            height: `${CONFIG.WHEEL_FADE_HEIGHT_PERCENT}%`,
+            background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.WHEEL_FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`
+          }}
+        />
+        <div
+          className="absolute left-0 right-0 bottom-0 pointer-events-none z-10"
+          style={{
+            height: `${CONFIG.WHEEL_FADE_HEIGHT_PERCENT}%`,
+            background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.WHEEL_FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`
+          }}
+        />
       </div>
     );
   };
