@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer } from 'lucide-react';
+import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer, Copy } from 'lucide-react';
 import { UNIFIED_CONFIG } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -77,12 +77,18 @@ export const SMARTIMPORT_CONFIG = {
     CAPSULE_COUNT_SIZE: '10px',          // Taille du compteur de chansons
     
     // ══════════════════════════════════════════════════════════════════════════
-    // DIALOG - Badge "existe" (bulle verte)
+    // DIALOG - Badge "doublon" (contenu identique existe déjà)
     // ══════════════════════════════════════════════════════════════════════════
-    EXISTS_BADGE_SIZE: '1.37rem',        // Taille de la bulle
-    EXISTS_BADGE_TOP: '-0.6rem',         // Position verticale (négatif = déborde en haut)
-    EXISTS_BADGE_RIGHT: '-0.6rem',       // Position horizontale (négatif = déborde à droite)
-    EXISTS_BADGE_ICON_SIZE: 12,          // Taille de l'icône check
+    DUPLICATE_BADGE_SIZE: '1.37rem',     // Taille de la bulle
+    DUPLICATE_BADGE_TOP: '-0.6rem',      // Position verticale (négatif = déborde en haut)
+    DUPLICATE_BADGE_RIGHT: '-0.6rem',    // Position horizontale (négatif = déborde à droite)
+    DUPLICATE_BADGE_ICON_SIZE: 12,       // Taille de l'icône
+    DUPLICATE_BADGE_COLOR: '#f97316',    // Couleur orange (doublon détecté)
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // DIALOG - Sélection des cartes (tap pour toggle)
+    // ══════════════════════════════════════════════════════════════════════════
+    UNSELECTED_OPACITY: 0.3,             // Opacité des cartes désélectionnées (même que VIBECARD_MIN_OPACITY)
     
     // ══════════════════════════════════════════════════════════════════════════
     // DIALOG - Animations
@@ -264,6 +270,9 @@ const SmartImport = ({
     const [swipePreview, setSwipePreview] = useState(null); // { gradient, gradientName } pour preview locale
     const cardWidthRef = useRef(0); // Largeur de la carte pour limiter le swipe à 50%
 
+    // État pour la sélection des cartes (tap pour toggle) - toutes sélectionnées par défaut
+    const [selectedCards, setSelectedCards] = useState(new Set());
+
     // ══════════════════════════════════════════════════════════════════════════
     // ANALYSE DES FICHIERS
     // ══════════════════════════════════════════════════════════════════════════
@@ -427,11 +436,37 @@ const SmartImport = ({
         
         // Sinon, afficher le dialog de preview
         const folderGradients = calculateGradients(folders);
-        
-        // Détecter les dossiers qui existent déjà (nouveau format: { vibeId: { name, songs } })
-        const existingFolders = Object.keys(folders).filter(name =>
-            playlists && Object.values(playlists).some(v => v.name === name)
-        );
+
+        // Créer une map de toutes les vibes existantes par leur "signature de contenu"
+        // (ensemble trié des fileSignature de leurs chansons)
+        const existingVibeSignatures = new Map(); // signature -> vibeId
+        if (playlists) {
+            Object.entries(playlists).forEach(([vibeId, vibe]) => {
+                if (vibe.songs && vibe.songs.length > 0) {
+                    const signatures = vibe.songs
+                        .map(s => s.fileSignature)
+                        .filter(Boolean)
+                        .sort()
+                        .join('|');
+                    if (signatures) {
+                        existingVibeSignatures.set(signatures, vibeId);
+                    }
+                }
+            });
+        }
+
+        // Détecter les dossiers dont le CONTENU existe déjà (par fileSignature)
+        const duplicateFolders = Object.entries(folders).filter(([name, folderFiles]) => {
+            // Calculer les signatures des fichiers de ce dossier
+            const folderSignatures = folderFiles
+                .map(file => {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    return `${file.size}-${ext}`;
+                })
+                .sort()
+                .join('|');
+            return existingVibeSignatures.has(folderSignatures);
+        }).map(([name]) => name);
         
         // Afficher la capsule jaune immédiatement
         setShowMorphCapsule(true);
@@ -469,13 +504,16 @@ const SmartImport = ({
         
         // NE PAS fermer le menu ici - il reste visible pendant le dialog
         
+        // Initialiser toutes les cartes comme sélectionnées
+        setSelectedCards(new Set(Object.keys(folders)));
+
         setImportPreview({
             folders: folders,
             folderGradients: folderGradients,
             allFiles: audioFiles,
             totalFiles: totalFiles,
             rootName: rootName,
-            existingFolders: existingFolders,
+            duplicateFolders: duplicateFolders,
             event: event
         });
         
@@ -514,13 +552,35 @@ const SmartImport = ({
             if (action === 'cancel') {
                 if (importPreview.event) importPreview.event.target.value = '';
             } else if (action === 'fusion') {
-                const mergedFolders = { [importPreview.rootName]: importPreview.allFiles };
-                // Pour fusion, utiliser le premier gradient disponible ou en calculer un
+                // Fusion : merge tous les fichiers des cartes SÉLECTIONNÉES
+                const selectedFiles = Object.entries(importPreview.folders)
+                    .filter(([name]) => selectedCards.has(name))
+                    .flatMap(([, files]) => files);
+                if (selectedFiles.length === 0) {
+                    // Rien à importer
+                    setBtnIgniting(null);
+                    return;
+                }
+                const mergedFolders = { [importPreview.rootName]: selectedFiles };
                 const fusionGradients = { [importPreview.rootName]: importPreview.folderGradients?.[Object.keys(importPreview.folders)[0]] ?? 0 };
                 onImportComplete(mergedFolders, 'fusion', fusionGradients, importPreview.isDropbox);
                 if (importPreview.event) importPreview.event.target.value = '';
             } else if (action === 'vibes') {
-                onImportComplete(importPreview.folders, 'vibes', importPreview.folderGradients, importPreview.isDropbox);
+                // Vibes : n'envoyer que les cartes SÉLECTIONNÉES
+                const selectedFolders = {};
+                const selectedGradients = {};
+                Object.entries(importPreview.folders).forEach(([name, files]) => {
+                    if (selectedCards.has(name)) {
+                        selectedFolders[name] = files;
+                        selectedGradients[name] = importPreview.folderGradients?.[name] ?? 0;
+                    }
+                });
+                if (Object.keys(selectedFolders).length === 0) {
+                    // Rien à importer
+                    setBtnIgniting(null);
+                    return;
+                }
+                onImportComplete(selectedFolders, 'vibes', selectedGradients, importPreview.isDropbox);
                 if (importPreview.event) importPreview.event.target.value = '';
             }
             
@@ -626,9 +686,34 @@ const SmartImport = ({
                 return;
             }
 
-            const existingFolders = Object.keys(folders).filter(name =>
-                playlists && Object.values(playlists).some(v => v.name === name)
-            );
+            // Créer une map de toutes les vibes existantes par leur "signature de contenu"
+            const existingVibeSignatures = new Map();
+            if (playlists) {
+                Object.entries(playlists).forEach(([vibeId, vibe]) => {
+                    if (vibe.songs && vibe.songs.length > 0) {
+                        const signatures = vibe.songs
+                            .map(s => s.fileSignature)
+                            .filter(Boolean)
+                            .sort()
+                            .join('|');
+                        if (signatures) {
+                            existingVibeSignatures.set(signatures, vibeId);
+                        }
+                    }
+                });
+            }
+
+            // Détecter les dossiers dont le CONTENU existe déjà (par fileSignature)
+            const duplicateFolders = Object.entries(folders).filter(([name, folderFiles]) => {
+                const folderSignatures = folderFiles
+                    .map(file => {
+                        const ext = file.name.split('.').pop().toLowerCase();
+                        return `${file.size}-${ext}`;
+                    })
+                    .sort()
+                    .join('|');
+                return existingVibeSignatures.has(folderSignatures);
+            }).map(([name]) => name);
 
             // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)
             const screenWidth = window.innerWidth;
@@ -653,13 +738,16 @@ const SmartImport = ({
                 height: 48
             });
 
+            // Initialiser toutes les cartes comme sélectionnées
+            setSelectedCards(new Set(Object.keys(folders)));
+
             setImportPreview({
                 folders: folders,
                 folderGradients: folderGradients,
                 allFiles: Object.values(folders).flat(),
                 totalFiles: totalFiles,
                 rootName: rootName,
-                existingFolders: existingFolders,
+                duplicateFolders: duplicateFolders,
                 event: null,
                 isDropbox: true
             });
@@ -774,8 +862,12 @@ const SmartImport = ({
     // RENDU : Dialog de preview
     // ══════════════════════════════════════════════════════════════════════════
     const folderCount = Object.keys(importPreview.folders).length;
-    const existingCount = importPreview.existingFolders?.length || 0;
-    const newCount = folderCount - existingCount;
+    const selectedCount = selectedCards.size;
+    const duplicateCount = importPreview.duplicateFolders?.length || 0;
+    // Nombre de chansons = somme des fichiers des cartes SÉLECTIONNÉES uniquement
+    const selectedFilesCount = Object.entries(importPreview.folders)
+        .filter(([name]) => selectedCards.has(name))
+        .reduce((sum, [, files]) => sum + files.length, 0);
     const isLongName = importPreview.rootName.length > 20;
     
     // Couleurs du dossier
@@ -929,10 +1021,10 @@ const SmartImport = ({
                             }}
                         >
                             <div className="flex items-center gap-1.5">
-                                {/* Badge nouvelles vibes (+X) rose */}
-                                <div 
+                                {/* Badge vibes sélectionnées (X/Y) rose */}
+                                <div
                                     className="font-bold flex items-center justify-center gap-0.5"
-                                    style={{ 
+                                    style={{
                                         background: SMARTIMPORT_CONFIG.BADGE_BG,
                                         color: SMARTIMPORT_CONFIG.BADGE_COLOR,
                                         borderRadius: SMARTIMPORT_CONFIG.BADGE_RADIUS,
@@ -943,15 +1035,15 @@ const SmartImport = ({
                                         fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                     }}
                                 >
-                                    <span>+{newCount}</span>
+                                    <span>{selectedCount}/{folderCount}</span>
                                 </div>
-                                {/* Badge vibes existantes (✓X) vert */}
-                                {existingCount > 0 && (
-                                    <div 
+                                {/* Badge doublons (contenu identique) orange */}
+                                {duplicateCount > 0 && (
+                                    <div
                                         className="font-bold flex items-center justify-center gap-0.5"
-                                        style={{ 
-                                            background: 'rgba(34, 197, 94, 0.15)',
-                                            color: '#16a34a',
+                                        style={{
+                                            background: 'rgba(249, 115, 22, 0.15)',
+                                            color: '#ea580c',
                                             borderRadius: SMARTIMPORT_CONFIG.BADGE_RADIUS,
                                             height: SMARTIMPORT_CONFIG.BADGE_HEIGHT,
                                             minWidth: SMARTIMPORT_CONFIG.BADGE_MIN_WIDTH,
@@ -960,17 +1052,17 @@ const SmartImport = ({
                                             fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                         }}
                                     >
-                                        <Check size={12} strokeWidth={3} />
-                                        <span>{existingCount}</span>
+                                        <Copy size={12} strokeWidth={2.5} />
+                                        <span>{duplicateCount}</span>
                                     </div>
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
-                                <span 
+                                <span
                                     className="font-bold text-gray-400"
                                     style={{ fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}
                                 >
-                                    {importPreview.totalFiles}
+                                    {selectedFilesCount}
                                 </span>
                                 <Music
                                     className="text-gray-400"
@@ -1037,39 +1129,57 @@ const SmartImport = ({
                                         const gradientStyle = gradientColors.length === 2
                                             ? `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`
                                             : `linear-gradient(135deg, ${gradientColors.join(', ')})`;
-                                        const isExisting = importPreview.existingFolders?.includes(name);
-                                        
+                                        const isDuplicate = importPreview.duplicateFolders?.includes(name);
+                                        const isSelected = selectedCards.has(name);
+
+                                        // Handler pour toggle sélection (tap simple)
+                                        const handleCardTap = () => {
+                                            if (Math.abs(swipeOffset) < 10) {
+                                                setSelectedCards(prev => {
+                                                    const next = new Set(prev);
+                                                    if (next.has(name)) {
+                                                        next.delete(name);
+                                                    } else {
+                                                        next.add(name);
+                                                    }
+                                                    return next;
+                                                });
+                                            }
+                                        };
+
                                         return (
-                                            <div 
+                                            <div
                                                 key={name}
                                                 className="flex items-end px-3 pb-2 flex-shrink-0 relative"
-                                                style={{ 
+                                                style={{
                                                     background: gradientStyle,
                                                     borderRadius: SMARTIMPORT_CONFIG.CARD_RADIUS,
                                                     height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
                                                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                                                     transform: swipingCard === name ? `translateX(${swipeOffset}px)` : 'translateX(0)',
-                                                    transition: swipingCard === name ? 'none' : 'transform 0.2s ease-out'
+                                                    transition: swipingCard === name ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                                                    opacity: isSelected ? 1 : SMARTIMPORT_CONFIG.UNSELECTED_OPACITY
                                                 }}
+                                                onClick={handleCardTap}
                                                 onTouchStart={(e) => handleCardSwipeStart(e, name)}
                                                 onTouchMove={(e) => handleCardSwipeMove(e, name)}
                                                 onTouchEnd={() => handleCardSwipeEnd(name)}
                                             >
-                                                {/* Bulle check verte pour les vibes existantes */}
-                                                {isExisting && (
-                                                    <div 
+                                                {/* Bulle orange pour les doublons (contenu identique existe déjà) */}
+                                                {isDuplicate && (
+                                                    <div
                                                         className="absolute flex items-center justify-center rounded-full"
-                                                        style={{ 
-                                                            width: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE,
-                                                            height: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE,
-                                                            top: SMARTIMPORT_CONFIG.EXISTS_BADGE_TOP,
-                                                            right: SMARTIMPORT_CONFIG.EXISTS_BADGE_RIGHT,
-                                                            background: '#22c55e',
+                                                        style={{
+                                                            width: SMARTIMPORT_CONFIG.DUPLICATE_BADGE_SIZE,
+                                                            height: SMARTIMPORT_CONFIG.DUPLICATE_BADGE_SIZE,
+                                                            top: SMARTIMPORT_CONFIG.DUPLICATE_BADGE_TOP,
+                                                            right: SMARTIMPORT_CONFIG.DUPLICATE_BADGE_RIGHT,
+                                                            background: SMARTIMPORT_CONFIG.DUPLICATE_BADGE_COLOR,
                                                             boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
                                                             zIndex: 10
                                                         }}
                                                     >
-                                                        <Check size={SMARTIMPORT_CONFIG.EXISTS_BADGE_ICON_SIZE} className="text-white" strokeWidth={3} />
+                                                        <Copy size={SMARTIMPORT_CONFIG.DUPLICATE_BADGE_ICON_SIZE} className="text-white" strokeWidth={2.5} />
                                                     </div>
                                                 )}
                                                 {/* Indicateur de swipe - chevrons + pointer en haut centré */}

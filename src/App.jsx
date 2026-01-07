@@ -4864,11 +4864,32 @@ const vibeSearchResults = () => {
         });
     }
 
+    // Créer une map de toutes les vibes existantes par leur "signature de contenu"
+    // (ensemble trié des fileSignature de leurs chansons) pour détecter les doublons
+    const existingVibeSignatures = new Set();
+    if (playlists) {
+        Object.values(playlists).forEach(vibe => {
+            if (vibe.songs && vibe.songs.length > 0) {
+                const signature = vibe.songs
+                    .map(s => s.fileSignature)
+                    .filter(Boolean)
+                    .sort()
+                    .join('|');
+                if (signature) {
+                    existingVibeSignatures.add(signature);
+                }
+            }
+        });
+    }
+
     // Stocker les nouveaux vibeIds créés
     const newVibeIds = [];
 
     // Map pour tracker les vibes créées pendant CET import (pour regrouper les fichiers du même artiste)
     const importNameToVibeIdMap = new Map();
+
+    // Map des fichiers locaux à propager (même si la vibe n'est pas créée)
+    const allNewFilesForPropagation = new Map(); // id -> file URL
 
     // On traite chaque dossier trouvé dans l'import
     Object.keys(folders).forEach(folderName => {
@@ -4908,6 +4929,31 @@ const vibeSearchResults = () => {
         };
       });
 
+      // Stocker les fichiers pour propagation (même si la vibe n'est pas créée)
+      newSongsForThisFolder.forEach(song => {
+          if (song.file && song.id) {
+              allNewFilesForPropagation.set(song.id, song.file);
+          }
+      });
+
+      // Vérifier si une vibe avec exactement ce contenu existe déjà
+      const folderSignature = newSongsForThisFolder
+          .map(s => s.fileSignature)
+          .filter(Boolean)
+          .sort()
+          .join('|');
+
+      // Si une vibe identique existe, ne pas créer de doublon
+      // Les fichiers ont déjà été ajoutés à allNewFilesForPropagation pour la propagation
+      if (folderSignature && existingVibeSignatures.has(folderSignature)) {
+          return;
+      }
+
+      // Ajouter cette signature pour éviter les doublons dans le même import
+      if (folderSignature) {
+          existingVibeSignatures.add(folderSignature);
+      }
+
       // Toujours créer une nouvelle vibe (ne jamais écraser les existantes)
       // Mais regrouper les fichiers du même artiste importés en même temps
       const existingImportVibeId = importNameToVibeIdMap.get(folderName);
@@ -4932,20 +4978,7 @@ const vibeSearchResults = () => {
     // On met à jour l'état principal. Ceci va déclencher la sauvegarde automatique de l'Étape 1.
     // MAIS D'ABORD : propager les fichiers aux autres playlists (Vibes) qui contiennent les mêmes chansons
 
-    // Créer une map ID -> file pour toutes les chansons fraîchement importées
-    const newFilesMap = new Map();
-    Object.keys(folders).forEach(folderName => {
-        const vibeId = importNameToVibeIdMap.get(folderName);
-        if (vibeId && newPlaylists[vibeId]) {
-            newPlaylists[vibeId].songs.forEach(song => {
-                if (song.file) {
-                    newFilesMap.set(song.id, song.file);
-                }
-            });
-        }
-    });
-
-    // Propager les fichiers à TOUTES les autres playlists (notamment les Vibes)
+    // Propager les fichiers locaux à TOUTES les autres playlists (y compris vibes dont on a skip la création)
     // Quand on ajoute un fichier local, on met aussi à jour le type en 'local' (priorité au local)
     const importedVibeIds = Object.keys(folders).map(name => importNameToVibeIdMap.get(name)).filter(Boolean);
     Object.keys(newPlaylists).forEach(vibeId => {
@@ -4955,7 +4988,7 @@ const vibeSearchResults = () => {
         newPlaylists[vibeId] = {
             ...newPlaylists[vibeId],
             songs: newPlaylists[vibeId].songs.map(song => {
-                const newFile = newFilesMap.get(song.id);
+                const newFile = allNewFilesForPropagation.get(song.id);
                 if (newFile && !song.file) {
                     // Propager le fichier local et mettre à jour le type
                     return { ...song, file: newFile, type: 'local' };
@@ -5011,6 +5044,21 @@ const vibeSearchResults = () => {
         }
     });
 
+    // Créer un Set de toutes les vibes existantes par leur "signature de contenu"
+    const existingVibeSignatures = new Set();
+    Object.values(newPlaylists).forEach(vibe => {
+        if (vibe.songs && vibe.songs.length > 0) {
+            const signature = vibe.songs
+                .map(s => s.fileSignature)
+                .filter(Boolean)
+                .sort()
+                .join('|');
+            if (signature) {
+                existingVibeSignatures.add(signature);
+            }
+        }
+    });
+
     Object.keys(foldersToImport).forEach(folderName => {
         const filesInFolder = foldersToImport[folderName];
 
@@ -5044,6 +5092,23 @@ const vibeSearchResults = () => {
                 type: hasLocalFile ? 'local' : 'dropbox'
             };
         });
+
+        // Vérifier si une vibe avec exactement ce contenu existe déjà
+        const folderSignature = newSongsForThisFolder
+            .map(s => s.fileSignature)
+            .filter(Boolean)
+            .sort()
+            .join('|');
+
+        // Si une vibe identique existe, ne pas créer de doublon
+        if (folderSignature && existingVibeSignatures.has(folderSignature)) {
+            return;
+        }
+
+        // Ajouter cette signature pour éviter les doublons dans le même import
+        if (folderSignature) {
+            existingVibeSignatures.add(folderSignature);
+        }
 
         // Chercher si une vibe avec ce nom existe déjà
         const existingVibeId = nameToVibeIdMap.get(folderName);
@@ -6269,6 +6334,21 @@ const importDropboxFolder = async (folderPath, folderName) => {
           });
       });
 
+      // Créer un Set de toutes les vibes existantes par leur "signature de contenu"
+      const existingVibeSignatures = new Set();
+      Object.values(newPlaylists).forEach(vibe => {
+          if (vibe.songs && vibe.songs.length > 0) {
+              const signature = vibe.songs
+                  .map(s => s.fileSignature)
+                  .filter(Boolean)
+                  .sort()
+                  .join('|');
+              if (signature) {
+                  existingVibeSignatures.add(signature);
+              }
+          }
+      });
+
       const newSongs = mp3Files.map((file) => {
           const extension = file.name.split('.').pop().toLowerCase();
           const fileSignature = `${file.size}-${extension}`;
@@ -6304,12 +6384,24 @@ const importDropboxFolder = async (folderPath, folderName) => {
           };
       });
 
-      // Générer un vibeId unique pour cette nouvelle playlist
-      const newVibeId = generateVibeId();
-      newPlaylists[newVibeId] = {
-          name: folderName,
-          songs: newSongs
-      };
+      // Vérifier si une vibe avec exactement ce contenu existe déjà
+      const folderSignature = newSongs
+          .map(s => s.fileSignature)
+          .filter(Boolean)
+          .sort()
+          .join('|');
+
+      // Si une vibe identique existe, ne pas créer de doublon
+      // Mais propager quand même les dropboxPath
+      let newVibeId = null;
+      if (!folderSignature || !existingVibeSignatures.has(folderSignature)) {
+          // Générer un vibeId unique pour cette nouvelle playlist
+          newVibeId = generateVibeId();
+          newPlaylists[newVibeId] = {
+              name: folderName,
+              songs: newSongs
+          };
+      }
 
       // Propager les dropboxPath aux autres vibes qui ont les mêmes chansons (par ID)
       const newDropboxPathsMap = new Map();
@@ -6336,7 +6428,12 @@ const importDropboxFolder = async (folderPath, folderName) => {
 
       setPlaylists(newPlaylists);
       setShowDropboxBrowser(false);
-      setFeedback({ text: `${mp3Files.length} titres importés depuis Dropbox`, type: 'confirm', triggerValidation: Date.now() });
+      // Si la vibe n'a pas été créée (doublon), afficher un message différent
+      if (newVibeId) {
+          setFeedback({ text: `${mp3Files.length} titres importés depuis Dropbox`, type: 'confirm', triggerValidation: Date.now() });
+      } else {
+          setFeedback({ text: `Cette vibe existe déjà`, type: 'confirm', triggerValidation: Date.now() });
+      }
       
   } catch (error) {
       console.error('Erreur import Dropbox:', error);
