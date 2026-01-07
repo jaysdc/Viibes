@@ -4931,9 +4931,15 @@ const vibeSearchResults = () => {
       });
 
       // Stocker les fichiers pour propagation (même si la vibe n'est pas créée)
+      // On stocke par ID ET par fileSignature pour matcher les chansons existantes
       newSongsForThisFolder.forEach(song => {
-          if (song.file && song.id) {
-              allNewFilesForPropagation.set(song.id, song.file);
+          if (song.file) {
+              if (song.id) {
+                  allNewFilesForPropagation.set(song.id, song.file);
+              }
+              if (song.fileSignature) {
+                  allNewFilesForPropagation.set(song.fileSignature, song.file);
+              }
           }
       });
 
@@ -4989,7 +4995,9 @@ const vibeSearchResults = () => {
         newPlaylists[vibeId] = {
             ...newPlaylists[vibeId],
             songs: newPlaylists[vibeId].songs.map(song => {
-                const newFile = allNewFilesForPropagation.get(song.id);
+                // Chercher par ID ou par fileSignature (pour matcher les chansons Dropbox existantes)
+                const newFile = allNewFilesForPropagation.get(song.id) ||
+                               (song.fileSignature && allNewFilesForPropagation.get(song.fileSignature));
                 if (newFile && !song.file) {
                     // Propager le fichier local et mettre à jour le type
                     return { ...song, file: newFile, type: 'local' };
