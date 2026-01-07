@@ -6301,6 +6301,97 @@ const cancelKillVibe = () => {
     return token;
   };
 
+  // Scanner la disponibilité des fichiers Dropbox en arrière-plan
+  const scanDropboxAvailability = async () => {
+    const token = await getValidDropboxToken();
+    if (!token) return;
+
+    // Collecter tous les dropboxPath uniques
+    const dropboxPaths = new Set();
+    Object.values(playlists).forEach(vibe => {
+        vibe.songs.forEach(song => {
+            if (song.dropboxPath) {
+                dropboxPaths.add(song.dropboxPath);
+            }
+        });
+    });
+
+    if (dropboxPaths.size === 0) return;
+
+    const pathsArray = Array.from(dropboxPaths);
+    const unavailablePaths = new Set();
+
+    // Vérifier par batch de 100 (limite Dropbox)
+    const batchSize = 100;
+    for (let i = 0; i < pathsArray.length; i += batchSize) {
+        const batch = pathsArray.slice(i, i + batchSize);
+
+        try {
+            const response = await fetch('https://api.dropboxapi.com/2/files/get_metadata_batch', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    paths: batch
+                }),
+            });
+
+            if (response.status === 401) {
+                // Token expiré pendant le scan, arrêter
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.entries) {
+                data.entries.forEach((entry, index) => {
+                    if (entry['.tag'] === 'failure') {
+                        // Fichier non trouvé
+                        unavailablePaths.add(batch[index]);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Erreur scan Dropbox batch:', error);
+        }
+    }
+
+    // Mettre à jour les playlists avec le flag dropboxAvailable
+    if (unavailablePaths.size > 0) {
+        setPlaylists(prev => {
+            const updated = { ...prev };
+            Object.keys(updated).forEach(vibeId => {
+                updated[vibeId] = {
+                    ...updated[vibeId],
+                    songs: updated[vibeId].songs.map(song => {
+                        if (song.dropboxPath && unavailablePaths.has(song.dropboxPath)) {
+                            return { ...song, dropboxAvailable: false };
+                        } else if (song.dropboxPath && !unavailablePaths.has(song.dropboxPath)) {
+                            return { ...song, dropboxAvailable: true };
+                        }
+                        return song;
+                    })
+                };
+            });
+            return updated;
+        });
+        console.log(`Scan Dropbox: ${unavailablePaths.size} fichier(s) indisponible(s)`);
+    }
+  };
+
+  // Lancer le scan au démarrage si connecté à Dropbox
+  useEffect(() => {
+    if (getRefreshToken() && Object.keys(playlists).length > 0) {
+        // Attendre un peu que l'app soit chargée
+        const timer = setTimeout(() => {
+            scanDropboxAvailability();
+        }, 2000);
+        return () => clearTimeout(timer);
+    }
+  }, []); // Exécuter une seule fois au montage
+
   // Charger le contenu d'un dossier Dropbox
   const loadDropboxFolder = async (path, token) => {
     setDropboxLoading(true);
