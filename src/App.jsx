@@ -659,7 +659,7 @@ const CONFIG = {
     // DRAWER (Tiroir dashboard)
     // ══════════════════════════════════════════════════════════════════════════
     DRAWER_DEFAULT_HEIGHT_PERCENT: 28,    // Hauteur par défaut du drawer (% de l'écran)
-    DRAWER_RECENTER_HEIGHT_PERCENT: 70,   // Hauteur du drawer quand on tap sur recenter depuis état fermé (% de l'écran)
+    DRAWER_RECENTER_HEIGHT_PERCENT: 60,   // Hauteur du drawer quand on tap sur recenter depuis état fermé (% de l'écran)
     DRAWER_RECENTER_ANIMATION_DURATION: 400, // Durée de l'animation d'ouverture via recenter (ms)
     DRAWER_TWEAKER_HEIGHT_PERCENT: 0,    // Hauteur du drawer quand Tweaker ouvert (% de l'écran)
     DRAWER_TOP_SPACING: 32,               // Espacement entre la dernière carte et le haut du tiroir (px)
@@ -5354,33 +5354,35 @@ const vibeSearchResults = () => {
             // Vérifier si on doit changer la source
             const currentSrc = audio.src;
             let newSrc = null;
-            
-            if (currentSong.type === 'dropbox' && currentSong.dropboxPath) {
-              // Pour Dropbox, on doit toujours obtenir un lien frais si la chanson change
-              if (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id) {
-                  // Vérifier si on a un fichier préchargé pour ce morceau
-                  if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
-                      console.log('Utilisation du fichier préchargé pour:', currentSong.title);
-                      newSrc = preloadedRef.current.link;
-                      // Nettoyer le préchargement
-                      if (preloadedRef.current.audio) {
-                          preloadedRef.current.audio.src = '';
-                          preloadedRef.current.audio = null;
-                      }
-                      preloadedRef.current = { songId: null, link: null, audio: null };
-                  } else {
-                      const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
-                      if (link) {
-                          newSrc = link;
-                      } else {
-                          console.error('Impossible d\'obtenir le lien Dropbox');
-                          return;
-                      }
-                  }
-              }
-          } else if (currentSong.file) {
+
+            // PRIORITÉ : fichier local d'abord, puis Dropbox en fallback
+            if (currentSong.file) {
+                // Fichier local disponible - toujours prioritaire
                 if (currentSrc !== currentSong.file) {
                     newSrc = currentSong.file;
+                }
+            } else if (currentSong.dropboxPath) {
+                // Pas de fichier local - fallback sur Dropbox
+                if (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id) {
+                    // Vérifier si on a un fichier préchargé pour ce morceau
+                    if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
+                        console.log('Utilisation du fichier préchargé pour:', currentSong.title);
+                        newSrc = preloadedRef.current.link;
+                        // Nettoyer le préchargement
+                        if (preloadedRef.current.audio) {
+                            preloadedRef.current.audio.src = '';
+                            preloadedRef.current.audio = null;
+                        }
+                        preloadedRef.current = { songId: null, link: null, audio: null };
+                    } else {
+                        const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
+                        if (link) {
+                            newSrc = link;
+                        } else {
+                            console.error('Impossible d\'obtenir le lien Dropbox');
+                            return;
+                        }
+                    }
                 }
             }
             
