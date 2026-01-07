@@ -236,8 +236,8 @@ const CONFIG = {
     WHEEL_MASK_CURVE: 2,                // Courbe du fondu (1 = linéaire, 2+ = reste net plus longtemps au centre)
 
     // FADE BLANC (dégradé blanc en haut/bas pour indiquer scroll)
-    WHEEL_FADE_HEIGHT_PERCENT: 15,      // Hauteur du fade en % de la zone (haut + bas)
-    WHEEL_FADE_OPACITY: 0.95,           // Puissance du fade (opacité max du blanc)
+    WHEEL_FADE_HEIGHT_PERCENT: 25,      // Hauteur du fade en % de la zone (haut + bas)
+    WHEEL_FADE_OPACITY: 0.65,           // Puissance du fade (opacité max du blanc)
 
     // VIRTUALISATION (performance)
     WHEEL_VIRTUALIZATION_BUFFER: 5,     // Nombre d'éléments à rendre au-dessus/en-dessous du visible
