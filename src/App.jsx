@@ -6879,6 +6879,87 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             </div>
                         </div>
                     )}
+
+                  {/* OVERLAY DE FEEDBACK (Kill Vibe / Nuke All / Gradient Preview) - par-dessus les boutons */}
+                  {(pendingVibe || nukeConfirmMode || (vibeSwipePreview && vibeSwipePreview.progress > 0)) && !showImportMenu && importOverlayAnim === 'none' && !isLibrarySearching && searchOverlayAnim === 'none' && (
+                      <div
+                          className="absolute inset-0 flex items-center"
+                          style={{
+                              opacity: (pendingVibe || nukeConfirmMode) ? (confirmOverlayVisible ? 1 : 0) : 1,
+                              transition: 'opacity 150ms ease-out'
+                          }}
+                      >
+                          {/* Gradient Preview */}
+                          {vibeSwipePreview && vibeSwipePreview.progress > 0 && !pendingVibe && !nukeConfirmMode && (() => {
+                              const { direction, progress, nextGradient, previewIndex } = vibeSwipePreview;
+                              const gradientName = getGradientName(previewIndex);
+                              const step = 100 / (nextGradient.length - 1);
+                              const gradientBg = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
+                              return (
+                                  <div
+                                      className="w-full rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
+                                      style={{
+                                          height: CONFIG.HEADER_BUTTONS_HEIGHT,
+                                          background: gradientBg,
+                                          opacity: 0.3 + (progress * 0.7),
+                                          boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
+                                      }}
+                                  >
+                                      <div
+                                          className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                          style={{
+                                              opacity: progress,
+                                              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                                          }}
+                                      >
+                                          <ChevronLeft size={16} />
+                                          <span>{gradientName}</span>
+                                          <ChevronRight size={16} />
+                                      </div>
+                                  </div>
+                              );
+                          })()}
+
+                          {/* Kill/Nuke Confirmation */}
+                          {(pendingVibe || nukeConfirmMode) && (
+                              <div className="w-full h-full relative">
+                                  {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
+                                  {!confirmFeedback && (
+                                      <div
+                                          className="absolute inset-0 rounded-full flex items-center justify-center border"
+                                          style={{
+                                              background: pendingVibe
+                                                  ? 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)'  // Fuchsia Overdose
+                                                  : 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)', // Lava Flow
+                                              borderColor: pendingVibe ? '#d946ef' : '#CC0530',
+                                              boxShadow: pendingVibe
+                                                  ? '0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.4)'
+                                                  : '0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.4)'
+                                          }}
+                                      >
+                                          <div className="flex items-center gap-2 text-white font-black tracking-widest text-xs">
+                                              {pendingVibe ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                              <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
+                                          </div>
+                                      </div>
+                                  )}
+                                  {/* FeedbackOverlay avec animation ignite quand on confirme */}
+                                  {confirmFeedback && (
+                                      <FeedbackOverlay
+                                          feedback={confirmFeedback}
+                                          onAnimationComplete={onConfirmAnimationComplete}
+                                          neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_FUCHSIA : CONFIG.NEON_COLOR_RED}
+                                          bgClass={confirmFeedback.type === 'kill' ? 'bg-pink-500' : 'bg-red-500'}
+                                          borderClass={confirmFeedback.type === 'kill' ? 'border-pink-600' : 'border-red-600'}
+                                      >
+                                          {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                          <span>{confirmFeedback.text}</span>
+                                      </FeedbackOverlay>
+                                  )}
+                              </div>
+                          )}
+                      </div>
+                  )}
                 </div>
 
                 {/* Handle - slide depuis le haut */}
@@ -7150,15 +7231,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       height: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                       paddingBottom: safeAreaBottom,
                       bottom: 0,
-                      transform: (currentSong || vibeSwipePreview || pendingVibe || nukeConfirmMode) ? 'translateY(0)' : 'translateY(100%)',
+                      transform: currentSong ? 'translateY(0)' : 'translateY(100%)',
                       transition: `transform ${CONFIG.FOOTER_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
                 >
                     {/* Fond avec blur - couvre TOUTE la zone y compris safe-area */}
                     <div className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 rounded-b-none"></div>
                     {/* BARRE DE CONTRÔLE */}
-                    {!(pendingVibe || nukeConfirmMode) && (
-                        <ControlBar
+                    <ControlBar
                         currentTime={progress}
                         duration={duration}
                         onSeek={(e) => { if(audioRef.current) { audioRef.current.currentTime = e.target.value; setProgress(e.target.value); }}}
@@ -7166,66 +7246,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onSkipForward={skipForward10}
                         confirmMode={false}
                         confirmType={null}
-                        vibeSwipePreview={vibeSwipePreview}
+                        vibeSwipePreview={null}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
-                    )}
-                    
-                    {/* CAPSULE DE CONFIRMATION - RECOUVRE LA BARRE DE CONTRÔLE */}
-                    {(pendingVibe || nukeConfirmMode) && (
-                        <div
-                            className="absolute left-0 right-0 flex items-start z-50"
-                            style={{
-                                top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
-                                padding: `0 ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
-                                height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT
-                            }}
-                        >
-                            <div
-                                className="flex-1 h-full relative"
-                                style={{
-                                    opacity: confirmOverlayVisible ? 1 : 0,
-                                    transition: 'opacity 150ms ease-out'
-                                }}
-                            >
-                                {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
-                                {!confirmFeedback && (
-                                    <div
-                                        className="absolute inset-0 rounded-full flex items-center justify-center border"
-                                        style={{
-                                            background: pendingVibe
-                                                ? 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)'  // Fuchsia Overdose
-                                                : 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)', // Lava Flow
-                                            borderColor: pendingVibe ? '#d946ef' : '#CC0530',
-                                            boxShadow: pendingVibe
-                                                ? '0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.4)'
-                                                : '0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.4)'
-                                        }}
-                                    >
-                                        <div className="flex items-center gap-2 text-white font-black tracking-widest text-xs">
-                                            {pendingVibe ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
-                                            <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {/* FeedbackOverlay avec animation ignite quand on confirme */}
-                                {confirmFeedback && (
-                                    <FeedbackOverlay
-                                        feedback={confirmFeedback}
-                                        onAnimationComplete={onConfirmAnimationComplete}
-                                        neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_FUCHSIA : CONFIG.NEON_COLOR_RED}
-                                        bgClass={confirmFeedback.type === 'kill' ? 'bg-pink-500' : 'bg-red-500'}
-                                        borderClass={confirmFeedback.type === 'kill' ? 'border-pink-600' : 'border-red-600'}
-                                    >
-                                        {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
-                                        <span>{confirmFeedback.text}</span>
-                                    </FeedbackOverlay>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </div>
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
