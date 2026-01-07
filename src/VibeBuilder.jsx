@@ -2127,7 +2127,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, onDeleteVibe, fadeM
                                     <Pencil
                                         size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                         strokeWidth={2.5}
-                                        style={{ color: displayGradient[Math.floor(displayGradient.length / 2)] }}
+                                        style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
                                     />
                                 ) : (
                                     <svg

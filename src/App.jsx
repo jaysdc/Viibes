@@ -2016,17 +2016,17 @@ return (
               );
           })()}
 
-          {/* Icône en haut à droite - cliquable pour éditer la vibe */}
+          {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
           <div
               className="absolute top-3 right-3"
               onClick={(e) => {
                   e.stopPropagation();
-                  if (onEditVibe && isVibe) {
+                  if (onEditVibe) {
                       onEditVibe();
                   }
               }}
           >
-              <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${isVibe && onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
+              <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
               <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
               </div>
           </div>
