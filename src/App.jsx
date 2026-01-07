@@ -5127,9 +5127,13 @@ const vibeSearchResults = () => {
         }
     });
 
-    // Propager les dropboxPath aux autres vibes qui ont les mêmes chansons (par ID ou fileSignature)
+    // Propager les dropboxPath ET les fichiers locaux aux autres vibes qui ont les mêmes chansons (par ID ou fileSignature)
     const dropboxPathsById = new Map();
     const dropboxPathsBySignature = new Map();
+    const localFilesById = new Map();
+    const localFilesBySignature = new Map();
+
+    // Collecter tous les dropboxPath ET fichiers locaux disponibles
     Object.values(newPlaylists).forEach(vibe => {
         vibe.songs.forEach(song => {
             if (song.dropboxPath) {
@@ -5140,20 +5144,35 @@ const vibeSearchResults = () => {
                     dropboxPathsBySignature.set(song.fileSignature, song.dropboxPath);
                 }
             }
+            if (song.file) {
+                if (!localFilesById.has(song.id)) {
+                    localFilesById.set(song.id, song.file);
+                }
+                if (song.fileSignature && !localFilesBySignature.has(song.fileSignature)) {
+                    localFilesBySignature.set(song.fileSignature, song.file);
+                }
+            }
         });
     });
 
+    // Propager dropboxPath ET fichiers locaux à toutes les chansons correspondantes
     Object.keys(newPlaylists).forEach(vibeId => {
         newPlaylists[vibeId] = {
             ...newPlaylists[vibeId],
             songs: newPlaylists[vibeId].songs.map(song => {
                 // Chercher un dropboxPath par ID ou par fileSignature
-                const dropboxPath = dropboxPathsById.get(song.id) ||
+                const dropboxPath = song.dropboxPath || dropboxPathsById.get(song.id) ||
                                     (song.fileSignature && dropboxPathsBySignature.get(song.fileSignature));
-                if (dropboxPath && !song.dropboxPath) {
-                    // Mettre à jour le type en 'dropbox' si le fichier local n'est plus disponible
-                    const newType = song.file ? song.type : 'dropbox';
-                    return { ...song, dropboxPath: dropboxPath, type: newType };
+                // Chercher un fichier local par ID ou par fileSignature
+                const localFile = song.file || localFilesById.get(song.id) ||
+                                  (song.fileSignature && localFilesBySignature.get(song.fileSignature));
+
+                // Déterminer le type : local si on a un fichier, sinon dropbox si on a un path
+                const newType = localFile ? 'local' : (dropboxPath ? 'dropbox' : song.type);
+
+                // Mettre à jour seulement si quelque chose a changé
+                if (dropboxPath !== song.dropboxPath || localFile !== song.file || newType !== song.type) {
+                    return { ...song, dropboxPath: dropboxPath || null, file: localFile || null, type: newType };
                 }
                 return song;
             })
