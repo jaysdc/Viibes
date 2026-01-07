@@ -4051,6 +4051,7 @@ export default function App() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSong, setCurrentSong] = useState(null);
     const [debugInfo, setDebugInfo] = useState(null); // DEBUG: info sur la lecture
+    const [debugImport, setDebugImport] = useState(null); // DEBUG: info sur l'import
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [feedback, setFeedback] = useState(null);
@@ -5035,6 +5036,16 @@ const vibeSearchResults = () => {
         });
     }
 
+    // DEBUG: Collecter les infos pour l'overlay
+    const localFilesFound = [];
+    allExistingSongsMap.forEach((song, sig) => {
+        if (song.file) {
+            localFilesFound.push(sig);
+        }
+    });
+    const dropboxFilesToImport = Object.values(foldersToImport).flat().map(f => f.name);
+    const debugLookups = [];
+
     // Créer une map nom -> vibeId pour trouver les vibes existantes par nom
     const nameToVibeIdMap = new Map();
     Object.keys(newPlaylists).forEach(vibeId => {
@@ -5075,6 +5086,14 @@ const vibeSearchResults = () => {
             }
 
             const existingSong = allExistingSongsMap.get(fileSignature);
+
+            // DEBUG: Collecter les lookups pour l'overlay
+            debugLookups.push({
+                sig: fileSignature,
+                found: !!existingSong,
+                hasFile: existingSong ? !!existingSong.file : false
+            });
+
             const playCount = existingSong ? existingSong.playCount : 0;
             const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
@@ -5180,6 +5199,15 @@ const vibeSearchResults = () => {
     });
 
     setPlaylists(newPlaylists);
+
+    // DEBUG: Afficher l'overlay avec les infos d'import
+    setDebugImport({
+        mapSize: allExistingSongsMap.size,
+        localFilesFound,
+        dropboxFilesToImport,
+        lookups: debugLookups
+    });
+
     setFeedback({ text: `Import Dropbox terminé`, type: 'confirm', triggerValidation: Date.now() });
   };
 
@@ -6871,6 +6899,74 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           {debugInfo.dropboxPath && <div><span style={{color:'#888'}}>Dropbox:</span> {debugInfo.dropboxPath}</div>}
           <div style={{ marginTop: 8, color: '#ff0' }}><span style={{color:'#888'}}>Source utilisée:</span> <span style={{color: debugInfo.source === 'local' ? '#0f0' : '#0af'}}>{debugInfo.source}</span></div>
           <div><span style={{color:'#888'}}>useDropbox:</span> {debugInfo.useDropbox ? 'true' : 'false'}</div>
+        </div>
+      )}
+
+      {/* DEBUG IMPORT OVERLAY */}
+      {debugImport && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 60,
+            left: 10,
+            right: 10,
+            background: 'rgba(0,0,0,0.95)',
+            color: '#0f0',
+            padding: 12,
+            borderRadius: 8,
+            zIndex: 99999,
+            fontSize: 10,
+            fontFamily: 'monospace',
+            maxHeight: '70vh',
+            overflow: 'auto'
+          }}
+          onClick={() => setDebugImport(null)}
+        >
+          <div style={{ color: '#ff0', marginBottom: 8, fontWeight: 'bold' }}>📦 DEBUG IMPORT (tap to close)</div>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{color:'#888'}}>Chansons existantes:</span> {debugImport.mapSize}
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{color:'#888'}}>Avec fichier local ({debugImport.localFilesFound.length}):</span>
+            {debugImport.localFilesFound.length > 0 ? (
+              <div style={{ marginLeft: 8, color: '#0f0', maxHeight: 60, overflow: 'auto' }}>
+                {debugImport.localFilesFound.map((sig, i) => (
+                  <div key={i}>• {sig}</div>
+                ))}
+              </div>
+            ) : (
+              <span style={{ color: '#f00', marginLeft: 8 }}>AUCUN</span>
+            )}
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{color:'#888'}}>Fichiers Dropbox à importer ({debugImport.dropboxFilesToImport.length}):</span>
+            <div style={{ marginLeft: 8, color: '#0af', maxHeight: 60, overflow: 'auto' }}>
+              {debugImport.dropboxFilesToImport.slice(0, 5).map((name, i) => (
+                <div key={i}>• {name}</div>
+              ))}
+              {debugImport.dropboxFilesToImport.length > 5 && (
+                <div style={{ color: '#888' }}>... et {debugImport.dropboxFilesToImport.length - 5} autres</div>
+              )}
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid #333', paddingTop: 8 }}>
+            <span style={{color:'#ff0'}}>Résultats des lookups:</span>
+            <div style={{ maxHeight: 150, overflow: 'auto' }}>
+              {debugImport.lookups.map((lookup, i) => (
+                <div key={i} style={{ marginLeft: 8 }}>
+                  <span style={{color: lookup.found ? '#0f0' : '#f00'}}>
+                    {lookup.found ? '✓' : '✗'}
+                  </span>
+                  {' '}{lookup.sig.substring(0, 30)}
+                  {lookup.found && (
+                    <span style={{ color: lookup.hasFile ? '#0f0' : '#f55', marginLeft: 8 }}>
+                      [file: {lookup.hasFile ? 'YES' : 'NO'}]
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
