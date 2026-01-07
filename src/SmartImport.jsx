@@ -1035,7 +1035,7 @@ const SmartImport = ({
                         </div>
                         
                         {/* Liste des vibes avec gradient sur toute la carte */}
-                        <div className="relative mb-2 flex-1 min-h-0 overflow-hidden" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                        <div className="relative mb-2 flex-1 min-h-0" style={{ paddingLeft: 0, paddingRight: 0, overflow: 'clip', overflowClipMargin: '1rem' }}>
                             <div
                                 className="h-full"
                                 style={{ overflow: 'visible' }}
@@ -1098,7 +1098,7 @@ const SmartImport = ({
                                         return (
                                             <div
                                                 key={name}
-                                                className="flex items-end px-3 pb-2 flex-shrink-0 relative"
+                                                className="flex items-end px-3 pb-2 flex-shrink-0 relative overflow-visible"
                                                 style={{
                                                     background: gradientStyle,
                                                     borderRadius: SMARTIMPORT_CONFIG.CARD_RADIUS,
