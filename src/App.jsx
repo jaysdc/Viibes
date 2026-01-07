@@ -3209,7 +3209,6 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         OverlayContent = (
         <div
             className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
-            style={exitAnimation === 'right' ? exitStyle : {}}
         >
             <ListPlus size={24} strokeWidth={3} />
             <div className="flex flex-col leading-none">
@@ -3223,7 +3222,6 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         OverlayContent = (
         <div
             className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
-            style={exitAnimation === 'left' ? exitStyle : {}}
         >
             <span>GHOST...</span>
             <Ghost size={24} strokeWidth={3} />
@@ -3272,7 +3270,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
       onTouchEnd={onTouchEnd}
       onClick={() => { if(Math.abs(offset) < 5) onClick(); }}
       >
-        {showFeedback && <div className={`absolute inset-0 mx-4 ${overlayClass}`} style={{ opacity: progressOpacity }}>{OverlayContent}</div>}
+        {showFeedback && <div className={`absolute inset-0 mx-4 ${overlayClass}`} style={{ opacity: progressOpacity, ...exitStyle }}>{OverlayContent}</div>}
         
         <div className="w-full h-full flex items-center transition-transform duration-75 ease-linear relative z-10" style={{ transform: `translateX(${offset}px)` }}>
             {/* Colonne gauche : Play count - LARGEUR FIXE 40px */}
@@ -6536,11 +6534,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     // Si on est sur le dashboard (pas en full player) et le drawer est à sa hauteur minimale, l'ouvrir à 70%
     if (!showFullPlayer && mainContainerRef.current) {
         const containerHeight = mainContainerRef.current.offsetHeight;
-        const defaultHeight = containerHeight * CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100;
+        const handleHeight = containerHeight * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100;
         const currentHeight = dashboardHeight;
 
-        // Si le drawer est proche de sa hauteur minimale (±10%), l'ouvrir à 70%
-        if (Math.abs(currentHeight - defaultHeight) < defaultHeight * 0.1) {
+        // Si le drawer est proche de sa hauteur minimale (handle seul), l'ouvrir à 70%
+        if (currentHeight < handleHeight * 1.2) {
             const recenterHeight = containerHeight * CONFIG.DRAWER_RECENTER_HEIGHT_PERCENT / 100;
             setDashboardHeight(recenterHeight);
         }
