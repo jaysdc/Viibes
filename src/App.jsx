@@ -7445,14 +7445,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 const parts = nameWithoutExt.split(' - ');
                                 const title = parts.length > 1 ? parts.slice(1).join(' - ') : nameWithoutExt;
                                 const artist = parts.length > 1 ? parts[0] : '';
+                                const extension = fileName.split('.').pop().toLowerCase();
+                                const fileSignature = `${f.size || 0}-${extension}`;
                                 return {
-                                    id: `dropbox-${f.path_lower || fileName}-${Date.now()}`,
+                                    id: `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
                                     title: title,
                                     artist: artist,
                                     playCount: 0,
                                     file: null,
                                     dropboxPath: f.path_lower,
-                                    fileSignature: `dropbox:${f.path_lower}:${f.size || 0}`,
+                                    fileSignature: fileSignature,
                                     type: 'dropbox'
                                 };
                             })

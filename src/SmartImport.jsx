@@ -823,17 +823,22 @@ const SmartImport = ({
         }
     };
 
-    const handleCardSwipeEnd = (cardName) => {
-        if (swipingCard !== cardName) return;
-        
+    const handleCardSwipeEnd = (cardName, toggleSelection) => {
+        if (swipingCard !== cardName) {
+            // Si pas de swipe en cours, c'est un tap simple
+            if (toggleSelection) toggleSelection(false);
+            return;
+        }
+
         const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
         const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
-        
-        if (swipeDirection === 'horizontal' && colorsTraversed >= 1 && importPreview) {
+        const wasSwipe = swipeDirection === 'horizontal' && colorsTraversed >= 1;
+
+        if (wasSwipe && importPreview) {
             const direction = swipeOffset > 0 ? 1 : -1;
             const currentIdx = importPreview.folderGradients?.[cardName] ?? 0;
             const newIdx = currentIdx + (direction * colorsTraversed);
-            
+
             setImportPreview(prev => ({
                 ...prev,
                 folderGradients: {
@@ -842,7 +847,13 @@ const SmartImport = ({
                 }
             }));
         }
-        
+
+        // Si ce n'était pas un swipe horizontal significatif ET pas de scroll vertical, c'est un tap
+        const wasTap = !wasSwipe && swipeDirection !== 'vertical';
+        if (wasTap && toggleSelection) {
+            toggleSelection(false); // false = ce n'était pas un swipe
+        }
+
         setSwipingCard(null);
         setSwipeOffset(0);
         setSwipeTouchStartX(null);
@@ -1132,9 +1143,9 @@ const SmartImport = ({
                                         const isDuplicate = importPreview.duplicateFolders?.includes(name);
                                         const isSelected = selectedCards.has(name);
 
-                                        // Handler pour toggle sélection (tap simple)
-                                        const handleCardTap = () => {
-                                            if (Math.abs(swipeOffset) < 10) {
+                                        // Handler pour toggle sélection (tap simple) - appelé depuis onTouchEnd
+                                        const handleCardTap = (wasSwipe) => {
+                                            if (!wasSwipe) {
                                                 setSelectedCards(prev => {
                                                     const next = new Set(prev);
                                                     if (next.has(name)) {
@@ -1160,10 +1171,9 @@ const SmartImport = ({
                                                     transition: swipingCard === name ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
                                                     opacity: isSelected ? 1 : SMARTIMPORT_CONFIG.UNSELECTED_OPACITY
                                                 }}
-                                                onClick={handleCardTap}
                                                 onTouchStart={(e) => handleCardSwipeStart(e, name)}
                                                 onTouchMove={(e) => handleCardSwipeMove(e, name)}
-                                                onTouchEnd={() => handleCardSwipeEnd(name)}
+                                                onTouchEnd={() => handleCardSwipeEnd(name, handleCardTap)}
                                             >
                                                 {/* Bulle orange pour les doublons (contenu identique existe déjà) */}
                                                 {isDuplicate && (
