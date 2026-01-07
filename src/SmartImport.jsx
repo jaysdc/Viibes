@@ -80,8 +80,8 @@ export const SMARTIMPORT_CONFIG = {
     // DIALOG - Badge "doublon" (contenu identique existe déjà)
     // ══════════════════════════════════════════════════════════════════════════
     DUPLICATE_BADGE_SIZE: '1.37rem',     // Taille de la bulle
-    DUPLICATE_BADGE_TOP: '-0.6rem',      // Position verticale (négatif = déborde en haut)
-    DUPLICATE_BADGE_RIGHT: '-0.6rem',    // Position horizontale (négatif = déborde à droite)
+    DUPLICATE_BADGE_TOP: '0.35rem',      // Position verticale (depuis le haut de la carte)
+    DUPLICATE_BADGE_RIGHT: '0.35rem',    // Position horizontale (depuis la droite de la carte)
     DUPLICATE_BADGE_ICON_SIZE: 12,       // Taille de l'icône
     DUPLICATE_BADGE_COLOR: '#f97316',    // Couleur orange (doublon détecté)
 
