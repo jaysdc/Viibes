@@ -6608,6 +6608,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           const code = urlParams.get('code');
 
           if (code) {
+              // Afficher le loading pendant l'échange de tokens
+              setDropboxLoading(true);
               // Échanger le code contre des tokens
               const accessToken = await exchangeCodeForTokens(code);
               if (accessToken) {
@@ -6618,6 +6620,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                   setShowDropboxBrowser(true);
                   loadDropboxFolder('', accessToken);
               } else {
+                  setDropboxLoading(false);
                   alert('Erreur de connexion à Dropbox. Veuillez réessayer.');
                   window.history.replaceState(null, '', window.location.pathname);
               }
@@ -6630,6 +6633,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
               const params = new URLSearchParams(hash.substring(1));
               const accessToken = params.get('access_token');
               if (accessToken) {
+                  // Afficher le loading
+                  setDropboxLoading(true);
                   // Stocker le token (ancien format, expirera dans 4h)
                   localStorage.setItem('dropbox_token', accessToken);
                   setDropboxToken(accessToken);
@@ -7212,6 +7217,26 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             </div>
                         </div>
                     )}
+
+                  {/* Loading Dropbox après login OAuth */}
+                  {dropboxLoading && !showDropboxBrowser && (
+                      <div
+                          className="absolute inset-0 flex items-center justify-center"
+                          style={{ zIndex: 50 }}
+                      >
+                          <div
+                              className="w-full rounded-full flex items-center justify-center gap-2"
+                              style={{
+                                  height: CONFIG.HEADER_BUTTONS_HEIGHT,
+                                  background: '#0061FE',
+                                  boxShadow: '0 0 15px rgba(0, 97, 254, 0.5)'
+                              }}
+                          >
+                              <Loader2 size={18} className="animate-spin text-white" />
+                              <span className="text-white font-bold text-sm">DROPBOX</span>
+                          </div>
+                      </div>
+                  )}
 
                   {/* OVERLAY DE FEEDBACK (Gradient Preview uniquement) - par-dessus les boutons */}
                   {vibeSwipePreview && vibeSwipePreview.progress > 0 && !pendingVibe && !nukeConfirmMode && !showImportMenu && importOverlayAnim === 'none' && !isLibrarySearching && searchOverlayAnim === 'none' && (() => {

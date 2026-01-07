@@ -888,11 +888,7 @@ const DropboxBrowser = ({
                                     }}
                                     onScroll={handleScroll}
                                 >
-                                    {loading ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <Loader2 size={24} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
-                                        </div>
-                                    ) : files.length === 0 ? (
+                                    {files.length === 0 && !loading ? (
                                         <div className="text-center py-12 text-gray-300 font-medium text-2xl">—</div>
                                     ) : (
                                         <div className="flex flex-col">
@@ -999,6 +995,13 @@ const DropboxBrowser = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* Loading overlay centré sur toute la fenêtre */}
+                    {loading && (
+                        <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(250, 250, 250, 0.8)', zIndex: 100 }}>
+                            <Loader2 size={32} className="animate-spin" style={{ color: CONFIG.DROPBOX_BLUE }} />
+                        </div>
+                    )}
                 </div>
             </div>
         </>
