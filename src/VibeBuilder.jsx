@@ -1194,9 +1194,14 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
     const PREVIEW_DURATION = 15; // Durée en secondes
     // =========================================== 
 
-    const allSongs = React.useMemo(() => { 
-        let songs = []; 
-        Object.values(sourcePlaylists).forEach(list => songs = [...songs, ...list]); 
+    const allSongs = React.useMemo(() => {
+        let songs = [];
+        Object.values(sourcePlaylists || {}).forEach(vibe => {
+            const vibeSongs = vibe?.songs || vibe;
+            if (Array.isArray(vibeSongs)) {
+                songs = [...songs, ...vibeSongs];
+            }
+        }); 
         
         // Dédoublonnage intelligent : garder la version avec file si elle existe
         const songMap = new Map();

@@ -10,6 +10,42 @@ import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
+// ERROR BOUNDARY (pour debug)
+// ══════════════════════════════════════════════════════════════════════════
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, background: '#fee', color: '#c00', fontSize: 14, overflow: 'auto', maxHeight: '100vh' }}>
+          <h2>🔴 CRASH DÉTECTÉ</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {this.state.error?.toString()}
+          </pre>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12, marginTop: 10 }}>
+            {this.state.errorInfo?.componentStack}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 // VIBE ID GENERATOR
 // ══════════════════════════════════════════════════════════════════════════
 
@@ -7689,6 +7725,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 
                 return (
                   <div className="absolute inset-0 z-[200]">
+                  <ErrorBoundary>
                   <VibeBuilder
                       sourcePlaylists={playlists}
                         onClose={() => setShowBuilder(false)}
@@ -7740,6 +7777,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         usedGradientIndices={usedIndices}
                         totalGradients={ALL_GRADIENTS.length}
                     />
+                  </ErrorBoundary>
                     </div>
                 );
             })()}
