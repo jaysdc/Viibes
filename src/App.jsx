@@ -6381,6 +6381,16 @@ const cancelKillVibe = () => {
     }
   };
 
+  // Lancer le scan au démarrage si connecté à Dropbox (après 3s)
+  useEffect(() => {
+    if (!getRefreshToken()) return;
+
+    const timer = setTimeout(() => {
+        scanDropboxAvailability();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []); // Une seule fois au montage
 
   // Charger le contenu d'un dossier Dropbox
   const loadDropboxFolder = async (path, token) => {
