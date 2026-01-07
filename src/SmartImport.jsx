@@ -218,11 +218,12 @@ const MarqueeText = ({ text, className, style }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL : SmartImport
 // ══════════════════════════════════════════════════════════════════════════════
-const SmartImport = ({ 
+const SmartImport = ({
     playlists,
     vibeColorIndices,
     getGradientByIndex,
     getGradientName,
+    vibeCardMinOpacity,    // Opacité des cartes désélectionnées (depuis CONFIG)
     onImportComplete,
     onMenuClose,
     dropboxData,
@@ -230,7 +231,7 @@ const SmartImport = ({
     inputRef,
     folderButtonRef,       // Ref du bouton Folder
     slideOutDuration,      // Durée du slide out (synchro avec barre import)
-    dropboxButtonRef,      // Ref du bouton Dropbox  
+    dropboxButtonRef,      // Ref du bouton Dropbox
     folderButtonColor,     // Couleur du bouton Folder
     dropboxButtonColor,    // Couleur du bouton Dropbox
     containerRef           // Ref du container principal pour les positions
@@ -1105,7 +1106,7 @@ const SmartImport = ({
                                                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                                                     transform: swipingCard === name ? `translateX(${swipeOffset}px)` : 'translateX(0)',
                                                     transition: swipingCard === name ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
-                                                    opacity: isSelected ? 1 : 0.3
+                                                    opacity: isSelected ? 1 : (vibeCardMinOpacity ?? 0.3)
                                                 }}
                                                 onTouchStart={(e) => handleCardSwipeStart(e, name)}
                                                 onTouchMove={(e) => handleCardSwipeMove(e, name)}

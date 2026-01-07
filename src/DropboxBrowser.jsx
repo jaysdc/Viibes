@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2, Flame, Layers, Check, AlertTriangle, CheckCircle2, ChevronRight, Pointer } from 'lucide-react';
+import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
 import { UNIFIED_CONFIG } from './Config.jsx';
-import { SMARTIMPORT_CONFIG } from './SmartImport.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    DROPBOX BROWSER - PARAMÈTRES                           ║
@@ -127,17 +126,12 @@ const DropboxBrowser = ({
     isVisible,
     onClose,
     onDisconnect,
-    onImportComplete,  // Callback final pour importer les vibes (renommé de onImport)
-    onMenuClose, // Callback pour ranger la barre d'import
+    onScanComplete,    // Callback quand le scan est terminé - passe les données à SmartImport
+    onMenuClose,       // Callback pour ranger la barre d'import
     dropboxToken,
     getValidDropboxToken,
     refreshDropboxToken,
     clearDropboxTokens,
-    // Props pour la phase import
-    playlists,
-    vibeColorIndices,
-    getGradientByIndex,
-    getGradientName,
     // Props pour calculer la position du bouton Dropbox (vient de App.jsx CONFIG)
     headerLogoSize,
     headerPaddingX,
@@ -206,27 +200,7 @@ const DropboxBrowser = ({
     const [backdropVisible, setBackdropVisible] = useState(false);
     const [dialogDimensions, setDialogDimensions] = useState(null);
 
-    // États pour la phase import
-    const [phase, setPhase] = useState('browse'); // 'browse' | 'import'
-    const [phaseTransition, setPhaseTransition] = useState(null); // 'to-import' | 'to-browse' | null
-    const [importData, setImportData] = useState(null); // { folders, folderGradients, totalFiles, rootName, existingFolders }
-    const [importBtnIgniting, setImportBtnIgniting] = useState(null); // 'cancel' | 'fusion' | 'vibes' | null
-    const [importListNeedsScroll, setImportListNeedsScroll] = useState(false);
-    const [importFadeTopOpacity, setImportFadeTopOpacity] = useState(0);
-    const [importFadeBottomOpacity, setImportFadeBottomOpacity] = useState(1);
-
-    // États pour le swipe de couleur (phase import)
-    const [swipingCard, setSwipingCard] = useState(null);
-    const [swipeOffset, setSwipeOffset] = useState(0);
-    const [swipeTouchStartX, setSwipeTouchStartX] = useState(null);
-    const [swipeTouchStartY, setSwipeTouchStartY] = useState(null);
-    const [swipeDirection, setSwipeDirection] = useState(null);
-    const [swipePreview, setSwipePreview] = useState(null);
-    const cardWidthRef = useRef(0);
-    const swipeStateRef = useRef({ card: null, startX: null, startY: null, direction: null });
-
     const listRef = useRef(null);
-    const importListRef = useRef(null);
     const abortControllerRef = useRef(null); // Pour annuler les requêtes en cours
     const loadingPathRef = useRef(null); // Pour tracker quel path est en cours de chargement
     const dialogRef = useRef(null);
@@ -283,130 +257,6 @@ const DropboxBrowser = ({
 
     const handleScrubEnd = () => {
         setIsScrubbing(false);
-    };
-
-    // Gérer le scroll pour la liste d'import (fades bidirectionnels)
-    const handleImportListScroll = () => {
-        if (!importListRef.current) return;
-        const { scrollTop, scrollHeight, clientHeight } = importListRef.current;
-        const maxScroll = scrollHeight - clientHeight;
-
-        if (maxScroll > 0) {
-            setImportListNeedsScroll(true);
-            // Fade en haut : apparaît quand on scroll vers le bas
-            const topOpacity = Math.min(1, scrollTop / CONFIG.FADE_DISTANCE);
-            setImportFadeTopOpacity(topOpacity);
-            // Fade en bas : disparaît quand on approche du bas
-            const distanceFromBottom = maxScroll - scrollTop;
-            const bottomOpacity = Math.min(1, distanceFromBottom / CONFIG.FADE_DISTANCE);
-            setImportFadeBottomOpacity(bottomOpacity);
-        } else {
-            setImportListNeedsScroll(false);
-            setImportFadeTopOpacity(0);
-            setImportFadeBottomOpacity(0);
-        }
-    };
-
-    // Calculer les gradients pour les vibes (comme SmartImport)
-    const calculateGradients = (folders) => {
-        const usedIndices = Object.values(vibeColorIndices || {});
-        const tempUsage = new Array(20).fill(0);
-        usedIndices.forEach(idx => { if (idx !== undefined && idx < 20) tempUsage[idx]++; });
-
-        const usedInImport = new Set();
-        const folderGradients = {};
-
-        // Créer une map nom -> vibeId pour trouver les vibeId existants
-        const nameToVibeIdMap = {};
-        if (playlists) {
-            Object.keys(playlists).forEach(vibeId => {
-                const vibe = playlists[vibeId];
-                if (vibe.name) {
-                    nameToVibeIdMap[vibe.name] = vibeId;
-                }
-            });
-        }
-
-        Object.keys(folders).forEach(folderName => {
-            // Chercher si une vibe avec ce nom existe et récupérer son gradient
-            const existingVibeId = nameToVibeIdMap[folderName];
-            if (existingVibeId && vibeColorIndices && vibeColorIndices[existingVibeId] !== undefined) {
-                folderGradients[folderName] = vibeColorIndices[existingVibeId];
-                usedInImport.add(vibeColorIndices[existingVibeId]);
-            } else {
-                let bestIndex = -1;
-                let bestUsage = Infinity;
-
-                for (let i = 0; i < tempUsage.length; i++) {
-                    if (usedInImport.has(i)) continue;
-                    if (tempUsage[i] < bestUsage) {
-                        bestUsage = tempUsage[i];
-                        bestIndex = i;
-                    }
-                }
-
-                if (bestIndex === -1) {
-                    const minUsage = Math.min(...tempUsage);
-                    bestIndex = tempUsage.findIndex(count => count === minUsage);
-                }
-
-                folderGradients[folderName] = bestIndex;
-                usedInImport.add(bestIndex);
-                tempUsage[bestIndex]++;
-            }
-        });
-
-        return folderGradients;
-    };
-
-    // Handlers pour le swipe de couleur sur les cartes (utilise swipeStateRef pour passive:false)
-    const handleCardSwipeStart = (e, cardName) => {
-        if (!e.touches || !e.touches[0]) return;
-        setSwipingCard(cardName);
-        setSwipeTouchStartX(e.touches[0].clientX);
-        setSwipeTouchStartY(e.touches[0].clientY);
-        setSwipeDirection(null);
-        // Stocker dans la ref pour l'event listener passive:false
-        swipeStateRef.current = {
-            card: cardName,
-            startX: e.touches[0].clientX,
-            startY: e.touches[0].clientY,
-            direction: null
-        };
-        if (e.currentTarget) {
-            cardWidthRef.current = e.currentTarget.offsetWidth;
-        }
-    };
-
-    // handleCardSwipeMove est maintenant géré par le useEffect avec passive:false
-
-    const handleCardSwipeEnd = (cardName) => {
-        if (swipingCard !== cardName) return;
-        const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
-        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
-
-        if (swipeDirection === 'horizontal' && colorsTraversed >= 1 && importData) {
-            const direction = swipeOffset > 0 ? 1 : -1;
-            const currentIdx = importData.folderGradients?.[cardName] ?? 0;
-            const newIdx = currentIdx + (direction * colorsTraversed);
-
-            setImportData(prev => ({
-                ...prev,
-                folderGradients: {
-                    ...prev.folderGradients,
-                    [cardName]: newIdx
-                }
-            }));
-        }
-
-        setSwipingCard(null);
-        setSwipeOffset(0);
-        setSwipeTouchStartX(null);
-        setSwipeTouchStartY(null);
-        setSwipeDirection(null);
-        setSwipePreview(null);
-        // Reset la ref aussi
-        swipeStateRef.current = { card: null, startX: null, startY: null, direction: null };
     };
 
     // Charger le contenu d'un dossier
@@ -665,7 +515,7 @@ const DropboxBrowser = ({
         return result;
     };
 
-    // Handler pour l'import - passe en phase import au lieu d'appeler directement onImportComplete
+    // Handler pour l'import - scanne et passe les données à SmartImport via onScanComplete
     const handleImport = async () => {
         if (!currentPath) {
             alert('Sélectionne un dossier à importer');
@@ -702,95 +552,33 @@ const DropboxBrowser = ({
                 setProcessedFiles(processed);
             });
 
-            // Calculer les gradients pour chaque vibe
-            const folderGradients = calculateGradients(scannedFolders);
+            // Fermer le browser et passer les données à SmartImport
+            setScanning(false);
+            setScanPhase(null);
+            setProcessedFiles(0);
+            setTotalFilesToProcess(0);
 
-            // Détecter les vibes existantes (nouveau format: { vibeId: { name, songs } })
-            const existingFolders = Object.keys(scannedFolders).filter(name =>
-                playlists && Object.values(playlists).some(v => v.name === name)
-            );
-
-            // Compter le total de fichiers
-            const allFilesCount = Object.values(scannedFolders).reduce((sum, arr) => sum + arr.length, 0);
-
-            // Si un seul dossier (pas de sous-dossiers), importer directement sans phase import
-            const folderKeys = Object.keys(scannedFolders);
-            if (folderKeys.length === 1) {
-                onImportComplete(scannedFolders, 'vibes', folderGradients, true);
-                handleCloseAfterImport();
-                setScanning(false);
-                setScanPhase(null);
-                setProcessedFiles(0);
-                setTotalFilesToProcess(0);
-                return;
-            }
-
-            // Préparer les données pour la phase import (plusieurs dossiers)
-            setImportData({
-                folders: scannedFolders,
-                folderGradients,
-                totalFiles: allFilesCount,
-                rootName: folderName,
-                existingFolders
-            });
-
-            // Lancer la transition vers la phase import
-            setPhaseTransition('to-import');
+            // Fermer le browser avec animation
+            setIsFadingOut(true);
             setTimeout(() => {
-                setPhase('import');
-                setPhaseTransition(null);
-            }, CONFIG.PHASE_TRANSITION_DURATION);
+                onClose();
+                // Passer les données scannées à SmartImport via le callback
+                if (onScanComplete) {
+                    onScanComplete({
+                        folders: scannedFolders,
+                        rootName: folderName
+                    });
+                }
+            }, 150);
 
         } catch (error) {
             console.error('Erreur import:', error);
             alert('Erreur lors du scan du dossier');
+            setScanning(false);
+            setScanPhase(null);
+            setProcessedFiles(0);
+            setTotalFilesToProcess(0);
         }
-
-        setScanning(false);
-        setScanPhase(null);
-        setProcessedFiles(0);
-        setTotalFilesToProcess(0);
-    };
-
-    // Handler pour les boutons de la phase import
-    const handleImportAction = (action) => {
-        if (importBtnIgniting) return;
-        setImportBtnIgniting(action);
-
-        setTimeout(() => {
-            if (action === 'cancel') {
-                // Retourner à la phase browse
-                setPhaseTransition('to-browse');
-                setTimeout(() => {
-                    setPhase('browse');
-                    setPhaseTransition(null);
-                    setImportData(null);
-                }, CONFIG.PHASE_TRANSITION_DURATION);
-            } else if (action === 'fusion') {
-                // Fusionner tout en une seule vibe
-                const mergedFolders = { [importData.rootName]: Object.values(importData.folders).flat() };
-                const fusionGradients = { [importData.rootName]: importData.folderGradients?.[Object.keys(importData.folders)[0]] ?? 0 };
-                onImportComplete(mergedFolders, 'fusion', fusionGradients, true);
-                handleCloseAfterImport();
-            } else if (action === 'vibes') {
-                // Importer comme vibes séparées
-                onImportComplete(importData.folders, 'vibes', importData.folderGradients, true);
-                handleCloseAfterImport();
-            }
-            setImportBtnIgniting(null);
-        }, SMARTIMPORT_CONFIG.IGNITE_DURATION);
-    };
-
-    // Fermeture après import réussi
-    const handleCloseAfterImport = () => {
-        setIsFadingOut(true);
-        setTimeout(() => {
-            onClose();
-            if (onMenuClose) onMenuClose();
-            // Reset
-            setPhase('browse');
-            setImportData(null);
-        }, 150);
     };
 
     // Handler fermeture avec animation
@@ -867,11 +655,6 @@ const DropboxBrowser = ({
             setFolderNameHistory([]);
             setScrollPositionHistory([]);
             setPendingScrollRestore(null);
-            // Reset phase import
-            setPhase('browse');
-            setPhaseTransition(null);
-            setImportData(null);
-            setImportBtnIgniting(null);
             loadFolder('');
 
             // Calculer les dimensions finales du dialog (en % de l'écran)
@@ -939,84 +722,6 @@ const DropboxBrowser = ({
 
         return () => clearTimeout(timer);
     }, [files, loading]);
-
-    // Initialiser les fades de la liste d'import quand on entre en phase import
-    useEffect(() => {
-        if (phase === 'import' && importListRef.current) {
-            const timer = setTimeout(() => {
-                if (importListRef.current) {
-                    const { scrollHeight, clientHeight, scrollTop } = importListRef.current;
-                    const maxScroll = scrollHeight - clientHeight;
-                    if (maxScroll > 0) {
-                        setImportListNeedsScroll(true);
-                        setImportFadeTopOpacity(Math.min(1, scrollTop / CONFIG.FADE_DISTANCE));
-                        setImportFadeBottomOpacity(Math.min(1, (maxScroll - scrollTop) / CONFIG.FADE_DISTANCE));
-                    } else {
-                        setImportListNeedsScroll(false);
-                        setImportFadeTopOpacity(0);
-                        setImportFadeBottomOpacity(0);
-                    }
-                }
-            }, 50);
-            return () => clearTimeout(timer);
-        }
-    }, [phase, importData]);
-
-    // Swipe avec passive:false pour bloquer le scroll pendant le swipe horizontal (iOS)
-    useEffect(() => {
-        const container = importListRef.current;
-        if (!container || phase !== 'import') return;
-
-        const handleTouchMove = (e) => {
-            const state = swipeStateRef.current;
-            if (!state.card || state.startX === null || state.startY === null) return;
-
-            const clientX = e.touches[0].clientX;
-            const clientY = e.touches[0].clientY;
-            const diffX = clientX - state.startX;
-            const diffY = clientY - state.startY;
-
-            // Déterminer la direction au premier mouvement significatif
-            if (state.direction === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-                state.direction = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
-                setSwipeDirection(state.direction);
-                if (state.direction === 'horizontal') {
-                    const currentIdx = importData?.folderGradients?.[state.card] ?? 0;
-                    const currentGradient = getGradientByIndex(currentIdx);
-                    const gradientStyle = currentGradient.length === 2
-                        ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
-                        : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
-                    const safeIndex = ((currentIdx % 20) + 20) % 20;
-                    setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
-                }
-            }
-
-            // Si vertical, laisser le scroll natif
-            if (state.direction === 'vertical') return;
-
-            // Si horizontal, BLOQUER le scroll et gérer le swipe
-            if (state.direction === 'horizontal') {
-                e.preventDefault(); // Fonctionne car passive: false
-                const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
-                if (Math.abs(diffX) < maxSwipeDistance) {
-                    setSwipeOffset(diffX);
-                    const direction = diffX > 0 ? 1 : -1;
-                    const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
-                    const currentIdx = importData?.folderGradients?.[state.card] ?? 0;
-                    const previewIdx = currentIdx + (direction * colorsTraversed);
-                    const previewGradient = getGradientByIndex(previewIdx);
-                    const gradientStyle = previewGradient.length === 2
-                        ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
-                        : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
-                    const safeIndex = ((previewIdx % 20) + 20) % 20;
-                    setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
-                }
-            }
-        };
-
-        container.addEventListener('touchmove', handleTouchMove, { passive: false });
-        return () => container.removeEventListener('touchmove', handleTouchMove);
-    }, [phase, importData, getGradientByIndex, getGradientName]);
 
     // Restaurer la position de scroll après chargement
     useEffect(() => {
@@ -1100,14 +805,10 @@ const DropboxBrowser = ({
                         opacity: 1,
                     }}
                 >
-                    {/* PHASE BROWSE - Navigation Dropbox */}
+                    {/* Navigation Dropbox */}
                     <div
-                        className="absolute inset-0 flex flex-col"
+                        className="flex-1 flex flex-col"
                         style={{
-                            opacity: phase === 'browse' ? (phaseTransition === 'to-import' ? 0 : 1) : 0,
-                            transform: phase === 'browse' ? (phaseTransition === 'to-import' ? 'translateX(-20px)' : 'translateX(0)') : 'translateX(-20px)',
-                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
-                            pointerEvents: phase === 'browse' ? 'auto' : 'none',
                             paddingTop: '0.75rem',
                             paddingBottom: '0.75rem',
                         }}
@@ -1296,162 +997,6 @@ const DropboxBrowser = ({
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* PHASE IMPORT - Cartes de vibes colorées */}
-                    <div
-                        className="absolute inset-0 flex flex-col"
-                        style={{
-                            opacity: phase === 'import' ? (phaseTransition === 'to-browse' ? 0 : 1) : 0,
-                            transform: phase === 'import' ? (phaseTransition === 'to-browse' ? 'translateX(20px)' : 'translateX(0)') : 'translateX(20px)',
-                            transition: `opacity ${CONFIG.PHASE_TRANSITION_DURATION}ms, transform ${CONFIG.PHASE_TRANSITION_DURATION}ms`,
-                            pointerEvents: phase === 'import' ? 'auto' : 'none',
-                            paddingTop: '0.75rem',
-                            paddingBottom: '0.75rem',
-                        }}
-                    >
-                        {importData && (
-                            <>
-                                {/* Header Import - avec bouton retour */}
-                                <div className="mb-2" style={{ flexShrink: 0, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
-                                    <div className="flex items-center justify-between rounded-full px-4 border border-gray-200 w-full" style={{ background: 'white', height: UNIFIED_CONFIG.CAPSULE_HEIGHT, minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                        <button onClick={() => handleImportAction('cancel')} className="flex items-center justify-center -ml-2 mr-2" style={{ color: CONFIG.DROPBOX_BLUE }}>
-                                            <ChevronLeft size={18} strokeWidth={2.5} />
-                                        </button>
-                                        <div className="flex-1 overflow-hidden mr-2">
-                                            <span className="font-bold text-gray-700 whitespace-nowrap truncate" style={{ fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}>{importData.rootName}</span>
-                                        </div>
-                                        {importData.totalFiles > SMARTIMPORT_CONFIG.WARNING_THRESHOLD && (
-                                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,150,0,0.15)' }}>
-                                                <AlertTriangle size={12} className="text-orange-500" />
-                                                <span className="text-xs font-bold text-orange-600">{importData.totalFiles}</span>
-                                                <AlertTriangle size={12} className="text-orange-500" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Badges résumé */}
-                                <div className="flex justify-between items-center mb-2" style={{ paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="font-bold flex items-center justify-center gap-0.5" style={{ background: SMARTIMPORT_CONFIG.BADGE_BG, color: SMARTIMPORT_CONFIG.BADGE_COLOR, borderRadius: SMARTIMPORT_CONFIG.BADGE_RADIUS, height: SMARTIMPORT_CONFIG.BADGE_HEIGHT, minWidth: SMARTIMPORT_CONFIG.BADGE_MIN_WIDTH, paddingLeft: SMARTIMPORT_CONFIG.BADGE_PADDING_X, paddingRight: SMARTIMPORT_CONFIG.BADGE_PADDING_X, fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}>
-                                            +{Object.keys(importData.folders).length - (importData.existingFolders?.length || 0)}
-                                        </div>
-                                        {importData.existingFolders?.length > 0 && (
-                                            <div className="font-bold flex items-center justify-center gap-0.5" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', borderRadius: SMARTIMPORT_CONFIG.BADGE_RADIUS, height: SMARTIMPORT_CONFIG.BADGE_HEIGHT, minWidth: SMARTIMPORT_CONFIG.BADGE_MIN_WIDTH, paddingLeft: SMARTIMPORT_CONFIG.BADGE_PADDING_X, paddingRight: SMARTIMPORT_CONFIG.BADGE_PADDING_X, fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }}>
-                                                <Check size={10} strokeWidth={3} />
-                                                {importData.existingFolders.length}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-1 text-gray-400">
-                                        <span className="text-xs font-bold">{importData.totalFiles}</span>
-                                        <Music className="text-gray-400" style={{ width: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE, height: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE }} />
-                                    </div>
-                                </div>
-
-                                {/* Liste des vibes */}
-                                <div className="relative mb-2 flex-1 min-h-0" style={{ paddingLeft: 0, paddingRight: 0, overflowX: 'clip', overflowY: 'visible' }}>
-                                    <div className="h-full" style={{ overflow: 'visible' }}>
-                                        <div ref={importListRef} className="h-full overflow-y-auto" onScroll={handleImportListScroll} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', flexDirection: 'column', gap: SMARTIMPORT_CONFIG.CARD_GAP, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: `calc(${SMARTIMPORT_CONFIG.HORIZONTAL_PADDING} + 0.6rem)`, paddingTop: '0.75rem', paddingBottom: '0.5rem' }}>
-                                            {Object.entries(importData.folders).map(([folderName, folderFiles]) => {
-                                                const gradientIndex = importData.folderGradients?.[folderName] ?? 0;
-                                                const gradient = getGradientByIndex(gradientIndex);
-                                                const gradientStyle = gradient.length === 2 ? `linear-gradient(135deg, ${gradient[0]} 0%, ${gradient[1]} 100%)` : `linear-gradient(135deg, ${gradient.join(', ')})`;
-                                                const exists = importData.existingFolders?.includes(folderName);
-                                                const isBeingSwiped = swipingCard === folderName && swipeDirection === 'horizontal';
-
-                                                return (
-                                                    <div
-                                                        key={folderName}
-                                                        className="relative rounded-xl overflow-visible"
-                                                        style={{
-                                                            height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
-                                                            background: isBeingSwiped && swipePreview ? swipePreview.gradient : gradientStyle,
-                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                                                            flexShrink: 0,
-                                                            transform: isBeingSwiped ? `translateX(${swipeOffset * 1.5}px)` : 'translateX(0)',
-                                                            transition: isBeingSwiped ? 'none' : 'transform 0.2s ease-out',
-                                                            touchAction: 'pan-y', // Permet scroll vertical, on gère horizontal nous-mêmes
-                                                        }}
-                                                        onTouchStart={(e) => handleCardSwipeStart(e, folderName)}
-                                                        onTouchEnd={() => handleCardSwipeEnd(folderName)}
-                                                    >
-                                                        {/* Indicateurs swipe - chevrons à côté du pointer */}
-                                                        {!isBeingSwiped && (
-                                                            <div className="absolute top-0 left-0 right-0 flex justify-center items-center gap-1 pointer-events-none" style={{ top: SMARTIMPORT_CONFIG.SWIPE_INDICATOR_TOP, opacity: SMARTIMPORT_CONFIG.SWIPE_CHEVRON_OPACITY }}>
-                                                                <ChevronLeft size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white/60" strokeWidth={3} />
-                                                                <Pointer size={SMARTIMPORT_CONFIG.SWIPE_POINTER_SIZE} className="text-white/60" strokeWidth={2} />
-                                                                <ChevronRight size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white/60" strokeWidth={3} />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Badge existe */}
-                                                        {exists && (
-                                                            <div className="absolute flex items-center justify-center rounded-full bg-green-500 shadow-lg" style={{ width: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE, height: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE, top: SMARTIMPORT_CONFIG.EXISTS_BADGE_TOP, right: SMARTIMPORT_CONFIG.EXISTS_BADGE_RIGHT, zIndex: 10 }}>
-                                                                <CheckCircle2 size={SMARTIMPORT_CONFIG.EXISTS_BADGE_ICON_SIZE} className="text-white" strokeWidth={3} />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Contenu carte */}
-                                                        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                                                            <div className="flex items-center gap-2 rounded-full px-3 py-1" style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)` }}>
-                                                                <span className="font-bold text-white truncate" style={{ fontSize: SMARTIMPORT_CONFIG.CAPSULE_FONT_SIZE, maxWidth: '120px' }}>{folderName}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)` }}>
-                                                                <span className="font-bold text-white" style={{ fontSize: SMARTIMPORT_CONFIG.CAPSULE_COUNT_SIZE }}>{folderFiles.length}</span>
-                                                                <Music size={10} className="text-white" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                    {importListNeedsScroll && importFadeTopOpacity > 0 && (
-                                        <div className="absolute left-0 right-0 top-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeTopOpacity }} />
-                                    )}
-                                    {importListNeedsScroll && importFadeBottomOpacity > 0 && (
-                                        <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: CONFIG.FADE_HEIGHT, background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`, opacity: importFadeBottomOpacity }} />
-                                    )}
-                                </div>
-
-                                {/* Boutons Import */}
-                                <div className="relative" style={{ flexShrink: 0, paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING }}>
-                                    {swipePreview && (
-                                        <div className="absolute rounded-full z-20 flex items-center justify-center" style={{ left: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, right: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING, top: 0, bottom: 0, background: swipePreview.gradient, boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
-                                            <div className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                                                <ChevronLeft size={16} />
-                                                <span>{swipePreview.gradientName}</span>
-                                                <ChevronRight size={16} />
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-2" style={{ opacity: swipePreview ? 0 : 1 }}>
-                                        <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                            {importBtnIgniting === 'cancel' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('cancel')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center" style={{ background: importBtnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)', color: importBtnIgniting === 'cancel' ? 'white' : '#9ca3af' }}>
-                                                <X size={18} />
-                                            </button>
-                                        </div>
-                                        <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                            {importBtnIgniting === 'fusion' && <div className="absolute inset-0 rounded-full dropbox-ignite-orange" style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)', border: '1px solid #dc2626', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('fusion')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)', color: 'white', boxShadow: '0 0 15px rgba(220, 38, 38, 0.4)' }}>
-                                                <Layers size={14} />
-                                                <span>FUSION</span>
-                                            </button>
-                                        </div>
-                                        <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                            {importBtnIgniting === 'vibes' && <div className="absolute inset-0 rounded-full dropbox-ignite-pink" style={{ background: 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)', zIndex: 0 }} />}
-                                            <button onClick={() => handleImportAction('vibes')} disabled={!!importBtnIgniting} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: importBtnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)', color: 'white', boxShadow: '0 0 15px rgba(236, 72, 153, 0.4), 0 0 25px rgba(255, 7, 163, 0.3)' }}>
-                                                <Flame size={14} />
-                                                <span>{Object.keys(importData.folders).length} VIBES</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
                     </div>
                 </div>
             </div>

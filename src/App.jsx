@@ -7422,52 +7422,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 clearDropboxTokens();
                 setDropboxToken(null);
             }}
-            onImportComplete={(folders, mode, folderGradients, fromDropbox) => {
-                // Mode: 'fusion' = une seule vibe, 'vibes' = vibes séparées
-                // folderGradients: { folderName: gradientIndex }
-                setShowDropboxBrowser(false);
-
-                // Importer les vibes avec les gradients choisis
-                Object.entries(folders).forEach(([folderName, files]) => {
-                    const colorIndex = folderGradients?.[folderName] ?? 0;
-                    const normalizedIndex = ((colorIndex % 20) + 20) % 20;
-
-                    // Générer un ID unique pour cette nouvelle vibe
-                    const newVibeId = generateVibeId();
-                    setPlaylists(prev => ({
-                        ...prev,
-                        [newVibeId]: {
-                            name: folderName,
-                            songs: files.map(f => {
-                                const fileName = f.name || f;
-                                const nameWithoutExt = fileName.replace(/\.mp3$/i, '');
-                                const parts = nameWithoutExt.split(' - ');
-                                const title = parts.length > 1 ? parts.slice(1).join(' - ') : nameWithoutExt;
-                                const artist = parts.length > 1 ? parts[0] : '';
-                                // Créer une signature unique basée sur le nom du fichier
-                                const fileSignature = fileName;
-                                return {
-                                    id: `dropbox-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-                                    title: title,
-                                    artist: artist,
-                                    playCount: 0,
-                                    file: null,
-                                    dropboxPath: f.path_lower,
-                                    fileSignature: fileSignature,
-                                    type: 'dropbox'
-                                };
-                            })
-                        }
-                    }));
-
-                    setVibeColorIndices(prev => ({
-                        ...prev,
-                        [newVibeId]: normalizedIndex
-                    }));
-                });
-
-                // Sauvegarder
-                setTimeout(() => savePlaylistsToLocalStorage(), 100);
+            onScanComplete={(data) => {
+                // Passer les données scannées à SmartImport via pendingDropboxData
+                setPendingDropboxData(data);
             }}
             onMenuClose={() => {
                 setImportOverlayAnim('closing');
@@ -7482,10 +7439,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             getValidDropboxToken={getValidDropboxToken}
             refreshDropboxToken={refreshDropboxToken}
             clearDropboxTokens={clearDropboxTokens}
-            playlists={playlists}
-            vibeColorIndices={vibeColorIndices}
-            getGradientByIndex={getGradientByIndex}
-            getGradientName={getGradientName}
             headerLogoSize={CONFIG.HEADER_LOGO_SIZE}
             headerPaddingX={CONFIG.HEADER_PADDING_X}
             headerButtonsGap={CONFIG.HEADER_BUTTONS_GAP}
@@ -7954,11 +7907,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 )}
         
                     {/* SMART IMPORT */}
-                    <SmartImport 
+                    <SmartImport
                         playlists={playlists}
                         vibeColorIndices={vibeColorIndices}
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}
+                        vibeCardMinOpacity={CONFIG.VIBECARD_MIN_OPACITY}
                         dropboxData={pendingDropboxData}
                         onDropboxDataClear={() => setPendingDropboxData(null)}
                         onImportComplete={(folders, mode, folderGradients, isDropbox) => {
