@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines, Pencil } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.jsx';
 
@@ -1033,24 +1033,27 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 } }) => {
+const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0 }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
     const [closingDirection, setClosingDirection] = useState(null);
     const [titleSwipeX, setTitleSwipeX] = useState(0);
     const titleStartX = useRef(0);
-    const [selectedSongs, setSelectedSongs] = useState([]);
-    const [vibeName, setVibeName] = useState('');
-    const [nameWasEdited, setNameWasEdited] = useState(false);
+    const [selectedSongs, setSelectedSongs] = useState(editMode ? editVibeSongs : []);
+    const [vibeName, setVibeName] = useState(editMode ? editVibeName : '');
+    const [nameWasEdited, setNameWasEdited] = useState(editMode); // En mode édition, on ne génère pas de nom auto
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef(null);
     const [isCreatingVibe, setIsCreatingVibe] = useState(false);
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteConfirmSwipeX, setDeleteConfirmSwipeX] = useState(0);
+    const deleteConfirmStartX = useRef(null);
     
     const [sortMode, setSortMode] = useState('alphaTitle');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
-    const [fileFilter, setFileFilter] = useState('available'); // 'available', 'all', 'unavailable'
+    const [fileFilter, setFileFilter] = useState(editMode ? 'all' : 'available'); // 'available', 'all', 'unavailable' - en mode édition, afficher tout
     
     const listRef = useRef(null);
     // IMPORTANT : On utilise une ref pour stocker la hauteur réelle d'une ligne
@@ -1076,7 +1079,7 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
     const [vibingSong, setVibingSong] = useState(null); 
     
     // État pour le gradient de la future Vibe (fixe au montage, modifiable par swipe)
-    const [chosenGradientIndex, setChosenGradientIndex] = useState(initialGradientIndex || 0);
+    const [chosenGradientIndex, setChosenGradientIndex] = useState(editMode ? editVibeGradientIndex : (initialGradientIndex || 0));
     const [cardSwipeOffset, setCardSwipeOffset] = useState(0);
     const [cardSwipeDirection, setCardSwipeDirection] = useState(null);
     const [previewGradientIndex, setPreviewGradientIndex] = useState(null);
@@ -1484,15 +1487,37 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
             setIsSearching(false); 
         }, CONFIG.BLINK_ANIMATION_DURATION);
     };
-    const handleSave = () => { 
-        if (selectedSongs.length === 0 || isCreatingVibe) return; 
+    const handleSave = () => {
+        if (isCreatingVibe) return;
+
+        // En mode édition, si aucun morceau sélectionné, proposer de supprimer la vibe
+        if (selectedSongs.length === 0) {
+            if (editMode) {
+                setShowDeleteConfirm(true);
+            }
+            return;
+        }
+
         setIsCreatingVibe(true);
-        
+
         // Après le blink, lancer l'animation de fermeture vers la droite
         setTimeout(() => {
-            onSaveVibe(vibeName, selectedSongs, chosenGradientIndex); 
-            handleClose('right'); 
+            onSaveVibe(vibeName, selectedSongs, chosenGradientIndex);
+            handleClose('right');
         }, CONFIG.BLINK_ANIMATION_DURATION);
+    };
+
+    const handleDeleteConfirm = () => {
+        setIsCreatingVibe(true);
+        if (onDeleteVibe) {
+            onDeleteVibe();
+        }
+        handleClose('right');
+    };
+
+    const handleDeleteCancel = () => {
+        setShowDeleteConfirm(false);
+        setDeleteConfirmSwipeX(0);
     };
     
     // Handlers SIMPLIFIÉS pour la carte (swipe direct partout sauf + et capsule)
@@ -1734,6 +1759,43 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                 </div>
                 <div className="flex items-center gap-2 relative z-20">
                     <div className="flex-1 relative" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
+                    {/* OVERLAY CONFIRMATION SUPPRESSION */}
+                    {showDeleteConfirm && (
+                        <div
+                            className="absolute inset-0 rounded-full flex items-center justify-center z-50"
+                            style={{
+                                background: '#ef4444',
+                                boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)',
+                                transform: `translateX(${deleteConfirmSwipeX}px)`,
+                                transition: deleteConfirmStartX.current === null ? 'transform 0.2s ease-out' : 'none'
+                            }}
+                            onTouchStart={(e) => {
+                                deleteConfirmStartX.current = e.touches[0].clientX;
+                            }}
+                            onTouchMove={(e) => {
+                                if (deleteConfirmStartX.current === null) return;
+                                const diff = e.touches[0].clientX - deleteConfirmStartX.current;
+                                setDeleteConfirmSwipeX(diff);
+                            }}
+                            onTouchEnd={() => {
+                                if (deleteConfirmSwipeX > 80) {
+                                    // Swipe droite = confirmer suppression
+                                    handleDeleteConfirm();
+                                } else if (deleteConfirmSwipeX < -80) {
+                                    // Swipe gauche = annuler
+                                    handleDeleteCancel();
+                                } else {
+                                    setDeleteConfirmSwipeX(0);
+                                }
+                                deleteConfirmStartX.current = null;
+                            }}
+                        >
+                            <div className="flex items-center gap-2 text-white font-black text-sm">
+                                <Trash2 size={18} strokeWidth={2.5} />
+                                <span>SUPPRIMER VIBE ?</span>
+                            </div>
+                        </div>
+                    )}
                     {dragState ? (
                             <div 
                                 className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
@@ -2043,37 +2105,47 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                                 />
                             )}
                             
-                            {/* Bouton CREATE - Centré verticalement à droite - + transparent découpé */}
-                            <div 
+                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - icône transparent découpé */}
+                            <div
                                 data-create-btn
-                                className="absolute transition-transform hover:scale-110 rounded-full overflow-hidden"
-                                style={{ 
+                                className="absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center"
+                                style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     width: CONFIG.CREATE_BTN_SIZE,
                                     height: CONFIG.CREATE_BTN_SIZE,
-                                    boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`
+                                    boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
+                                    background: 'white'
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleSave();
                                 }}
                             >
-                                <svg 
-                                    width="100%" 
-                                    height="100%" 
-                                    viewBox="0 0 100 100"
-                                >
-                                    <defs>
-                                        <mask id="plusCutout">
-                                            <circle cx="50" cy="50" r="50" fill="white"/>
-                                            <line x1="50" y1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} x2="50" y2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
-                                            <line x1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y1="50" x2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y2="50" stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
-                                        </mask>
-                                    </defs>
-                                    <circle cx="50" cy="50" r="50" fill="white" mask="url(#plusCutout)"/>
-                                </svg>
+                                {editMode ? (
+                                    <Pencil
+                                        size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                        strokeWidth={2.5}
+                                        style={{ color: displayGradient[Math.floor(displayGradient.length / 2)] }}
+                                    />
+                                ) : (
+                                    <svg
+                                        width="100%"
+                                        height="100%"
+                                        viewBox="0 0 100 100"
+                                        style={{ position: 'absolute', inset: 0 }}
+                                    >
+                                        <defs>
+                                            <mask id="plusCutout">
+                                                <circle cx="50" cy="50" r="50" fill="white"/>
+                                                <line x1="50" y1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} x2="50" y2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
+                                                <line x1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y1="50" x2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y2="50" stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
+                                            </mask>
+                                        </defs>
+                                        <circle cx="50" cy="50" r="50" fill="white" mask="url(#plusCutout)"/>
+                                    </svg>
+                                )}
                             </div>
                             
                             {/* Capsule Liquid Glass - IDENTIQUE à App.txt */}

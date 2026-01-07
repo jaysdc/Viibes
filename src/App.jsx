@@ -1841,7 +1841,7 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, onReimport, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, onReimport, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -2016,9 +2016,17 @@ return (
               );
           })()}
 
-          {/* Icône en haut à droite */}
-          <div className="absolute top-3 right-3">
-              <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner">
+          {/* Icône en haut à droite - cliquable pour éditer la vibe */}
+          <div
+              className="absolute top-3 right-3"
+              onClick={(e) => {
+                  e.stopPropagation();
+                  if (onEditVibe && isVibe) {
+                      onEditVibe();
+                  }
+              }}
+          >
+              <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${isVibe && onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
               <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
               </div>
           </div>
@@ -4188,6 +4196,7 @@ const handlePlayerTouchEnd = () => {
 
     const [scrollTrigger, setScrollTrigger] = useState(0);
     const [showBuilder, setShowBuilder] = useState(false);
+    const [editingVibeId, setEditingVibeId] = useState(null); // null = création, vibeId = édition
     const [builderBtnIgniting, setBuilderBtnIgniting] = useState(false);
     const [isPlayerSearching, setIsPlayerSearching] = useState(false);
     const [playerSearchQuery, setPlayerSearchQuery] = useState('');
@@ -7424,6 +7433,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     setBlinkingVibe(null);
                                     launchVibe(vibeToLaunch);
                                 }}
+                                onEditVibe={() => {
+                                    setEditingVibeId(vibeId);
+                                    setShowBuilder(true);
+                                }}
                             />
                         );
                     })}
@@ -8133,18 +8146,25 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
             {/* VIBE BUILDER OVERLAY */}
             {showBuilder && (() => {
+                // Mode édition : récupérer les données de la vibe à éditer
+                const isEditMode = editingVibeId !== null;
+                const editingVibe = isEditMode ? playlists[editingVibeId] : null;
+
                 // Calculer l'index initial UNE SEULE FOIS au montage
                 const usedIndices = Object.values(vibeColorIndices);
                 const allIndices = Array.from({ length: ALL_GRADIENTS.length }, (_, i) => i);
                 const unusedIndices = allIndices.filter(i => !usedIndices.includes(i));
                 const initialIdx = unusedIndices.length > 0 ? unusedIndices[0] : 0;
-                
+
                 return (
                   <div className="absolute inset-0 z-[200]">
                   <ErrorBoundary>
                   <VibeBuilder
                       sourcePlaylists={playlists}
-                        onClose={() => setShowBuilder(false)}
+                        onClose={() => {
+                            setShowBuilder(false);
+                            setEditingVibeId(null);
+                        }}
                         cardAnimConfig={{
                           openDuration: CONFIG.CARD_ANIM_OPEN_DURATION,
                           openDecel: CONFIG.CARD_ANIM_OPEN_DECEL,
@@ -8155,21 +8175,51 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           borderWidth: CONFIG.CARD_ANIM_BORDER_WIDTH,
                           originY: CONFIG.CARD_ANIM_ORIGIN_Y,
                       }}
+                        editMode={isEditMode}
+                        editVibeId={editingVibeId}
+                        editVibeName={editingVibe?.name || ''}
+                        editVibeSongs={editingVibe?.songs || []}
+                        editVibeGradientIndex={isEditMode ? (vibeColorIndices[editingVibeId] ?? 0) : 0}
                         onSaveVibe={(name, songs, gradientIndex) => {
                           const vibeSongs = songs.map(s => ({...s, type: 'vibe'}));
 
-                          // Générer un ID unique pour cette nouvelle vibe
-                          const newVibeId = generateVibeId();
-                          setPlaylists(prev => ({
-                              ...prev,
-                              [newVibeId]: {
-                                  name: name,
-                                  songs: vibeSongs
-                              }
-                          }));
-
-                          setVibeColorIndices(prev => ({ ...prev, [newVibeId]: gradientIndex }));
+                          if (isEditMode) {
+                              // Mode édition : modifier la vibe existante
+                              setPlaylists(prev => ({
+                                  ...prev,
+                                  [editingVibeId]: {
+                                      name: name,
+                                      songs: vibeSongs
+                                  }
+                              }));
+                              setVibeColorIndices(prev => ({ ...prev, [editingVibeId]: gradientIndex }));
+                          } else {
+                              // Mode création : générer un ID unique pour cette nouvelle vibe
+                              const newVibeId = generateVibeId();
+                              setPlaylists(prev => ({
+                                  ...prev,
+                                  [newVibeId]: {
+                                      name: name,
+                                      songs: vibeSongs
+                                  }
+                              }));
+                              setVibeColorIndices(prev => ({ ...prev, [newVibeId]: gradientIndex }));
+                          }
                           // NE PAS fermer ici - le VibeBuilder appellera onClose après l'animation
+                      }}
+                        onDeleteVibe={() => {
+                            if (isEditMode && editingVibeId) {
+                                setPlaylists(prev => {
+                                    const newPlaylists = { ...prev };
+                                    delete newPlaylists[editingVibeId];
+                                    return newPlaylists;
+                                });
+                                setVibeColorIndices(prev => {
+                                    const newIndices = { ...prev };
+                                    delete newIndices[editingVibeId];
+                                    return newIndices;
+                                });
+                            }
                       }}
                         fadeMainAudio={fadeMainAudio}
                         onPlayNext={addToPlayNext}
