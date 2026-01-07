@@ -671,10 +671,6 @@ const CONFIG = {
     NEON_COLOR_LIME: '192, 255, 0',       // Vert lime (BACK TO VIBES)
     NEON_COLOR_CYAN: '6, 182, 212',       // Cyan (VIBE NEXT!)
     NEON_COLOR_ORANGE: '255, 140, 0',     // Orange (GHOST...)
-
-    // SWIPE CAPSULE ANIMATION (Ghost / Play Next)
-    SWIPE_ACTION_THRESHOLD: 50,           // Seuil pour déclencher l'action (px)
-    SWIPE_CAPSULE_EXIT_DURATION: 200,     // Durée de l'animation de sortie (ms)
     NEON_COLOR_GREEN: '0, 255, 136',      // Vert néon sexy (Check validation)
     NEON_COLOR_FUCHSIA: '236, 72, 153',   // Fuchsia Overdose (KILL VIBE) - #ec4899
     NEON_COLOR_RED: '255, 7, 58',         // Rouge (NUKE ALL)
@@ -1093,16 +1089,6 @@ const styles = `
   }
   .animate-pulse-pill-red {
     animation: pulse-pill-red 0.6s ease-in-out infinite;
-  }
-
-  /* Animation capsule exit - slide+fade pour ghost/play next */
-  @keyframes capsule-exit-left {
-    0% { transform: translateX(0); opacity: 1; }
-    100% { transform: translateX(-30px); opacity: 0; }
-  }
-  @keyframes capsule-exit-right {
-    0% { transform: translateX(0); opacity: 1; }
-    100% { transform: translateX(30px); opacity: 0; }
   }
 
   /* Animation ignite pour CHECK - Vert néon sexy (#00ff88 → #00cc6a) */
@@ -1852,15 +1838,15 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
 
-    const [touchStartX, setTouchStartX] = useState(null);
-    const [touchStartY, setTouchStartY] = useState(null);
+    const cardRef = useRef(null);
+    const touchStartRef = useRef({ x: null, y: null });
+    const swipeDirectionRef = useRef(null);
     const [swipeOffset, setSwipeOffset] = useState(0);
-    const [swipeDirection, setSwipeDirection] = useState(null); // 'horizontal', 'vertical', ou null
-    
+
     // Animation d'entrée stagger
     const [hasAnimated, setHasAnimated] = useState(false);
     const prevAnimKeyRef = useRef(animationKey);
-    
+
     useEffect(() => {
         // Reset l'animation quand animationKey change
         if (animationKey !== prevAnimKeyRef.current) {
@@ -1873,71 +1859,79 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         }, animationDelay + animationIndex * CONFIG.VIBECARD_STAGGER_DELAY);
         return () => clearTimeout(timer);
     }, [animationKey, animationIndex, animationDelay]);
-    
-    const handleTouchStart = (e) => {
-        if (!e.touches || !e.touches[0]) return;
-        setTouchStartX(e.touches[0].clientX);
-        setTouchStartY(e.touches[0].clientY);
-        setSwipeDirection(null);
-    };
-    
-    const handleTouchMove = (e) => {
-        if (touchStartX === null || touchStartY === null) return;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const diffX = clientX - touchStartX;
-        const diffY = clientY - touchStartY;
 
-        // Déterminer la direction au premier mouvement significatif
-        if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                setSwipeDirection('horizontal');
-            } else {
-                setSwipeDirection('vertical');
+    // Utiliser useEffect pour ajouter le listener avec { passive: false }
+    // Cela permet à preventDefault() de fonctionner sur iOS
+    useEffect(() => {
+        const element = cardRef.current;
+        if (!element) return;
+
+        const handleTouchMove = (e) => {
+            const { x: touchStartX, y: touchStartY } = touchStartRef.current;
+            if (touchStartX === null || touchStartY === null) return;
+
+            const currentX = e.targetTouches[0].clientX;
+            const currentY = e.targetTouches[0].clientY;
+            const diffX = currentX - touchStartX;
+            const diffY = currentY - touchStartY;
+
+            // Déterminer la direction au premier mouvement significatif (verrouillage)
+            if (swipeDirectionRef.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+                swipeDirectionRef.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
             }
-        }
 
-        // Si c'est un swipe vertical, on ignore (laisser le scroll se faire)
-        if (swipeDirection === 'vertical') return;
+            // Si c'est un swipe vertical, on laisse le scroll natif faire son travail
+            if (swipeDirectionRef.current === 'vertical') return;
 
-        // Si c'est horizontal, bloquer le scroll vertical et gérer le swipe couleur
-        if (swipeDirection === 'horizontal') {
-            // Bloquer le scroll vertical quand on swipe horizontalement
-            e.preventDefault();
+            // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe couleur
+            if (swipeDirectionRef.current === 'horizontal') {
+                e.preventDefault(); // Fonctionne car passive: false
 
-            if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
-                setSwipeOffset(diffX);
+                if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
+                    setSwipeOffset(diffX);
 
-                if (Math.abs(diffX) > 10 && onSwipeProgress) {
-                    const direction = diffX > 0 ? 1 : -1;
+                    if (Math.abs(diffX) > 10 && onSwipeProgress) {
+                        const direction = diffX > 0 ? 1 : -1;
 
-                    // Calculer combien de couleurs on a parcouru (0 à 19)
-                    const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
-                    const currentIdx = colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId);
-                    const previewIdx = currentIdx + (direction * colorsTraversed);
-                    const previewGradient = getGradientByIndex(previewIdx);
+                        // Calculer combien de couleurs on a parcouru (0 à 19)
+                        const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                        const currentIdx = colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId);
+                        const previewIdx = currentIdx + (direction * colorsTraversed);
+                        const previewGradient = getGradientByIndex(previewIdx);
 
-                    // Progress pour l'opacité (0 à 1)
-                    const progress = Math.min(Math.abs(diffX) / 50, 1);
+                        // Progress pour l'opacité (0 à 1)
+                        const progress = Math.min(Math.abs(diffX) / 50, 1);
 
-                    onSwipeProgress({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: ((previewIdx % 20) + 20) % 20 });
+                        onSwipeProgress({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: ((previewIdx % 20) + 20) % 20 });
+                    }
                 }
             }
-        }
+        };
+
+        element.addEventListener('touchmove', handleTouchMove, { passive: false });
+        return () => element.removeEventListener('touchmove', handleTouchMove);
+    }, [colorIndex, vibeId, onSwipeProgress]);
+
+    const handleTouchStart = (e) => {
+        if (!e.touches || !e.touches[0]) return;
+        touchStartRef.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        };
+        swipeDirectionRef.current = null;
     };
-        
+
     const handleTouchEnd = () => {
         // Ne changer la couleur que si c'était un swipe horizontal
         const colorsTraversed = Math.floor((Math.abs(swipeOffset) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
-        if (swipeDirection === 'horizontal' && colorsTraversed >= 1) {
+        if (swipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
             const direction = swipeOffset > 0 ? 1 : -1;
             if (onColorChange) onColorChange(direction * colorsTraversed);
         }
         setSwipeOffset(0);
-        setTouchStartX(null);
-        setTouchStartY(null);
-        setSwipeDirection(null);
-        
+        touchStartRef.current = { x: null, y: null };
+        swipeDirectionRef.current = null;
+
         if (onSwipeProgress) onSwipeProgress(null);
     };
 
@@ -1962,16 +1956,11 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 return (
   <FeedbackCardOverlay isActive={isBlinking} onAnimationComplete={onBlinkComplete}>
       <div
+          ref={cardRef}
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
 
-          // Événements de souris
-          onMouseDown={handleTouchStart}
-          onMouseMove={handleTouchMove}
-          onMouseUp={handleTouchEnd}
-          
           className="w-full rounded-xl px-4 py-3 flex items-end justify-between shadow-lg cursor-pointer relative overflow-hidden"
           style={{ 
             height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
@@ -3088,8 +3077,6 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
     const [offset, setOffset] = useState(0);
-    const [thresholdReached, setThresholdReached] = useState(null); // 'left' | 'right' | null
-    const prevThresholdRef = useRef(null);
 
     // Utiliser useEffect pour ajouter le listener avec { passive: false }
     // Cela permet à preventDefault() de fonctionner sur iOS
@@ -3119,19 +3106,6 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
                 e.preventDefault(); // Fonctionne car passive: false
                 if (Math.abs(diffX) < 150) {
                     setOffset(diffX);
-
-                    // Détecter quand on atteint le seuil (une seule fois par direction)
-                    const threshold = CONFIG.SWIPE_ACTION_THRESHOLD;
-                    if (diffX < -threshold && prevThresholdRef.current !== 'left') {
-                        prevThresholdRef.current = 'left';
-                        setThresholdReached('left');
-                    } else if (diffX > threshold && prevThresholdRef.current !== 'right') {
-                        prevThresholdRef.current = 'right';
-                        setThresholdReached('right');
-                    } else if (Math.abs(diffX) < threshold && prevThresholdRef.current !== null) {
-                        prevThresholdRef.current = null;
-                        setThresholdReached(null);
-                    }
                 }
             }
         };
@@ -3146,21 +3120,16 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
             y: e.targetTouches[0].clientY
         };
         swipeDirectionRef.current = null;
-        prevThresholdRef.current = null;
-        setThresholdReached(null);
     };
 
     const onTouchEnd = () => {
-        const threshold = CONFIG.SWIPE_ACTION_THRESHOLD;
         if (swipeDirectionRef.current === 'horizontal' && touchStartRef.current.x !== null) {
-            if (offset < -threshold) onSwipeLeft(song);
-            else if (offset > threshold) onSwipeRight(song);
+            if (offset < -50) onSwipeLeft(song);
+            else if (offset > 50) onSwipeRight(song);
         }
         setOffset(0);
         touchStartRef.current = { x: null, y: null };
         swipeDirectionRef.current = null;
-        prevThresholdRef.current = null;
-        setThresholdReached(null);
     };
     const WHEEL_TITLE_SIZE_MAIN_CENTER = CONFIG.WHEEL_TITLE_SIZE_MAIN_CENTER;
     const WHEEL_TITLE_SIZE_MAIN_OTHER = CONFIG.WHEEL_TITLE_SIZE_MAIN_OTHER;
@@ -3194,23 +3163,15 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
 
     const progress = Math.abs(offset);
     const showFeedback = progress > 20; 
-    const progressOpacity = Math.min((progress - 20) / (180 - 20), 1.0); 
+    const progressOpacity = Math.min((progress - 20) / (180 - 20), 1.0);
 
-    let OverlayContent = null; 
+    let OverlayContent = null;
     let overlayClass = "";
-
-    // Animation de slide+fade quand le seuil est atteint
-    const capsuleExitStyle = thresholdReached ? {
-        animation: `capsule-exit-${thresholdReached} ${CONFIG.SWIPE_CAPSULE_EXIT_DURATION}ms ease-out forwards`
-    } : {};
 
     if (offset > 0) {
         overlayClass = "bg-cyan-500 rounded-full shadow-inner";
         OverlayContent = (
-        <div
-            className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
-            style={thresholdReached === 'right' ? capsuleExitStyle : {}}
-        >
+        <div className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest">
             <ListPlus size={24} strokeWidth={3} />
             <div className="flex flex-col leading-none">
             <span>VIBE</span>
@@ -3221,10 +3182,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     } else if (offset < 0) {
         overlayClass = "bg-orange-500 rounded-full shadow-inner";
         OverlayContent = (
-        <div
-            className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
-            style={thresholdReached === 'left' ? capsuleExitStyle : {}}
-        >
+        <div className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest">
             <span>GHOST...</span>
             <Ghost size={24} strokeWidth={3} />
         </div>
