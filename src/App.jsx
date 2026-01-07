@@ -4051,7 +4051,6 @@ export default function App() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSong, setCurrentSong] = useState(null);
     const [debugInfo, setDebugInfo] = useState(null); // DEBUG: info sur la lecture
-    const [debugImport, setDebugImport] = useState(null); // DEBUG: info sur l'import
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [feedback, setFeedback] = useState(null);
@@ -5066,18 +5065,6 @@ const vibeSearchResults = () => {
         });
     }
 
-    // DEBUG: Collecter les infos pour l'overlay
-    const localFilesFound = [];
-    const allExistingSigs = [];
-    allExistingSongsMap.forEach((song, sig) => {
-        allExistingSigs.push({ sig, hasFile: !!song.file, file: song.file ? song.file.substring(0, 30) : null });
-        if (song.file) {
-            localFilesFound.push(sig);
-        }
-    });
-    const dropboxFilesToImport = Object.values(foldersToImport).flat().map(f => f.name);
-    const debugLookups = [];
-
     // Créer une map nom -> vibeId pour trouver les vibes existantes par nom
     const nameToVibeIdMap = new Map();
     Object.keys(newPlaylists).forEach(vibeId => {
@@ -5125,15 +5112,6 @@ const vibeSearchResults = () => {
             if (!existingSong && normalizedDropboxTitle) {
                 existingSong = allExistingSongsByTitle.get(normalizedDropboxTitle);
             }
-
-            // DEBUG: Collecter les lookups pour l'overlay
-            debugLookups.push({
-                sig: fileSignature,
-                normalizedTitle: normalizedDropboxTitle,
-                found: !!existingSong,
-                hasFile: existingSong ? !!(existingSong.file || existingSong.localFileName) : false,
-                matchedBy: existingSong ? (allExistingSongsMap.has(fileSignature) ? 'signature' : 'title') : null
-            });
 
             const playCount = existingSong ? existingSong.playCount : 0;
             const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
@@ -5243,15 +5221,6 @@ const vibeSearchResults = () => {
     });
 
     setPlaylists(newPlaylists);
-
-    // DEBUG: Afficher l'overlay avec les infos d'import
-    setDebugImport({
-        mapSize: allExistingSongsMap.size,
-        localFilesFound,
-        allExistingSigs,
-        dropboxFilesToImport,
-        lookups: debugLookups
-    });
 
     setFeedback({ text: `Import Dropbox terminé`, type: 'confirm', triggerValidation: Date.now() });
   };
@@ -6947,79 +6916,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         </div>
       )}
 
-      {/* DEBUG IMPORT OVERLAY */}
-      {debugImport && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 60,
-            left: 10,
-            right: 10,
-            background: 'rgba(0,0,0,0.95)',
-            color: '#0f0',
-            padding: 12,
-            borderRadius: 8,
-            zIndex: 99999,
-            fontSize: 10,
-            fontFamily: 'monospace',
-            maxHeight: '70vh',
-            overflow: 'auto'
-          }}
-          onClick={() => setDebugImport(null)}
-        >
-          <div style={{ color: '#ff0', marginBottom: 8, fontWeight: 'bold' }}>📦 DEBUG IMPORT (tap to close)</div>
-          <div style={{ marginBottom: 8 }}>
-            <span style={{color:'#888'}}>Chansons existantes:</span> {debugImport.mapSize}
-          </div>
-          <div style={{ marginBottom: 8 }}>
-            <span style={{color:'#ff0'}}>Toutes les signatures existantes ({debugImport.allExistingSigs?.length || 0}):</span>
-            {debugImport.allExistingSigs && debugImport.allExistingSigs.length > 0 ? (
-              <div style={{ marginLeft: 8, maxHeight: 100, overflow: 'auto' }}>
-                {debugImport.allExistingSigs.map((item, i) => (
-                  <div key={i}>
-                    <span style={{color: item.hasFile ? '#0f0' : '#f55'}}>
-                      {item.hasFile ? '✓' : '✗'}
-                    </span>
-                    {' '}<span style={{color: '#fff'}}>{item.sig}</span>
-                    {item.hasFile && <span style={{color: '#0f0', marginLeft: 4}}>[LOCAL]</span>}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span style={{ color: '#f00', marginLeft: 8 }}>AUCUNE</span>
-            )}
-          </div>
-          <div style={{ marginBottom: 8 }}>
-            <span style={{color:'#888'}}>Fichiers Dropbox à importer ({debugImport.dropboxFilesToImport.length}):</span>
-            <div style={{ marginLeft: 8, color: '#0af', maxHeight: 60, overflow: 'auto' }}>
-              {debugImport.dropboxFilesToImport.slice(0, 5).map((name, i) => (
-                <div key={i}>• {name}</div>
-              ))}
-              {debugImport.dropboxFilesToImport.length > 5 && (
-                <div style={{ color: '#888' }}>... et {debugImport.dropboxFilesToImport.length - 5} autres</div>
-              )}
-            </div>
-          </div>
-          <div style={{ borderTop: '1px solid #333', paddingTop: 8 }}>
-            <span style={{color:'#ff0'}}>Résultats des lookups:</span>
-            <div style={{ maxHeight: 150, overflow: 'auto' }}>
-              {debugImport.lookups.map((lookup, i) => (
-                <div key={i} style={{ marginLeft: 8 }}>
-                  <span style={{color: lookup.found ? '#0f0' : '#f00'}}>
-                    {lookup.found ? '✓' : '✗'}
-                  </span>
-                  {' '}{lookup.sig.substring(0, 30)}
-                  {lookup.found && (
-                    <span style={{ color: lookup.hasFile ? '#0f0' : '#f55', marginLeft: 8 }}>
-                      [file: {lookup.hasFile ? 'YES' : 'NO'}]
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
 
