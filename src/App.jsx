@@ -6381,21 +6381,6 @@ const cancelKillVibe = () => {
     }
   };
 
-  // Ref pour éviter de scanner plusieurs fois
-  const hasScannedDropbox = useRef(false);
-
-  // Lancer le scan au démarrage si connecté à Dropbox
-  useEffect(() => {
-    if (hasScannedDropbox.current) return;
-    if (getRefreshToken() && Object.keys(playlists).length > 0) {
-        hasScannedDropbox.current = true;
-        // Attendre un peu que l'app soit chargée
-        const timer = setTimeout(() => {
-            scanDropboxAvailability();
-        }, 2000);
-        return () => clearTimeout(timer);
-    }
-  }, [playlists]); // Réexécuter quand playlists change (pour attraper le chargement initial)
 
   // Charger le contenu d'un dossier Dropbox
   const loadDropboxFolder = async (path, token) => {
