@@ -4402,17 +4402,7 @@ useEffect(() => {
     }
   }
 
-  // Données par défaut si vide
-  if (Object.keys(initialPlaylists).length === 0) {
-    const id1 = generateVibeId();
-    const id2 = generateVibeId();
-    const id3 = generateVibeId();
-    initialPlaylists = {
-      [id1]: { name: "Beach", songs: [{ id: 'd1', title: "Sunny Day", artist: "Vibe Masters", playCount: 12, file: null, duration: "3:45", type: 'folder' }] },
-      [id2]: { name: "Chill Vibes", songs: [{ id: 'c1', title: "Night Drive", artist: "Synthwave Boy", playCount: 8, file: null, duration: "3:20", type: 'folder' }] },
-      [id3]: { name: "My Top", songs: [{ id: 'v1', title: "Favorites", artist: "Various", playCount: 0, file: null, duration: "0:00", type: 'vibe' }] }
-    };
-  }
+  // Pas de données par défaut - l'app démarre vide
 
   setPlaylists(initialPlaylists);
   setVibeColorIndices(initialColorIndices);
