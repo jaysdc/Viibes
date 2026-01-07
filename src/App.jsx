@@ -4243,6 +4243,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
+    const [scanDebugInfo, setScanDebugInfo] = useState({ hasRefreshToken: false, triggered: false, started: false, pathsCount: 0 });
     const [pendingDropboxData, setPendingDropboxData] = useState(null);
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
     const [confirmOverlayVisible, setConfirmOverlayVisible] = useState(false);
@@ -6294,8 +6295,13 @@ const cancelKillVibe = () => {
 
   // Scanner la disponibilité des fichiers Dropbox en arrière-plan
   const scanDropboxAvailability = async () => {
+    setScanDebugInfo(prev => ({ ...prev, started: true }));
+
     const token = await getValidDropboxToken();
-    if (!token) return;
+    if (!token) {
+        setScanDebugInfo(prev => ({ ...prev, error: 'no token' }));
+        return;
+    }
 
     // Collecter tous les dropboxPath uniques
     const dropboxPaths = new Set();
@@ -6307,7 +6313,12 @@ const cancelKillVibe = () => {
         });
     });
 
-    if (dropboxPaths.size === 0) return;
+    setScanDebugInfo(prev => ({ ...prev, pathsCount: dropboxPaths.size }));
+
+    if (dropboxPaths.size === 0) {
+        setScanDebugInfo(prev => ({ ...prev, error: 'no paths' }));
+        return;
+    }
 
     const pathsArray = Array.from(dropboxPaths);
     const unavailablePaths = new Set();
@@ -6385,9 +6396,13 @@ const cancelKillVibe = () => {
 
   // Lancer le scan au démarrage si connecté à Dropbox (après 3s)
   useEffect(() => {
-    if (!getRefreshToken()) return;
+    const hasToken = !!getRefreshToken();
+    setScanDebugInfo(prev => ({ ...prev, hasRefreshToken: hasToken }));
+
+    if (!hasToken) return;
 
     const timer = setTimeout(() => {
+        setScanDebugInfo(prev => ({ ...prev, triggered: true }));
         scanDropboxAvailability();
     }, 3000);
 
@@ -7405,6 +7420,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     />
                 </div>
             )}
+
+            {/* DEBUG OVERLAY - Scan Dropbox */}
+            <div
+                className="absolute top-full left-0 right-0 bg-black/90 text-white text-xs p-2 font-mono z-50"
+                style={{ fontSize: '10px' }}
+            >
+                <div>hasRefreshToken: {scanDebugInfo.hasRefreshToken ? '✓' : '✗'}</div>
+                <div>triggered (3s): {scanDebugInfo.triggered ? '✓' : '✗'}</div>
+                <div>started: {scanDebugInfo.started ? '✓' : '✗'}</div>
+                <div>pathsCount: {scanDebugInfo.pathsCount}</div>
+                <div>progress: {dropboxScanProgress ?? 'null'}</div>
+                {scanDebugInfo.error && <div className="text-red-400">error: {scanDebugInfo.error}</div>}
+            </div>
 
             </div>
         {/* FIN HEADER */}
