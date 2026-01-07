@@ -71,6 +71,7 @@ const CONFIG = {
     
     // SWIPE TITRE (fermeture)
     TITLE_SWIPE_THRESHOLD: 100,           // Seuil de swipe pour confirmer/annuler (px)
+    SWIPE_MAX_ROTATION: 8,                // Rotation max de l'éventail au seuil (degrés)
     SWIPE_OVERLAY_OPACITY: 0.85,          // Opacité max du fond noir lors du swipe
     HEADER_TITLE_GAP: '0.75rem',           // Espacement entre titre et boutons de tri
 
@@ -1593,10 +1594,10 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
             style={{
                 paddingBottom: 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
-                transform: closingDirection 
+                transform: closingDirection
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
-                    : titleSwipeX !== 0 
-                        ? `rotateZ(${titleSwipeX / CONFIG.TITLE_SWIPE_THRESHOLD * 15}deg)`
+                    : titleSwipeX !== 0
+                        ? `rotateZ(${titleSwipeX / CONFIG.TITLE_SWIPE_THRESHOLD * CONFIG.SWIPE_MAX_ROTATION}deg)`
                         : isVisible ? 'rotateZ(0deg)' : `rotateZ(-${cardAnimConfig.closeRotation}deg)`,
                 borderRadius: (closingDirection || !isVisible || titleSwipeX !== 0) ? cardAnimConfig.radius : '0',
                 outline: (closingDirection || !isVisible || isOpenAnimating || titleSwipeX !== 0) ? `${cardAnimConfig.borderWidth}px solid ${cardAnimConfig.borderColor}` : 'none',

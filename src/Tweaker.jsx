@@ -12,7 +12,8 @@ export const TWEAKER_CONFIG = {
     HEADER_BTN_SHOW_TEXT: false,   // Afficher les textes "Undo", "Reorder", "Delete"
     HEADER_BTN_ICON_SIZE: UNIFIED_CONFIG.ICON_SIZE_PERCENT,     // Taille icône en % de la hauteur du bouton (depuis config.js)
     SWIPE_THRESHOLD: 100,         // Seuil de swipe pour confirmer/annuler (px)
-    
+    SWIPE_MAX_ROTATION: 8,        // Rotation max de l'éventail au seuil (degrés)
+
     // Animation d'ouverture (tiroir)
     SWIPE_OVERLAY_OPACITY: 0.85,       // Opacité max du fond noir lors du swipe
     DRAWER_TOP_SPACING: 16,            // Espacement entre la dernière carte et le haut du tiroir (px)
@@ -613,10 +614,10 @@ const Tweaker = ({
             style={{ 
                 paddingBottom: hasSong ? FOOTER_CONTENT_HEIGHT_CSS : 0,
                 transformOrigin: `center ${cardAnimConfig.originY}`,
-                transform: closingDirection 
+                transform: closingDirection
                     ? `rotateZ(${closingDirection === 'right' ? '' : '-'}${cardAnimConfig.closeRotation}deg)`
-                    : titleSwipeX !== 0 
-                        ? `rotateZ(${titleSwipeX / TWEAKER_CONFIG.SWIPE_THRESHOLD * 15}deg)`
+                    : titleSwipeX !== 0
+                        ? `rotateZ(${titleSwipeX / TWEAKER_CONFIG.SWIPE_THRESHOLD * TWEAKER_CONFIG.SWIPE_MAX_ROTATION}deg)`
                         : isVisible ? 'rotateZ(0deg)' : `rotateZ(-${cardAnimConfig.closeRotation}deg)`,
                         borderRadius: (closingDirection || !isVisible || titleSwipeX !== 0) ? cardAnimConfig.radius : '0',
                         outline: (closingDirection || !isVisible || isOpenAnimating || titleSwipeX !== 0) ? `${cardAnimConfig.borderWidth}px solid ${cardAnimConfig.borderColor}` : 'none',

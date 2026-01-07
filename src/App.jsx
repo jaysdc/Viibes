@@ -659,6 +659,7 @@ const CONFIG = {
     // DRAWER (Tiroir dashboard)
     // ══════════════════════════════════════════════════════════════════════════
     DRAWER_DEFAULT_HEIGHT_PERCENT: 28,    // Hauteur par défaut du drawer (% de l'écran)
+    DRAWER_RECENTER_HEIGHT_PERCENT: 70,   // Hauteur du drawer quand on tap sur recenter depuis état fermé (% de l'écran)
     DRAWER_TWEAKER_HEIGHT_PERCENT: 0,    // Hauteur du drawer quand Tweaker ouvert (% de l'écran)
     DRAWER_TOP_SPACING: 32,               // Espacement entre la dernière carte et le haut du tiroir (px)
     FOOTER_TOP_SPACING: 32,               // Espacement entre la dernière carte et le haut du footer (px)
@@ -674,6 +675,12 @@ const CONFIG = {
     NEON_COLOR_GREEN: '0, 255, 136',      // Vert néon sexy (Check validation)
     NEON_COLOR_FUCHSIA: '236, 72, 153',   // Fuchsia Overdose (KILL VIBE) - #ec4899
     NEON_COLOR_RED: '255, 7, 58',         // Rouge (NUKE ALL)
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // SWIPE EXIT ANIMATION (Ghost / Play Next capsule slide-out)
+    // ══════════════════════════════════════════════════════════════════════════
+    SWIPE_EXIT_ANIMATION_DURATION: 200,   // Durée du slide de la capsule (ms)
+    SWIPE_EXIT_OPACITY_DURATION: 100,     // Durée du fade-in à opacité 1 (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
     // FEEDBACK ANIMATION (apparition, blinks, fade out)
@@ -3077,6 +3084,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
     const [offset, setOffset] = useState(0);
+    const [exitAnimation, setExitAnimation] = useState(null); // 'left' | 'right' | null
 
     // Utiliser useEffect pour ajouter le listener avec { passive: false }
     // Cela permet à preventDefault() de fonctionner sur iOS
@@ -3120,14 +3128,33 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
             y: e.targetTouches[0].clientY
         };
         swipeDirectionRef.current = null;
+        setExitAnimation(null);
     };
 
     const onTouchEnd = () => {
         if (swipeDirectionRef.current === 'horizontal' && touchStartRef.current.x !== null) {
-            if (offset < -50) onSwipeLeft(song);
-            else if (offset > 50) onSwipeRight(song);
+            if (offset < -50) {
+                // Déclencher l'animation de sortie vers la gauche
+                setExitAnimation('left');
+                setTimeout(() => {
+                    onSwipeLeft(song);
+                    setExitAnimation(null);
+                    setOffset(0);
+                }, CONFIG.SWIPE_EXIT_ANIMATION_DURATION);
+            } else if (offset > 50) {
+                // Déclencher l'animation de sortie vers la droite
+                setExitAnimation('right');
+                setTimeout(() => {
+                    onSwipeRight(song);
+                    setExitAnimation(null);
+                    setOffset(0);
+                }, CONFIG.SWIPE_EXIT_ANIMATION_DURATION);
+            } else {
+                setOffset(0);
+            }
+        } else {
+            setOffset(0);
         }
-        setOffset(0);
         touchStartRef.current = { x: null, y: null };
         swipeDirectionRef.current = null;
     };
@@ -3162,16 +3189,28 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     }
 
     const progress = Math.abs(offset);
-    const showFeedback = progress > 20; 
-    const progressOpacity = Math.min((progress - 20) / (180 - 20), 1.0);
+    const showFeedback = progress > 20 || exitAnimation !== null;
+
+    // Pendant l'animation de sortie : opacité = 1, sinon progressive
+    const progressOpacity = exitAnimation !== null ? 1 : Math.min((progress - 20) / (180 - 20), 1.0);
 
     let OverlayContent = null;
     let overlayClass = "";
 
-    if (offset > 0) {
+    // Style d'animation de sortie (slide vers la droite ou gauche)
+    const exitStyle = exitAnimation ? {
+        transform: `translateX(${exitAnimation === 'right' ? '100%' : '-100%'})`,
+        transition: `transform ${CONFIG.SWIPE_EXIT_ANIMATION_DURATION}ms ease-out, opacity ${CONFIG.SWIPE_EXIT_OPACITY_DURATION}ms ease-out`,
+        opacity: 1
+    } : {};
+
+    if (offset > 0 || exitAnimation === 'right') {
         overlayClass = "bg-cyan-500 rounded-full shadow-inner";
         OverlayContent = (
-        <div className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest">
+        <div
+            className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
+            style={exitAnimation === 'right' ? exitStyle : {}}
+        >
             <ListPlus size={24} strokeWidth={3} />
             <div className="flex flex-col leading-none">
             <span>VIBE</span>
@@ -3179,10 +3218,13 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
             </div>
         </div>
         );
-    } else if (offset < 0) {
+    } else if (offset < 0 || exitAnimation === 'left') {
         overlayClass = "bg-orange-500 rounded-full shadow-inner";
         OverlayContent = (
-        <div className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest">
+        <div
+            className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
+            style={exitAnimation === 'left' ? exitStyle : {}}
+        >
             <span>GHOST...</span>
             <Ghost size={24} strokeWidth={3} />
         </div>
@@ -6490,7 +6532,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         }, stepDuration);
     }
 };
-  const triggerRecenter = () => { setScrollTrigger(prev => prev + 1); };
+  const triggerRecenter = () => {
+    // Si on est sur le dashboard (pas en full player) et le drawer est à sa hauteur minimale, l'ouvrir à 70%
+    if (!showFullPlayer && mainContainerRef.current) {
+        const containerHeight = mainContainerRef.current.offsetHeight;
+        const defaultHeight = containerHeight * CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100;
+        const currentHeight = dashboardHeight;
+
+        // Si le drawer est proche de sa hauteur minimale (±10%), l'ouvrir à 70%
+        if (Math.abs(currentHeight - defaultHeight) < defaultHeight * 0.1) {
+            const recenterHeight = containerHeight * CONFIG.DRAWER_RECENTER_HEIGHT_PERCENT / 100;
+            setDashboardHeight(recenterHeight);
+        }
+    }
+    // Dans tous les cas, recentrer le scroll
+    setScrollTrigger(prev => prev + 1);
+  };
   const saveNewVibe = (name, songs) => {
     const vibeSongs = songs.map(s => ({...s, type: 'vibe'}));
     let finalName = name;
