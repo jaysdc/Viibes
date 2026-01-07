@@ -4050,6 +4050,7 @@ export default function App() {
     }, []);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSong, setCurrentSong] = useState(null);
+    const [debugInfo, setDebugInfo] = useState(null); // DEBUG: info sur la lecture
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [feedback, setFeedback] = useState(null);
@@ -5355,17 +5356,36 @@ const vibeSearchResults = () => {
             const currentSrc = audio.src;
             let newSrc = null;
             let useDropbox = false;
+            let debugSource = 'none';
+
+            // DEBUG: Logger l'état du fichier
+            const debugData = {
+                title: currentSong.title,
+                hasFile: !!currentSong.file,
+                fileValue: currentSong.file ? currentSong.file.substring(0, 50) + '...' : null,
+                hasDropboxPath: !!currentSong.dropboxPath,
+                dropboxPath: currentSong.dropboxPath,
+                type: currentSong.type,
+                id: currentSong.id
+            };
 
             // PRIORITÉ : fichier local d'abord, puis Dropbox en fallback
             if (currentSong.file) {
                 // Fichier local disponible - toujours prioritaire
                 if (currentSrc !== currentSong.file) {
                     newSrc = currentSong.file;
+                    debugSource = 'local';
+                } else {
+                    debugSource = 'local (same src)';
                 }
             } else if (currentSong.dropboxPath) {
                 // Pas de fichier local - utiliser Dropbox
                 useDropbox = true;
+                debugSource = 'dropbox';
             }
+
+            // Mettre à jour le debug
+            setDebugInfo({ ...debugData, source: debugSource, useDropbox });
 
             // Si on doit utiliser Dropbox
             if (useDropbox && (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id)) {
@@ -6801,6 +6821,39 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         <div className="orientation-lock-icon">📱</div>
       </div>
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
+
+      {/* DEBUG OVERLAY */}
+      {debugInfo && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 60,
+            left: 10,
+            right: 10,
+            background: 'rgba(0,0,0,0.9)',
+            color: '#0f0',
+            padding: 12,
+            borderRadius: 8,
+            zIndex: 99999,
+            fontSize: 11,
+            fontFamily: 'monospace',
+            maxHeight: '40vh',
+            overflow: 'auto'
+          }}
+          onClick={() => setDebugInfo(null)}
+        >
+          <div style={{ color: '#ff0', marginBottom: 8, fontWeight: 'bold' }}>🔍 DEBUG PLAYBACK (tap to close)</div>
+          <div><span style={{color:'#888'}}>Title:</span> {debugInfo.title}</div>
+          <div><span style={{color:'#888'}}>ID:</span> {debugInfo.id}</div>
+          <div><span style={{color:'#888'}}>Type:</span> <span style={{color: debugInfo.type === 'local' ? '#0f0' : '#0af'}}>{debugInfo.type}</span></div>
+          <div><span style={{color:'#888'}}>Has file:</span> <span style={{color: debugInfo.hasFile ? '#0f0' : '#f00'}}>{debugInfo.hasFile ? 'YES' : 'NO'}</span></div>
+          {debugInfo.fileValue && <div><span style={{color:'#888'}}>File:</span> {debugInfo.fileValue}</div>}
+          <div><span style={{color:'#888'}}>Has dropboxPath:</span> <span style={{color: debugInfo.hasDropboxPath ? '#0f0' : '#f00'}}>{debugInfo.hasDropboxPath ? 'YES' : 'NO'}</span></div>
+          {debugInfo.dropboxPath && <div><span style={{color:'#888'}}>Dropbox:</span> {debugInfo.dropboxPath}</div>}
+          <div style={{ marginTop: 8, color: '#ff0' }}><span style={{color:'#888'}}>Source utilisée:</span> <span style={{color: debugInfo.source === 'local' ? '#0f0' : '#0af'}}>{debugInfo.source}</span></div>
+          <div><span style={{color:'#888'}}>useDropbox:</span> {debugInfo.useDropbox ? 'true' : 'false'}</div>
+        </div>
+      )}
 
       <div ref={mainContainerRef} className={isOnRealDevice ? "w-full h-screen bg-white relative overflow-hidden flex flex-col" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 relative overflow-hidden shadow-2xl flex flex-col"} style={{ '--ignite-duration': `${CONFIG.IMPORT_IGNITE_DURATION}ms` }}>
 
