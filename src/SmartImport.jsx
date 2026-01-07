@@ -357,17 +357,29 @@ const SmartImport = ({
         
         const usedInImport = new Set();
         const folderGradients = {};
-        
+
+        // Créer une map nom -> vibeId pour trouver les vibeId existants
+        const nameToVibeIdMap = {};
+        if (playlists) {
+            Object.keys(playlists).forEach(vibeId => {
+                const vibe = playlists[vibeId];
+                if (vibe.name) {
+                    nameToVibeIdMap[vibe.name] = vibeId;
+                }
+            });
+        }
+
         Object.keys(folders).forEach(folderName => {
-            // Vérifier si la Vibe existe déjà
-            if (vibeColorIndices && vibeColorIndices[folderName] !== undefined) {
-                folderGradients[folderName] = vibeColorIndices[folderName];
-                usedInImport.add(vibeColorIndices[folderName]);
+            // Chercher si une vibe avec ce nom existe et récupérer son gradient
+            const existingVibeId = nameToVibeIdMap[folderName];
+            if (existingVibeId && vibeColorIndices && vibeColorIndices[existingVibeId] !== undefined) {
+                folderGradients[folderName] = vibeColorIndices[existingVibeId];
+                usedInImport.add(vibeColorIndices[existingVibeId]);
             } else {
                 // Trouver un gradient non utilisé
                 let bestIndex = -1;
                 let bestUsage = Infinity;
-                
+
                 for (let i = 0; i < tempUsage.length; i++) {
                     if (usedInImport.has(i)) continue;
                     if (tempUsage[i] < bestUsage) {
@@ -375,18 +387,18 @@ const SmartImport = ({
                         bestIndex = i;
                     }
                 }
-                
+
                 if (bestIndex === -1) {
                     const minUsage = Math.min(...tempUsage);
                     bestIndex = tempUsage.findIndex(count => count === minUsage);
                 }
-                
+
                 folderGradients[folderName] = bestIndex;
                 usedInImport.add(bestIndex);
                 tempUsage[bestIndex]++;
             }
         });
-        
+
         return folderGradients;
     };
 
@@ -416,9 +428,9 @@ const SmartImport = ({
         // Sinon, afficher le dialog de preview
         const folderGradients = calculateGradients(folders);
         
-        // Détecter les dossiers qui existent déjà
-        const existingFolders = Object.keys(folders).filter(name => 
-            playlists && playlists[name] !== undefined
+        // Détecter les dossiers qui existent déjà (nouveau format: { vibeId: { name, songs } })
+        const existingFolders = Object.keys(folders).filter(name =>
+            playlists && Object.values(playlists).some(v => v.name === name)
         );
         
         // Afficher la capsule jaune immédiatement
@@ -615,7 +627,7 @@ const SmartImport = ({
             }
 
             const existingFolders = Object.keys(folders).filter(name =>
-                playlists && playlists[name] !== undefined
+                playlists && Object.values(playlists).some(v => v.name === name)
             );
 
             // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)

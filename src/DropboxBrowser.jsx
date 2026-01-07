@@ -316,10 +316,23 @@ const DropboxBrowser = ({
         const usedInImport = new Set();
         const folderGradients = {};
 
+        // Créer une map nom -> vibeId pour trouver les vibeId existants
+        const nameToVibeIdMap = {};
+        if (playlists) {
+            Object.keys(playlists).forEach(vibeId => {
+                const vibe = playlists[vibeId];
+                if (vibe.name) {
+                    nameToVibeIdMap[vibe.name] = vibeId;
+                }
+            });
+        }
+
         Object.keys(folders).forEach(folderName => {
-            if (vibeColorIndices && vibeColorIndices[folderName] !== undefined) {
-                folderGradients[folderName] = vibeColorIndices[folderName];
-                usedInImport.add(vibeColorIndices[folderName]);
+            // Chercher si une vibe avec ce nom existe et récupérer son gradient
+            const existingVibeId = nameToVibeIdMap[folderName];
+            if (existingVibeId && vibeColorIndices && vibeColorIndices[existingVibeId] !== undefined) {
+                folderGradients[folderName] = vibeColorIndices[existingVibeId];
+                usedInImport.add(vibeColorIndices[existingVibeId]);
             } else {
                 let bestIndex = -1;
                 let bestUsage = Infinity;
@@ -692,9 +705,9 @@ const DropboxBrowser = ({
             // Calculer les gradients pour chaque vibe
             const folderGradients = calculateGradients(scannedFolders);
 
-            // Détecter les vibes existantes
+            // Détecter les vibes existantes (nouveau format: { vibeId: { name, songs } })
             const existingFolders = Object.keys(scannedFolders).filter(name =>
-                playlists && playlists[name] !== undefined
+                playlists && Object.values(playlists).some(v => v.name === name)
             );
 
             // Compter le total de fichiers

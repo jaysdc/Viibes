@@ -10,6 +10,13 @@ import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
 
 // ══════════════════════════════════════════════════════════════════════════
+// VIBE ID GENERATOR
+// ══════════════════════════════════════════════════════════════════════════
+
+// Génère un ID unique pour chaque vibe (format: vibe_timestamp_random)
+const generateVibeId = () => `vibe_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
+// ══════════════════════════════════════════════════════════════════════════
 // DROPBOX PKCE HELPERS
 // ══════════════════════════════════════════════════════════════════════════
 
@@ -1756,8 +1763,9 @@ const initializeGradientUsage = (playlists) => {
     gradientUsageCount = new Array(ALL_GRADIENTS.length).fill(0);
     // Compter les utilisations actuelles
     if (playlists) {
-        Object.keys(playlists).forEach(name => {
-            const index = playlists[name]?.[0]?.gradientIndex;
+        Object.keys(playlists).forEach(vibeId => {
+            const vibe = playlists[vibeId];
+            const index = vibe?.songs?.[0]?.gradientIndex;
             if (index !== undefined && index >= 0 && index < gradientUsageCount.length) {
                 gradientUsageCount[index]++;
             }
@@ -1788,8 +1796,8 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ folderName, availableCount, unavailableCount, isVibe, onClick, isExpired, onReimport, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
-    const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(folderName));
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, onReimport, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
+    const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
 
@@ -1854,7 +1862,7 @@ const VibeCard = ({ folderName, availableCount, unavailableCount, isVibe, onClic
 
                     // Calculer combien de couleurs on a parcouru (0 à 19)
                     const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
-                    const currentIdx = colorIndex !== undefined ? colorIndex : getInitialGradientIndex(folderName);
+                    const currentIdx = colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId);
                     const previewIdx = currentIdx + (direction * colorsTraversed);
                     const previewGradient = getGradientByIndex(previewIdx);
 
@@ -1967,10 +1975,11 @@ return (
               </div>
           </div>
 
-          {/* Capsule Liquid Glass en bas à gauche */}
-          <div 
+          {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition */}
+          {(vibeName || isEditingName) ? (
+            <div
                 className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
-                style={{ 
+                style={{
                   padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
                   maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
                   background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
@@ -1997,8 +2006,8 @@ return (
                         onClick={(e) => e.stopPropagation()}
                         autoFocus
                         className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
-                        style={{ 
-                            fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`, 
+                        style={{
+                            fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
                             lineHeight: 1.25,
                             width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
                             paddingLeft: '0.25rem',
@@ -2008,22 +2017,30 @@ return (
                         }}
                     />
                   ) : (
-                    <MarqueeText 
-                        text={folderName}
+                    <MarqueeText
+                        text={vibeName || ''}
                         className="font-black leading-tight text-white"
-                        style={{ 
+                        style={{
                             fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
                         }}
                     />
                   )}
                 </div>
-                <span 
+                <span
                     className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
                 >
                     <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
                     {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                 </span>
-                </div>
+            </div>
+          ) : (
+            /* Compteurs en bas à gauche quand pas de nom */
+            <div className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5"
+                 style={{ background: 'rgba(255,255,255,0.15)' }}>
+                <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
+                {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+            </div>
+          )}
         </div>
     </FeedbackCardOverlay>
     );
@@ -4113,7 +4130,7 @@ const handlePlayerTouchEnd = () => {
     const [activeFilter, setActiveFilter] = useState('initialShuffle');
     const [sortDirection, setSortDirection] = useState('asc');
     const [queue, setQueue] = useState([]);
-    const [activeVibeName, setActiveVibeName] = useState(null);
+    const [activeVibeId, setActiveVibeId] = useState(null);
     const [initialRandomQueue, setInitialRandomQueue] = useState([]);
     const [pendingVibe, setPendingVibe] = useState(null);
     const [showImportMenu, setShowImportMenu] = useState(false);
@@ -4218,12 +4235,12 @@ const handlePlayerTouchEnd = () => {
     }, [queue, playerSearchQuery]);
   
     const allGlobalSongs = React.useMemo(() => {
-      if (!playlists) return []; // <-- Voici la correction !
+      if (!playlists) return [];
       let songs = [];
-      // On s'assure que chaque "list" est bien un tableau avant de le déverser
-      Object.values(playlists).forEach(list => {
-          if (Array.isArray(list)) {
-              songs = [...songs, ...list];
+      // Nouveau format : chaque vibe = { name, songs }
+      Object.values(playlists).forEach(vibe => {
+          if (vibe && Array.isArray(vibe.songs)) {
+              songs = [...songs, ...vibe.songs];
           }
       });
       return Array.from(new Map(songs.map(s => [s.id, s])).values());
@@ -4239,37 +4256,77 @@ const handlePlayerTouchEnd = () => {
 // 1. CHARGEMENT AU DÉMARRAGE
 useEffect(() => {
   const savedPlaylists = localStorage.getItem('vibes_playlists');
-  
+  const savedColorIndices = localStorage.getItem('vibes_color_indices');
+
   let initialPlaylists = {};
+  let initialColorIndices = {};
+
   if (savedPlaylists) {
     try {
       const parsed = JSON.parse(savedPlaylists);
-      Object.keys(parsed).forEach(key => {
-        initialPlaylists[key] = parsed[key].map(song => ({ ...song, file: null }));
-      });
+      const firstKey = Object.keys(parsed)[0];
+      const firstValue = parsed[firstKey];
+
+      // Détecter le format : nouveau = { name, songs }, ancien = array directement
+      const isNewFormat = firstValue && typeof firstValue === 'object' && !Array.isArray(firstValue) && 'songs' in firstValue;
+
+      if (isNewFormat) {
+        // Nouveau format : { vibeId: { name, songs } }
+        Object.keys(parsed).forEach(vibeId => {
+          initialPlaylists[vibeId] = {
+            name: parsed[vibeId].name,
+            songs: parsed[vibeId].songs.map(song => ({ ...song, file: null }))
+          };
+        });
+        // Charger les couleurs telles quelles (déjà indexées par vibeId)
+        if (savedColorIndices) {
+          initialColorIndices = JSON.parse(savedColorIndices);
+        }
+      } else {
+        // Ancien format : { "Nom Vibe": [songs] } → migrer vers nouveau format
+        const oldColorIndices = savedColorIndices ? JSON.parse(savedColorIndices) : {};
+        Object.keys(parsed).forEach(name => {
+          const vibeId = generateVibeId();
+          initialPlaylists[vibeId] = {
+            name: name,
+            songs: parsed[name].map(song => ({ ...song, file: null }))
+          };
+          // Migrer les couleurs : ancien nom → nouveau vibeId
+          if (oldColorIndices[name] !== undefined) {
+            initialColorIndices[vibeId] = oldColorIndices[name];
+          }
+        });
+        console.log('[Migration] Ancien format détecté, migration vers nouveau format effectuée');
+      }
     } catch (e) {
       console.error("Erreur de parsing des playlists, on repart de zéro.", e);
       initialPlaylists = {};
     }
   }
 
+  // Données par défaut si vide
   if (Object.keys(initialPlaylists).length === 0) {
+    const id1 = generateVibeId();
+    const id2 = generateVibeId();
+    const id3 = generateVibeId();
     initialPlaylists = {
-      "Beach": [ { id: 'd1', title: "Sunny Day", artist: "Vibe Masters", playCount: 12, file: null, duration: "3:45", type: 'folder' } ],
-      "Chill Vibes": [ { id: 'c1', title: "Night Drive", artist: "Synthwave Boy", playCount: 8, file: null, duration: "3:20", type: 'folder' } ],
-      "My Top": [ { id: 'v1', title: "Favorites", artist: "Various", playCount: 0, file: null, duration: "0:00", type: 'vibe' } ]
+      [id1]: { name: "Beach", songs: [{ id: 'd1', title: "Sunny Day", artist: "Vibe Masters", playCount: 12, file: null, duration: "3:45", type: 'folder' }] },
+      [id2]: { name: "Chill Vibes", songs: [{ id: 'c1', title: "Night Drive", artist: "Synthwave Boy", playCount: 8, file: null, duration: "3:20", type: 'folder' }] },
+      [id3]: { name: "My Top", songs: [{ id: 'v1', title: "Favorites", artist: "Various", playCount: 0, file: null, duration: "0:00", type: 'vibe' }] }
     };
   }
+
   setPlaylists(initialPlaylists);
-  
+  setVibeColorIndices(initialColorIndices);
+
   // Charger les playCounts sauvegardés et les merger
   const savedPlayCounts = localStorage.getItem('vibes_playcounts');
   if (savedPlayCounts) {
     try {
       const playCountsMap = JSON.parse(savedPlayCounts);
-      // Merger les playCounts avec les playlists
-      Object.keys(initialPlaylists).forEach(key => {
-        initialPlaylists[key] = initialPlaylists[key].map(song => {
+      // Merger les playCounts avec les playlists (nouveau format)
+      Object.keys(initialPlaylists).forEach(vibeId => {
+        initialPlaylists[vibeId].songs = initialPlaylists[vibeId].songs.map(song => {
           if (playCountsMap[song.id] !== undefined) {
             return { ...song, playCount: playCountsMap[song.id] };
           }
@@ -4279,16 +4336,6 @@ useEffect(() => {
       setPlaylists({...initialPlaylists});
     } catch (e) {
       console.error("Erreur parsing playCounts", e);
-    }
-  }
-  
-  // Charger les indices de couleur sauvegardés
-  const savedColorIndices = localStorage.getItem('vibes_color_indices');
-  if (savedColorIndices) {
-    try {
-      setVibeColorIndices(JSON.parse(savedColorIndices));
-    } catch (e) {
-      console.error("Erreur parsing color indices", e);
     }
   } else {
     // Première fois : attribuer des couleurs uniques à chaque playlist existante
@@ -4301,15 +4348,19 @@ useEffect(() => {
   }
 }, []);
 
-// 2. SAUVEGARDE AUTOMATIQUE
+// 2. SAUVEGARDE AUTOMATIQUE (nouveau format: { vibeId: { name, songs } })
 useEffect(() => {
     if (playlists !== null) {
     const playlistsToSave = {};
-    Object.keys(playlists).forEach(key => {
-      playlistsToSave[key] = playlists[key].map(song => {
-        const { file, ...songWithoutFile } = song;
-        return songWithoutFile;
-      });
+    Object.keys(playlists).forEach(vibeId => {
+      const vibe = playlists[vibeId];
+      playlistsToSave[vibeId] = {
+        name: vibe.name,
+        songs: vibe.songs.map(song => {
+          const { file, ...songWithoutFile } = song;
+          return songWithoutFile;
+        })
+      };
     });
     localStorage.setItem('vibes_playlists', JSON.stringify(playlistsToSave));
   }
@@ -4319,8 +4370,8 @@ useEffect(() => {
 useEffect(() => {
   if (playlists !== null) {
     const playCountsMap = {};
-    Object.values(playlists).forEach(playlist => {
-      playlist.forEach(song => {
+    Object.values(playlists).forEach(vibe => {
+      vibe.songs.forEach(song => {
         if (song.playCount > 0) {
           playCountsMap[song.id] = song.playCount;
         }
@@ -4657,23 +4708,22 @@ const vibeSearchResults = () => {
 
     let songsToPlay = [...librarySearchResults];
 
-    // Nom de la vibe = titre de la première chanson (avant mélange)
+    // Nom de la vibe = artiste de la première chanson (avant mélange)
     const vibeName = songsToPlay[0].artist;
 
-    // Créer la carte Vibe avec nom unique
+    // Créer la carte Vibe avec ID unique
+    const newVibeId = generateVibeId();
     const vibeSongs = songsToPlay.map(s => ({...s, type: 'vibe'}));
-    let finalVibeName = vibeName;
-    setPlaylists(prev => {
-        let counter = 2;
-        while (prev[finalVibeName] !== undefined) {
-            finalVibeName = `${vibeName} (${counter})`;
-            counter++;
+    setPlaylists(prev => ({
+        ...prev,
+        [newVibeId]: {
+            name: vibeName,
+            songs: vibeSongs
         }
-        return { ...prev, [finalVibeName]: vibeSongs };
-    });
+    }));
 
     // Attribuer le dégradé choisi à cette nouvelle vibe
-    setVibeColorIndices(prev => ({ ...prev, [finalVibeName]: vibeTheseGradientIndex }));
+    setVibeColorIndices(prev => ({ ...prev, [newVibeId]: vibeTheseGradientIndex }));
 
     // Mélanger
     for (let i = songsToPlay.length - 1; i > 0; i--) {
@@ -4708,22 +4758,34 @@ const vibeSearchResults = () => {
 
     // On fait une copie modifiable des playlists actuelles (ou objet vide si null)
     const newPlaylists = playlists ? { ...playlists } : {};
-  
+
     // On utilise directement la structure passée en paramètre
     const folders = foldersToImport;
-  
+
     // Créer une map globale de TOUTES les chansons existantes (toutes playlists confondues)
     // Clé = fileSignature (taille + extension), Valeur = chanson
     const allExistingSongsMap = new Map();
     if (playlists) {
-        Object.values(playlists).forEach(playlist => {
-            playlist.forEach(song => {
+        Object.values(playlists).forEach(vibe => {
+            vibe.songs.forEach(song => {
                 if (song.fileSignature) {
                     allExistingSongsMap.set(song.fileSignature, song);
                 }
             });
         });
     }
+
+    // Créer une map nom -> vibeId pour trouver les vibes existantes par nom
+    const nameToVibeIdMap = new Map();
+    Object.keys(newPlaylists).forEach(vibeId => {
+        const vibe = newPlaylists[vibeId];
+        if (vibe.name) {
+            nameToVibeIdMap.set(vibe.name, vibeId);
+        }
+    });
+
+    // Stocker les nouveaux vibeIds créés
+    const newVibeIds = [];
 
     // On traite chaque dossier trouvé dans l'import
     Object.keys(folders).forEach(folderName => {
@@ -4733,7 +4795,7 @@ const vibeSearchResults = () => {
         // Créer une signature unique basée sur le fichier (taille + extension)
         const extension = file.name.split('.').pop().toLowerCase();
         const fileSignature = `${file.size}-${extension}`;
-        
+
         // On extrait le titre et l'artiste depuis le nom du fichier
         let title = file.name.replace(/\.[^/.]+$/, "");
         let artist = "Artiste Inconnu";
@@ -4742,14 +4804,14 @@ const vibeSearchResults = () => {
           artist = parts[0].trim();
           title = parts[1].trim();
         }
-  
+
         // On cherche si le fichier existait déjà (par sa signature)
         const existingSong = allExistingSongsMap.get(fileSignature);
         const playCount = existingSong ? existingSong.playCount : 0;
-        
+
         // Générer un ID unique basé sur la signature du fichier
         const id = existingSong ? existingSong.id : `file-${fileSignature}-${Date.now()}`;
-        
+
         // On crée le nouvel objet chanson
         return {
           id: id,
@@ -4761,61 +4823,81 @@ const vibeSearchResults = () => {
           type: 'local'
         };
       });
-      
-      // On remplace l'ancienne playlist de ce dossier par la nouvelle, "réhydratée"
-      newPlaylists[folderName] = newSongsForThisFolder;
+
+      // Chercher si une vibe avec ce nom existe déjà
+      const existingVibeId = nameToVibeIdMap.get(folderName);
+      if (existingVibeId) {
+        // Mettre à jour la vibe existante
+        newPlaylists[existingVibeId] = {
+          ...newPlaylists[existingVibeId],
+          songs: newSongsForThisFolder
+        };
+      } else {
+        // Créer une nouvelle vibe avec un ID unique
+        const newVibeId = generateVibeId();
+        newPlaylists[newVibeId] = {
+          name: folderName,
+          songs: newSongsForThisFolder
+        };
+        newVibeIds.push(newVibeId);
+        nameToVibeIdMap.set(folderName, newVibeId);
+      }
     });
-  
+
     // On met à jour l'état principal. Ceci va déclencher la sauvegarde automatique de l'Étape 1.
     // MAIS D'ABORD : propager les fichiers aux autres playlists (Vibes) qui contiennent les mêmes chansons
-    
+
     // Créer une map ID -> file pour toutes les chansons fraîchement importées
     const newFilesMap = new Map();
     Object.keys(folders).forEach(folderName => {
-        if (newPlaylists[folderName]) {
-            newPlaylists[folderName].forEach(song => {
+        const vibeId = nameToVibeIdMap.get(folderName);
+        if (vibeId && newPlaylists[vibeId]) {
+            newPlaylists[vibeId].songs.forEach(song => {
                 if (song.file) {
                     newFilesMap.set(song.id, song.file);
                 }
             });
         }
     });
-    
+
     // Propager les fichiers à TOUTES les autres playlists (notamment les Vibes)
-    Object.keys(newPlaylists).forEach(playlistName => {
+    const importedVibeIds = Object.keys(folders).map(name => nameToVibeIdMap.get(name)).filter(Boolean);
+    Object.keys(newPlaylists).forEach(vibeId => {
         // Ne pas re-traiter les dossiers qu'on vient d'importer
-        if (Object.keys(folders).includes(playlistName)) return;
-        
-        newPlaylists[playlistName] = newPlaylists[playlistName].map(song => {
-            const newFile = newFilesMap.get(song.id);
-            if (newFile && !song.file) {
-                return { ...song, file: newFile };
-            }
-            return song;
-        });
+        if (importedVibeIds.includes(vibeId)) return;
+
+        newPlaylists[vibeId] = {
+            ...newPlaylists[vibeId],
+            songs: newPlaylists[vibeId].songs.map(song => {
+                const newFile = newFilesMap.get(song.id);
+                if (newFile && !song.file) {
+                    return { ...song, file: newFile };
+                }
+                return song;
+            })
+        };
     });
-    
+
     setPlaylists(newPlaylists);
 
-    // Attribuer des couleurs uniques aux nouveaux dossiers
-    const newFolderNames = Object.keys(folders);
-    setVibeColorIndices(prev => {
-      const updated = { ...prev };
-      let needsUpdate = false;
-      
-      // Recalculer le compteur d'usage
-      initializeGradientUsage(null);
-      Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
-      
-      newFolderNames.forEach(name => {
-        if (updated[name] === undefined) {
-          updated[name] = getNextAvailableGradientIndex();
-          needsUpdate = true;
-        }
+    // Attribuer des couleurs uniques aux nouveaux vibes
+    if (newVibeIds.length > 0) {
+      setVibeColorIndices(prev => {
+        const updated = { ...prev };
+
+        // Recalculer le compteur d'usage
+        initializeGradientUsage(null);
+        Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
+
+        newVibeIds.forEach(vibeId => {
+          if (updated[vibeId] === undefined) {
+            updated[vibeId] = getNextAvailableGradientIndex();
+          }
+        });
+
+        return updated;
       });
-      
-      return needsUpdate ? updated : prev;
-    });
+    }
   };
 
   // Traiter l'import de fichiers Dropbox
@@ -4824,14 +4906,23 @@ const vibeSearchResults = () => {
 
     const allExistingSongsMap = new Map();
     if (playlists) {
-        Object.values(playlists).forEach(playlist => {
-            playlist.forEach(song => {
+        Object.values(playlists).forEach(vibe => {
+            vibe.songs.forEach(song => {
                 if (song.fileSignature) {
                     allExistingSongsMap.set(song.fileSignature, song);
                 }
             });
         });
     }
+
+    // Créer une map nom -> vibeId pour trouver les vibes existantes par nom
+    const nameToVibeIdMap = new Map();
+    Object.keys(newPlaylists).forEach(vibeId => {
+        const vibe = newPlaylists[vibeId];
+        if (vibe.name) {
+            nameToVibeIdMap.set(vibe.name, vibeId);
+        }
+    });
 
     Object.keys(foldersToImport).forEach(folderName => {
         const filesInFolder = foldersToImport[folderName];
@@ -4850,7 +4941,7 @@ const vibeSearchResults = () => {
 
             const existingSong = allExistingSongsMap.get(fileSignature);
             const playCount = existingSong ? existingSong.playCount : 0;
-            const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
             return {
                 id: id,
@@ -4864,7 +4955,21 @@ const vibeSearchResults = () => {
             };
         });
 
-        newPlaylists[folderName] = newSongsForThisFolder;
+        // Chercher si une vibe avec ce nom existe déjà
+        const existingVibeId = nameToVibeIdMap.get(folderName);
+        if (existingVibeId) {
+            newPlaylists[existingVibeId] = {
+                ...newPlaylists[existingVibeId],
+                songs: newSongsForThisFolder
+            };
+        } else {
+            const newVibeId = generateVibeId();
+            newPlaylists[newVibeId] = {
+                name: folderName,
+                songs: newSongsForThisFolder
+            };
+            nameToVibeIdMap.set(folderName, newVibeId);
+        }
     });
 
     setPlaylists(newPlaylists);
@@ -5528,7 +5633,19 @@ const vibeSearchResults = () => {
       setProgress(0);
     }
   };
-  const updatePlayCount = (songToUpdate) => { const newPlaylists = { ...playlists }; Object.keys(newPlaylists).forEach(key => { newPlaylists[key] = newPlaylists[key].map(s => { if (s.id === songToUpdate.id) return { ...s, playCount: (s.playCount || 0) + 1 }; return s; }); }); setPlaylists(newPlaylists); };
+  const updatePlayCount = (songToUpdate) => {
+    const newPlaylists = { ...playlists };
+    Object.keys(newPlaylists).forEach(vibeId => {
+      newPlaylists[vibeId] = {
+        ...newPlaylists[vibeId],
+        songs: newPlaylists[vibeId].songs.map(s => {
+          if (s.id === songToUpdate.id) return { ...s, playCount: (s.playCount || 0) + 1 };
+          return s;
+        })
+      };
+    });
+    setPlaylists(newPlaylists);
+  };
 
   const applySort = (mode, direction = 'asc') => { 
     let newQueue = [...queue]; 
@@ -5641,12 +5758,15 @@ const vibeSearchResults = () => {
       newQueue.splice(currentIdx + 1, 0, song);
       
       // Ajouter aussi à la playlist active si ce n'est pas déjà le cas
-      if (activeVibeName && playlists[activeVibeName]) {
-        const isInPlaylist = playlists[activeVibeName].find(s => s.id === song.id);
+      if (activeVibeId && playlists[activeVibeId]) {
+        const isInPlaylist = playlists[activeVibeId].songs.find(s => s.id === song.id);
         if (!isInPlaylist) {
           setPlaylists(prev => ({
             ...prev,
-            [activeVibeName]: [...prev[activeVibeName], { ...song, type: 'vibe' }]
+            [activeVibeId]: {
+              ...prev[activeVibeId],
+              songs: [...prev[activeVibeId].songs, { ...song, type: 'vibe' }]
+            }
           }));
         }
       }
@@ -5657,34 +5777,34 @@ const vibeSearchResults = () => {
     return true; 
   };
 
-  const playFolder = (folderName) => { 
-        const songs = playlists[folderName];
-        if (!songs || songs.length === 0) {
-            console.error("Vibe introuvable ou vide:", folderName);
+  const playFolder = (vibeId) => {
+        const vibe = playlists[vibeId];
+        if (!vibe || !vibe.songs || vibe.songs.length === 0) {
+            console.error("Vibe introuvable ou vide:", vibeId);
             return;
         }
 
         // VÉRIFICATION : fichiers accessibles ?
-        const firstSong = songs[0];
+        const firstSong = vibe.songs[0];
         const isAccessible = isSongAvailable(firstSong);
         if (!isAccessible) {
-            alert(`Session expirée pour "${folderName}" ! Ré-importez le dossier.`);
+            alert(`Session expirée pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
             return;
         }
 
         // SI une vibe est déjà chargée (peu importe si elle joue ou non)
         if (currentSong) {
-          setPendingVibe(folderName);
+          setPendingVibe(vibeId);
           return;
       }
 
       // Lancer l'animation (la vibe sera lancée par onBlinkComplete)
-      setBlinkingVibe(folderName);
+      setBlinkingVibe(vibeId);
     };
 
-    const launchVibe = (folderName) => {
+    const launchVibe = (vibeId) => {
         // Cas spécial : résultats de recherche
-        if (folderName === '__SEARCH_RESULTS__') {
+        if (vibeId === '__SEARCH_RESULTS__') {
             if (audioRef.current && !audioRef.current.paused) {
                 fadeOutAndStop(vibeSearchResults);
             } else {
@@ -5695,19 +5815,19 @@ const vibeSearchResults = () => {
 
         // Fade out audio si une musique joue, puis lancer la vibe
         if (audioRef.current && !audioRef.current.paused) {
-            fadeOutAndStop(() => doLaunchVibe(folderName));
+            fadeOutAndStop(() => doLaunchVibe(vibeId));
             return;
         }
 
-        doLaunchVibe(folderName);
+        doLaunchVibe(vibeId);
     };
 
-    const doLaunchVibe = (folderName) => {
-      const songs = playlists[folderName];
+    const doLaunchVibe = (vibeId) => {
+      const vibe = playlists[vibeId];
     // Filtrer pour ne garder que les morceaux avec fichier disponible
-    let songsToPlay = songs.filter(s => isSongAvailable(s));
+    let songsToPlay = vibe.songs.filter(s => isSongAvailable(s));
     if (songsToPlay.length === 0) {
-        alert(`Aucun morceau disponible pour "${folderName}" ! Ré-importez le dossier.`);
+        alert(`Aucun morceau disponible pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
         return;
     }
     for (let i = songsToPlay.length - 1; i > 0; i--) {
@@ -5728,7 +5848,7 @@ const vibeSearchResults = () => {
     setIsPlaying(true);
     openFullPlayer();
     setPendingVibe(null);
-    setActiveVibeName(folderName);
+    setActiveVibeId(vibeId);
 
     // Forcer le play si même chanson (le useEffect ne se déclenche pas)
     if (isSameSong && audioRef.current) {
@@ -6189,7 +6309,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             setCurrentSong(null);
             setQueue([]);
             setIsPlaying(false);
-            setActiveVibeName(null);
+            setActiveVibeId(null);
         }
     };
   
@@ -6774,34 +6894,37 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
             ) : (
               <div className="flex flex-col" style={{ gap: `${CONFIG.VIBECARD_GAP_VH}vh`, marginTop: `${CONFIG.HEADER_CARDS_GAP}rem` }}>
-                    {Object.keys(playlists).map((folderName, index) => {
-                        const songs = playlists[folderName];
-                        const isVibe = songs[0]?.type === 'vibe' || folderName.includes('Vibe'); 
+                    {Object.keys(playlists).map((vibeId, index) => {
+                        const vibe = playlists[vibeId];
+                        const songs = vibe.songs;
+                        const vibeName = vibe.name;
+                        const isVibe = songs[0]?.type === 'vibe' || vibeName?.includes('Vibe');
                         const availableCount = songs.filter(s => isSongAvailable(s)).length;
                         const unavailableCount = songs.length - availableCount;
                         const isExpired = availableCount === 0;
                         return (
-                            <VibeCard 
-                                key={folderName}
+                            <VibeCard
+                                key={vibeId}
                                 animationIndex={index}
                                 animationKey={cardsAnimKey}
-                                animationDelay={cardsAnimDelay} 
-                                folderName={folderName} 
+                                animationDelay={cardsAnimDelay}
+                                vibeId={vibeId}
+                                vibeName={vibeName}
                                 availableCount={availableCount}
                                 unavailableCount={unavailableCount}
                                 isVibe={isVibe}
                                 isExpired={isExpired}
-                                onClick={() => playFolder(folderName)}
+                                onClick={() => playFolder(vibeId)}
                                 onReimport={() => document.querySelector('input[type="file"]').click()}
-                                colorIndex={vibeColorIndices[folderName] !== undefined ? vibeColorIndices[folderName] : getInitialGradientIndex(folderName)}
+                                colorIndex={vibeColorIndices[vibeId] !== undefined ? vibeColorIndices[vibeId] : getInitialGradientIndex(vibeId)}
                                 onColorChange={(direction) => {
                                     setVibeColorIndices(prev => ({
                                         ...prev,
-                                        [folderName]: (prev[folderName] !== undefined ? prev[folderName] : getInitialGradientIndex(folderName)) + direction
+                                        [vibeId]: (prev[vibeId] !== undefined ? prev[vibeId] : getInitialGradientIndex(vibeId)) + direction
                                     }));
                                 }}
                                 onSwipeProgress={setVibeSwipePreview}
-                                isBlinking={blinkingVibe === folderName}
+                                isBlinking={blinkingVibe === vibeId}
                                 onBlinkComplete={() => {
                                     const vibeToLaunch = blinkingVibe;
                                     setBlinkingVibe(null);
@@ -7053,17 +7176,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const colorIndex = folderGradients?.[folderName] ?? 0;
                     const normalizedIndex = ((colorIndex % 20) + 20) % 20;
 
-                    // Créer la vibe avec nom unique (évite d'écraser une vibe existante)
-                    let finalName = folderName;
-                    setPlaylists(prev => {
-                        let counter = 2;
-                        while (prev[finalName] !== undefined) {
-                            finalName = `${folderName} (${counter})`;
-                            counter++;
-                        }
-                        return {
-                            ...prev,
-                            [finalName]: files.map(f => {
+                    // Générer un ID unique pour cette nouvelle vibe
+                    const newVibeId = generateVibeId();
+                    setPlaylists(prev => ({
+                        ...prev,
+                        [newVibeId]: {
+                            name: folderName,
+                            songs: files.map(f => {
                                 const fileName = f.name || f;
                                 const nameWithoutExt = fileName.replace(/\.mp3$/i, '');
                                 const parts = nameWithoutExt.split(' - ');
@@ -7080,12 +7199,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     type: 'dropbox'
                                 };
                             })
-                        };
-                    });
+                        }
+                    }));
 
                     setVibeColorIndices(prev => ({
                         ...prev,
-                        [finalName]: normalizedIndex
+                        [newVibeId]: normalizedIndex
                     }));
                 });
 
@@ -7585,19 +7704,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       }}
                         onSaveVibe={(name, songs, gradientIndex) => {
                           const vibeSongs = songs.map(s => ({...s, type: 'vibe'}));
-                          
-                          // Générer un nom unique si le nom existe déjà
-                          let finalName = name;
-                          let counter = 2;
-                          setPlaylists(prev => {
-                              while (prev[finalName] !== undefined) {
-                                  finalName = `${name} (${counter})`;
-                                  counter++;
+
+                          // Générer un ID unique pour cette nouvelle vibe
+                          const newVibeId = generateVibeId();
+                          setPlaylists(prev => ({
+                              ...prev,
+                              [newVibeId]: {
+                                  name: name,
+                                  songs: vibeSongs
                               }
-                              return { ...prev, [finalName]: vibeSongs };
-                          });
-                          
-                          setVibeColorIndices(prev => ({ ...prev, [finalName]: gradientIndex }));
+                          }));
+
+                          setVibeColorIndices(prev => ({ ...prev, [newVibeId]: gradientIndex }));
                           // NE PAS fermer ici - le VibeBuilder appellera onClose après l'animation
                       }}
                         fadeMainAudio={fadeMainAudio}

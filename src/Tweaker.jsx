@@ -281,11 +281,14 @@ const Tweaker = ({
     }, []);
     
     // État local des vibes (copie pour modifications)
-    const [vibes, setVibes] = useState(() => 
-        Object.keys(playlists).map(name => ({
-            name,
-            originalName: name,
-            songs: playlists[name]
+    // Nouveau format : playlists = { vibeId: { name, songs } }
+    const [vibes, setVibes] = useState(() =>
+        Object.keys(playlists).map(vibeId => ({
+            vibeId,
+            name: playlists[vibeId].name,
+            originalVibeId: vibeId,
+            originalName: playlists[vibeId].name,
+            songs: playlists[vibeId].songs
         }))
     );
     
@@ -334,11 +337,13 @@ const Tweaker = ({
     
     // Sauvegarder l'état original complet pour pouvoir annuler
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
-    const [originalVibes] = useState(() => 
-        Object.keys(playlists).map(name => ({
-            name,
-            originalName: name,
-            songs: playlists[name]
+    const [originalVibes] = useState(() =>
+        Object.keys(playlists).map(vibeId => ({
+            vibeId,
+            name: playlists[vibeId].name,
+            originalVibeId: vibeId,
+            originalName: playlists[vibeId].name,
+            songs: playlists[vibeId].songs
         }))
     );
     
@@ -391,23 +396,21 @@ const Tweaker = ({
         setEditedName(oldName);
     };
     
-    // Confirmer le changement de nom
-    const confirmNameChange = (oldName) => {
-        if (editedName.trim() && editedName !== oldName) {
-            setVibes(prev => prev.map(v => 
-                v.name === oldName ? { ...v, name: editedName.trim() } : v
+    // Confirmer le changement de nom (vibeId reste inchangé, seul le nom change)
+    const confirmNameChange = (vibeId) => {
+        const vibe = vibes.find(v => v.vibeId === vibeId);
+        if (!vibe) {
+            setEditingVibeName(null);
+            setEditedName('');
+            return;
+        }
+
+        // Permettre les noms vides et les noms en double (car l'ID est unique)
+        const newName = editedName.trim();
+        if (newName !== vibe.name) {
+            setVibes(prev => prev.map(v =>
+                v.vibeId === vibeId ? { ...v, name: newName } : v
             ));
-            // Mettre à jour orderedVibes si nécessaire
-            setOrderedVibes(prev => prev.map(n => n === oldName ? editedName.trim() : n));
-            // Mettre à jour vibeColorIndices
-            if (vibeColorIndices[oldName] !== undefined) {
-                setVibeColorIndices(prev => {
-                    const newIndices = { ...prev };
-                    newIndices[editedName.trim()] = newIndices[oldName];
-                    delete newIndices[oldName];
-                    return newIndices;
-                });
-            }
         }
         setEditingVibeName(null);
         setEditedName('');
@@ -416,7 +419,7 @@ const Tweaker = ({
     // Quitter automatiquement le mode reorder quand toutes les cartes sont ordonnées
     useEffect(() => {
         if (activeMode === 'reorder') {
-            const remainingVibes = vibes.filter(v => !markedForDeletion.includes(v.name));
+            const remainingVibes = vibes.filter(v => !markedForDeletion.includes(v.vibeId));
             if (orderedVibes.length > 0 && orderedVibes.length === remainingVibes.length) {
                 // Sauvegarder l'ordre validé pour le rappeler plus tard
                 setLastValidatedOrder([...orderedVibes]);
@@ -427,22 +430,22 @@ const Tweaker = ({
     }, [orderedVibes, vibes, markedForDeletion, activeMode]);
     
     // Lancer l'animation de delete pour une carte
-    const startDeleteAnimation = (vibeName, cardElement) => {
+    const startDeleteAnimation = (vibeId, cardElement) => {
         if (!deleteButtonRef.current || !cardElement) return;
-        
+
         const cardRect = cardElement.getBoundingClientRect();
         const buttonRect = deleteButtonRef.current.getBoundingClientRect();
-        
-        const animationId = `${vibeName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')}-${Date.now()}`;
-        
+
+        const animationId = `${vibeId.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')}-${Date.now()}`;
+
         const cardCenterX = cardRect.left + cardRect.width / 2;
         const cardCenterY = cardRect.top + cardRect.height / 2;
         const buttonCenterX = buttonRect.left + buttonRect.width / 2;
         const buttonCenterY = buttonRect.top + buttonRect.height / 2;
-        
+
         const animationData = {
             id: animationId,
-            vibeName,
+            vibeId,
             startX: cardRect.left,
             startY: cardRect.top,
             startWidth: cardRect.width,
@@ -450,20 +453,20 @@ const Tweaker = ({
             deltaX: buttonCenterX - cardCenterX,
             deltaY: buttonCenterY - cardCenterY,
         };
-        
+
         // Ajouter l'animation à la liste
         setDeletingAnimations(prev => [...prev, animationData]);
-        
+
         // Déclencher le feedback overlay après que la carte arrive sur le bouton
         setTimeout(() => {
             setDeleteFeedback(true);
         }, TWEAKER_CONFIG.DELETE_DELAY_BEFORE_HIDE);
-        
+
         // Cacher la carte après le délai
         setTimeout(() => {
-            setMarkedForDeletion(prev => [...prev, vibeName]);
+            setMarkedForDeletion(prev => [...prev, vibeId]);
         }, TWEAKER_CONFIG.DELETE_DELAY_BEFORE_HIDE);
-        
+
         // Supprimer l'animation de la liste après qu'elle soit terminée
         setTimeout(() => {
             setDeletingAnimations(prev => prev.filter(a => a.id !== animationId));
@@ -493,34 +496,34 @@ const Tweaker = ({
         setTitleTouchStart(null);
     };
     
-    const handleCardClick = (vibeName) => {
+    const handleCardClick = (vibeId) => {
         if (activeMode === 'delete') {
             // Mode delete : lancer l'animation et marquer pour suppression
-            if (!markedForDeletion.includes(vibeName)) {
-                const cardElement = cardRefsMap.current.get(vibeName);
+            if (!markedForDeletion.includes(vibeId)) {
+                const cardElement = cardRefsMap.current.get(vibeId);
                 if (cardElement) {
-                    startDeleteAnimation(vibeName, cardElement);
+                    startDeleteAnimation(vibeId, cardElement);
                 }
             }
         } else if (activeMode === 'reorder') {
             // Mode reorder : toggle l'ordre
-            if (orderedVibes.includes(vibeName)) {
-                setOrderedVibes(prev => prev.filter(n => n !== vibeName));
+            if (orderedVibes.includes(vibeId)) {
+                setOrderedVibes(prev => prev.filter(id => id !== vibeId));
             } else {
-                setOrderedVibes(prev => [...prev, vibeName]);
+                setOrderedVibes(prev => [...prev, vibeId]);
             }
         }
     };
-    
-    const handleSwipeDelete = (vibeName) => {
-        setDeletingVibe(vibeName);
-        
+
+    const handleSwipeDelete = (vibeId) => {
+        setDeletingVibe(vibeId);
+
         setTimeout(() => {
-            const vibeToDelete = vibes.find(v => v.name === vibeName);
+            const vibeToDelete = vibes.find(v => v.vibeId === vibeId);
             if (vibeToDelete) {
                 setDeletedVibes(prev => [...prev, vibeToDelete]);
-                setVibes(prev => prev.filter(v => v.name !== vibeName));
-                setOrderedVibes(prev => prev.filter(n => n !== vibeName));
+                setVibes(prev => prev.filter(v => v.vibeId !== vibeId));
+                setOrderedVibes(prev => prev.filter(id => id !== vibeId));
             }
             setDeletingVibe(null);
         }, 300);
@@ -528,29 +531,32 @@ const Tweaker = ({
     
     const handleConfirm = () => {
         // Construire le nouvel objet playlists
-        // D'abord, filtrer les cartes marquées pour suppression
-        let finalVibes = vibes.filter(v => !markedForDeletion.includes(v.name));
-        
-        // Utiliser orderedVibes si défini, sinon lastValidatedOrder
+        // D'abord, filtrer les cartes marquées pour suppression (utilise vibeId)
+        let finalVibes = vibes.filter(v => !markedForDeletion.includes(v.vibeId));
+
+        // Utiliser orderedVibes si défini, sinon lastValidatedOrder (stocke vibeId)
         const orderToApply = orderedVibes.length > 0 ? orderedVibes : lastValidatedOrder;
-        
+
         // Si un ordre a été défini, l'appliquer
         if (orderToApply.length > 0) {
             const orderedSet = new Set(orderToApply);
-            const unordered = finalVibes.filter(v => !orderedSet.has(v.name));
-            const ordered = orderToApply.map(name => finalVibes.find(v => v.name === name)).filter(Boolean);
+            const unordered = finalVibes.filter(v => !orderedSet.has(v.vibeId));
+            const ordered = orderToApply.map(vibeId => finalVibes.find(v => v.vibeId === vibeId)).filter(Boolean);
             finalVibes = [...ordered, ...unordered];
         }
-        
-        // Créer le nouvel objet
+
+        // Créer le nouvel objet (nouveau format: { vibeId: { name, songs } })
         const newPlaylists = {};
         finalVibes.forEach(vibe => {
-            newPlaylists[vibe.name] = vibe.songs;
+            newPlaylists[vibe.vibeId] = {
+                name: vibe.name,
+                songs: vibe.songs
+            };
         });
-        
+
         // APPLIQUER LES CHANGEMENTS IMMÉDIATEMENT (avant l'animation)
         onSave(newPlaylists);
-        
+
         // PUIS lancer l'animation de fermeture vers la droite
         setClosingDirection('right');
         onCloseStart(); // Reset les cartes pendant l'animation
@@ -578,22 +584,22 @@ const Tweaker = ({
     // Trier les vibes pour l'affichage
     // En mode reorder, utiliser lastValidatedOrder pour les vibes non encore sélectionnées
     const displayVibes = [...vibes].sort((a, b) => {
-        const aIndexOrdered = orderedVibes.indexOf(a.name);
-        const bIndexOrdered = orderedVibes.indexOf(b.name);
-        
+        const aIndexOrdered = orderedVibes.indexOf(a.vibeId);
+        const bIndexOrdered = orderedVibes.indexOf(b.vibeId);
+
         // Si les deux sont dans orderedVibes, trier par cet ordre
         if (aIndexOrdered !== -1 && bIndexOrdered !== -1) {
             return aIndexOrdered - bIndexOrdered;
         }
-        
+
         // Si un seul est dans orderedVibes, il passe en premier
         if (aIndexOrdered !== -1) return -1;
         if (bIndexOrdered !== -1) return 1;
-        
+
         // Sinon, utiliser lastValidatedOrder pour trier
-        const aIndexLast = lastValidatedOrder.indexOf(a.name);
-        const bIndexLast = lastValidatedOrder.indexOf(b.name);
-        
+        const aIndexLast = lastValidatedOrder.indexOf(a.vibeId);
+        const bIndexLast = lastValidatedOrder.indexOf(b.vibeId);
+
         if (aIndexLast === -1 && bIndexLast === -1) return 0;
         if (aIndexLast === -1) return 1;
         if (bIndexLast === -1) return -1;
@@ -765,15 +771,15 @@ const Tweaker = ({
             
             {/* Animations de delete en cours - Rendu dans un portail pour positionnement absolu sur l'écran */}
             {deletingAnimations.map(anim => {
-                const vibe = originalVibes.find(v => v.name === anim.vibeName);
+                const vibe = originalVibes.find(v => v.vibeId === anim.vibeId);
                 if (!vibe) return null;
-                
+
                 const songs = vibe.songs;
-                const isVibe = songs[0]?.type === 'vibe' || vibe.name.includes('Vibe');
+                const isVibe = songs[0]?.type === 'vibe' || vibe.name?.includes('Vibe');
                 const availableCount = songs.filter(s => isSongAvailable(s)).length;
                 const unavailableCount = songs.length - availableCount;
                 const isExpired = availableCount === 0;
-                
+
                 return createPortal(
                     <div
                         key={anim.id}
@@ -799,14 +805,15 @@ const Tweaker = ({
                                 }
                             }
                         `}</style>
-                        <VibeCardComponent 
-                            folderName={vibe.name} 
+                        <VibeCardComponent
+                            vibeId={vibe.vibeId}
+                            vibeName={vibe.name}
                             availableCount={availableCount}
                             unavailableCount={unavailableCount}
                             isVibe={isVibe}
                             isExpired={isExpired}
                             onClick={() => {}}
-                            colorIndex={vibeColorIndices[vibe.name] !== undefined ? vibeColorIndices[vibe.name] : getInitialGradientIndex(vibe.name)}
+                            colorIndex={vibeColorIndices[vibe.vibeId] !== undefined ? vibeColorIndices[vibe.vibeId] : getInitialGradientIndex(vibe.vibeId)}
                             onColorChange={() => {}}
                             onSwipeProgress={() => {}}
                         />
@@ -818,46 +825,46 @@ const Tweaker = ({
             {/* TOP LISTE - Vibes ordonnées (mode reorder) */}
             {activeMode === 'reorder' && orderedVibes.length > 0 && (
                 <div className="flex flex-col" style={{ marginBottom: TWEAKER_CONFIG.REORDER_GAP_BOTTOM }}>
-                    {orderedVibes.map((vibeName, index) => {
-                        const vibe = vibes.find(v => v.name === vibeName);
+                    {orderedVibes.map((vibeId, index) => {
+                        const vibe = vibes.find(v => v.vibeId === vibeId);
                         if (!vibe) return null;
-                        
+
                         const songs = vibe.songs;
                         const availableCount = songs.filter(s => isSongAvailable(s)).length;
                         const unavailableCount = songs.length - availableCount;
-                        const colorIndex = vibeColorIndices[vibe.name] !== undefined 
-                            ? vibeColorIndices[vibe.name] 
-                            : getInitialGradientIndex(vibe.name);
+                        const colorIndex = vibeColorIndices[vibe.vibeId] !== undefined
+                            ? vibeColorIndices[vibe.vibeId]
+                            : getInitialGradientIndex(vibe.vibeId);
                         const gradient = getGradientByIndex ? getGradientByIndex(colorIndex) : ['#ec4899', '#f472b6', '#f9a8d4'];
                         const step = 100 / (gradient.length - 1);
                         const gradientBg = `linear-gradient(135deg, ${gradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
                         
                         return (
                             <div
-                                key={`ordered-${vibe.name}`}
+                                key={`ordered-${vibe.vibeId}`}
                                 className="w-full flex items-center border-b border-white/20 cursor-pointer active:opacity-80"
                                 style={{
                                     height: TWEAKER_CONFIG.REORDER_ROW_HEIGHT,
                                     background: gradientBg,
                                 }}
                                 onClick={() => {
-                                    setOrderedVibes(prev => prev.filter(n => n !== vibeName));
+                                    setOrderedVibes(prev => prev.filter(id => id !== vibeId));
                                 }}
                             >
                                 {/* Tout sur une ligne, centré verticalement */}
                                 <div className="w-10 flex-shrink-0 flex items-center justify-center text-white/60 font-black text-sm">
                                     {index + 1}
                                 </div>
-                                <span 
+                                <span
                                     className="font-black text-white truncate"
-                                    style={{ 
+                                    style={{
                                         fontSize: TWEAKER_CONFIG.REORDER_ROW_TITLE_SIZE,
                                         textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                                     }}
                                 >
-                                    {vibe.name}
+                                    {vibe.name || `Vibe ${index + 1}`}
                                 </span>
-                                <span 
+                                <span
                                     className="text-white/90 font-semibold flex items-center gap-1 ml-2"
                                     style={{ fontSize: TWEAKER_CONFIG.REORDER_ROW_COUNT_SIZE }}
                                 >
@@ -880,39 +887,38 @@ const Tweaker = ({
 <div className="flex flex-col" style={{ gap: '1.2vh' }}>
                     {displayVibes.map((vibe) => {
                         const songs = vibe.songs;
-                        const isVibe = songs[0]?.type === 'vibe' || vibe.name.includes('Vibe');
+                        const isVibe = songs[0]?.type === 'vibe' || vibe.name?.includes('Vibe');
                         const availableCount = songs.filter(s => isSongAvailable(s)).length;
                         const unavailableCount = songs.length - availableCount;
                         const isExpired = availableCount === 0;
-                        const orderNumber = orderedVibes.indexOf(vibe.name);
-                        
+                        const orderNumber = orderedVibes.indexOf(vibe.vibeId);
+
                         // Ne pas afficher les vibes marquées pour suppression
-                        if (markedForDeletion.includes(vibe.name)) return null;
-                        
+                        if (markedForDeletion.includes(vibe.vibeId)) return null;
+
                         // Ne pas afficher les vibes déjà dans la top liste (mode reorder)
-                        if (activeMode === 'reorder' && orderedVibes.includes(vibe.name)) return null;
-                        
-                        const isMarkedDelete = markedForDeletion.includes(vibe.name);
-                        
+                        if (activeMode === 'reorder' && orderedVibes.includes(vibe.vibeId)) return null;
+
                         return (
-                            <div 
-                                key={vibe.originalName}
-                                ref={(el) => { if (el) cardRefsMap.current.set(vibe.name, el); }}
-                                className={`relative ${deletingVibe === vibe.name ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
+                            <div
+                                key={vibe.originalVibeId}
+                                ref={(el) => { if (el) cardRefsMap.current.set(vibe.vibeId, el); }}
+                                className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
-                                
-                                <VibeCardComponent 
-                                    folderName={vibe.name} 
+
+                                <VibeCardComponent
+                                    vibeId={vibe.vibeId}
+                                    vibeName={vibe.name}
                                     availableCount={availableCount}
                                     unavailableCount={unavailableCount}
                                     isVibe={isVibe}
                                     isExpired={isExpired}
-                                    onClick={() => handleCardClick(vibe.name)}
-                                    colorIndex={vibeColorIndices[vibe.name] !== undefined ? vibeColorIndices[vibe.name] : getInitialGradientIndex(vibe.name)}
+                                    onClick={() => handleCardClick(vibe.vibeId)}
+                                    colorIndex={vibeColorIndices[vibe.vibeId] !== undefined ? vibeColorIndices[vibe.vibeId] : getInitialGradientIndex(vibe.vibeId)}
                                     onColorChange={(direction) => {
                                         setVibeColorIndices(prev => ({
                                             ...prev,
-                                            [vibe.name]: (prev[vibe.name] !== undefined ? prev[vibe.name] : getInitialGradientIndex(vibe.name)) + direction
+                                            [vibe.vibeId]: (prev[vibe.vibeId] !== undefined ? prev[vibe.vibeId] : getInitialGradientIndex(vibe.vibeId)) + direction
                                         }));
                                     }}
                                     onSwipeProgress={(preview) => {
@@ -920,13 +926,13 @@ const Tweaker = ({
                                         onSwipeProgress(preview);
                                     }}
                                     onNameEdit={activeMode === null ? () => {
-                                        setEditingVibeName(vibe.name);
-                                        setEditedName(vibe.name);
+                                        setEditingVibeName(vibe.vibeId);
+                                        setEditedName(vibe.name || '');
                                     } : undefined}
-                                    isEditingName={editingVibeName === vibe.name}
+                                    isEditingName={editingVibeName === vibe.vibeId}
                                     editedName={editedName}
                                     onEditedNameChange={setEditedName}
-                                    onConfirmNameChange={() => confirmNameChange(vibe.name)}
+                                    onConfirmNameChange={() => confirmNameChange(vibe.vibeId)}
                                 />
                             </div>
                         );
