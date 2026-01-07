@@ -4924,6 +4924,7 @@ const vibeSearchResults = () => {
           artist: artist,
           playCount: playCount,
           file: URL.createObjectURL(file),
+          localFileName: file.name,
           dropboxPath: existingSong?.dropboxPath || null,
           fileSignature: fileSignature,
           type: 'local'
@@ -4934,11 +4935,12 @@ const vibeSearchResults = () => {
       // On stocke par ID ET par fileSignature pour matcher les chansons existantes
       newSongsForThisFolder.forEach(song => {
           if (song.file) {
+              const fileData = { file: song.file, localFileName: song.localFileName };
               if (song.id) {
-                  allNewFilesForPropagation.set(song.id, song.file);
+                  allNewFilesForPropagation.set(song.id, fileData);
               }
               if (song.fileSignature) {
-                  allNewFilesForPropagation.set(song.fileSignature, song.file);
+                  allNewFilesForPropagation.set(song.fileSignature, fileData);
               }
           }
       });
@@ -4996,11 +4998,11 @@ const vibeSearchResults = () => {
             ...newPlaylists[vibeId],
             songs: newPlaylists[vibeId].songs.map(song => {
                 // Chercher par ID ou par fileSignature (pour matcher les chansons Dropbox existantes)
-                const newFile = allNewFilesForPropagation.get(song.id) ||
+                const fileData = allNewFilesForPropagation.get(song.id) ||
                                (song.fileSignature && allNewFilesForPropagation.get(song.fileSignature));
-                if (newFile && !song.file) {
+                if (fileData && !song.file) {
                     // Propager le fichier local et mettre à jour le type
-                    return { ...song, file: newFile, type: 'local' };
+                    return { ...song, file: fileData.file, localFileName: fileData.localFileName, type: 'local' };
                 }
                 return song;
             })
@@ -5129,7 +5131,7 @@ const vibeSearchResults = () => {
                 sig: fileSignature,
                 normalizedTitle: normalizedDropboxTitle,
                 found: !!existingSong,
-                hasFile: existingSong ? !!existingSong.file : false,
+                hasFile: existingSong ? !!(existingSong.file || existingSong.localFileName) : false,
                 matchedBy: existingSong ? (allExistingSongsMap.has(fileSignature) ? 'signature' : 'title') : null
             });
 
@@ -5137,7 +5139,9 @@ const vibeSearchResults = () => {
             const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
             // Garder le fichier local SEULEMENT s'il est vraiment disponible (file non null)
+            // OU si on a un localFileName sauvegardé (le fichier sera rechargé au prochain import local)
             const hasLocalFile = existingSong && existingSong.file;
+            const hasLocalFileName = existingSong && existingSong.localFileName;
 
             return {
                 id: id,
@@ -5145,6 +5149,7 @@ const vibeSearchResults = () => {
                 artist: artist,
                 playCount: playCount,
                 file: hasLocalFile ? existingSong.file : null,
+                localFileName: hasLocalFileName ? existingSong.localFileName : null,
                 dropboxPath: file.path_lower,
                 fileSignature: fileSignature,
                 type: hasLocalFile ? 'local' : 'dropbox'
