@@ -4896,9 +4896,8 @@ const vibeSearchResults = () => {
       const filesInFolder = folders[folderName];
 
       const newSongsForThisFolder = filesInFolder.map((file) => {
-        // Créer une signature unique basée sur le fichier (taille + extension)
-        const extension = file.name.split('.').pop().toLowerCase();
-        const fileSignature = `${file.size}-${extension}`;
+        // Créer une signature unique basée sur le nom du fichier
+        const fileSignature = file.name;
 
         // On extrait le titre et l'artiste depuis le nom du fichier
         let title = file.name.replace(/\.[^/.]+$/, "");
@@ -5063,8 +5062,8 @@ const vibeSearchResults = () => {
         const filesInFolder = foldersToImport[folderName];
 
         const newSongsForThisFolder = filesInFolder.map((file) => {
-            const extension = file.name.split('.').pop().toLowerCase();
-            const fileSignature = `${file.size}-${extension}`;
+            // Créer une signature unique basée sur le nom du fichier
+            const fileSignature = file.name;
 
             let title = file.name.replace(/\.[^/.]+$/, "");
             let artist = "Artiste Inconnu";
@@ -6350,8 +6349,8 @@ const importDropboxFolder = async (folderPath, folderName) => {
       });
 
       const newSongs = mp3Files.map((file) => {
-          const extension = file.name.split('.').pop().toLowerCase();
-          const fileSignature = `${file.size}-${extension}`;
+          // Créer une signature unique basée sur le nom du fichier
+          const fileSignature = file.name;
 
           let title = file.name.replace(/\.[^/.]+$/, "");
           let artist = "Artiste Inconnu";
@@ -7445,10 +7444,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 const parts = nameWithoutExt.split(' - ');
                                 const title = parts.length > 1 ? parts.slice(1).join(' - ') : nameWithoutExt;
                                 const artist = parts.length > 1 ? parts[0] : '';
-                                const extension = fileName.split('.').pop().toLowerCase();
-                                const fileSignature = `${f.size || 0}-${extension}`;
+                                // Créer une signature unique basée sur le nom du fichier
+                                const fileSignature = fileName;
                                 return {
-                                    id: `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+                                    id: `dropbox-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
                                     title: title,
                                     artist: artist,
                                     playCount: 0,
