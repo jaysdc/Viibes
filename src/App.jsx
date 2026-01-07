@@ -5025,12 +5025,32 @@ const vibeSearchResults = () => {
   const processDropboxImport = (foldersToImport) => {
     const newPlaylists = playlists ? { ...playlists } : {};
 
+    // Fonction pour normaliser un titre (enlever numéros de piste, artiste, etc.)
+    const normalizeTitle = (filename) => {
+        // Enlever l'extension
+        let name = filename.replace(/\.[^/.]+$/, "");
+        // Enlever les préfixes numériques (01, 02, 01., 01 -, etc.)
+        name = name.replace(/^\d+[\s._-]*/, "");
+        // Si format "Artiste - Titre", garder le titre
+        if (name.includes(" - ")) {
+            name = name.split(" - ").pop().trim();
+        }
+        // Normaliser: lowercase, enlever accents, espaces multiples
+        return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+    };
+
     const allExistingSongsMap = new Map();
+    const allExistingSongsByTitle = new Map(); // Nouvelle map par titre normalisé
     if (playlists) {
         Object.values(playlists).forEach(vibe => {
             vibe.songs.forEach(song => {
                 if (song.fileSignature) {
                     allExistingSongsMap.set(song.fileSignature, song);
+                }
+                // Aussi indexer par titre normalisé
+                const normalizedTitle = normalizeTitle(song.fileSignature || song.title || "");
+                if (normalizedTitle && !allExistingSongsByTitle.has(normalizedTitle)) {
+                    allExistingSongsByTitle.set(normalizedTitle, song);
                 }
             });
         });
@@ -5038,7 +5058,9 @@ const vibeSearchResults = () => {
 
     // DEBUG: Collecter les infos pour l'overlay
     const localFilesFound = [];
+    const allExistingSigs = [];
     allExistingSongsMap.forEach((song, sig) => {
+        allExistingSigs.push({ sig, hasFile: !!song.file, file: song.file ? song.file.substring(0, 30) : null });
         if (song.file) {
             localFilesFound.push(sig);
         }
@@ -5079,19 +5101,28 @@ const vibeSearchResults = () => {
 
             let title = file.name.replace(/\.[^/.]+$/, "");
             let artist = "Artiste Inconnu";
+            // Enlever les préfixes numériques pour le titre
+            title = title.replace(/^\d+[\s._-]*/, "");
             if (title.includes(" - ")) {
                 const parts = title.split(" - ");
                 artist = parts[0].trim();
                 title = parts[1].trim();
             }
 
-            const existingSong = allExistingSongsMap.get(fileSignature);
+            // Chercher d'abord par signature exacte, puis par titre normalisé
+            let existingSong = allExistingSongsMap.get(fileSignature);
+            const normalizedDropboxTitle = normalizeTitle(file.name);
+            if (!existingSong && normalizedDropboxTitle) {
+                existingSong = allExistingSongsByTitle.get(normalizedDropboxTitle);
+            }
 
             // DEBUG: Collecter les lookups pour l'overlay
             debugLookups.push({
                 sig: fileSignature,
+                normalizedTitle: normalizedDropboxTitle,
                 found: !!existingSong,
-                hasFile: existingSong ? !!existingSong.file : false
+                hasFile: existingSong ? !!existingSong.file : false,
+                matchedBy: existingSong ? (allExistingSongsMap.has(fileSignature) ? 'signature' : 'title') : null
             });
 
             const playCount = existingSong ? existingSong.playCount : 0;
@@ -5204,6 +5235,7 @@ const vibeSearchResults = () => {
     setDebugImport({
         mapSize: allExistingSongsMap.size,
         localFilesFound,
+        allExistingSigs,
         dropboxFilesToImport,
         lookups: debugLookups
     });
@@ -6927,15 +6959,21 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <span style={{color:'#888'}}>Chansons existantes:</span> {debugImport.mapSize}
           </div>
           <div style={{ marginBottom: 8 }}>
-            <span style={{color:'#888'}}>Avec fichier local ({debugImport.localFilesFound.length}):</span>
-            {debugImport.localFilesFound.length > 0 ? (
-              <div style={{ marginLeft: 8, color: '#0f0', maxHeight: 60, overflow: 'auto' }}>
-                {debugImport.localFilesFound.map((sig, i) => (
-                  <div key={i}>• {sig}</div>
+            <span style={{color:'#ff0'}}>Toutes les signatures existantes ({debugImport.allExistingSigs?.length || 0}):</span>
+            {debugImport.allExistingSigs && debugImport.allExistingSigs.length > 0 ? (
+              <div style={{ marginLeft: 8, maxHeight: 100, overflow: 'auto' }}>
+                {debugImport.allExistingSigs.map((item, i) => (
+                  <div key={i}>
+                    <span style={{color: item.hasFile ? '#0f0' : '#f55'}}>
+                      {item.hasFile ? '✓' : '✗'}
+                    </span>
+                    {' '}<span style={{color: '#fff'}}>{item.sig}</span>
+                    {item.hasFile && <span style={{color: '#0f0', marginLeft: 4}}>[LOCAL]</span>}
+                  </div>
                 ))}
               </div>
             ) : (
-              <span style={{ color: '#f00', marginLeft: 8 }}>AUCUN</span>
+              <span style={{ color: '#f00', marginLeft: 8 }}>AUCUNE</span>
             )}
           </div>
           <div style={{ marginBottom: 8 }}>
