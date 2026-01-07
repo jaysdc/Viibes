@@ -4895,13 +4895,14 @@ const vibeSearchResults = () => {
         // Générer un ID unique basé sur la signature du fichier
         const id = existingSong ? existingSong.id : `file-${fileSignature}-${Date.now()}`;
 
-        // On crée le nouvel objet chanson
+        // On crée le nouvel objet chanson (préserver dropboxPath si existant pour fallback)
         return {
           id: id,
           title: title,
           artist: artist,
           playCount: playCount,
           file: URL.createObjectURL(file),
+          dropboxPath: existingSong?.dropboxPath || null,
           fileSignature: fileSignature,
           type: 'local'
         };
@@ -4945,6 +4946,7 @@ const vibeSearchResults = () => {
     });
 
     // Propager les fichiers à TOUTES les autres playlists (notamment les Vibes)
+    // Quand on ajoute un fichier local, on met aussi à jour le type en 'local' (priorité au local)
     const importedVibeIds = Object.keys(folders).map(name => importNameToVibeIdMap.get(name)).filter(Boolean);
     Object.keys(newPlaylists).forEach(vibeId => {
         // Ne pas re-traiter les dossiers qu'on vient d'importer
@@ -4955,7 +4957,8 @@ const vibeSearchResults = () => {
             songs: newPlaylists[vibeId].songs.map(song => {
                 const newFile = newFilesMap.get(song.id);
                 if (newFile && !song.file) {
-                    return { ...song, file: newFile };
+                    // Propager le fichier local et mettre à jour le type
+                    return { ...song, file: newFile, type: 'local' };
                 }
                 return song;
             })
@@ -5027,15 +5030,18 @@ const vibeSearchResults = () => {
             const playCount = existingSong ? existingSong.playCount : 0;
             const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
+            // Garder le fichier local si présent (priorité au local)
+            const hasLocalFile = existingSong && (existingSong.type === 'local' || existingSong.file);
+
             return {
                 id: id,
                 title: title,
                 artist: artist,
                 playCount: playCount,
-                file: null,
+                file: hasLocalFile ? existingSong.file : null,
                 dropboxPath: file.path_lower,
                 fileSignature: fileSignature,
-                type: 'dropbox'
+                type: hasLocalFile ? 'local' : 'dropbox'
             };
         });
 
@@ -5054,6 +5060,29 @@ const vibeSearchResults = () => {
             };
             nameToVibeIdMap.set(folderName, newVibeId);
         }
+    });
+
+    // Propager les dropboxPath aux autres vibes qui ont les mêmes chansons (par ID)
+    const allNewDropboxPaths = new Map();
+    Object.values(newPlaylists).forEach(vibe => {
+        vibe.songs.forEach(song => {
+            if (song.dropboxPath && !allNewDropboxPaths.has(song.id)) {
+                allNewDropboxPaths.set(song.id, song.dropboxPath);
+            }
+        });
+    });
+
+    Object.keys(newPlaylists).forEach(vibeId => {
+        newPlaylists[vibeId] = {
+            ...newPlaylists[vibeId],
+            songs: newPlaylists[vibeId].songs.map(song => {
+                const dropboxPath = allNewDropboxPaths.get(song.id);
+                if (dropboxPath && !song.dropboxPath) {
+                    return { ...song, dropboxPath: dropboxPath };
+                }
+                return song;
+            })
+        };
     });
 
     setPlaylists(newPlaylists);
@@ -6229,11 +6258,21 @@ const importDropboxFolder = async (folderPath, folderName) => {
       }
       
       const newPlaylists = playlists ? { ...playlists } : {};
-      
+
+      // Créer une map de TOUTES les chansons existantes par fileSignature
+      const allExistingSongsMap = new Map();
+      Object.values(newPlaylists).forEach(vibe => {
+          vibe.songs.forEach(song => {
+              if (song.fileSignature) {
+                  allExistingSongsMap.set(song.fileSignature, song);
+              }
+          });
+      });
+
       const newSongs = mp3Files.map((file) => {
           const extension = file.name.split('.').pop().toLowerCase();
           const fileSignature = `${file.size}-${extension}`;
-          
+
           let title = file.name.replace(/\.[^/.]+$/, "");
           let artist = "Artiste Inconnu";
           if (title.includes(" - ")) {
@@ -6241,20 +6280,60 @@ const importDropboxFolder = async (folderPath, folderName) => {
               artist = parts[0].trim();
               title = parts[1].trim();
           }
-          
+
+          // Vérifier si cette chanson existe déjà (par signature)
+          const existingSong = allExistingSongsMap.get(fileSignature);
+
+          // Si la chanson existe déjà avec un fichier local, on réutilise ses données
+          // Sinon on crée une nouvelle entrée Dropbox
+          const playCount = existingSong ? existingSong.playCount : 0;
+          const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+
+          // Garder le fichier local si présent (priorité au local)
+          const hasLocalFile = existingSong && (existingSong.type === 'local' || existingSong.file);
+
           return {
-              id: `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              id: id,
               title: title,
               artist: artist,
-              playCount: 0,
-              file: null,
+              playCount: playCount,
+              file: hasLocalFile ? existingSong.file : null,
               dropboxPath: file.path_lower,
               fileSignature: fileSignature,
-              type: 'dropbox'
+              type: hasLocalFile ? 'local' : 'dropbox'
           };
       });
-      
-      newPlaylists[folderName] = newSongs;
+
+      // Générer un vibeId unique pour cette nouvelle playlist
+      const newVibeId = generateVibeId();
+      newPlaylists[newVibeId] = {
+          name: folderName,
+          songs: newSongs
+      };
+
+      // Propager les dropboxPath aux autres vibes qui ont les mêmes chansons (par ID)
+      const newDropboxPathsMap = new Map();
+      newSongs.forEach(song => {
+          if (song.dropboxPath) {
+              newDropboxPathsMap.set(song.id, song.dropboxPath);
+          }
+      });
+
+      Object.keys(newPlaylists).forEach(vibeId => {
+          if (vibeId === newVibeId) return; // Ne pas re-traiter la vibe qu'on vient de créer
+
+          newPlaylists[vibeId] = {
+              ...newPlaylists[vibeId],
+              songs: newPlaylists[vibeId].songs.map(song => {
+                  const newDropboxPath = newDropboxPathsMap.get(song.id);
+                  if (newDropboxPath && !song.dropboxPath) {
+                      return { ...song, dropboxPath: newDropboxPath };
+                  }
+                  return song;
+              })
+          };
+      });
+
       setPlaylists(newPlaylists);
       setShowDropboxBrowser(false);
       setFeedback({ text: `${mp3Files.length} titres importés depuis Dropbox`, type: 'confirm', triggerValidation: Date.now() });
