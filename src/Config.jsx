@@ -54,7 +54,7 @@ export const ALL_GRADIENTS = [
 export const GRADIENT_NAMES = [
     'Miami Vice',
     'Lava Flow',
-    'Afterburner',
+    'Coral Neon',
     'Glitch City',
     'Galactic Haze',
     'Arcade Glow',

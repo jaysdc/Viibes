@@ -4934,7 +4934,7 @@ const vibeSearchResults = () => {
     // Créer une map ID -> file pour toutes les chansons fraîchement importées
     const newFilesMap = new Map();
     Object.keys(folders).forEach(folderName => {
-        const vibeId = nameToVibeIdMap.get(folderName);
+        const vibeId = importNameToVibeIdMap.get(folderName);
         if (vibeId && newPlaylists[vibeId]) {
             newPlaylists[vibeId].songs.forEach(song => {
                 if (song.file) {
@@ -4945,7 +4945,7 @@ const vibeSearchResults = () => {
     });
 
     // Propager les fichiers à TOUTES les autres playlists (notamment les Vibes)
-    const importedVibeIds = Object.keys(folders).map(name => nameToVibeIdMap.get(name)).filter(Boolean);
+    const importedVibeIds = Object.keys(folders).map(name => importNameToVibeIdMap.get(name)).filter(Boolean);
     Object.keys(newPlaylists).forEach(vibeId => {
         // Ne pas re-traiter les dossiers qu'on vient d'importer
         if (importedVibeIds.includes(vibeId)) return;
