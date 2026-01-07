@@ -102,7 +102,7 @@ const CONFIG = {
     // ÉCRAN PRÉ-ÉCOUTE
     // ══════════════════════════════════════════════════════════════════════════
     PREVIEW_BLUR: 20,                     // Blur du fond (px)
-    PREVIEW_BG_OVERLAY: 'rgba(0, 0, 0, 0.4)', // Overlay sombre sur le blur
+    PREVIEW_BG_OVERLAY: 'transparent',    // Pas de couleur de fond, juste le blur
 
     PREVIEW_DISC_SIZE: 128,               // Taille du disque qui tourne (px)
     PREVIEW_DISC_ICON_SIZE: 72,           // Taille de l'icône dans le disque (px)
