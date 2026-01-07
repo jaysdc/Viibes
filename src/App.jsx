@@ -4242,6 +4242,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxPath, setDropboxPath] = useState('');
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);
+    const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
     const [pendingDropboxData, setPendingDropboxData] = useState(null);
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
     const [confirmOverlayVisible, setConfirmOverlayVisible] = useState(false);
@@ -6313,8 +6314,12 @@ const cancelKillVibe = () => {
 
     // Vérifier par batch de 100 (limite Dropbox)
     const batchSize = 100;
+    const totalBatches = Math.ceil(pathsArray.length / batchSize);
+    setDropboxScanProgress(0);
+
     for (let i = 0; i < pathsArray.length; i += batchSize) {
         const batch = pathsArray.slice(i, i + batchSize);
+        const currentBatch = Math.floor(i / batchSize) + 1;
 
         try {
             const response = await fetch('https://api.dropboxapi.com/2/files/get_metadata_batch', {
@@ -6330,6 +6335,7 @@ const cancelKillVibe = () => {
 
             if (response.status === 401) {
                 // Token expiré pendant le scan, arrêter
+                setDropboxScanProgress(null);
                 return;
             }
 
@@ -6343,10 +6349,16 @@ const cancelKillVibe = () => {
                     }
                 });
             }
+
+            // Mettre à jour la progression
+            setDropboxScanProgress(Math.round((currentBatch / totalBatches) * 100));
         } catch (error) {
             console.error('Erreur scan Dropbox batch:', error);
         }
     }
+
+    // Scan terminé
+    setDropboxScanProgress(null);
 
     // Mettre à jour les playlists avec le flag dropboxAvailable
     if (unavailablePaths.size > 0) {
@@ -6977,7 +6989,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         {/* HEADER - Indépendant */}
         <div
-            className="bg-white border-b border-gray-200 safe-area-top"
+            className="bg-white border-b border-gray-200 safe-area-top relative"
             style={{
                 zIndex: CONFIG.HEADER_Z_INDEX,
                 paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
@@ -7377,6 +7389,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             )}
 
           </div>
+
+            {/* Barre de progression scan Dropbox */}
+            {dropboxScanProgress !== null && (
+                <div
+                    className="absolute bottom-0 left-0 right-0 h-1"
+                    style={{ background: 'rgba(0,0,0,0.05)' }}
+                >
+                    <div
+                        className="h-full transition-all duration-300 ease-out"
+                        style={{
+                            width: `${dropboxScanProgress}%`,
+                            background: 'cyan'
+                        }}
+                    />
+                </div>
+            )}
 
             </div>
         {/* FIN HEADER */}
