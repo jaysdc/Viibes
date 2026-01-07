@@ -10,6 +10,7 @@ import { UNIFIED_CONFIG } from './Config.jsx';
 const CONFIG = {
     // Couleurs
     DROPBOX_BLUE: '#0061FE',
+    DIALOG_BG_COLOR: '#FAFAFA',     // Fond du dialog (comme SmartImport)
 
     // Cartes dossiers (représentent des vibes)
     CARD_HEIGHT: '2.0rem',              // Comme ROW_HEIGHT du VibeBuilder
@@ -800,7 +801,7 @@ const DropboxBrowser = ({
                         paddingBottom: '0.75rem',
                         paddingLeft: 0,
                         paddingRight: 0,
-                        background: SMARTIMPORT_CONFIG.DIALOG_BG_COLOR,
+                        background: CONFIG.DIALOG_BG_COLOR,
                         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
                         opacity: 1,
                     }}
