@@ -194,6 +194,7 @@ const CONFIG = {
     VIBECARD_HEIGHT_VH: UNIFIED_CONFIG.VIBECARD_HEIGHT_VH,  // Hauteur des cartes (depuis Config.jsx)
     VIBECARD_BUILDER_HEIGHT_VH: UNIFIED_CONFIG.VIBECARD_BUILDER_HEIGHT_VH,  // Hauteur carte VibeBuilder (depuis Config.jsx)
     VIBECARD_GAP_VH: 1.2,                 // Espacement entre les cartes (% de la hauteur écran)
+    VIBECARD_LONG_PRESS_TWEAKER: 500,     // Durée appui long pour entrer en mode Tweaker (ms)
     VIBECARD_STAGGER_DELAY: 80,           // Délai entre chaque carte (ms)
     VIBECARD_SLIDE_DURATION: 400,         // Durée de l'animation slide (ms)
     VIBECARD_SLIDE_DISTANCE: 100,         // Distance de départ depuis la gauche (px)
@@ -670,6 +671,10 @@ const CONFIG = {
     NEON_COLOR_LIME: '192, 255, 0',       // Vert lime (BACK TO VIBES)
     NEON_COLOR_CYAN: '6, 182, 212',       // Cyan (VIBE NEXT!)
     NEON_COLOR_ORANGE: '255, 140, 0',     // Orange (GHOST...)
+
+    // SWIPE CAPSULE ANIMATION (Ghost / Play Next)
+    SWIPE_ACTION_THRESHOLD: 50,           // Seuil pour déclencher l'action (px)
+    SWIPE_CAPSULE_EXIT_DURATION: 200,     // Durée de l'animation de sortie (ms)
     NEON_COLOR_GREEN: '0, 255, 136',      // Vert néon sexy (Check validation)
     NEON_COLOR_FUCHSIA: '236, 72, 153',   // Fuchsia Overdose (KILL VIBE) - #ec4899
     NEON_COLOR_RED: '255, 7, 58',         // Rouge (NUKE ALL)
@@ -1088,6 +1093,16 @@ const styles = `
   }
   .animate-pulse-pill-red {
     animation: pulse-pill-red 0.6s ease-in-out infinite;
+  }
+
+  /* Animation capsule exit - slide+fade pour ghost/play next */
+  @keyframes capsule-exit-left {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(-30px); opacity: 0; }
+  }
+  @keyframes capsule-exit-right {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(30px); opacity: 0; }
   }
 
   /* Animation ignite pour CHECK - Vert néon sexy (#00ff88 → #00cc6a) */
@@ -2070,9 +2085,17 @@ return (
                 </span>
             </div>
           ) : (
-            /* Compteurs en bas à gauche quand pas de nom */
-            <div className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5"
-                 style={{ background: 'rgba(255,255,255,0.15)' }}>
+            /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
+            <div
+                className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
+                style={{ background: 'rgba(255,255,255,0.15)' }}
+                onClick={(e) => {
+                    if (onNameEdit) {
+                        e.stopPropagation();
+                        onNameEdit();
+                    }
+                }}
+            >
                 <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
                 {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
             </div>
@@ -3065,6 +3088,8 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
     const [offset, setOffset] = useState(0);
+    const [thresholdReached, setThresholdReached] = useState(null); // 'left' | 'right' | null
+    const prevThresholdRef = useRef(null);
 
     // Utiliser useEffect pour ajouter le listener avec { passive: false }
     // Cela permet à preventDefault() de fonctionner sur iOS
@@ -3094,6 +3119,19 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
                 e.preventDefault(); // Fonctionne car passive: false
                 if (Math.abs(diffX) < 150) {
                     setOffset(diffX);
+
+                    // Détecter quand on atteint le seuil (une seule fois par direction)
+                    const threshold = CONFIG.SWIPE_ACTION_THRESHOLD;
+                    if (diffX < -threshold && prevThresholdRef.current !== 'left') {
+                        prevThresholdRef.current = 'left';
+                        setThresholdReached('left');
+                    } else if (diffX > threshold && prevThresholdRef.current !== 'right') {
+                        prevThresholdRef.current = 'right';
+                        setThresholdReached('right');
+                    } else if (Math.abs(diffX) < threshold && prevThresholdRef.current !== null) {
+                        prevThresholdRef.current = null;
+                        setThresholdReached(null);
+                    }
                 }
             }
         };
@@ -3108,16 +3146,21 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
             y: e.targetTouches[0].clientY
         };
         swipeDirectionRef.current = null;
+        prevThresholdRef.current = null;
+        setThresholdReached(null);
     };
 
     const onTouchEnd = () => {
+        const threshold = CONFIG.SWIPE_ACTION_THRESHOLD;
         if (swipeDirectionRef.current === 'horizontal' && touchStartRef.current.x !== null) {
-            if (offset < -50) onSwipeLeft(song);
-            else if (offset > 50) onSwipeRight(song);
+            if (offset < -threshold) onSwipeLeft(song);
+            else if (offset > threshold) onSwipeRight(song);
         }
         setOffset(0);
         touchStartRef.current = { x: null, y: null };
         swipeDirectionRef.current = null;
+        prevThresholdRef.current = null;
+        setThresholdReached(null);
     };
     const WHEEL_TITLE_SIZE_MAIN_CENTER = CONFIG.WHEEL_TITLE_SIZE_MAIN_CENTER;
     const WHEEL_TITLE_SIZE_MAIN_OTHER = CONFIG.WHEEL_TITLE_SIZE_MAIN_OTHER;
@@ -3156,10 +3199,18 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     let OverlayContent = null; 
     let overlayClass = "";
 
+    // Animation de slide+fade quand le seuil est atteint
+    const capsuleExitStyle = thresholdReached ? {
+        animation: `capsule-exit-${thresholdReached} ${CONFIG.SWIPE_CAPSULE_EXIT_DURATION}ms ease-out forwards`
+    } : {};
+
     if (offset > 0) {
         overlayClass = "bg-cyan-500 rounded-full shadow-inner";
         OverlayContent = (
-        <div className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest">
+        <div
+            className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
+            style={thresholdReached === 'right' ? capsuleExitStyle : {}}
+        >
             <ListPlus size={24} strokeWidth={3} />
             <div className="flex flex-col leading-none">
             <span>VIBE</span>
@@ -3170,7 +3221,10 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     } else if (offset < 0) {
         overlayClass = "bg-orange-500 rounded-full shadow-inner";
         OverlayContent = (
-        <div className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest">
+        <div
+            className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
+            style={thresholdReached === 'left' ? capsuleExitStyle : {}}
+        >
             <span>GHOST...</span>
             <Ghost size={24} strokeWidth={3} />
         </div>
@@ -5768,7 +5822,7 @@ const vibeSearchResults = () => {
     
     if (action === 'archive') { 
       newQueue.unshift(movedSong); 
-      triggerFeedback("GHOST...", "archive"); 
+      triggerFeedback("GHOSTING!", "archive"); 
     } else if (action === 'next') { 
       const currentIdx = newQueue.findIndex(s => s.id === currentSong?.id); 
       newQueue.splice(currentIdx + 1, 0, movedSong); 
@@ -6893,7 +6947,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 // Long press pour entrer en mode Tweaker
                 const timer = setTimeout(() => {
                     setShowTweaker(true);
-                }, 800);
+                }, CONFIG.VIBECARD_LONG_PRESS_TWEAKER);
                 e.currentTarget.dataset.longPressTimer = timer;
             }}
             onTouchEnd={(e) => {
