@@ -191,7 +191,7 @@ export const UNIFIED_CONFIG = {
     HANDLE_COLOR: '#d1d5db',            // gray-300
 
     // Cartes Vibes
-    VIBECARD_HEIGHT_VH: 9,               // Hauteur des cartes vibes du dashboard (% hauteur écran)
+    VIBECARD_HEIGHT_VH: 10.5,               // Hauteur des cartes vibes du dashboard (% hauteur écran)
     VIBECARD_BUILDER_HEIGHT_VH: 12,       // Hauteur de la carte vibe du VibeBuilder (% hauteur écran)
 
     // Écrans d'import (SmartImport + DropboxBrowser)

@@ -101,13 +101,14 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // ÉCRAN PRÉ-ÉCOUTE
     // ══════════════════════════════════════════════════════════════════════════
-    PREVIEW_BG_TOP: '#111111',            // Couleur haut du dégradé
-    PREVIEW_BG_MIDDLE: '#1a1a1a',         // Couleur milieu du dégradé
-    PREVIEW_BG_BOTTOM: '#0d0d0d',         // Couleur bas du dégradé
+    PREVIEW_BLUR: 20,                     // Blur du fond (px)
+    PREVIEW_BG_OVERLAY: 'rgba(0, 0, 0, 0.4)', // Overlay sombre sur le blur
 
     PREVIEW_DISC_SIZE: 128,               // Taille du disque qui tourne (px)
     PREVIEW_DISC_ICON_SIZE: 72,           // Taille de l'icône dans le disque (px)
     PREVIEW_DISC_MARGIN_BOTTOM: 32,       // Marge sous le disque (px)
+    PREVIEW_DISC_COLOR: '#06b6d4',        // Couleur du disque (cyan)
+    PREVIEW_DISC_BG: 'rgba(6, 182, 212, 0.15)', // Fond du disque (cyan transparent)
 
     PREVIEW_TITLE_SIZE: 24,               // Taille du titre (px)
     PREVIEW_ARTIST_SIZE: 16,              // Taille de l'artiste (px)
@@ -121,9 +122,9 @@ const CONFIG = {
     PREVIEW_BTN_PLAYNEXT_ICON: 28,        // Taille icône Play Next (px)
     PREVIEW_BTN_ADD_ICON: 28,             // Taille icône Check (px)
 
-    PREVIEW_BTN_CLOSE_COLOR: 'rgba(255, 255, 255, 0.1)',    // Fond bouton X
-    PREVIEW_BTN_PLAYNEXT_COLOR: '#8CFF00',                   // Fond bouton Play Next (lime)
-    PREVIEW_BTN_ADD_COLOR: '#ec4899',                        // Fond bouton Ajouter (pink)
+    PREVIEW_BTN_CLOSE_COLOR: 'rgba(100, 100, 100, 0.5)',    // Fond bouton X (gris foncé)
+    PREVIEW_BTN_PLAYNEXT_COLOR: '#06b6d4',                   // Fond bouton Play Next (cyan)
+    PREVIEW_BTN_ADD_COLOR: '#00ff88',                        // Fond bouton Ajouter (vert néon)
     
     PREVIEW_FADEIN_DURATION: 200,         // Durée du fade in en ms (0 = pas de fade)
     PREVIEW_FADEOUT_DURATION: 300,        // Durée du fade out en ms (0 = pas de fade)
@@ -1605,24 +1606,29 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
 
             {/* OVERLAY PRÉ-ÉCOUTE */}
             {vibingSong && (
-                <div 
+                <div
                     className="absolute inset-0 z-[100] flex flex-col items-center justify-center animate-in fade-in duration-300"
-                    style={{ background: `linear-gradient(180deg, ${CONFIG.PREVIEW_BG_TOP} 0%, ${CONFIG.PREVIEW_BG_MIDDLE} 50%, ${CONFIG.PREVIEW_BG_BOTTOM} 100%)` }}
+                    style={{
+                        backdropFilter: `blur(${CONFIG.PREVIEW_BLUR}px)`,
+                        WebkitBackdropFilter: `blur(${CONFIG.PREVIEW_BLUR}px)`,
+                        backgroundColor: CONFIG.PREVIEW_BG_OVERLAY
+                    }}
                     onClick={(e) => { if (e.target === e.currentTarget) stopVibing(false); }}
                 >
-                    {/* Disc qui tourne avec glow rose */}
+                    {/* Disc qui tourne avec glow cyan */}
                     <div style={{ marginBottom: CONFIG.PREVIEW_DISC_MARGIN_BOTTOM }}>
-                        <div 
-                            className="rounded-full flex items-center justify-center animate-neon-breathe-pink"
-                            style={{ 
-                                width: CONFIG.PREVIEW_DISC_SIZE, 
+                        <div
+                            className="rounded-full flex items-center justify-center animate-neon-breathe-cyan"
+                            style={{
+                                width: CONFIG.PREVIEW_DISC_SIZE,
                                 height: CONFIG.PREVIEW_DISC_SIZE,
-                                background: 'rgba(236, 72, 153, 0.15)' 
+                                background: CONFIG.PREVIEW_DISC_BG
                             }}
                         >
-                            <Disc3 
-                                size={CONFIG.PREVIEW_DISC_ICON_SIZE} 
-                                className="text-pink-500 animate-spin-slow" 
+                            <Disc3
+                                size={CONFIG.PREVIEW_DISC_ICON_SIZE}
+                                className="animate-spin-slow"
+                                style={{ color: CONFIG.PREVIEW_DISC_COLOR }}
                             />
                         </div>
                     </div>
@@ -1643,43 +1649,43 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, fadeMainAudio, onPl
                     
                     {/* Boutons avec style néon */}
                     <div className="flex items-center" style={{ gap: CONFIG.PREVIEW_BTN_GAP }}>
-                        {/* Bouton X - Fermer (blanc discret) */}
-                        <button 
+                        {/* Bouton X - Fermer (gris discret) */}
+                        <button
                             onClick={() => stopVibing(false)}
-                            className="rounded-full flex items-center justify-center text-white/80 transition-all hover:scale-105 animate-neon-breathe-white"
-                            style={{ 
-                                width: CONFIG.PREVIEW_BTN_CLOSE_SIZE, 
+                            className="rounded-full flex items-center justify-center text-white/90 transition-all hover:scale-105"
+                            style={{
+                                width: CONFIG.PREVIEW_BTN_CLOSE_SIZE,
                                 height: CONFIG.PREVIEW_BTN_CLOSE_SIZE,
-                                background: CONFIG.PREVIEW_BTN_CLOSE_COLOR, 
-                                border: '1px solid rgba(255, 255, 255, 0.2)' 
+                                background: CONFIG.PREVIEW_BTN_CLOSE_COLOR,
+                                border: '1px solid rgba(255, 255, 255, 0.15)'
                             }}
                         >
                             <X size={CONFIG.PREVIEW_BTN_CLOSE_ICON} />
                         </button>
-                        
-                        {/* Bouton Play Next - Flamme/Lime (si queue active) */}
+
+                        {/* Bouton Play Next - Cyan (si queue active) */}
                         {hasActiveQueue && (
-                            <button 
+                            <button
                                 onClick={() => stopVibing('playNext')}
-                                className="rounded-full flex items-center justify-center text-gray-900 transition-all hover:scale-105 animate-neon-breathe-lime"
-                                style={{ 
-                                    width: CONFIG.PREVIEW_BTN_PLAYNEXT_SIZE, 
+                                className="rounded-full flex items-center justify-center text-gray-900 transition-all hover:scale-105 animate-neon-breathe-cyan"
+                                style={{
+                                    width: CONFIG.PREVIEW_BTN_PLAYNEXT_SIZE,
                                     height: CONFIG.PREVIEW_BTN_PLAYNEXT_SIZE,
-                                    background: CONFIG.PREVIEW_BTN_PLAYNEXT_COLOR 
+                                    background: CONFIG.PREVIEW_BTN_PLAYNEXT_COLOR
                                 }}
                             >
                                 <ListPlus size={CONFIG.PREVIEW_BTN_PLAYNEXT_ICON} strokeWidth={2.5} />
                             </button>
                         )}
-                        
-                        {/* Bouton Check - Ajouter à la Vibe (rose/pink) */}
-                        <button 
+
+                        {/* Bouton Check - Ajouter à la Vibe (vert néon) */}
+                        <button
                             onClick={() => stopVibing('add')}
-                            className="rounded-full flex items-center justify-center text-white transition-all hover:scale-105 animate-neon-breathe-pink"
-                            style={{ 
-                                width: CONFIG.PREVIEW_BTN_ADD_SIZE, 
+                            className="rounded-full flex items-center justify-center text-gray-900 transition-all hover:scale-105 animate-neon-breathe-green"
+                            style={{
+                                width: CONFIG.PREVIEW_BTN_ADD_SIZE,
                                 height: CONFIG.PREVIEW_BTN_ADD_SIZE,
-                                background: CONFIG.PREVIEW_BTN_ADD_COLOR 
+                                background: CONFIG.PREVIEW_BTN_ADD_COLOR
                             }}
                         >
                             <Check size={CONFIG.PREVIEW_BTN_ADD_ICON} strokeWidth={3} />

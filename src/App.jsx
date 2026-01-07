@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, CheckCircle2, Ghost, Skull, AlertTriangle, Clock, Layers, Star } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -620,9 +620,10 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // COULEURS NÉON (format RGB pour variable CSS)
     // ══════════════════════════════════════════════════════════════════════════
-    NEON_COLOR_LIME: '192, 255, 0',       // Vert lime (BACK TO VIBES, Check)
-    NEON_COLOR_EMERALD: '16, 185, 129',   // Vert émeraude (PLAY NEXT)
-    NEON_COLOR_ROSE: '244, 63, 94',       // Rose (ARCHIVE)
+    NEON_COLOR_LIME: '192, 255, 0',       // Vert lime (BACK TO VIBES)
+    NEON_COLOR_CYAN: '6, 182, 212',       // Cyan (VIBE NEXT!)
+    NEON_COLOR_ORANGE: '255, 140, 0',     // Orange (GHOST...)
+    NEON_COLOR_GREEN: '0, 255, 136',      // Vert néon sexy (Check validation)
     NEON_COLOR_FUCHSIA: '236, 72, 153',   // Fuchsia Overdose (KILL VIBE) - #ec4899
     NEON_COLOR_RED: '255, 7, 58',         // Rouge (NUKE ALL)
 
@@ -1012,19 +1013,19 @@ const styles = `
     color: #ef4444 !important;
   }
 
-  /* Animation pulse pour KILL VIBE - Fuchsia Overdose (#ec4899 → #ff07a3) */
-  @keyframes pulse-pill-lime {
+  /* Animation pulse pour CHECK - Vert néon sexy (#00ff88 → #00cc6a) */
+  @keyframes pulse-pill-green {
     0%, 100% {
       transform: scale(var(--pulse-scale-min, 1));
-      box-shadow: 0 0 15px rgba(236, 72, 153, 0.6), 0 0 25px rgba(255, 7, 163, 0.3);
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.6), 0 0 25px rgba(0, 204, 106, 0.3);
     }
     50% {
       transform: scale(var(--pulse-scale-max, 1.25));
-      box-shadow: 0 0 30px rgba(236, 72, 153, 1), 0 0 50px rgba(255, 7, 163, 0.6);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 1), 0 0 50px rgba(0, 204, 106, 0.6);
     }
   }
-  .animate-pulse-pill-lime {
-    animation: pulse-pill-lime 0.6s ease-in-out infinite;
+  .animate-pulse-pill-green {
+    animation: pulse-pill-green 0.6s ease-in-out infinite;
   }
 
   /* Animation pulse pour NUKE ALL - Lava Flow (#f43f5e → #b91c1c) */
@@ -1042,18 +1043,18 @@ const styles = `
     animation: pulse-pill-red 0.6s ease-in-out infinite;
   }
 
-  /* Animation ignite pour KILL VIBE - Fuchsia Overdose (pink #ec4899 → fuchsia #ff07a3) */
-  @keyframes ignite-pill-lime {
-    0% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.4), 0 0 20px rgba(255, 7, 163, 0.2); }
-    15% { box-shadow: 0 0 25px rgba(236, 72, 153, 1), 0 0 50px rgba(255, 7, 163, 0.8); }
-    25% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), 0 0 30px rgba(255, 7, 163, 0.4); }
-    40% { box-shadow: 0 0 35px rgba(236, 72, 153, 1), 0 0 70px rgba(255, 7, 163, 0.9); }
-    55% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.6), 0 0 40px rgba(255, 7, 163, 0.5); }
-    70% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.9), 0 0 60px rgba(255, 7, 163, 0.7); }
-    100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.5); }
+  /* Animation ignite pour CHECK - Vert néon sexy (#00ff88 → #00cc6a) */
+  @keyframes ignite-pill-green {
+    0% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.4), 0 0 20px rgba(0, 204, 106, 0.2); }
+    15% { box-shadow: 0 0 25px rgba(0, 255, 136, 1), 0 0 50px rgba(0, 204, 106, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(0, 255, 136, 0.5), 0 0 30px rgba(0, 204, 106, 0.4); }
+    40% { box-shadow: 0 0 35px rgba(0, 255, 136, 1), 0 0 70px rgba(0, 204, 106, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(0, 204, 106, 0.5); }
+    70% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.9), 0 0 60px rgba(0, 204, 106, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(0, 255, 136, 0.7), 0 0 50px rgba(0, 204, 106, 0.5); }
   }
-  .animate-ignite-pill-lime {
-    animation: ignite-pill-lime 0.5s ease-out forwards;
+  .animate-ignite-pill-green {
+    animation: ignite-pill-green 0.5s ease-out forwards;
   }
 
   /* Animation ignite pour NUKE ALL - Lava Flow (rose #f43f5e → rouge foncé #b91c1c) */
@@ -3098,25 +3099,25 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     let OverlayContent = null; 
     let overlayClass = "";
 
-    if (offset > 0) { 
-        overlayClass = "bg-emerald-500 rounded-full shadow-inner"; 
+    if (offset > 0) {
+        overlayClass = "bg-cyan-500 rounded-full shadow-inner";
         OverlayContent = (
         <div className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest">
             <ListPlus size={24} strokeWidth={3} />
             <div className="flex flex-col leading-none">
-            <span>PLAY</span>
-            <span>NEXT</span>
+            <span>VIBE</span>
+            <span>NEXT!</span>
             </div>
         </div>
-        ); 
-    } else if (offset < 0) { 
-        overlayClass = "bg-rose-500 rounded-full shadow-inner"; 
+        );
+    } else if (offset < 0) {
+        overlayClass = "bg-orange-500 rounded-full shadow-inner";
         OverlayContent = (
         <div className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest">
-            <span>ARCHIVE</span>
-            <Archive size={24} strokeWidth={3} />
+            <span>GHOST...</span>
+            <Ghost size={24} strokeWidth={3} />
         </div>
-        ); 
+        );
     }
 
     // Calcul de l'effet cylindre (style iOS)
@@ -4393,7 +4394,14 @@ useEffect(() => {
         // Stocker pour pouvoir annuler
         fadeInterval.current = { cancel: () => cancelAnimationFrame(rafId) };
     } else {
-        // Fallback sans Web Audio API (fade par steps)
+        // Sur iOS, pas de fade possible (volume readonly) - arrêt direct
+        if (isIOSDevice.current) {
+            audioRef.current.pause();
+            complete();
+            return;
+        }
+
+        // Fallback sans Web Audio API (fade par steps) - pour autres plateformes
         const intervalTime = 20;
         const totalSteps = (FADE_OUT_DURATION_SEC * 1000) / intervalTime;
         const step = volumeBeforeFade / totalSteps;
@@ -4478,7 +4486,13 @@ useEffect(() => {
         // Stocker pour pouvoir annuler
         fadeInterval.current = { cancel: () => cancelAnimationFrame(rafId) };
     } else {
-        // Fallback sans Web Audio API
+        // Sur iOS, pas de fade possible (volume readonly) - pause directe
+        if (isIOSDevice.current) {
+            audioRef.current.pause();
+            return;
+        }
+
+        // Fallback sans Web Audio API - pour autres plateformes
         const startVol = audioRef.current.volume;
         if (startVol > 0.01) {
             savedVolume.current = startVol;
@@ -5581,11 +5595,11 @@ const vibeSearchResults = () => {
     
     if (action === 'archive') { 
       newQueue.unshift(movedSong); 
-      triggerFeedback("ARCHIVE", "archive"); 
+      triggerFeedback("GHOST...", "archive"); 
     } else if (action === 'next') { 
       const currentIdx = newQueue.findIndex(s => s.id === currentSong?.id); 
       newQueue.splice(currentIdx + 1, 0, movedSong); 
-      triggerFeedback("PLAY NEXT", "next"); 
+      triggerFeedback("VIBE NEXT!", "next"); 
     } 
     
     setQueue(newQueue); 
@@ -7202,8 +7216,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         <div
                             className={`absolute flex items-center justify-center ${
                                 confirmFeedback
-                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-lime' : 'animate-ignite-pill-red')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-lime' : '')
+                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
                             }`}
                             style={{
                                 '--pulse-scale-min': 1,
@@ -7214,7 +7228,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel'
                                     ? 'rgba(244, 63, 94, 0.9)'  // Lava Flow (rose #f43f5e)
                                     : isAtRightThreshold || confirmFeedback?.type === 'kill'
-                                        ? 'rgba(236, 72, 153, 0.9)'  // Fuchsia Overdose (pink #ec4899)
+                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon sexy (#00ff88)
                                         : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
@@ -7450,11 +7464,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         <FeedbackOverlay
                             feedback={feedback}
                             onAnimationComplete={() => setFeedback(null)}
-                            neonColor={feedback.type === 'next' ? CONFIG.NEON_COLOR_EMERALD : CONFIG.NEON_COLOR_ROSE}
-                            bgClass={feedback.type === 'next' ? 'bg-emerald-500' : 'bg-rose-500'}
-                            borderClass={feedback.type === 'next' ? 'border-emerald-600' : 'border-rose-600'}
+                            neonColor={feedback.type === 'next' ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE}
+                            bgClass={feedback.type === 'next' ? 'bg-cyan-500' : 'bg-orange-500'}
+                            borderClass={feedback.type === 'next' ? 'border-cyan-600' : 'border-orange-600'}
                         >
-                            {feedback.type === 'next' ? <ListPlus size={20} strokeWidth={3} /> : <Archive size={20} strokeWidth={3} />}
+                            {feedback.type === 'next' ? <ListPlus size={20} strokeWidth={3} /> : <Ghost size={20} strokeWidth={3} />}
                             <span>{feedback.text}</span>
                         </FeedbackOverlay>
                     )}
