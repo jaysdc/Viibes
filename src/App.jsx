@@ -5355,9 +5355,20 @@ const vibeSearchResults = () => {
             const currentSrc = audio.src;
             let newSrc = null;
 
-            // PRIORITÉ : fichier local d'abord, puis Dropbox en fallback
+            // Vérifier si le fichier local est vraiment accessible (les blob URLs expirent après reload)
+            let localFileValid = false;
             if (currentSong.file) {
-                // Fichier local disponible - toujours prioritaire
+                try {
+                    const response = await fetch(currentSong.file, { method: 'HEAD' });
+                    localFileValid = response.ok;
+                } catch {
+                    localFileValid = false;
+                }
+            }
+
+            // PRIORITÉ : fichier local d'abord (si valide), puis Dropbox en fallback
+            if (localFileValid) {
+                // Fichier local disponible et valide - toujours prioritaire
                 if (currentSrc !== currentSong.file) {
                     newSrc = currentSong.file;
                 }
