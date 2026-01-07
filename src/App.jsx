@@ -5354,70 +5354,89 @@ const vibeSearchResults = () => {
             // Vérifier si on doit changer la source
             const currentSrc = audio.src;
             let newSrc = null;
+            let useDropbox = false;
 
-            // Vérifier si le fichier local est vraiment accessible (les blob URLs expirent après reload)
-            let localFileValid = false;
+            // PRIORITÉ : fichier local d'abord, puis Dropbox en fallback
             if (currentSong.file) {
-                try {
-                    const response = await fetch(currentSong.file, { method: 'HEAD' });
-                    localFileValid = response.ok;
-                } catch {
-                    localFileValid = false;
-                }
-            }
-
-            // PRIORITÉ : fichier local d'abord (si valide), puis Dropbox en fallback
-            if (localFileValid) {
-                // Fichier local disponible et valide - toujours prioritaire
+                // Fichier local disponible - toujours prioritaire
                 if (currentSrc !== currentSong.file) {
                     newSrc = currentSong.file;
                 }
             } else if (currentSong.dropboxPath) {
-                // Pas de fichier local - fallback sur Dropbox
-                if (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id) {
-                    // Vérifier si on a un fichier préchargé pour ce morceau
-                    if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
-                        console.log('Utilisation du fichier préchargé pour:', currentSong.title);
-                        newSrc = preloadedRef.current.link;
-                        // Nettoyer le préchargement
-                        if (preloadedRef.current.audio) {
-                            preloadedRef.current.audio.src = '';
-                            preloadedRef.current.audio = null;
-                        }
-                        preloadedRef.current = { songId: null, link: null, audio: null };
+                // Pas de fichier local - utiliser Dropbox
+                useDropbox = true;
+            }
+
+            // Si on doit utiliser Dropbox
+            if (useDropbox && (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id)) {
+                // Vérifier si on a un fichier préchargé pour ce morceau
+                if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
+                    console.log('Utilisation du fichier préchargé pour:', currentSong.title);
+                    newSrc = preloadedRef.current.link;
+                    // Nettoyer le préchargement
+                    if (preloadedRef.current.audio) {
+                        preloadedRef.current.audio.src = '';
+                        preloadedRef.current.audio = null;
+                    }
+                    preloadedRef.current = { songId: null, link: null, audio: null };
+                } else {
+                    const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
+                    if (link) {
+                        newSrc = link;
                     } else {
-                        const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
-                        if (link) {
-                            newSrc = link;
-                        } else {
-                            console.error('Impossible d\'obtenir le lien Dropbox');
-                            return;
-                        }
+                        console.error('Impossible d\'obtenir le lien Dropbox');
+                        return;
                     }
                 }
             }
-            
+
             // Ne changer le src que si nécessaire
             if (newSrc) {
                 audio.src = newSrc;
                 audio.dataset.songId = currentSong.id;
-                // Attendre que l'audio soit prêt avant de jouer
-                await new Promise((resolve) => {
+
+                // Attendre que l'audio soit prêt, avec fallback Dropbox si échec local
+                const loadSuccess = await new Promise((resolve) => {
                     const onCanPlay = () => {
                         audio.removeEventListener('canplay', onCanPlay);
                         audio.removeEventListener('error', onError);
-                        resolve();
+                        resolve(true);
                     };
                     const onError = () => {
                         audio.removeEventListener('canplay', onCanPlay);
                         audio.removeEventListener('error', onError);
                         console.error('Erreur chargement audio');
-                        resolve();
+                        resolve(false);
                     };
                     audio.addEventListener('canplay', onCanPlay);
                     audio.addEventListener('error', onError);
                     audio.load();
                 });
+
+                // Si échec du fichier local et qu'on a un fallback Dropbox, l'utiliser
+                if (!loadSuccess && !useDropbox && currentSong.dropboxPath) {
+                    console.log('Fichier local invalide, fallback sur Dropbox pour:', currentSong.title);
+                    const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
+                    if (link) {
+                        audio.src = link;
+                        audio.dataset.songId = currentSong.id;
+                        await new Promise((resolve) => {
+                            const onCanPlay = () => {
+                                audio.removeEventListener('canplay', onCanPlay);
+                                audio.removeEventListener('error', onError);
+                                resolve();
+                            };
+                            const onError = () => {
+                                audio.removeEventListener('canplay', onCanPlay);
+                                audio.removeEventListener('error', onError);
+                                resolve();
+                            };
+                            audio.addEventListener('canplay', onCanPlay);
+                            audio.addEventListener('error', onError);
+                            audio.load();
+                        });
+                    }
+                }
             }
           }
 
