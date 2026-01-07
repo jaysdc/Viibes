@@ -7340,13 +7340,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             const isAtLeftThreshold = slideProgress <= -0.9;
             const isAtRightThreshold = slideProgress >= 0.9;
 
+            // Calculer le bas du header pour que le blur ne l'affecte pas
+            const headerElement = headerButtonsRef.current?.parentElement;
+            const headerBottom = headerElement
+                ? headerElement.getBoundingClientRect().bottom - containerRect.top
+                : 0;
+
             return (
             <>
-                {/* Backdrop blur fixe (pas animé = performant) */}
+                {/* Backdrop blur fixe (pas animé = performant) - COMMENCE APRÈS LE HEADER */}
                 <div
                     className="absolute left-0 right-0 z-[64] pointer-events-none"
                     style={{
-                        top: 0,
+                        top: headerBottom,
                         bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                         backdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
