@@ -5961,7 +5961,7 @@ const vibeSearchResults = () => {
         // Filtrer pour ne garder que les morceaux disponibles
         const availableSongs = vibeSongs.filter(s => isSongAvailable(s));
         if (availableSongs.length === 0) {
-            alert(`Aucun morceau disponible pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
+            // Rien à jouer - l'utilisateur voit déjà les fantômes sur la carte
             return;
         }
 
@@ -6002,7 +6002,6 @@ const vibeSearchResults = () => {
     // Filtrer pour ne garder que les morceaux avec fichier disponible
     let songsToPlay = vibeSongs.filter(s => isSongAvailable(s));
     if (songsToPlay.length === 0) {
-        alert(`Aucun morceau disponible pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
         return;
     }
     for (let i = songsToPlay.length - 1; i > 0; i--) {
