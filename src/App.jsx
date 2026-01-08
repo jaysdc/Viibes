@@ -4507,9 +4507,11 @@ useEffect(() => {
         };
       });
 
-      // Marquer migration complète
+      // Marquer migration complète ET sauvegarder immédiatement
       localStorage.setItem('vibes_library_version', '1');
-      console.log(`[Migration] Terminée: ${Object.keys(initialLibrary).length} morceaux uniques, ${Object.keys(initialPlaylists).length} vibes`);
+      localStorage.setItem('vibes_library', JSON.stringify(initialLibrary));
+      localStorage.setItem('vibes_playlists', JSON.stringify(initialPlaylists));
+      console.log(`[Migration] Terminée et sauvegardée: ${Object.keys(initialLibrary).length} morceaux uniques, ${Object.keys(initialPlaylists).length} vibes`);
     } catch (e) {
       console.error("[Migration] Erreur:", e);
       initialPlaylists = {};
@@ -5039,6 +5041,11 @@ const vibeSearchResults = () => {
     setFileCache(newFileCache);
     setPlaylists(newPlaylists);
 
+    // Sauvegarder immédiatement (ne pas attendre le useEffect)
+    localStorage.setItem('vibes_library_version', '1');
+    localStorage.setItem('vibes_library', JSON.stringify(newLibrary));
+    localStorage.setItem('vibes_playlists', JSON.stringify(newPlaylists));
+
     // Attribuer des couleurs aux nouvelles vibes
     if (newVibeIds.length > 0) {
         setVibeColorIndices(prev => {
@@ -5189,6 +5196,11 @@ const vibeSearchResults = () => {
     // Mettre à jour les états
     setLibrary(newLibrary);
     setPlaylists(newPlaylists);
+
+    // Sauvegarder immédiatement (ne pas attendre le useEffect)
+    localStorage.setItem('vibes_library_version', '1');
+    localStorage.setItem('vibes_library', JSON.stringify(newLibrary));
+    localStorage.setItem('vibes_playlists', JSON.stringify(newPlaylists));
 
     // Attribuer des couleurs aux nouvelles vibes
     if (newVibeIds.length > 0) {
@@ -7448,6 +7460,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 <div>progress: {dropboxScanProgress ?? 'null'}</div>
                 <div>unavailable: {scanDebugInfo.unavailableCount ?? 0}</div>
                 {scanDebugInfo.error && <div className="text-red-400">error: {scanDebugInfo.error}</div>}
+                <button
+                    className="mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded"
+                    onClick={() => {
+                        if (confirm('Effacer toutes les données?')) {
+                            localStorage.clear();
+                            window.location.reload();
+                        }
+                    }}
+                >
+                    RESET ALL
+                </button>
             </div>
 
             </div>
