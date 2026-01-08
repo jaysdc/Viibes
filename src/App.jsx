@@ -7579,7 +7579,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* TWEAKER MODE */}
         {showTweaker && (
             <Tweaker
-            playlists={playlists} 
+            playlists={(() => {
+                // Résoudre les songs depuis la library pour le Tweaker
+                const resolved = {};
+                Object.keys(playlists).forEach(vibeId => {
+                    const vibe = playlists[vibeId];
+                    resolved[vibeId] = {
+                        name: vibe.name,
+                        songs: getVibeSongs(vibeId)
+                    };
+                });
+                return resolved;
+            })()} 
             vibeColorIndices={vibeColorIndices}
             cardAnimConfig={{
               openDuration: CONFIG.CARD_ANIM_OPEN_DURATION,
@@ -7593,7 +7604,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           }}
               setVibeColorIndices={setVibeColorIndices}
                 onSave={(newPlaylists) => {
-                  setPlaylists(newPlaylists);
+                  // Reconvertir en format songIds
+                  const converted = {};
+                  Object.keys(newPlaylists).forEach(vibeId => {
+                      const vibe = newPlaylists[vibeId];
+                      converted[vibeId] = {
+                          name: vibe.name,
+                          songIds: vibe.songs ? vibe.songs.map(s => s.id) : []
+                      };
+                  });
+                  setPlaylists(converted);
+                  localStorage.setItem('vibes_playlists', JSON.stringify(converted));
                   // Ne PAS fermer ici - le Tweaker appellera onCancel après l'animation
             }}
             onCancel={() => setShowTweaker(false)}
