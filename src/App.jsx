@@ -4260,6 +4260,13 @@ const handlePlayerTouchEnd = () => {
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
+    const [vibeTheseSwipeOffset, setVibeTheseSwipeOffset] = useState(0); // Offset du swipe sur VIBE THESE
+    const [vibeTheseSwipeDirection, setVibeTheseSwipeDirection] = useState(null); // Direction du swipe (horizontal/vertical)
+    const [vibeThesePreviewIndex, setVibeThesePreviewIndex] = useState(null); // Index preview pendant le swipe
+    const [isVibeTheseCatchingUp, setIsVibeTheseCatchingUp] = useState(false); // Animation de rattrapage
+    const vibeTheseTouchStartRef = useRef({ x: null, y: null });
+    const vibeTheseSwipeDirectionRef = useRef(null); // Direction verrouillée du swipe
+    const vibeTheseBtnRef = useRef(null); // Ref du bouton pour le touch handler
     const importMenuTimer = useRef(null);
 
     // ===== TOUS LES useRef ENSUITE =====
@@ -4753,6 +4760,58 @@ useEffect(() => {
         }
     }
 }, [librarySearchResults.length > 0, vibeColorIndices]);
+
+// Touch handlers pour le swipe sur VIBE THESE
+useEffect(() => {
+    const element = vibeTheseBtnRef.current;
+    if (!element) return;
+
+    const handleTouchMove = (e) => {
+        const { x: touchStartX, y: touchStartY } = vibeTheseTouchStartRef.current;
+        if (touchStartX === null || touchStartY === null) return;
+
+        const currentX = e.targetTouches[0].clientX;
+        const currentY = e.targetTouches[0].clientY;
+        const diffX = currentX - touchStartX;
+        const diffY = currentY - touchStartY;
+
+        // Déterminer la direction au premier mouvement significatif (verrouillage)
+        if (vibeTheseSwipeDirectionRef.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+            vibeTheseSwipeDirectionRef.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+
+            // Si horizontal, activer l'animation de rattrapage
+            if (vibeTheseSwipeDirectionRef.current === 'horizontal') {
+                setIsVibeTheseCatchingUp(true);
+                setTimeout(() => setIsVibeTheseCatchingUp(false), 120);
+            }
+        }
+
+        // Si c'est un swipe vertical, laisser le scroll natif
+        if (vibeTheseSwipeDirectionRef.current === 'vertical') return;
+
+        // Si c'est horizontal, bloquer le scroll et gérer le swipe couleur
+        if (vibeTheseSwipeDirectionRef.current === 'horizontal') {
+            e.preventDefault();
+
+            if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
+                setVibeTheseSwipeOffset(diffX);
+
+                const direction = diffX > 0 ? 1 : -1;
+                const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
+                const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
+                const previewGradient = getGradientByIndex(normalizedPreviewIdx);
+                const progress = Math.min(Math.abs(diffX) / 50, 1);
+
+                setVibeThesePreviewIndex(normalizedPreviewIdx);
+                setVibeSwipePreview({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
+            }
+        }
+    };
+
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => element.removeEventListener('touchmove', handleTouchMove);
+}, [vibeTheseGradientIndex, isVibeTheseCatchingUp]);
 
 // Gérer les actions import en attente
 useEffect(() => {
@@ -7215,24 +7274,71 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             {isLibrarySearching && librarySearchQuery && librarySearchResults.length > 0 && (
                 <div className="w-full" style={{ marginTop: `${CONFIG.HEADER_VIBETHIS_MARGIN_TOP}px` }}>
                     {(() => {
-                        const gradientColors = getGradientByIndex(vibeTheseGradientIndex);
+                        // Déterminer l'index affiché (preview pendant swipe, sinon l'index courant)
+                        const displayIndex = vibeThesePreviewIndex !== null ? vibeThesePreviewIndex : vibeTheseGradientIndex;
+                        const gradientColors = getGradientByIndex(displayIndex);
                         const step = 100 / (gradientColors.length - 1);
                         const gradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
+
+                        // Vérifier si ce dégradé est déjà utilisé par une vibe
+                        const usedIndices = Object.values(vibeColorIndices);
+                        const isDuplicateGradient = usedIndices.includes(displayIndex);
+
                         return (
                             <button
+                                ref={vibeTheseBtnRef}
                                 onClick={() => {
+                                    // Ne pas déclencher si on est en train de swiper
+                                    if (Math.abs(vibeTheseSwipeOffset) > 10) return;
                                     if (currentSong) {
                                         setPendingVibe('__SEARCH_RESULTS__');
                                     } else {
                                         vibeSearchResults();
                                     }
                                 }}
-                                className="w-full h-8 rounded-full font-black flex items-center justify-center gap-2 transition-transform text-base text-white"
+                                onTouchStart={(e) => {
+                                    if (!e.touches || !e.touches[0]) return;
+                                    vibeTheseTouchStartRef.current = {
+                                        x: e.touches[0].clientX,
+                                        y: e.touches[0].clientY
+                                    };
+                                    vibeTheseSwipeDirectionRef.current = null;
+                                }}
+                                onTouchEnd={() => {
+                                    // Changer la couleur si swipe horizontal significatif
+                                    const colorsTraversed = Math.floor((Math.abs(vibeTheseSwipeOffset) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                                    if (vibeTheseSwipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
+                                        const direction = vibeTheseSwipeOffset > 0 ? 1 : -1;
+                                        const newIndex = vibeTheseGradientIndex + (direction * colorsTraversed);
+                                        setVibeTheseGradientIndex(((newIndex % 20) + 20) % 20);
+                                    }
+                                    setVibeTheseSwipeOffset(0);
+                                    setVibeThesePreviewIndex(null);
+                                    vibeTheseTouchStartRef.current = { x: null, y: null };
+                                    vibeTheseSwipeDirectionRef.current = null;
+                                    setVibeSwipePreview(null);
+                                }}
+                                className="w-full h-8 rounded-full font-black flex items-center justify-center gap-2 text-base text-white relative overflow-hidden"
                                 style={{
                                     background: gradient,
-                                    boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`
+                                    boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`,
+                                    transform: `translateX(${vibeTheseSwipeOffset * 0.3}px)`,
+                                    transition: vibeTheseSwipeOffset === 0
+                                        ? 'transform 0.2s ease-out'
+                                        : (isVibeTheseCatchingUp ? 'transform 0.12s ease-out' : 'none')
                                 }}
                             >
+                                {/* Bordure overlay - pointillée si dégradé dupliqué */}
+                                <div
+                                    className="absolute inset-0 rounded-full pointer-events-none"
+                                    style={{
+                                        border: isDuplicateGradient
+                                            ? '2px dashed rgba(255,255,255,0.7)'
+                                            : '2px solid rgba(255,255,255,0.4)',
+                                        opacity: vibeTheseSwipeOffset !== 0 ? 1 : 0,
+                                        transition: 'opacity 0.15s ease-out'
+                                    }}
+                                />
                                 <Flame size={18} className="fill-white" />
                                 <span>VIBE THESE</span>
                                 <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
