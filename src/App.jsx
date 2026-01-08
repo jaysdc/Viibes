@@ -4307,8 +4307,20 @@ const handlePlayerTouchEnd = () => {
         if (vibe.songs) {
             return vibe.songs.map(s => ({ ...s, file: fileCache[s.id] || s.file }));
         }
-        return getSongsFromLibrary(vibe.songIds || []);
-    }, [playlists, fileCache, getSongsFromLibrary]);
+        const songIds = vibe.songIds || [];
+        const songs = getSongsFromLibrary(songIds);
+        // Debug: vérifier pourquoi les songs ne sont pas trouvées
+        if (songIds.length > 0 && songs.length === 0) {
+            console.log('[getVibeSongs] Aucune song trouvée!', {
+                vibeId,
+                songIdsCount: songIds.length,
+                firstSongId: songIds[0],
+                libraryHasKey: songIds[0] in library,
+                librarySize: Object.keys(library).length
+            });
+        }
+        return songs;
+    }, [playlists, fileCache, getSongsFromLibrary, library]);
 
     // Initialiser Web Audio API pour contrôle volume
     // IMPORTANT: Sur iOS, on NE DOIT PAS utiliser createMediaElementSource car ça empêche
@@ -4505,6 +4517,11 @@ useEffect(() => {
     }
   }
 
+  console.log('[Library] Setting states:', {
+    librarySize: Object.keys(initialLibrary).length,
+    playlistsSize: Object.keys(initialPlaylists).length,
+    firstSong: Object.values(initialLibrary)[0]
+  });
   setLibrary(initialLibrary);
   setPlaylists(initialPlaylists);
   setVibeColorIndices(initialColorIndices);
@@ -7406,6 +7423,23 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 className="absolute top-full left-0 right-0 bg-black/90 text-white text-xs p-2 font-mono z-50"
                 style={{ fontSize: '10px' }}
             >
+                <div className="text-yellow-400">--- LIBRARY ---</div>
+                <div>library size: {Object.keys(library).length}</div>
+                <div>playlists: {Object.keys(playlists).length}</div>
+                {Object.keys(playlists).length > 0 && (() => {
+                    const firstVibeId = Object.keys(playlists)[0];
+                    const firstVibe = playlists[firstVibeId];
+                    const songIds = firstVibe?.songIds || [];
+                    const songs = firstVibe?.songs || [];
+                    return (
+                        <>
+                            <div>1st vibe songIds: {songIds.length}</div>
+                            <div>1st vibe songs: {songs.length}</div>
+                            {songIds.length > 0 && <div>1st songId in lib: {library[songIds[0]] ? '✓' : '✗'}</div>}
+                        </>
+                    );
+                })()}
+                <div className="text-yellow-400 mt-1">--- SCAN ---</div>
                 <div>hasRefreshToken: {scanDebugInfo.hasRefreshToken ? '✓' : '✗'}</div>
                 <div>libraryLoaded: {scanDebugInfo.libraryLoaded ? '✓' : '✗'}</div>
                 <div>triggered (3s): {scanDebugInfo.triggered ? '✓' : '✗'}</div>
