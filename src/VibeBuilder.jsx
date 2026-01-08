@@ -371,6 +371,18 @@ const styles = `
     animation: fade-out 0.3s ease-out forwards;
   }
 
+  @keyframes shake {
+    0%, 100% { transform: translateY(-50%) translateX(0); }
+    20% { transform: translateY(-50%) translateX(-4px); }
+    40% { transform: translateY(-50%) translateX(4px); }
+    60% { transform: translateY(-50%) translateX(-4px); }
+    80% { transform: translateY(-50%) translateX(4px); }
+  }
+
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
+
   @keyframes spin-slow {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -1050,6 +1062,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteConfirmSwipeX, setDeleteConfirmSwipeX] = useState(0);
     const deleteConfirmStartX = useRef(null);
+    const [showNoSongsHint, setShowNoSongsHint] = useState(false);
     
     const [sortMode, setSortMode] = useState('alphaTitle');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
@@ -1471,10 +1484,15 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const handleSave = () => {
         if (isCreatingVibe) return;
 
-        // En mode édition, si aucun morceau sélectionné, proposer de supprimer la vibe
+        // Si aucun morceau sélectionné
         if (selectedSongs.length === 0) {
             if (editMode) {
+                // Mode édition : proposer de supprimer la vibe
                 setShowDeleteConfirm(true);
+            } else {
+                // Mode création : feedback visuel pour indiquer qu'il faut sélectionner des morceaux
+                setShowNoSongsHint(true);
+                setTimeout(() => setShowNoSongsHint(false), 600);
             }
             return;
         }
@@ -2115,15 +2133,18 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite - icône transparent découpé */}
                             <div
                                 data-create-btn
-                                className="absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center"
+                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     width: CONFIG.CREATE_BTN_SIZE,
                                     height: CONFIG.CREATE_BTN_SIZE,
-                                    boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
-                                    background: 'white'
+                                    boxShadow: showNoSongsHint
+                                        ? `0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4)`
+                                        : `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
+                                    background: showNoSongsHint ? '#ef4444' : 'white',
+                                    transition: 'background 0.15s, box-shadow 0.15s'
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2140,7 +2161,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                     <Plus
                                         size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                         strokeWidth={3}
-                                        style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
+                                        style={{ color: showNoSongsHint ? 'white' : futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
                                     />
                                 )}
                             </div>
