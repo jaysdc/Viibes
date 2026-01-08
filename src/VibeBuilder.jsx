@@ -2111,21 +2111,11 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                         style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
                                     />
                                 ) : (
-                                    <svg
-                                        width="100%"
-                                        height="100%"
-                                        viewBox="0 0 100 100"
-                                        style={{ position: 'absolute', inset: 0 }}
-                                    >
-                                        <defs>
-                                            <mask id="plusCutout">
-                                                <circle cx="50" cy="50" r="50" fill="white"/>
-                                                <line x1="50" y1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} x2="50" y2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
-                                                <line x1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y1="50" x2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y2="50" stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
-                                            </mask>
-                                        </defs>
-                                        <circle cx="50" cy="50" r="50" fill="white" mask="url(#plusCutout)"/>
-                                    </svg>
+                                    <Plus
+                                        size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                        strokeWidth={3}
+                                        style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
+                                    />
                                 )}
                             </div>
                             
