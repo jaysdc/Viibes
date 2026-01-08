@@ -6394,20 +6394,24 @@ const cancelKillVibe = () => {
     }
   };
 
-  // Lancer le scan au démarrage si connecté à Dropbox (après 3s)
+  // Lancer le scan au démarrage si connecté à Dropbox (après que playlists soit chargé)
+  const scanTriggeredRef = useRef(false);
   useEffect(() => {
     const hasToken = !!getRefreshToken();
-    setScanDebugInfo(prev => ({ ...prev, hasRefreshToken: hasToken }));
+    const playlistsLoaded = playlists && Object.keys(playlists).length > 0;
+    setScanDebugInfo(prev => ({ ...prev, hasRefreshToken: hasToken, playlistsLoaded }));
 
-    if (!hasToken) return;
+    // Attendre que playlists soit chargé et qu'on n'ait pas déjà lancé le scan
+    if (!hasToken || !playlistsLoaded || scanTriggeredRef.current) return;
 
+    scanTriggeredRef.current = true;
     const timer = setTimeout(() => {
         setScanDebugInfo(prev => ({ ...prev, triggered: true }));
         scanDropboxAvailability();
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []); // Une seule fois au montage
+  }, [playlists]); // Re-évaluer quand playlists change
 
   // Charger le contenu d'un dossier Dropbox
   const loadDropboxFolder = async (path, token) => {
@@ -7427,6 +7431,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 style={{ fontSize: '10px' }}
             >
                 <div>hasRefreshToken: {scanDebugInfo.hasRefreshToken ? '✓' : '✗'}</div>
+                <div>playlistsLoaded: {scanDebugInfo.playlistsLoaded ? '✓' : '✗'}</div>
                 <div>triggered (3s): {scanDebugInfo.triggered ? '✓' : '✗'}</div>
                 <div>started: {scanDebugInfo.started ? '✓' : '✗'}</div>
                 <div>pathsCount: {scanDebugInfo.pathsCount}</div>
