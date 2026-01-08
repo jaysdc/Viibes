@@ -1482,7 +1482,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         }, CONFIG.BLINK_ANIMATION_DURATION);
     };
     const handleSave = () => {
-        console.log('[VibeBuilder] handleSave called, selectedSongs:', selectedSongs.length, 'editMode:', editMode, 'isCreatingVibe:', isCreatingVibe);
         if (isCreatingVibe) return;
 
         // Si aucun morceau sélectionné
@@ -1499,11 +1498,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         }
 
         setIsCreatingVibe(true);
-        console.log('[VibeBuilder] Creating vibe with name:', vibeName, 'songs:', selectedSongs.length, 'gradient:', chosenGradientIndex);
 
         // Après le blink, lancer l'animation de fermeture vers la droite
         setTimeout(() => {
-            console.log('[VibeBuilder] Calling onSaveVibe...');
             onSaveVibe(vibeName, selectedSongs, chosenGradientIndex);
             handleClose('right');
         }, CONFIG.BLINK_ANIMATION_DURATION);
