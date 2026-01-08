@@ -8336,6 +8336,41 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 );
             })()}
 
+      {/* DEBUG OVERLAY - Library Status */}
+      {(() => {
+        const firstVibeId = Object.keys(playlists)[0];
+        const firstVibe = playlists[firstVibeId];
+        const firstVibeSongs = firstVibeId ? getVibeSongs(firstVibeId) : [];
+        const firstSong = firstVibeSongs[0];
+        return (
+          <div className="fixed top-20 left-2 right-2 bg-black/90 text-white text-xs p-3 rounded-lg z-[9999] font-mono">
+            <div className="font-bold text-yellow-400 mb-1">🔧 DEBUG LIBRARY</div>
+            <div>Library: {Object.keys(library).length} morceaux</div>
+            <div>Vibes: {Object.keys(playlists).length}</div>
+            <div>FileCache: {Object.keys(fileCache).length} blobs</div>
+            <hr className="border-gray-600 my-1" />
+            {firstVibe && (
+              <>
+                <div className="text-cyan-400">1ère vibe: "{firstVibe.name}"</div>
+                <div>songIds: {firstVibe.songIds?.length || 0}</div>
+                <div>songs résolues: {firstVibeSongs.length}</div>
+                <div>available: {firstVibeSongs.filter(s => isSongAvailable(s)).length}</div>
+                {firstSong && (
+                  <>
+                    <hr className="border-gray-600 my-1" />
+                    <div className="text-green-400">1er morceau:</div>
+                    <div>title: {firstSong.title}</div>
+                    <div>file: {firstSong.file ? '✅ blob' : '❌ null'}</div>
+                    <div>dropboxPath: {firstSong.dropboxPath || '❌ null'}</div>
+                    <div>localFileName: {firstSong.localFileName || '❌ null'}</div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
+
       </div>
     </div>
   );
