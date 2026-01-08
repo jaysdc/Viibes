@@ -5958,11 +5958,10 @@ const vibeSearchResults = () => {
             return;
         }
 
-        // VÉRIFICATION : fichiers accessibles ?
-        const firstSong = vibeSongs[0];
-        const isAccessible = isSongAvailable(firstSong);
-        if (!isAccessible) {
-            alert(`Session expirée pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
+        // Filtrer pour ne garder que les morceaux disponibles
+        const availableSongs = vibeSongs.filter(s => isSongAvailable(s));
+        if (availableSongs.length === 0) {
+            alert(`Aucun morceau disponible pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
             return;
         }
 
