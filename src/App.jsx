@@ -1841,7 +1841,7 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, onReimport, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -1953,11 +1953,9 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     }
     
     const handleClick = () => {
-        if (isExpired && onReimport) {
-            onReimport();
-        } else {
-            onClick();
-        }
+        // Si aucun morceau disponible, ne rien faire (swipe pour changer couleur, ou éditer via icône)
+        if (isExpired) return;
+        onClick();
     };
     
 // ========== LAYOUT BANDE HORIZONTALE ==========
@@ -7343,7 +7341,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 isVibe={isVibe}
                                 isExpired={isExpired}
                                 onClick={() => playFolder(vibeId)}
-                                onReimport={() => document.querySelector('input[type="file"]').click()}
                                 colorIndex={vibeColorIndices[vibeId] !== undefined ? vibeColorIndices[vibeId] : getInitialGradientIndex(vibeId)}
                                 onColorChange={(direction) => {
                                     setVibeColorIndices(prev => ({
