@@ -824,13 +824,25 @@ const DropboxBrowser = ({
                             }}
                         >
                             <div
-                                className="flex items-center rounded-full px-3 border border-gray-200 w-full"
+                                className="flex items-center rounded-full px-3 border border-gray-200 w-full relative overflow-hidden"
                                 style={{
                                     background: 'white',
                                     height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                     minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 }}
                             >
+                                {/* Barre de progression - se remplit de gauche à droite */}
+                                {scanPhase === 'processing' && totalFilesToProcess > 0 && (
+                                    <div
+                                        className="absolute left-0 top-0 bottom-0 z-0"
+                                        style={{
+                                            width: `${(processedFiles / totalFilesToProcess) * 100}%`,
+                                            background: CONFIG.DROPBOX_BLUE,
+                                            opacity: 0.15,
+                                            transition: 'width 0.1s ease-out'
+                                        }}
+                                    />
+                                )}
                                 {/* Bouton retour ou logo Dropbox */}
                                 {isAtRoot ? (
                                     <DropboxLogoVector size={18} color={CONFIG.DROPBOX_BLUE} />
@@ -967,11 +979,6 @@ const DropboxBrowser = ({
 
                         {/* Boutons browse */}
                         <div className="relative" style={{ flexShrink: 0, paddingLeft: CONFIG.HORIZONTAL_PADDING, paddingRight: CONFIG.HORIZONTAL_PADDING }}>
-                            {scanPhase === 'processing' && totalFilesToProcess > 0 && (
-                                <div className="absolute left-0 right-0 top-0 bottom-0 rounded-full overflow-hidden" style={{ marginLeft: CONFIG.HORIZONTAL_PADDING, marginRight: CONFIG.HORIZONTAL_PADDING, height: UNIFIED_CONFIG.CAPSULE_HEIGHT, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)', zIndex: 10 }}>
-                                    <div className="absolute left-0 top-0 bottom-0" style={{ width: `${(processedFiles / totalFilesToProcess) * 100}%`, background: CONFIG.DROPBOX_BLUE, transition: 'width 0.1s ease-out' }} />
-                                </div>
-                            )}
                             <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
                                 <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {closingButton === 'close' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
