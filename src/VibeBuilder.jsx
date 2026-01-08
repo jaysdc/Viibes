@@ -1740,6 +1740,33 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                 </div>
                 <div className="flex items-center gap-2 relative z-20">
                     <div className="flex-1 relative" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
+                    {/* OVERLAY NOM DU DÉGRADÉ (pendant swipe sur la carte) */}
+                    {cardSwipeOffset !== 0 && !showDeleteConfirm && !dragState && !isSearching && searchOverlayAnim === 'none' && (() => {
+                        const gradientName = getGradientName ? getGradientName(displayGradientIndex) : `Gradient ${displayGradientIndex}`;
+                        const progress = Math.min(1, Math.abs(cardSwipeOffset) / 100);
+                        return (
+                            <div
+                                className="absolute inset-0 rounded-full flex items-center justify-center z-40"
+                                style={{
+                                    background: futureGradient,
+                                    opacity: 0.3 + (progress * 0.7),
+                                    boxShadow: `0 0 25px ${futureGradientColors[Math.floor(futureGradientColors.length / 2)]}66, 0 0 50px ${futureGradientColors[Math.floor(futureGradientColors.length / 2)]}33`
+                                }}
+                            >
+                                <div
+                                    className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                    style={{
+                                        opacity: progress,
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                                    }}
+                                >
+                                    <ChevronLeft size={16} />
+                                    <span>{gradientName}</span>
+                                    <ChevronRight size={16} />
+                                </div>
+                            </div>
+                        );
+                    })()}
                     {/* OVERLAY CONFIRMATION SUPPRESSION */}
                     {showDeleteConfirm && (
                         <div
@@ -1804,35 +1831,34 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                 </div>
                             </div>
                         ) : (
-                            <div className="w-full h-full rounded-full overflow-visible relative">
-                                {/* BARRE DE TRI + LOUPE (toujours visible) */}
-                                <div 
-                                    className="absolute inset-0 w-full h-full rounded-full border border-gray-100 shadow-sm flex items-center"
+                            <div className="w-full h-full flex items-center gap-2 overflow-visible relative">
+                                {/* CAPSULE TRI (4 boutons égaux) */}
+                                <div
+                                    className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-hidden relative"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
                                     <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
                                     <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
                                     <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
                                     <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
-                                    <div className="h-1/2 w-px bg-gray-300"></div>
-                                    <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.SEARCH_BTN_FLEX }}>
-                                        <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-r-full" />
-                                        <button 
-                                            onClick={() => {
-                                                if (searchOverlayAnim !== 'none') return;
-                                                setCloseBtnAnimKey(0);
-                                                setSearchOverlayAnim('opening');
-                                                setTimeout(() => {
-                                                    setIsSearching(true);
-                                                    setSearchOverlayAnim('none');
-                                                }, CONFIG.SEARCH_FADE_IN_DURATION);
-                                            }}
-                                            className="relative z-10 w-full h-full flex items-center justify-center rounded-r-full bg-transparent text-gray-400 hover:text-gray-600"
-                                        >
-                                            <Search style={{ width: CONFIG.SEARCH_BTN_ICON_SIZE, height: CONFIG.SEARCH_BTN_ICON_SIZE }} />
-                                        </button>
-                                    </div>
                                 </div>
+
+                                {/* BOUTON LOUPE ROND (séparé) */}
+                                <button
+                                    onClick={() => {
+                                        if (searchOverlayAnim !== 'none') return;
+                                        setCloseBtnAnimKey(0);
+                                        setSearchOverlayAnim('opening');
+                                        setTimeout(() => {
+                                            setIsSearching(true);
+                                            setSearchOverlayAnim('none');
+                                        }, CONFIG.SEARCH_FADE_IN_DURATION);
+                                    }}
+                                    className="h-full aspect-square rounded-full border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                    style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
+                                >
+                                    <Search style={{ width: CONFIG.SEARCH_BTN_ICON_SIZE, height: CONFIG.SEARCH_BTN_ICON_SIZE }} />
+                                </button>
                                 
                                 {/* OVERLAY BARRE DE RECHERCHE (fade in/out) */}
                                 {(isSearching || searchOverlayAnim !== 'none') && (
