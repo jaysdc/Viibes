@@ -4391,9 +4391,8 @@ const handlePlayerTouchEnd = () => {
         return allGlobalSongs.filter(s => isSongAvailable(s) && (s.title.toLowerCase().includes(lowerQ) || s.artist.toLowerCase().includes(lowerQ)));
     }, [librarySearchQuery, allGlobalSongs]);
     
-// 1. CHARGEMENT AU DÉMARRAGE (avec support bibliothèque centrale)
+// 1. CHARGEMENT AU DÉMARRAGE - SIMPLE
 useEffect(() => {
-  const libraryVersion = localStorage.getItem('vibes_library_version');
   const savedLibrary = localStorage.getItem('vibes_library');
   const savedPlaylists = localStorage.getItem('vibes_playlists');
   const savedColorIndices = localStorage.getItem('vibes_color_indices');
@@ -4402,152 +4401,37 @@ useEffect(() => {
   let initialLibrary = {};
   let initialColorIndices = {};
 
-  // === FORMAT BIBLIOTHÈQUE v2 (ID = nom de fichier) ===
-  if (libraryVersion === '2' && savedLibrary) {
+  // Charger library si elle existe
+  if (savedLibrary) {
     try {
       initialLibrary = JSON.parse(savedLibrary);
-      const parsedPlaylists = JSON.parse(savedPlaylists || '{}');
+    } catch (e) {
+      console.error("Erreur parsing library:", e);
+    }
+  }
 
-      Object.keys(parsedPlaylists).forEach(vibeId => {
-        const vibe = parsedPlaylists[vibeId];
+  // Charger playlists si elles existent
+  if (savedPlaylists) {
+    try {
+      const parsed = JSON.parse(savedPlaylists);
+      Object.keys(parsed).forEach(vibeId => {
+        const vibe = parsed[vibeId];
         initialPlaylists[vibeId] = {
           name: vibe.name,
           songIds: vibe.songIds || []
         };
       });
-
-      if (savedColorIndices) {
-        initialColorIndices = JSON.parse(savedColorIndices);
-      }
     } catch (e) {
-      console.error("[Library] Erreur de chargement:", e);
+      console.error("Erreur parsing playlists:", e);
     }
   }
-  // === MIGRATION DEPUIS v1 (anciens IDs aléatoires -> nom de fichier) ===
-  else if (libraryVersion === '1' && savedLibrary) {
+
+  // Charger couleurs si elles existent
+  if (savedColorIndices) {
     try {
-      const oldLibrary = JSON.parse(savedLibrary);
-      const parsedPlaylists = JSON.parse(savedPlaylists || '{}');
-
-      // Mapper ancien ID -> nouveau ID (nom de fichier)
-      const oldToNewId = new Map();
-      Object.entries(oldLibrary).forEach(([oldId, song]) => {
-        const newId = song.fileSignature || song.localFileName || song.title + '.mp3';
-        oldToNewId.set(oldId, newId);
-
-        // Merger si déjà présent
-        if (initialLibrary[newId]) {
-          initialLibrary[newId] = {
-            ...initialLibrary[newId],
-            playCount: Math.max(initialLibrary[newId].playCount || 0, song.playCount || 0),
-            dropboxPath: initialLibrary[newId].dropboxPath || song.dropboxPath,
-            localFileName: initialLibrary[newId].localFileName || song.localFileName,
-            dropboxAvailable: initialLibrary[newId].dropboxAvailable ?? song.dropboxAvailable
-          };
-        } else {
-          initialLibrary[newId] = {
-            ...song,
-            id: newId,
-            fileSignature: newId
-          };
-        }
-      });
-
-      // Convertir songIds
-      Object.keys(parsedPlaylists).forEach(vibeId => {
-        const vibe = parsedPlaylists[vibeId];
-        const oldSongIds = vibe.songIds || [];
-        const newSongIds = oldSongIds.map(oldId => oldToNewId.get(oldId) || oldId);
-        initialPlaylists[vibeId] = {
-          name: vibe.name,
-          songIds: newSongIds
-        };
-      });
-
-      if (savedColorIndices) {
-        initialColorIndices = JSON.parse(savedColorIndices);
-      }
-
-      // Sauvegarder v2
-      localStorage.setItem('vibes_library_version', '2');
-      localStorage.setItem('vibes_library', JSON.stringify(initialLibrary));
-      localStorage.setItem('vibes_playlists', JSON.stringify(initialPlaylists));
+      initialColorIndices = JSON.parse(savedColorIndices);
     } catch (e) {
-      console.error("[Migration v1->v2] Erreur:", e);
-    }
-  }
-  // === MIGRATION DEPUIS ANCIEN FORMAT (pas de library) ===
-  else if (savedPlaylists) {
-    // Backup avant migration
-    localStorage.setItem('vibes_playlists_backup', savedPlaylists);
-
-    try {
-      const parsed = JSON.parse(savedPlaylists);
-      const savedPlayCounts = localStorage.getItem('vibes_playcounts');
-      const playCountsMap = savedPlayCounts ? JSON.parse(savedPlayCounts) : {};
-
-      // Détecter le format
-      const firstKey = Object.keys(parsed)[0];
-      const firstValue = parsed[firstKey];
-      const hasVibeFormat = firstValue && typeof firstValue === 'object' && !Array.isArray(firstValue) && ('songs' in firstValue || 'songIds' in firstValue);
-
-      if (savedColorIndices) {
-        initialColorIndices = JSON.parse(savedColorIndices);
-      }
-
-      Object.keys(parsed).forEach((key) => {
-        const vibeData = hasVibeFormat ? parsed[key] : { songs: parsed[key], name: key };
-        const songs = vibeData.songs || [];
-        const vibeName = vibeData.name || key;
-        const vibeId = hasVibeFormat ? key : generateVibeId();
-
-        if (!hasVibeFormat && initialColorIndices[key] !== undefined) {
-          initialColorIndices[vibeId] = initialColorIndices[key];
-          delete initialColorIndices[key];
-        }
-
-        const songIds = [];
-
-        songs.forEach(song => {
-          // ID = nom du fichier, c'est tout
-          const songId = song.fileSignature || song.localFileName || song.title + '.mp3';
-
-          if (initialLibrary[songId]) {
-            const existing = initialLibrary[songId];
-            initialLibrary[songId] = {
-              ...existing,
-              playCount: Math.max(existing.playCount || 0, song.playCount || playCountsMap[song.id] || 0),
-              dropboxPath: existing.dropboxPath || song.dropboxPath,
-              localFileName: existing.localFileName || song.localFileName,
-              dropboxAvailable: existing.dropboxAvailable ?? song.dropboxAvailable
-            };
-          } else {
-            initialLibrary[songId] = {
-              id: songId,
-              title: song.title,
-              artist: song.artist,
-              playCount: song.playCount || playCountsMap[song.id] || 0,
-              localFileName: song.localFileName || null,
-              dropboxPath: song.dropboxPath || null,
-              dropboxAvailable: song.dropboxAvailable,
-              fileSignature: songId
-            };
-          }
-
-          songIds.push(songId);
-        });
-
-        initialPlaylists[vibeId] = {
-          name: vibeName,
-          songIds: songIds
-        };
-      });
-
-      localStorage.setItem('vibes_library_version', '2');
-    } catch (e) {
-      console.error("[Migration] Erreur:", e);
-      initialPlaylists = {};
-      initialLibrary = {};
+      console.error("Erreur parsing colors:", e);
     }
   }
 
@@ -4576,7 +4460,6 @@ useEffect(() => {
 useEffect(() => {
     if (Object.keys(library).length > 0) {
         localStorage.setItem('vibes_library', JSON.stringify(library));
-        localStorage.setItem('vibes_library_version', '2');
     }
 }, [library]);
 
