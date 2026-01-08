@@ -5026,7 +5026,7 @@ const vibeSearchResults = () => {
             }
 
             // ID = nom du fichier, c'est tout
-            songId = fileSignature;
+            const songId = fileSignature;
 
             if (newLibrary[songId]) {
                 // Song existe déjà - mettre à jour dropboxPath
