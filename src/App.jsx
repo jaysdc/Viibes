@@ -8180,12 +8180,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
       </div>
 
-      {/* DEBUG OVERLAY - SIMPLE */}
-      <div className="fixed top-16 left-2 right-2 bg-black text-white text-xs p-2 rounded z-[9999] font-mono">
-        <div>LIB state: {Object.keys(library).length}</div>
-        <div>LIB localStorage: {localStorage.getItem('vibes_library') ? JSON.parse(localStorage.getItem('vibes_library') || '{}') && Object.keys(JSON.parse(localStorage.getItem('vibes_library') || '{}')).length : 0}</div>
-        <div>VIBES: {Object.keys(playlists).length}</div>
-      </div>
 
     </div>
   );
