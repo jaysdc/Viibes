@@ -4793,12 +4793,14 @@ const vibeSearchResults = () => {
 
     // Créer la carte Vibe avec ID unique
     const newVibeId = generateVibeId();
-    const vibeSongs = songsToPlay.map(s => ({...s, type: 'vibe'}));
+
+    // Format bibliothèque: songIds au lieu de songs
+    const songIds = songsToPlay.map(s => s.id);
     setPlaylists(prev => ({
         ...prev,
         [newVibeId]: {
             name: vibeName,
-            songs: vibeSongs
+            songIds: songIds
         }
     }));
 
