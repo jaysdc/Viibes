@@ -7,7 +7,7 @@ import { UNIFIED_CONFIG } from './Config.jsx';
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export const SMARTIMPORT_CONFIG = {
-    MAX_SWIPE_DISTANCE: 200,             // Distance max de swipe pour changer de couleur
+    MAX_SWIPE_DISTANCE: UNIFIED_CONFIG.COLOR_SWIPE_DISTANCE,  // Distance de swipe pour parcourir les dégradés (depuis Config.jsx)
     
     // ══════════════════════════════════════════════════════════════════════════
     // SEUILS ET LIMITES
@@ -749,14 +749,11 @@ const SmartImport = ({
         
         // Si direction pas encore déterminée ou si c'est horizontal, on gère le swipe couleur
         if (swipeDirection === 'horizontal') {
-            // Limite à 50% de la largeur de la carte
-            const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
-            
-            if (Math.abs(diffX) < maxSwipeDistance) {
+            if (Math.abs(diffX) < SMARTIMPORT_CONFIG.MAX_SWIPE_DISTANCE) {
                 setSwipeOffset(diffX);
-                
+
                 const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
+                const colorsTraversed = Math.floor((Math.abs(diffX) / SMARTIMPORT_CONFIG.MAX_SWIPE_DISTANCE) * 20);
                 const currentIdx = importPreview?.folderGradients?.[cardName] ?? 0;
                 const previewIdx = currentIdx + (direction * colorsTraversed);
                 const previewGradient = getGradientByIndex(previewIdx);
@@ -774,8 +771,7 @@ const SmartImport = ({
     const handleCardSwipeEnd = (cardName) => {
         if (swipingCard !== cardName) return;
 
-        const maxSwipeDistance = cardWidthRef.current * 0.5 || 150;
-        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
+        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / SMARTIMPORT_CONFIG.MAX_SWIPE_DISTANCE) * 20);
 
         // Si c'est un tap (pas de swipe horizontal significatif et pas de scroll vertical)
         const isTap = swipeDirection === null && Math.abs(swipeOffset) < 10;

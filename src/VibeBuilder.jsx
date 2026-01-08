@@ -67,7 +67,7 @@ const CONFIG = {
     ADDALL_BG_COLOR: '#8CFF00',
 
     // SWIPE VIBECARD PREVIEW
-    MAX_SWIPE_DISTANCE: 300,              // Distance max pour parcourir toutes les couleurs
+    MAX_SWIPE_DISTANCE: UNIFIED_CONFIG.COLOR_SWIPE_DISTANCE,  // Distance de swipe pour parcourir les dégradés (depuis Config.jsx)
     
     // SWIPE TITRE (fermeture)
     TITLE_SWIPE_THRESHOLD: 100,           // Seuil de swipe pour confirmer/annuler (px)

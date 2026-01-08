@@ -186,7 +186,7 @@ const CONFIG = {
     // DÉGRADÉS & COULEURS
     // ══════════════════════════════════════════════════════════════════════════
     GRADIENT_OPACITY: 1,              // Opacité des dégradés (0 = transparent, 1 = opaque)
-    MAX_SWIPE_DISTANCE: 275,          // Distance max pour parcourir les 20 couleurs en swipant
+    MAX_SWIPE_DISTANCE: UNIFIED_CONFIG.COLOR_SWIPE_DISTANCE,  // Distance de swipe pour parcourir les dégradés (depuis Config.jsx)
 
     // ══════════════════════════════════════════════════════════════════════════
     // VIBE CARDS (Dashboard)
