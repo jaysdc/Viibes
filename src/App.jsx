@@ -6370,28 +6370,27 @@ const cancelKillVibe = () => {
 
     // Scan terminé
     setDropboxScanProgress(null);
+    setScanDebugInfo(prev => ({ ...prev, unavailableCount: unavailablePaths.size }));
 
-    // Mettre à jour les playlists avec le flag dropboxAvailable
-    if (unavailablePaths.size > 0) {
-        setPlaylists(prev => {
-            const updated = { ...prev };
-            Object.keys(updated).forEach(vibeId => {
-                updated[vibeId] = {
-                    ...updated[vibeId],
-                    songs: updated[vibeId].songs.map(song => {
-                        if (song.dropboxPath && unavailablePaths.has(song.dropboxPath)) {
-                            return { ...song, dropboxAvailable: false };
-                        } else if (song.dropboxPath && !unavailablePaths.has(song.dropboxPath)) {
-                            return { ...song, dropboxAvailable: true };
-                        }
-                        return song;
-                    })
-                };
-            });
-            return updated;
+    // Mettre à jour les playlists avec le flag dropboxAvailable (toujours, même si 0 indisponibles)
+    setPlaylists(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(vibeId => {
+            updated[vibeId] = {
+                ...updated[vibeId],
+                songs: updated[vibeId].songs.map(song => {
+                    if (song.dropboxPath && unavailablePaths.has(song.dropboxPath)) {
+                        return { ...song, dropboxAvailable: false };
+                    } else if (song.dropboxPath) {
+                        return { ...song, dropboxAvailable: true };
+                    }
+                    return song;
+                })
+            };
         });
-        console.log(`Scan Dropbox: ${unavailablePaths.size} fichier(s) indisponible(s)`);
-    }
+        return updated;
+    });
+    console.log(`Scan Dropbox terminé: ${unavailablePaths.size} fichier(s) indisponible(s) sur ${pathsArray.length}`);
   };
 
   // Lancer le scan au démarrage si connecté à Dropbox (après que playlists soit chargé)
@@ -7436,6 +7435,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 <div>started: {scanDebugInfo.started ? '✓' : '✗'}</div>
                 <div>pathsCount: {scanDebugInfo.pathsCount}</div>
                 <div>progress: {dropboxScanProgress ?? 'null'}</div>
+                <div>unavailable: {scanDebugInfo.unavailableCount ?? 0}</div>
                 {scanDebugInfo.error && <div className="text-red-400">error: {scanDebugInfo.error}</div>}
             </div>
 
