@@ -4035,6 +4035,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
 export default function App() {
     // ===== TOUS LES useState EN PREMIER =====
     const [playlists, setPlaylists] = useState(null);
+    const [library, setLibrary] = useState({});         // Bibliothèque centrale de tous les morceaux
+    const [fileCache, setFileCache] = useState({});     // Cache runtime des blob URLs { songId: blobUrl }
     const [currentTime, setCurrentTime] = useState('');
     const [isOnRealDevice, setIsOnRealDevice] = useState(false);
     const [safeAreaBottom, setSafeAreaBottom] = useState(0);
@@ -4280,6 +4282,34 @@ const handlePlayerTouchEnd = () => {
     const isIOSDevice = useRef(/iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
+    // ===== LIBRARY HELPERS =====
+    // Récupérer un morceau complet depuis la library (avec file du cache)
+    const getSongFromLibrary = useCallback((songId) => {
+        const song = library[songId];
+        if (!song) return null;
+        return {
+            ...song,
+            file: fileCache[songId] || null
+        };
+    }, [library, fileCache]);
+
+    // Récupérer plusieurs morceaux depuis la library
+    const getSongsFromLibrary = useCallback((songIds) => {
+        if (!songIds) return [];
+        return songIds.map(id => getSongFromLibrary(id)).filter(Boolean);
+    }, [getSongFromLibrary]);
+
+    // Récupérer les morceaux d'une vibe
+    const getVibeSongs = useCallback((vibeId) => {
+        const vibe = playlists?.[vibeId];
+        if (!vibe) return [];
+        // Support ancien format (songs array) et nouveau format (songIds array)
+        if (vibe.songs) {
+            return vibe.songs.map(s => ({ ...s, file: fileCache[s.id] || s.file }));
+        }
+        return getSongsFromLibrary(vibe.songIds || []);
+    }, [playlists, fileCache, getSongsFromLibrary]);
+
     // Initialiser Web Audio API pour contrôle volume
     // IMPORTANT: Sur iOS, on NE DOIT PAS utiliser createMediaElementSource car ça empêche
     // la lecture en background (l'AudioContext est suspendu et l'audio ne peut plus jouer)
@@ -4334,17 +4364,13 @@ const handlePlayerTouchEnd = () => {
         return queue.filter(s => s.title.toLowerCase().includes(lowerQ) || s.artist.toLowerCase().includes(lowerQ));
     }, [queue, playerSearchQuery]);
   
+    // === FORMAT BIBLIOTHÈQUE - toutes les songs depuis la library ===
     const allGlobalSongs = React.useMemo(() => {
-      if (!playlists) return [];
-      let songs = [];
-      // Nouveau format : chaque vibe = { name, songs }
-      Object.values(playlists).forEach(vibe => {
-          if (vibe && Array.isArray(vibe.songs)) {
-              songs = [...songs, ...vibe.songs];
-          }
-      });
-      return Array.from(new Map(songs.map(s => [s.id, s])).values());
-    }, [playlists]);
+      return Object.values(library).map(song => ({
+        ...song,
+        file: fileCache[song.id] || null
+      }));
+    }, [library, fileCache]);
   
   
     const librarySearchResults = React.useMemo(() => {
@@ -4353,123 +4379,169 @@ const handlePlayerTouchEnd = () => {
         return allGlobalSongs.filter(s => isSongAvailable(s) && (s.title.toLowerCase().includes(lowerQ) || s.artist.toLowerCase().includes(lowerQ)));
     }, [librarySearchQuery, allGlobalSongs]);
     
-// 1. CHARGEMENT AU DÉMARRAGE
+// 1. CHARGEMENT AU DÉMARRAGE (avec support bibliothèque centrale)
 useEffect(() => {
+  const libraryVersion = localStorage.getItem('vibes_library_version');
+  const savedLibrary = localStorage.getItem('vibes_library');
   const savedPlaylists = localStorage.getItem('vibes_playlists');
   const savedColorIndices = localStorage.getItem('vibes_color_indices');
 
   let initialPlaylists = {};
+  let initialLibrary = {};
   let initialColorIndices = {};
 
-  if (savedPlaylists) {
+  // === FORMAT BIBLIOTHÈQUE (nouveau) ===
+  if (libraryVersion === '1' && savedLibrary) {
+    console.log('[Library] Chargement format bibliothèque...');
+    try {
+      initialLibrary = JSON.parse(savedLibrary);
+      const parsedPlaylists = JSON.parse(savedPlaylists || '{}');
+
+      // Les playlists ont maintenant songIds au lieu de songs
+      Object.keys(parsedPlaylists).forEach(vibeId => {
+        const vibe = parsedPlaylists[vibeId];
+        initialPlaylists[vibeId] = {
+          name: vibe.name,
+          songIds: vibe.songIds || []
+        };
+      });
+
+      if (savedColorIndices) {
+        initialColorIndices = JSON.parse(savedColorIndices);
+      }
+
+      console.log(`[Library] Chargé: ${Object.keys(initialLibrary).length} morceaux, ${Object.keys(initialPlaylists).length} vibes`);
+    } catch (e) {
+      console.error("[Library] Erreur de chargement:", e);
+    }
+  }
+  // === MIGRATION DEPUIS ANCIEN FORMAT ===
+  else if (savedPlaylists) {
+    console.log('[Migration] Conversion vers format bibliothèque...');
+
+    // Backup avant migration
+    localStorage.setItem('vibes_playlists_backup', savedPlaylists);
+    console.log('[Migration] Backup créé dans vibes_playlists_backup');
+
     try {
       const parsed = JSON.parse(savedPlaylists);
+      const savedPlayCounts = localStorage.getItem('vibes_playcounts');
+      const playCountsMap = savedPlayCounts ? JSON.parse(savedPlayCounts) : {};
+      const signatureToId = new Map(); // Pour déduplication
+
+      // Détecter le format
       const firstKey = Object.keys(parsed)[0];
       const firstValue = parsed[firstKey];
+      const hasVibeFormat = firstValue && typeof firstValue === 'object' && !Array.isArray(firstValue) && ('songs' in firstValue || 'songIds' in firstValue);
 
-      // Détecter le format : nouveau = { name, songs }, ancien = array directement
-      const isNewFormat = firstValue && typeof firstValue === 'object' && !Array.isArray(firstValue) && 'songs' in firstValue;
-
-      if (isNewFormat) {
-        // Nouveau format : { vibeId: { name, songs } }
-        Object.keys(parsed).forEach(vibeId => {
-          initialPlaylists[vibeId] = {
-            name: parsed[vibeId].name,
-            songs: parsed[vibeId].songs.map(song => ({ ...song, file: null }))
-          };
-        });
-        // Charger les couleurs telles quelles (déjà indexées par vibeId)
-        if (savedColorIndices) {
-          initialColorIndices = JSON.parse(savedColorIndices);
-        }
-      } else {
-        // Ancien format : { "Nom Vibe": [songs] } → migrer vers nouveau format
-        const oldColorIndices = savedColorIndices ? JSON.parse(savedColorIndices) : {};
-        Object.keys(parsed).forEach(name => {
-          const vibeId = generateVibeId();
-          initialPlaylists[vibeId] = {
-            name: name,
-            songs: parsed[name].map(song => ({ ...song, file: null }))
-          };
-          // Migrer les couleurs : ancien nom → nouveau vibeId
-          if (oldColorIndices[name] !== undefined) {
-            initialColorIndices[vibeId] = oldColorIndices[name];
-          }
-        });
-        console.log('[Migration] Ancien format détecté, migration vers nouveau format effectuée');
+      if (savedColorIndices) {
+        initialColorIndices = JSON.parse(savedColorIndices);
       }
+
+      // Parcourir toutes les vibes et construire la library
+      Object.keys(parsed).forEach(key => {
+        const vibe = hasVibeFormat ? parsed[key] : { name: key, songs: parsed[key] };
+        const vibeName = vibe.name || key;
+        const songs = vibe.songs || [];
+
+        // Générer vibeId si c'est une clé nom (ancien format)
+        const vibeId = hasVibeFormat ? key : generateVibeId();
+
+        // Migrer couleurs si ancien format
+        if (!hasVibeFormat && initialColorIndices[key] !== undefined) {
+          initialColorIndices[vibeId] = initialColorIndices[key];
+          delete initialColorIndices[key];
+        }
+
+        const songIds = [];
+
+        songs.forEach(song => {
+          const signature = song.fileSignature || song.id;
+          let songId;
+
+          if (signatureToId.has(signature)) {
+            // Song déjà dans la library - réutiliser et merger
+            songId = signatureToId.get(signature);
+            const existing = initialLibrary[songId];
+            initialLibrary[songId] = {
+              ...existing,
+              playCount: Math.max(existing.playCount || 0, song.playCount || playCountsMap[song.id] || 0),
+              dropboxPath: existing.dropboxPath || song.dropboxPath,
+              localFileName: existing.localFileName || song.localFileName,
+              dropboxAvailable: existing.dropboxAvailable ?? song.dropboxAvailable
+            };
+          } else {
+            // Nouvelle song
+            songId = song.id;
+            signatureToId.set(signature, songId);
+            initialLibrary[songId] = {
+              id: songId,
+              title: song.title,
+              artist: song.artist,
+              playCount: song.playCount || playCountsMap[song.id] || 0,
+              localFileName: song.localFileName || null,
+              dropboxPath: song.dropboxPath || null,
+              dropboxAvailable: song.dropboxAvailable,
+              fileSignature: signature
+            };
+          }
+
+          songIds.push(songId);
+        });
+
+        initialPlaylists[vibeId] = {
+          name: vibeName,
+          songIds: songIds
+        };
+      });
+
+      // Marquer migration complète
+      localStorage.setItem('vibes_library_version', '1');
+      console.log(`[Migration] Terminée: ${Object.keys(initialLibrary).length} morceaux uniques, ${Object.keys(initialPlaylists).length} vibes`);
     } catch (e) {
-      console.error("Erreur de parsing des playlists, on repart de zéro.", e);
+      console.error("[Migration] Erreur:", e);
       initialPlaylists = {};
+      initialLibrary = {};
     }
   }
 
-  // Pas de données par défaut - l'app démarre vide
-
+  setLibrary(initialLibrary);
   setPlaylists(initialPlaylists);
   setVibeColorIndices(initialColorIndices);
 
-  // Charger les playCounts sauvegardés et les merger
-  const savedPlayCounts = localStorage.getItem('vibes_playcounts');
-  if (savedPlayCounts) {
-    try {
-      const playCountsMap = JSON.parse(savedPlayCounts);
-      // Merger les playCounts avec les playlists (nouveau format)
-      Object.keys(initialPlaylists).forEach(vibeId => {
-        initialPlaylists[vibeId].songs = initialPlaylists[vibeId].songs.map(song => {
-          if (playCountsMap[song.id] !== undefined) {
-            return { ...song, playCount: playCountsMap[song.id] };
-          }
-          return song;
-        });
-      });
-      setPlaylists({...initialPlaylists});
-    } catch (e) {
-      console.error("Erreur parsing playCounts", e);
-    }
-  } else {
-    // Première fois : attribuer des couleurs uniques à chaque playlist existante
-    initializeGradientUsage(null); // Reset compteur
-    const initialColors = {};
-    Object.keys(initialPlaylists).forEach(name => {
-      initialColors[name] = getNextAvailableGradientIndex();
+  // Initialiser couleurs si première fois
+  if (Object.keys(initialPlaylists).length > 0 && Object.keys(initialColorIndices).length === 0) {
+    initializeGradientUsage(null);
+    const colors = {};
+    Object.keys(initialPlaylists).forEach(vibeId => {
+      colors[vibeId] = getNextAvailableGradientIndex();
     });
-    setVibeColorIndices(initialColors);
+    setVibeColorIndices(colors);
   }
 }, []);
 
-// 2. SAUVEGARDE AUTOMATIQUE (nouveau format: { vibeId: { name, songs } })
+// 2. SAUVEGARDE AUTOMATIQUE - PLAYLISTS (format bibliothèque: { vibeId: { name, songIds } })
 useEffect(() => {
-    if (playlists !== null) {
-    const playlistsToSave = {};
-    Object.keys(playlists).forEach(vibeId => {
-      const vibe = playlists[vibeId];
-      playlistsToSave[vibeId] = {
-        name: vibe.name,
-        songs: vibe.songs.map(song => {
-          const { file, ...songWithoutFile } = song;
-          return songWithoutFile;
-        })
-      };
-    });
-    localStorage.setItem('vibes_playlists', JSON.stringify(playlistsToSave));
-  }
+    if (playlists !== null && Object.keys(playlists).length > 0) {
+        const playlistsToSave = {};
+        Object.keys(playlists).forEach(vibeId => {
+            const vibe = playlists[vibeId];
+            playlistsToSave[vibeId] = {
+                name: vibe.name,
+                // Support les deux formats pendant la transition
+                songIds: vibe.songIds || (vibe.songs ? vibe.songs.map(s => s.id) : [])
+            };
+        });
+        localStorage.setItem('vibes_playlists', JSON.stringify(playlistsToSave));
+    }
 }, [playlists]);
 
-// 2b. SAUVEGARDE DES PLAYCOUNTS (séparée pour robustesse)
+// 2b. SAUVEGARDE AUTOMATIQUE - LIBRARY (tous les morceaux)
 useEffect(() => {
-  if (playlists !== null) {
-    const playCountsMap = {};
-    Object.values(playlists).forEach(vibe => {
-      vibe.songs.forEach(song => {
-        if (song.playCount > 0) {
-          playCountsMap[song.id] = song.playCount;
-        }
-      });
-    });
-    localStorage.setItem('vibes_playcounts', JSON.stringify(playCountsMap));
-  }
-}, [playlists]);
+    if (Object.keys(library).length > 0) {
+        localStorage.setItem('vibes_library', JSON.stringify(library));
+    }
+}, [library]);
 
 // 2c. SAUVEGARDE DES COULEURS
 useEffect(() => {
@@ -4844,228 +4916,161 @@ const vibeSearchResults = () => {
   };
 
   const processFileImport = (foldersToImport) => {
-    // foldersToImport est déjà un objet { nomDossier: [fichiers] }
+    // === FORMAT BIBLIOTHÈQUE ===
+    // foldersToImport: { nomDossier: [File objects] }
 
-    // On fait une copie modifiable des playlists actuelles (ou objet vide si null)
+    const newLibrary = { ...library };
     const newPlaylists = playlists ? { ...playlists } : {};
-
-    // On utilise directement la structure passée en paramètre
-    const folders = foldersToImport;
-
-    // Créer une map globale de TOUTES les chansons existantes (toutes playlists confondues)
-    // Clé = fileSignature (taille + extension), Valeur = chanson
-    const allExistingSongsMap = new Map();
-    if (playlists) {
-        Object.values(playlists).forEach(vibe => {
-            vibe.songs.forEach(song => {
-                if (song.fileSignature) {
-                    allExistingSongsMap.set(song.fileSignature, song);
-                }
-            });
-        });
-    }
-
-    // Créer une map de toutes les vibes existantes par leur "signature de contenu"
-    // (ensemble trié des fileSignature de leurs chansons) pour détecter les doublons
-    const existingVibeSignatures = new Set();
-    if (playlists) {
-        Object.values(playlists).forEach(vibe => {
-            if (vibe.songs && vibe.songs.length > 0) {
-                const signature = vibe.songs
-                    .map(s => s.fileSignature)
-                    .filter(Boolean)
-                    .sort()
-                    .join('|');
-                if (signature) {
-                    existingVibeSignatures.add(signature);
-                }
-            }
-        });
-    }
-
-    // Stocker les nouveaux vibeIds créés
+    const newFileCache = { ...fileCache };
     const newVibeIds = [];
 
-    // Map pour tracker les vibes créées pendant CET import (pour regrouper les fichiers du même artiste)
+    // Map fileSignature -> songId pour déduplication
+    const signatureToId = new Map();
+    Object.values(newLibrary).forEach(song => {
+        if (song.fileSignature) {
+            signatureToId.set(song.fileSignature, song.id);
+        }
+    });
+
+    // Signatures de vibes existantes pour éviter les doublons
+    const existingVibeSignatures = new Set();
+    Object.values(newPlaylists).forEach(vibe => {
+        const ids = vibe.songIds || (vibe.songs ? vibe.songs.map(s => s.id) : []);
+        if (ids.length > 0) {
+            existingVibeSignatures.add([...ids].sort().join('|'));
+        }
+    });
+
+    // Map pour regrouper les imports du même dossier
     const importNameToVibeIdMap = new Map();
 
-    // Map des fichiers locaux à propager (même si la vibe n'est pas créée)
-    const allNewFilesForPropagation = new Map(); // id -> file URL
+    Object.keys(foldersToImport).forEach(folderName => {
+        const filesInFolder = foldersToImport[folderName];
+        const songIdsForVibe = [];
 
-    // On traite chaque dossier trouvé dans l'import
-    Object.keys(folders).forEach(folderName => {
-      const filesInFolder = folders[folderName];
+        filesInFolder.forEach(file => {
+            const fileSignature = file.name;
 
-      const newSongsForThisFolder = filesInFolder.map((file) => {
-        // Créer une signature unique basée sur le nom du fichier
-        const fileSignature = file.name;
+            // Parser titre/artiste
+            let title = file.name.replace(/\.[^/.]+$/, "");
+            let artist = "Artiste Inconnu";
+            if (title.includes(" - ")) {
+                const parts = title.split(" - ");
+                artist = parts[0].trim();
+                title = parts[1].trim();
+            }
 
-        // On extrait le titre et l'artiste depuis le nom du fichier
-        let title = file.name.replace(/\.[^/.]+$/, "");
-        let artist = "Artiste Inconnu";
-        if (title.includes(" - ")) {
-          const parts = title.split(" - ");
-          artist = parts[0].trim();
-          title = parts[1].trim();
-        }
+            let songId;
 
-        // On cherche si le fichier existait déjà (par sa signature)
-        const existingSong = allExistingSongsMap.get(fileSignature);
-        const playCount = existingSong ? existingSong.playCount : 0;
+            if (signatureToId.has(fileSignature)) {
+                // Song existe déjà - mettre à jour avec fichier local
+                songId = signatureToId.get(fileSignature);
+                newLibrary[songId] = {
+                    ...newLibrary[songId],
+                    localFileName: file.name
+                };
+            } else {
+                // Nouvelle song
+                songId = `file-${fileSignature}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                signatureToId.set(fileSignature, songId);
+                newLibrary[songId] = {
+                    id: songId,
+                    title,
+                    artist,
+                    playCount: 0,
+                    localFileName: file.name,
+                    dropboxPath: null,
+                    dropboxAvailable: undefined,
+                    fileSignature
+                };
+            }
 
-        // Générer un ID unique basé sur la signature du fichier
-        const id = existingSong ? existingSong.id : `file-${fileSignature}-${Date.now()}`;
-
-        // On crée le nouvel objet chanson (préserver dropboxPath si existant pour fallback)
-        return {
-          id: id,
-          title: title,
-          artist: artist,
-          playCount: playCount,
-          file: URL.createObjectURL(file),
-          localFileName: file.name,
-          dropboxPath: existingSong?.dropboxPath || null,
-          fileSignature: fileSignature,
-          type: 'local'
-        };
-      });
-
-      // Stocker les fichiers pour propagation (même si la vibe n'est pas créée)
-      // On stocke par ID ET par fileSignature pour matcher les chansons existantes
-      newSongsForThisFolder.forEach(song => {
-          if (song.file) {
-              const fileData = { file: song.file, localFileName: song.localFileName };
-              if (song.id) {
-                  allNewFilesForPropagation.set(song.id, fileData);
-              }
-              if (song.fileSignature) {
-                  allNewFilesForPropagation.set(song.fileSignature, fileData);
-              }
-          }
-      });
-
-      // Vérifier si une vibe avec exactement ce contenu existe déjà
-      const folderSignature = newSongsForThisFolder
-          .map(s => s.fileSignature)
-          .filter(Boolean)
-          .sort()
-          .join('|');
-
-      // Si une vibe identique existe, ne pas créer de doublon
-      // Les fichiers ont déjà été ajoutés à allNewFilesForPropagation pour la propagation
-      if (folderSignature && existingVibeSignatures.has(folderSignature)) {
-          return;
-      }
-
-      // Ajouter cette signature pour éviter les doublons dans le même import
-      if (folderSignature) {
-          existingVibeSignatures.add(folderSignature);
-      }
-
-      // Toujours créer une nouvelle vibe (ne jamais écraser les existantes)
-      // Mais regrouper les fichiers du même artiste importés en même temps
-      const existingImportVibeId = importNameToVibeIdMap.get(folderName);
-      if (existingImportVibeId) {
-        // Ajouter les chansons à la vibe créée pendant cet import
-        newPlaylists[existingImportVibeId] = {
-          ...newPlaylists[existingImportVibeId],
-          songs: [...newPlaylists[existingImportVibeId].songs, ...newSongsForThisFolder]
-        };
-      } else {
-        // Créer une nouvelle vibe avec un ID unique
-        const newVibeId = generateVibeId();
-        newPlaylists[newVibeId] = {
-          name: folderName,
-          songs: newSongsForThisFolder
-        };
-        newVibeIds.push(newVibeId);
-        importNameToVibeIdMap.set(folderName, newVibeId);
-      }
-    });
-
-    // On met à jour l'état principal. Ceci va déclencher la sauvegarde automatique de l'Étape 1.
-    // MAIS D'ABORD : propager les fichiers aux autres playlists (Vibes) qui contiennent les mêmes chansons
-
-    // Propager les fichiers locaux à TOUTES les autres playlists (y compris vibes dont on a skip la création)
-    // Quand on ajoute un fichier local, on met aussi à jour le type en 'local' (priorité au local)
-    const importedVibeIds = Object.keys(folders).map(name => importNameToVibeIdMap.get(name)).filter(Boolean);
-    Object.keys(newPlaylists).forEach(vibeId => {
-        // Ne pas re-traiter les dossiers qu'on vient d'importer
-        if (importedVibeIds.includes(vibeId)) return;
-
-        newPlaylists[vibeId] = {
-            ...newPlaylists[vibeId],
-            songs: newPlaylists[vibeId].songs.map(song => {
-                // Chercher par ID ou par fileSignature (pour matcher les chansons Dropbox existantes)
-                const fileData = allNewFilesForPropagation.get(song.id) ||
-                               (song.fileSignature && allNewFilesForPropagation.get(song.fileSignature));
-                if (fileData && !song.file) {
-                    // Propager le fichier local et mettre à jour le type
-                    return { ...song, file: fileData.file, localFileName: fileData.localFileName, type: 'local' };
-                }
-                return song;
-            })
-        };
-    });
-
-    setPlaylists(newPlaylists);
-
-    // Attribuer des couleurs uniques aux nouveaux vibes
-    if (newVibeIds.length > 0) {
-      setVibeColorIndices(prev => {
-        const updated = { ...prev };
-
-        // Recalculer le compteur d'usage
-        initializeGradientUsage(null);
-        Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
-
-        newVibeIds.forEach(vibeId => {
-          if (updated[vibeId] === undefined) {
-            updated[vibeId] = getNextAvailableGradientIndex();
-          }
+            // Stocker blob URL dans le cache
+            newFileCache[songId] = URL.createObjectURL(file);
+            songIdsForVibe.push(songId);
         });
 
-        return updated;
-      });
+        // Vérifier doublon de vibe
+        const vibeSignature = [...songIdsForVibe].sort().join('|');
+        if (vibeSignature && existingVibeSignatures.has(vibeSignature)) {
+            return; // Skip, vibe identique existe déjà
+        }
+        existingVibeSignatures.add(vibeSignature);
+
+        // Regrouper ou créer nouvelle vibe
+        const existingImportVibeId = importNameToVibeIdMap.get(folderName);
+        if (existingImportVibeId) {
+            // Ajouter à vibe existante de cet import
+            newPlaylists[existingImportVibeId] = {
+                ...newPlaylists[existingImportVibeId],
+                songIds: [...(newPlaylists[existingImportVibeId].songIds || []), ...songIdsForVibe]
+            };
+        } else {
+            // Créer nouvelle vibe
+            const newVibeId = generateVibeId();
+            newPlaylists[newVibeId] = {
+                name: folderName,
+                songIds: songIdsForVibe
+            };
+            newVibeIds.push(newVibeId);
+            importNameToVibeIdMap.set(folderName, newVibeId);
+        }
+    });
+
+    // Mettre à jour les états
+    setLibrary(newLibrary);
+    setFileCache(newFileCache);
+    setPlaylists(newPlaylists);
+
+    // Attribuer des couleurs aux nouvelles vibes
+    if (newVibeIds.length > 0) {
+        setVibeColorIndices(prev => {
+            const updated = { ...prev };
+            initializeGradientUsage(null);
+            Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
+            newVibeIds.forEach(vibeId => {
+                if (updated[vibeId] === undefined) {
+                    updated[vibeId] = getNextAvailableGradientIndex();
+                }
+            });
+            return updated;
+        });
     }
   };
 
   // Traiter l'import de fichiers Dropbox
   const processDropboxImport = (foldersToImport) => {
-    const newPlaylists = playlists ? { ...playlists } : {};
+    // === FORMAT BIBLIOTHÈQUE ===
+    // foldersToImport: { nomDossier: [{ name, path_lower, ... }] }
 
-    // Fonction pour normaliser un titre (enlever numéros de piste, artiste, etc.)
+    const newLibrary = { ...library };
+    const newPlaylists = playlists ? { ...playlists } : {};
+    const newVibeIds = [];
+
+    // Fonction pour normaliser un titre (pour matching intelligent)
     const normalizeTitle = (filename) => {
-        // Enlever l'extension
         let name = filename.replace(/\.[^/.]+$/, "");
-        // Enlever les préfixes numériques (01, 02, 01., 01 -, etc.)
         name = name.replace(/^\d+[\s._-]*/, "");
-        // Si format "Artiste - Titre", garder le titre
         if (name.includes(" - ")) {
             name = name.split(" - ").pop().trim();
         }
-        // Normaliser: lowercase, enlever accents, espaces multiples
         return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
     };
 
-    const allExistingSongsMap = new Map();
-    const allExistingSongsByTitle = new Map(); // Nouvelle map par titre normalisé
-    if (playlists) {
-        Object.values(playlists).forEach(vibe => {
-            vibe.songs.forEach(song => {
-                if (song.fileSignature) {
-                    allExistingSongsMap.set(song.fileSignature, song);
-                }
-                // Aussi indexer par titre normalisé
-                const normalizedTitle = normalizeTitle(song.fileSignature || song.title || "");
-                if (normalizedTitle && !allExistingSongsByTitle.has(normalizedTitle)) {
-                    allExistingSongsByTitle.set(normalizedTitle, song);
-                }
-            });
-        });
-    }
+    // Map fileSignature -> songId pour déduplication
+    const signatureToId = new Map();
+    const titleToId = new Map();
+    Object.values(newLibrary).forEach(song => {
+        if (song.fileSignature) {
+            signatureToId.set(song.fileSignature, song.id);
+        }
+        const normalized = normalizeTitle(song.fileSignature || song.title || "");
+        if (normalized && !titleToId.has(normalized)) {
+            titleToId.set(normalized, song.id);
+        }
+    });
 
-    // Créer une map nom -> vibeId pour trouver les vibes existantes par nom
+    // Map nom -> vibeId pour trouver vibes existantes
     const nameToVibeIdMap = new Map();
     Object.keys(newPlaylists).forEach(vibeId => {
         const vibe = newPlaylists[vibeId];
@@ -5074,153 +5079,114 @@ const vibeSearchResults = () => {
         }
     });
 
-    // Créer un Set de toutes les vibes existantes par leur "signature de contenu"
+    // Signatures de vibes existantes
     const existingVibeSignatures = new Set();
     Object.values(newPlaylists).forEach(vibe => {
-        if (vibe.songs && vibe.songs.length > 0) {
-            const signature = vibe.songs
-                .map(s => s.fileSignature)
-                .filter(Boolean)
-                .sort()
-                .join('|');
-            if (signature) {
-                existingVibeSignatures.add(signature);
-            }
+        const ids = vibe.songIds || (vibe.songs ? vibe.songs.map(s => s.id) : []);
+        if (ids.length > 0) {
+            existingVibeSignatures.add([...ids].sort().join('|'));
         }
     });
 
     Object.keys(foldersToImport).forEach(folderName => {
         const filesInFolder = foldersToImport[folderName];
+        const songIdsForVibe = [];
 
-        const newSongsForThisFolder = filesInFolder.map((file) => {
-            // Créer une signature unique basée sur le nom du fichier
+        filesInFolder.forEach(file => {
             const fileSignature = file.name;
 
+            // Parser titre/artiste
             let title = file.name.replace(/\.[^/.]+$/, "");
-            let artist = "Artiste Inconnu";
-            // Enlever les préfixes numériques pour le titre
             title = title.replace(/^\d+[\s._-]*/, "");
+            let artist = "Artiste Inconnu";
             if (title.includes(" - ")) {
                 const parts = title.split(" - ");
                 artist = parts[0].trim();
                 title = parts[1].trim();
             }
 
-            // Chercher d'abord par signature exacte, puis par titre normalisé
-            let existingSong = allExistingSongsMap.get(fileSignature);
-            const normalizedDropboxTitle = normalizeTitle(file.name);
-            if (!existingSong && normalizedDropboxTitle) {
-                existingSong = allExistingSongsByTitle.get(normalizedDropboxTitle);
+            let songId;
+            const normalizedTitle = normalizeTitle(file.name);
+
+            // Chercher par signature exacte ou titre normalisé
+            if (signatureToId.has(fileSignature)) {
+                songId = signatureToId.get(fileSignature);
+                // Mettre à jour dropboxPath
+                newLibrary[songId] = {
+                    ...newLibrary[songId],
+                    dropboxPath: file.path_lower,
+                    dropboxAvailable: true
+                };
+            } else if (normalizedTitle && titleToId.has(normalizedTitle)) {
+                songId = titleToId.get(normalizedTitle);
+                newLibrary[songId] = {
+                    ...newLibrary[songId],
+                    dropboxPath: file.path_lower,
+                    dropboxAvailable: true
+                };
+            } else {
+                // Nouvelle song
+                songId = `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                signatureToId.set(fileSignature, songId);
+                if (normalizedTitle) titleToId.set(normalizedTitle, songId);
+                newLibrary[songId] = {
+                    id: songId,
+                    title,
+                    artist,
+                    playCount: 0,
+                    localFileName: null,
+                    dropboxPath: file.path_lower,
+                    dropboxAvailable: true,
+                    fileSignature
+                };
             }
 
-            const playCount = existingSong ? existingSong.playCount : 0;
-            const id = existingSong ? existingSong.id : `dropbox-${fileSignature}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-
-            // Garder le fichier local SEULEMENT s'il est vraiment disponible (file non null)
-            // OU si on a un localFileName sauvegardé (le fichier sera rechargé au prochain import local)
-            const hasLocalFile = existingSong && existingSong.file;
-            const hasLocalFileName = existingSong && existingSong.localFileName;
-
-            return {
-                id: id,
-                title: title,
-                artist: artist,
-                playCount: playCount,
-                file: hasLocalFile ? existingSong.file : null,
-                localFileName: hasLocalFileName ? existingSong.localFileName : null,
-                dropboxPath: file.path_lower,
-                fileSignature: fileSignature,
-                type: hasLocalFile ? 'local' : 'dropbox'
-            };
+            songIdsForVibe.push(songId);
         });
 
-        // Vérifier si une vibe avec exactement ce contenu existe déjà
-        const folderSignature = newSongsForThisFolder
-            .map(s => s.fileSignature)
-            .filter(Boolean)
-            .sort()
-            .join('|');
-
-        // Si une vibe identique existe, ne pas créer de doublon
-        if (folderSignature && existingVibeSignatures.has(folderSignature)) {
+        // Vérifier doublon de vibe
+        const vibeSignature = [...songIdsForVibe].sort().join('|');
+        if (vibeSignature && existingVibeSignatures.has(vibeSignature)) {
             return;
         }
+        existingVibeSignatures.add(vibeSignature);
 
-        // Ajouter cette signature pour éviter les doublons dans le même import
-        if (folderSignature) {
-            existingVibeSignatures.add(folderSignature);
-        }
-
-        // Chercher si une vibe avec ce nom existe déjà
+        // Chercher vibe existante par nom ou créer nouvelle
         const existingVibeId = nameToVibeIdMap.get(folderName);
         if (existingVibeId) {
             newPlaylists[existingVibeId] = {
                 ...newPlaylists[existingVibeId],
-                songs: newSongsForThisFolder
+                songIds: songIdsForVibe
             };
         } else {
             const newVibeId = generateVibeId();
             newPlaylists[newVibeId] = {
                 name: folderName,
-                songs: newSongsForThisFolder
+                songIds: songIdsForVibe
             };
+            newVibeIds.push(newVibeId);
             nameToVibeIdMap.set(folderName, newVibeId);
         }
     });
 
-    // Propager les dropboxPath ET les fichiers locaux aux autres vibes qui ont les mêmes chansons (par ID ou fileSignature)
-    const dropboxPathsById = new Map();
-    const dropboxPathsBySignature = new Map();
-    const localFilesById = new Map();
-    const localFilesBySignature = new Map();
-
-    // Collecter tous les dropboxPath ET fichiers locaux disponibles
-    Object.values(newPlaylists).forEach(vibe => {
-        vibe.songs.forEach(song => {
-            if (song.dropboxPath) {
-                if (!dropboxPathsById.has(song.id)) {
-                    dropboxPathsById.set(song.id, song.dropboxPath);
-                }
-                if (song.fileSignature && !dropboxPathsBySignature.has(song.fileSignature)) {
-                    dropboxPathsBySignature.set(song.fileSignature, song.dropboxPath);
-                }
-            }
-            if (song.file) {
-                if (!localFilesById.has(song.id)) {
-                    localFilesById.set(song.id, song.file);
-                }
-                if (song.fileSignature && !localFilesBySignature.has(song.fileSignature)) {
-                    localFilesBySignature.set(song.fileSignature, song.file);
-                }
-            }
-        });
-    });
-
-    // Propager dropboxPath ET fichiers locaux à toutes les chansons correspondantes
-    Object.keys(newPlaylists).forEach(vibeId => {
-        newPlaylists[vibeId] = {
-            ...newPlaylists[vibeId],
-            songs: newPlaylists[vibeId].songs.map(song => {
-                // Chercher un dropboxPath par ID ou par fileSignature
-                const dropboxPath = song.dropboxPath || dropboxPathsById.get(song.id) ||
-                                    (song.fileSignature && dropboxPathsBySignature.get(song.fileSignature));
-                // Chercher un fichier local par ID ou par fileSignature
-                const localFile = song.file || localFilesById.get(song.id) ||
-                                  (song.fileSignature && localFilesBySignature.get(song.fileSignature));
-
-                // Déterminer le type : local si on a un fichier, sinon dropbox si on a un path
-                const newType = localFile ? 'local' : (dropboxPath ? 'dropbox' : song.type);
-
-                // Mettre à jour seulement si quelque chose a changé
-                if (dropboxPath !== song.dropboxPath || localFile !== song.file || newType !== song.type) {
-                    return { ...song, dropboxPath: dropboxPath || null, file: localFile || null, type: newType };
-                }
-                return song;
-            })
-        };
-    });
-
+    // Mettre à jour les états
+    setLibrary(newLibrary);
     setPlaylists(newPlaylists);
+
+    // Attribuer des couleurs aux nouvelles vibes
+    if (newVibeIds.length > 0) {
+        setVibeColorIndices(prev => {
+            const updated = { ...prev };
+            initializeGradientUsage(null);
+            Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
+            newVibeIds.forEach(vibeId => {
+                if (updated[vibeId] === undefined) {
+                    updated[vibeId] = getNextAvailableGradientIndex();
+                }
+            });
+            return updated;
+        });
+    }
 
     setFeedback({ text: `Import Dropbox terminé`, type: 'confirm', triggerValidation: Date.now() });
   };
@@ -5915,18 +5881,16 @@ const vibeSearchResults = () => {
       setProgress(0);
     }
   };
+  // === FORMAT BIBLIOTHÈQUE - mettre à jour directement dans la library ===
   const updatePlayCount = (songToUpdate) => {
-    const newPlaylists = { ...playlists };
-    Object.keys(newPlaylists).forEach(vibeId => {
-      newPlaylists[vibeId] = {
-        ...newPlaylists[vibeId],
-        songs: newPlaylists[vibeId].songs.map(s => {
-          if (s.id === songToUpdate.id) return { ...s, playCount: (s.playCount || 0) + 1 };
-          return s;
-        })
-      };
-    });
-    setPlaylists(newPlaylists);
+    if (!songToUpdate?.id) return;
+    setLibrary(prev => ({
+      ...prev,
+      [songToUpdate.id]: {
+        ...prev[songToUpdate.id],
+        playCount: (prev[songToUpdate.id]?.playCount || 0) + 1
+      }
+    }));
   };
 
   const applySort = (mode, direction = 'asc') => { 
@@ -6039,15 +6003,34 @@ const vibeSearchResults = () => {
       // Sinon on l'ajoute simplement après le morceau en cours
       newQueue.splice(currentIdx + 1, 0, song);
       
-      // Ajouter aussi à la playlist active si ce n'est pas déjà le cas
+      // === FORMAT BIBLIOTHÈQUE - ajouter à la playlist active ===
       if (activeVibeId && playlists[activeVibeId]) {
-        const isInPlaylist = playlists[activeVibeId].songs.find(s => s.id === song.id);
+        const vibe = playlists[activeVibeId];
+        const songIds = vibe.songIds || [];
+        const isInPlaylist = songIds.includes(song.id);
         if (!isInPlaylist) {
+          // S'assurer que le song est dans la library
+          if (!library[song.id]) {
+            setLibrary(prev => ({
+              ...prev,
+              [song.id]: {
+                id: song.id,
+                title: song.title,
+                artist: song.artist,
+                playCount: song.playCount || 0,
+                localFileName: song.localFileName,
+                dropboxPath: song.dropboxPath,
+                dropboxAvailable: song.dropboxAvailable,
+                fileSignature: song.fileSignature
+              }
+            }));
+          }
+          // Ajouter le songId à la vibe
           setPlaylists(prev => ({
             ...prev,
             [activeVibeId]: {
               ...prev[activeVibeId],
-              songs: [...prev[activeVibeId].songs, { ...song, type: 'vibe' }]
+              songIds: [...(prev[activeVibeId].songIds || []), song.id]
             }
           }));
         }
@@ -6061,13 +6044,14 @@ const vibeSearchResults = () => {
 
   const playFolder = (vibeId) => {
         const vibe = playlists[vibeId];
-        if (!vibe || !vibe.songs || vibe.songs.length === 0) {
+        const vibeSongs = getVibeSongs(vibeId);
+        if (!vibe || vibeSongs.length === 0) {
             console.error("Vibe introuvable ou vide:", vibeId);
             return;
         }
 
         // VÉRIFICATION : fichiers accessibles ?
-        const firstSong = vibe.songs[0];
+        const firstSong = vibeSongs[0];
         const isAccessible = isSongAvailable(firstSong);
         if (!isAccessible) {
             alert(`Session expirée pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
@@ -6106,8 +6090,10 @@ const vibeSearchResults = () => {
 
     const doLaunchVibe = (vibeId) => {
       const vibe = playlists[vibeId];
+    // Récupérer les songs depuis la library
+    const vibeSongs = getVibeSongs(vibeId);
     // Filtrer pour ne garder que les morceaux avec fichier disponible
-    let songsToPlay = vibe.songs.filter(s => isSongAvailable(s));
+    let songsToPlay = vibeSongs.filter(s => isSongAvailable(s));
     if (songsToPlay.length === 0) {
         alert(`Aucun morceau disponible pour "${vibe.name || 'cette vibe'}" ! Ré-importez le dossier.`);
         return;
@@ -6294,6 +6280,7 @@ const cancelKillVibe = () => {
   };
 
   // Scanner la disponibilité des fichiers Dropbox en arrière-plan
+  // === FORMAT BIBLIOTHÈQUE - scan directement la library ===
   const scanDropboxAvailability = async () => {
     setScanDebugInfo(prev => ({ ...prev, started: true }));
 
@@ -6303,24 +6290,22 @@ const cancelKillVibe = () => {
         return;
     }
 
-    // Collecter tous les dropboxPath uniques
-    const dropboxPaths = new Set();
-    Object.values(playlists).forEach(vibe => {
-        vibe.songs.forEach(song => {
-            if (song.dropboxPath) {
-                dropboxPaths.add(song.dropboxPath);
-            }
-        });
+    // Collecter les dropboxPath directement depuis la library
+    const pathToSongId = new Map(); // path -> songId
+    Object.values(library).forEach(song => {
+        if (song.dropboxPath) {
+            pathToSongId.set(song.dropboxPath, song.id);
+        }
     });
 
-    setScanDebugInfo(prev => ({ ...prev, pathsCount: dropboxPaths.size }));
+    setScanDebugInfo(prev => ({ ...prev, pathsCount: pathToSongId.size }));
 
-    if (dropboxPaths.size === 0) {
+    if (pathToSongId.size === 0) {
         setScanDebugInfo(prev => ({ ...prev, error: 'no paths' }));
         return;
     }
 
-    const pathsArray = Array.from(dropboxPaths);
+    const pathsArray = Array.from(pathToSongId.keys());
     const unavailablePaths = new Set();
 
     // Vérifier par batch de 100 (limite Dropbox)
@@ -6345,7 +6330,6 @@ const cancelKillVibe = () => {
             });
 
             if (response.status === 401) {
-                // Token expiré pendant le scan, arrêter
                 setDropboxScanProgress(null);
                 return;
             }
@@ -6355,13 +6339,11 @@ const cancelKillVibe = () => {
             if (data.entries) {
                 data.entries.forEach((entry, index) => {
                     if (entry['.tag'] === 'failure') {
-                        // Fichier non trouvé
                         unavailablePaths.add(batch[index]);
                     }
                 });
             }
 
-            // Mettre à jour la progression
             setDropboxScanProgress(Math.round((currentBatch / totalBatches) * 100));
         } catch (error) {
             console.error('Erreur scan Dropbox batch:', error);
@@ -6372,36 +6354,31 @@ const cancelKillVibe = () => {
     setDropboxScanProgress(null);
     setScanDebugInfo(prev => ({ ...prev, unavailableCount: unavailablePaths.size }));
 
-    // Mettre à jour les playlists avec le flag dropboxAvailable (toujours, même si 0 indisponibles)
-    setPlaylists(prev => {
+    // Mettre à jour la library directement (plus besoin d'itérer les vibes)
+    setLibrary(prev => {
         const updated = { ...prev };
-        Object.keys(updated).forEach(vibeId => {
-            updated[vibeId] = {
-                ...updated[vibeId],
-                songs: updated[vibeId].songs.map(song => {
-                    if (song.dropboxPath && unavailablePaths.has(song.dropboxPath)) {
-                        return { ...song, dropboxAvailable: false };
-                    } else if (song.dropboxPath) {
-                        return { ...song, dropboxAvailable: true };
-                    }
-                    return song;
-                })
-            };
+        pathToSongId.forEach((songId, path) => {
+            if (updated[songId]) {
+                updated[songId] = {
+                    ...updated[songId],
+                    dropboxAvailable: !unavailablePaths.has(path)
+                };
+            }
         });
         return updated;
     });
     console.log(`Scan Dropbox terminé: ${unavailablePaths.size} fichier(s) indisponible(s) sur ${pathsArray.length}`);
   };
 
-  // Lancer le scan au démarrage si connecté à Dropbox (après que playlists soit chargé)
+  // Lancer le scan au démarrage si connecté à Dropbox (après que library soit chargée)
   const scanTriggeredRef = useRef(false);
   useEffect(() => {
     const hasToken = !!getRefreshToken();
-    const playlistsLoaded = playlists && Object.keys(playlists).length > 0;
-    setScanDebugInfo(prev => ({ ...prev, hasRefreshToken: hasToken, playlistsLoaded }));
+    const libraryLoaded = Object.keys(library).length > 0;
+    setScanDebugInfo(prev => ({ ...prev, hasRefreshToken: hasToken, libraryLoaded }));
 
-    // Attendre que playlists soit chargé et qu'on n'ait pas déjà lancé le scan
-    if (!hasToken || !playlistsLoaded || scanTriggeredRef.current) return;
+    // Attendre que library soit chargée et qu'on n'ait pas déjà lancé le scan
+    if (!hasToken || !libraryLoaded || scanTriggeredRef.current) return;
 
     scanTriggeredRef.current = true;
     const timer = setTimeout(() => {
@@ -6410,7 +6387,7 @@ const cancelKillVibe = () => {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [playlists]); // Re-évaluer quand playlists change
+  }, [library]); // Re-évaluer quand library change
 
   // Charger le contenu d'un dossier Dropbox
   const loadDropboxFolder = async (path, token) => {
@@ -7430,7 +7407,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 style={{ fontSize: '10px' }}
             >
                 <div>hasRefreshToken: {scanDebugInfo.hasRefreshToken ? '✓' : '✗'}</div>
-                <div>playlistsLoaded: {scanDebugInfo.playlistsLoaded ? '✓' : '✗'}</div>
+                <div>libraryLoaded: {scanDebugInfo.libraryLoaded ? '✓' : '✗'}</div>
                 <div>triggered (3s): {scanDebugInfo.triggered ? '✓' : '✗'}</div>
                 <div>started: {scanDebugInfo.started ? '✓' : '✗'}</div>
                 <div>pathsCount: {scanDebugInfo.pathsCount}</div>
@@ -7490,7 +7467,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
               <div className="flex flex-col" style={{ gap: `${CONFIG.VIBECARD_GAP_VH}vh`, marginTop: `${CONFIG.HEADER_CARDS_GAP}rem` }}>
                     {Object.keys(playlists).map((vibeId, index) => {
                         const vibe = playlists[vibeId];
-                        const songs = vibe.songs;
+                        // === FORMAT BIBLIOTHÈQUE - récupérer les songs depuis la library ===
+                        const songs = getVibeSongs(vibeId);
                         const vibeName = vibe.name;
                         const isVibe = songs[0]?.type === 'vibe' || vibeName?.includes('Vibe');
                         const availableCount = songs.filter(s => isSongAvailable(s)).length;
@@ -8240,6 +8218,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 // Mode édition : récupérer les données de la vibe à éditer
                 const isEditMode = editingVibeId !== null;
                 const editingVibe = isEditMode ? playlists[editingVibeId] : null;
+                // === FORMAT BIBLIOTHÈQUE - récupérer les songs pour l'édition ===
+                const editingVibeSongs = isEditMode ? getVibeSongs(editingVibeId) : [];
 
                 // Calculer l'index initial UNE SEULE FOIS au montage
                 const usedIndices = Object.values(vibeColorIndices);
@@ -8251,7 +8231,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                   <div className="absolute inset-0 z-[200]">
                   <ErrorBoundary>
                   <VibeBuilder
-                      sourcePlaylists={playlists}
+                      allGlobalSongs={allGlobalSongs}
                         onClose={() => {
                             setShowBuilder(false);
                             setEditingVibeId(null);
@@ -8269,10 +8249,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         editMode={isEditMode}
                         editVibeId={editingVibeId}
                         editVibeName={editingVibe?.name || ''}
-                        editVibeSongs={editingVibe?.songs || []}
+                        editVibeSongs={editingVibeSongs}
                         editVibeGradientIndex={isEditMode ? (vibeColorIndices[editingVibeId] ?? 0) : 0}
                         onSaveVibe={(name, songs, gradientIndex) => {
-                          const vibeSongs = songs.map(s => ({...s, type: 'vibe'}));
+                          // === FORMAT BIBLIOTHÈQUE - sauver avec songIds ===
+                          const songIds = songs.map(s => s.id);
 
                           if (isEditMode) {
                               // Mode édition : modifier la vibe existante
@@ -8280,7 +8261,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   ...prev,
                                   [editingVibeId]: {
                                       name: name,
-                                      songs: vibeSongs
+                                      songIds: songIds
                                   }
                               }));
                               setVibeColorIndices(prev => ({ ...prev, [editingVibeId]: gradientIndex }));
@@ -8291,7 +8272,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   ...prev,
                                   [newVibeId]: {
                                       name: name,
-                                      songs: vibeSongs
+                                      songIds: songIds
                                   }
                               }));
                               setVibeColorIndices(prev => ({ ...prev, [newVibeId]: gradientIndex }));

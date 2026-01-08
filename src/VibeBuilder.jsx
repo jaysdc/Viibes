@@ -1033,7 +1033,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0 }) => {
+const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0 }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -1198,27 +1198,8 @@ const VibeBuilder = ({ sourcePlaylists, onClose, onSaveVibe, onDeleteVibe, fadeM
     const PREVIEW_DURATION = 15; // Durée en secondes
     // =========================================== 
 
-    const allSongs = React.useMemo(() => {
-        let songs = [];
-        Object.values(sourcePlaylists || {}).forEach(vibe => {
-            const vibeSongs = vibe?.songs || vibe;
-            if (Array.isArray(vibeSongs)) {
-                songs = [...songs, ...vibeSongs];
-            }
-        }); 
-        
-        // Dédoublonnage intelligent : garder la version avec file si elle existe
-        const songMap = new Map();
-        songs.forEach(song => {
-            const existing = songMap.get(song.id);
-            // Garder la chanson si : elle n'existe pas encore OU si elle a un file et l'existante n'en a pas
-            if (!existing || (isSongAvailable(song) && !isSongAvailable(existing))) {
-                songMap.set(song.id, song);
-            }
-        });
-        
-        return Array.from(songMap.values());
-    }, [sourcePlaylists]);
+    // === FORMAT BIBLIOTHÈQUE - allGlobalSongs est déjà dédupliqué depuis la library ===
+    const allSongs = allGlobalSongs;
 
     const displaySongs = useMemo(() => { 
         let results = [...allSongs]; 
