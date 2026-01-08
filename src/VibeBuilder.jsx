@@ -2013,7 +2013,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
             </div>
             
             {/* BOTTOM BAR - VIBECARD PREVIEW */}
-            {selectedSongs.length > 0 && (() => {
+            {(() => {
                 // Calculer dispo/pas dispo
                 const availableCount = selectedSongs.filter(s => isSongAvailable(s)).length;
                 const unavailableCount = selectedSongs.length - availableCount;
