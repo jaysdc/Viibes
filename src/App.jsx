@@ -8195,7 +8195,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           try {
             const parsed = JSON.parse(saved);
             return `${Object.keys(parsed).length} songs - IDs: ${Object.keys(parsed).slice(0,3).join(', ')}...`;
-          } catch { return 'PARSE ERROR'; }
+          } catch (e) { return 'PARSE ERROR'; }
         })()}</div>
         <hr className="border-white/30 my-1"/>
         <div className="text-green-300">1ère vibe:</div>
