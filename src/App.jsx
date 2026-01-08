@@ -4576,6 +4576,7 @@ useEffect(() => {
 useEffect(() => {
     if (Object.keys(library).length > 0) {
         localStorage.setItem('vibes_library', JSON.stringify(library));
+        localStorage.setItem('vibes_library_version', '2');
     }
 }, [library]);
 
