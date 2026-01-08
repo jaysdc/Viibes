@@ -2013,7 +2013,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
             </div>
             
             {/* BOTTOM BAR - VIBECARD PREVIEW */}
-            {(() => {
+            {selectedSongs.length > 0 && (() => {
                 // Calculer dispo/pas dispo
                 const availableCount = selectedSongs.filter(s => isSongAvailable(s)).length;
                 const unavailableCount = selectedSongs.length - availableCount;
@@ -2112,18 +2112,19 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                     />
                                 ) : (
                                     <svg
-                                        width={CONFIG.CREATE_BTN_SIZE}
-                                        height={CONFIG.CREATE_BTN_SIZE}
+                                        width="100%"
+                                        height="100%"
                                         viewBox="0 0 100 100"
+                                        style={{ position: 'absolute', inset: 0 }}
                                     >
                                         <defs>
-                                            <mask id="plusCutoutMask">
+                                            <mask id="plusCutout">
                                                 <circle cx="50" cy="50" r="50" fill="white"/>
                                                 <line x1="50" y1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} x2="50" y2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
                                                 <line x1={50 - CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y1="50" x2={50 + CONFIG.CREATE_BTN_PLUS_LENGTH / 2} y2="50" stroke="black" strokeWidth={CONFIG.CREATE_BTN_ICON_STROKE} strokeLinecap="round"/>
                                             </mask>
                                         </defs>
-                                        <circle cx="50" cy="50" r="50" fill="white" mask="url(#plusCutoutMask)"/>
+                                        <circle cx="50" cy="50" r="50" fill="white" mask="url(#plusCutout)"/>
                                     </svg>
                                 )}
                             </div>

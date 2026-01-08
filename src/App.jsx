@@ -4507,11 +4507,9 @@ useEffect(() => {
         };
       });
 
-      // Marquer migration complète ET sauvegarder immédiatement
+      // Marquer migration complète
       localStorage.setItem('vibes_library_version', '1');
-      localStorage.setItem('vibes_library', JSON.stringify(initialLibrary));
-      localStorage.setItem('vibes_playlists', JSON.stringify(initialPlaylists));
-      console.log(`[Migration] Terminée et sauvegardée: ${Object.keys(initialLibrary).length} morceaux uniques, ${Object.keys(initialPlaylists).length} vibes`);
+      console.log(`[Migration] Terminée: ${Object.keys(initialLibrary).length} morceaux uniques, ${Object.keys(initialPlaylists).length} vibes`);
     } catch (e) {
       console.error("[Migration] Erreur:", e);
       initialPlaylists = {};
@@ -5041,11 +5039,6 @@ const vibeSearchResults = () => {
     setFileCache(newFileCache);
     setPlaylists(newPlaylists);
 
-    // Sauvegarder immédiatement (ne pas attendre le useEffect)
-    localStorage.setItem('vibes_library_version', '1');
-    localStorage.setItem('vibes_library', JSON.stringify(newLibrary));
-    localStorage.setItem('vibes_playlists', JSON.stringify(newPlaylists));
-
     // Attribuer des couleurs aux nouvelles vibes
     if (newVibeIds.length > 0) {
         setVibeColorIndices(prev => {
@@ -5196,11 +5189,6 @@ const vibeSearchResults = () => {
     // Mettre à jour les états
     setLibrary(newLibrary);
     setPlaylists(newPlaylists);
-
-    // Sauvegarder immédiatement (ne pas attendre le useEffect)
-    localStorage.setItem('vibes_library_version', '1');
-    localStorage.setItem('vibes_library', JSON.stringify(newLibrary));
-    localStorage.setItem('vibes_playlists', JSON.stringify(newPlaylists));
 
     // Attribuer des couleurs aux nouvelles vibes
     if (newVibeIds.length > 0) {
@@ -7430,6 +7418,37 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
             )}
 
+            {/* DEBUG OVERLAY - Scan Dropbox */}
+            <div
+                className="absolute top-full left-0 right-0 bg-black/90 text-white text-xs p-2 font-mono z-50"
+                style={{ fontSize: '10px' }}
+            >
+                <div className="text-yellow-400">--- LIBRARY ---</div>
+                <div>library size: {Object.keys(library).length}</div>
+                <div>playlists: {Object.keys(playlists).length}</div>
+                {Object.keys(playlists).length > 0 && (() => {
+                    const firstVibeId = Object.keys(playlists)[0];
+                    const firstVibe = playlists[firstVibeId];
+                    const songIds = firstVibe?.songIds || [];
+                    const songs = firstVibe?.songs || [];
+                    return (
+                        <>
+                            <div>1st vibe songIds: {songIds.length}</div>
+                            <div>1st vibe songs: {songs.length}</div>
+                            {songIds.length > 0 && <div>1st songId in lib: {library[songIds[0]] ? '✓' : '✗'}</div>}
+                        </>
+                    );
+                })()}
+                <div className="text-yellow-400 mt-1">--- SCAN ---</div>
+                <div>hasRefreshToken: {scanDebugInfo.hasRefreshToken ? '✓' : '✗'}</div>
+                <div>libraryLoaded: {scanDebugInfo.libraryLoaded ? '✓' : '✗'}</div>
+                <div>triggered (3s): {scanDebugInfo.triggered ? '✓' : '✗'}</div>
+                <div>started: {scanDebugInfo.started ? '✓' : '✗'}</div>
+                <div>pathsCount: {scanDebugInfo.pathsCount}</div>
+                <div>progress: {dropboxScanProgress ?? 'null'}</div>
+                <div>unavailable: {scanDebugInfo.unavailableCount ?? 0}</div>
+                {scanDebugInfo.error && <div className="text-red-400">error: {scanDebugInfo.error}</div>}
+            </div>
 
             </div>
         {/* FIN HEADER */}
@@ -7537,18 +7556,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* TWEAKER MODE */}
         {showTweaker && (
             <Tweaker
-            playlists={(() => {
-                // Résoudre les songs depuis la library pour le Tweaker
-                const resolved = {};
-                Object.keys(playlists).forEach(vibeId => {
-                    const vibe = playlists[vibeId];
-                    resolved[vibeId] = {
-                        name: vibe.name,
-                        songs: getVibeSongs(vibeId)
-                    };
-                });
-                return resolved;
-            })()} 
+            playlists={playlists} 
             vibeColorIndices={vibeColorIndices}
             cardAnimConfig={{
               openDuration: CONFIG.CARD_ANIM_OPEN_DURATION,
@@ -7562,17 +7570,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           }}
               setVibeColorIndices={setVibeColorIndices}
                 onSave={(newPlaylists) => {
-                  // Reconvertir en format songIds
-                  const converted = {};
-                  Object.keys(newPlaylists).forEach(vibeId => {
-                      const vibe = newPlaylists[vibeId];
-                      converted[vibeId] = {
-                          name: vibe.name,
-                          songIds: vibe.songs ? vibe.songs.map(s => s.id) : []
-                      };
-                  });
-                  setPlaylists(converted);
-                  localStorage.setItem('vibes_playlists', JSON.stringify(converted));
+                  setPlaylists(newPlaylists);
                   // Ne PAS fermer ici - le Tweaker appellera onCancel après l'animation
             }}
             onCancel={() => setShowTweaker(false)}
