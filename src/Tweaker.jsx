@@ -247,10 +247,11 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
 
 // Composant principal Tweaker
 const Tweaker = ({
-    playlists, 
-    vibeColorIndices, 
-    setVibeColorIndices, 
-    onSave, 
+    playlists,
+    getVibeSongs,
+    vibeColorIndices,
+    setVibeColorIndices,
+    onSave,
     onCancel,
     onCloseStart = () => {},
     VibeCardComponent,
@@ -282,14 +283,14 @@ const Tweaker = ({
     }, []);
     
     // État local des vibes (copie pour modifications)
-    // Nouveau format : playlists = { vibeId: { name, songs } }
+    // Format: { vibeId, name, songs (résolu depuis library) }
     const [vibes, setVibes] = useState(() =>
         Object.keys(playlists).map(vibeId => ({
             vibeId,
             name: playlists[vibeId].name,
             originalVibeId: vibeId,
             originalName: playlists[vibeId].name,
-            songs: playlists[vibeId].songs
+            songs: getVibeSongs(vibeId)
         }))
     );
     
@@ -344,7 +345,7 @@ const Tweaker = ({
             name: playlists[vibeId].name,
             originalVibeId: vibeId,
             originalName: playlists[vibeId].name,
-            songs: playlists[vibeId].songs
+            songs: getVibeSongs(vibeId)
         }))
     );
     
@@ -546,12 +547,12 @@ const Tweaker = ({
             finalVibes = [...ordered, ...unordered];
         }
 
-        // Créer le nouvel objet (nouveau format: { vibeId: { name, songs } })
+        // Créer le nouvel objet (format: { vibeId: { name, songIds } })
         const newPlaylists = {};
         finalVibes.forEach(vibe => {
             newPlaylists[vibe.vibeId] = {
                 name: vibe.name,
-                songs: vibe.songs
+                songIds: vibe.songs.map(s => s.id)
             };
         });
 

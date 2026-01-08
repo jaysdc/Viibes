@@ -7378,7 +7378,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         {/* TWEAKER MODE */}
         {showTweaker && (
             <Tweaker
-            playlists={playlists} 
+            playlists={playlists}
+            getVibeSongs={getVibeSongs}
             vibeColorIndices={vibeColorIndices}
             cardAnimConfig={{
               openDuration: CONFIG.CARD_ANIM_OPEN_DURATION,
