@@ -678,6 +678,31 @@ const Tweaker = ({
                     {/* Boutons capsule mode */}
                     <div className="px-4" style={{ paddingTop: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM, paddingBottom: `${TWEAKER_CONFIG.HEADER_MARGIN_BOTTOM}rem` }}>
                         <div className="flex gap-2 relative">
+                            {/* OVERLAY PREVIEW DÉGRADÉ (pendant swipe sur une carte) */}
+                            {vibeSwipePreview && vibeSwipePreview.nextGradient && (() => {
+                                const gradientColors = vibeSwipePreview.nextGradient;
+                                const step = 100 / (gradientColors.length - 1);
+                                const gradientStyle = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
+                                const gradientName = getGradientName ? getGradientName(vibeSwipePreview.previewIndex) : `Gradient ${vibeSwipePreview.previewIndex}`;
+                                return (
+                                    <div
+                                        className="absolute inset-0 rounded-full flex items-center justify-center z-50"
+                                        style={{
+                                            background: gradientStyle,
+                                            boxShadow: `0 0 25px ${gradientColors[Math.floor(gradientColors.length / 2)]}66, 0 0 50px ${gradientColors[Math.floor(gradientColors.length / 2)]}33`
+                                        }}
+                                    >
+                                        <div
+                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                                        >
+                                            <ChevronLeft size={16} />
+                                            <span>{gradientName}</span>
+                                            <ChevronRight size={16} />
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             {/* FeedbackOverlay pour UNDO */}
                             <TweakerFeedbackOverlay
                                 isActive={undoFeedback}

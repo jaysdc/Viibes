@@ -186,7 +186,7 @@ const CONFIG = {
     // DÉGRADÉS & COULEURS
     // ══════════════════════════════════════════════════════════════════════════
     GRADIENT_OPACITY: 1,              // Opacité des dégradés (0 = transparent, 1 = opaque)
-    MAX_SWIPE_DISTANCE: 300,          // Distance max pour parcourir les 20 couleurs en swipant
+    MAX_SWIPE_DISTANCE: 275,          // Distance max pour parcourir les 20 couleurs en swipant
 
     // ══════════════════════════════════════════════════════════════════════════
     // VIBE CARDS (Dashboard)
@@ -2527,16 +2527,12 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 style={{
                     height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     background: gradientBg,
-                    opacity: 0.3 + (progress * 0.7),
                     boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
                 }}
             >
-<div 
+                <div
                     className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                    style={{ 
-                        opacity: progress,
-                        textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                    }}
+                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                 >
                     <ChevronLeft size={16} />
                     <span>{gradientName}</span>
@@ -7164,16 +7160,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   style={{
                                       height: CONFIG.HEADER_BUTTONS_HEIGHT,
                                       background: gradientBg,
-                                      opacity: 0.3 + (progress * 0.7),
                                       boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
                                   }}
                               >
                                   <div
                                       className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                                      style={{
-                                          opacity: progress,
-                                          textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                      }}
+                                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                                   >
                                       <ChevronLeft size={16} />
                                       <span>{gradientName}</span>

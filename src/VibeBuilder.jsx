@@ -1789,10 +1789,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             >
                                 <div
                                     className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                                    style={{
-                                        opacity: progress,
-                                        textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                    }}
+                                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                                 >
                                     <ChevronLeft size={16} />
                                     <span>{gradientName}</span>
