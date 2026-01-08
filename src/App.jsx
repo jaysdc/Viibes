@@ -7418,37 +7418,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
             )}
 
-            {/* DEBUG OVERLAY - Scan Dropbox */}
-            <div
-                className="absolute top-full left-0 right-0 bg-black/90 text-white text-xs p-2 font-mono z-50"
-                style={{ fontSize: '10px' }}
-            >
-                <div className="text-yellow-400">--- LIBRARY ---</div>
-                <div>library size: {Object.keys(library).length}</div>
-                <div>playlists: {Object.keys(playlists).length}</div>
-                {Object.keys(playlists).length > 0 && (() => {
-                    const firstVibeId = Object.keys(playlists)[0];
-                    const firstVibe = playlists[firstVibeId];
-                    const songIds = firstVibe?.songIds || [];
-                    const songs = firstVibe?.songs || [];
-                    return (
-                        <>
-                            <div>1st vibe songIds: {songIds.length}</div>
-                            <div>1st vibe songs: {songs.length}</div>
-                            {songIds.length > 0 && <div>1st songId in lib: {library[songIds[0]] ? '✓' : '✗'}</div>}
-                        </>
-                    );
-                })()}
-                <div className="text-yellow-400 mt-1">--- SCAN ---</div>
-                <div>hasRefreshToken: {scanDebugInfo.hasRefreshToken ? '✓' : '✗'}</div>
-                <div>libraryLoaded: {scanDebugInfo.libraryLoaded ? '✓' : '✗'}</div>
-                <div>triggered (3s): {scanDebugInfo.triggered ? '✓' : '✗'}</div>
-                <div>started: {scanDebugInfo.started ? '✓' : '✗'}</div>
-                <div>pathsCount: {scanDebugInfo.pathsCount}</div>
-                <div>progress: {dropboxScanProgress ?? 'null'}</div>
-                <div>unavailable: {scanDebugInfo.unavailableCount ?? 0}</div>
-                {scanDebugInfo.error && <div className="text-red-400">error: {scanDebugInfo.error}</div>}
-            </div>
 
             </div>
         {/* FIN HEADER */}
