@@ -8180,48 +8180,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
       </div>
 
-      {/* DEBUG OVERLAY */}
-      <div className="fixed top-16 left-2 right-2 bg-red-900/95 text-white text-[10px] p-2 rounded z-[9999] font-mono max-h-[40vh] overflow-auto">
-        <div className="font-bold text-yellow-300">DEBUG v2</div>
-        <div>localStorage version: {localStorage.getItem('vibes_library_version') || 'null'}</div>
-        <div>library state: {Object.keys(library).length} songs</div>
-        <div>playlists state: {Object.keys(playlists).length} vibes</div>
-        <div>fileCache: {Object.keys(fileCache).length} blobs</div>
-        <hr className="border-white/30 my-1"/>
-        <div className="text-cyan-300">localStorage vibes_library:</div>
-        <div className="break-all">{(() => {
-          const saved = localStorage.getItem('vibes_library');
-          if (!saved) return 'NULL';
-          try {
-            const parsed = JSON.parse(saved);
-            return `${Object.keys(parsed).length} songs - IDs: ${Object.keys(parsed).slice(0,3).join(', ')}...`;
-          } catch (e) { return 'PARSE ERROR'; }
-        })()}</div>
-        <hr className="border-white/30 my-1"/>
-        <div className="text-green-300">1ère vibe:</div>
-        {(() => {
-          const firstVibeId = Object.keys(playlists)[0];
-          if (!firstVibeId) return <div>Aucune vibe</div>;
-          const vibe = playlists[firstVibeId];
-          const songs = getVibeSongs(firstVibeId);
-          return (
-            <>
-              <div>name: {vibe?.name}</div>
-              <div>songIds: {vibe?.songIds?.length || 0}</div>
-              <div>songs resolved: {songs.length}</div>
-              <div>available: {songs.filter(s => isSongAvailable(s)).length}</div>
-              {songs[0] && (
-                <>
-                  <div className="text-pink-300 mt-1">1er song:</div>
-                  <div>id: {songs[0].id?.substring(0, 30)}</div>
-                  <div>file: {songs[0].file ? 'BLOB' : 'null'}</div>
-                  <div>dropboxPath: {songs[0].dropboxPath || 'null'}</div>
-                  <div>localFileName: {songs[0].localFileName || 'null'}</div>
-                </>
-              )}
-            </>
-          );
-        })()}
+      {/* DEBUG OVERLAY - SIMPLE */}
+      <div className="fixed top-16 left-2 right-2 bg-black text-white text-xs p-2 rounded z-[9999] font-mono">
+        <div>LIB state: {Object.keys(library).length}</div>
+        <div>LIB localStorage: {localStorage.getItem('vibes_library') ? JSON.parse(localStorage.getItem('vibes_library') || '{}') && Object.keys(JSON.parse(localStorage.getItem('vibes_library') || '{}')).length : 0}</div>
+        <div>VIBES: {Object.keys(playlists).length}</div>
       </div>
 
     </div>
