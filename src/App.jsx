@@ -7476,6 +7476,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const isVibe = songs[0]?.type === 'vibe' || vibeName?.includes('Vibe');
                         const availableCount = songs.filter(s => isSongAvailable(s)).length;
                         const unavailableCount = songs.length - availableCount;
+                        // Debug
+                        if (index === 0) {
+                            console.log('[VibeCards] First vibe debug:', {
+                                vibeId,
+                                vibeName,
+                                songIdsCount: vibe.songIds?.length || 0,
+                                songsResolved: songs.length,
+                                availableCount,
+                                unavailableCount,
+                                librarySize: Object.keys(library).length,
+                                firstSong: songs[0]
+                            });
+                        }
                         const isExpired = availableCount === 0;
                         return (
                             <VibeCard
