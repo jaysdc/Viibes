@@ -659,7 +659,7 @@ const CONFIG = {
     // DRAWER (Tiroir dashboard)
     // ══════════════════════════════════════════════════════════════════════════
     DRAWER_DEFAULT_HEIGHT_PERCENT: 28,    // Hauteur par défaut du drawer (% de l'écran)
-    DRAWER_RECENTER_HEIGHT_PERCENT: 60,   // Hauteur du drawer quand on tap sur recenter depuis état fermé (% de l'écran)
+    DRAWER_RECENTER_HEIGHT_PERCENT: 65,   // Hauteur du drawer quand on tap sur recenter depuis état fermé (% de l'écran)
     DRAWER_RECENTER_ANIMATION_DURATION: 400, // Durée de l'animation d'ouverture via recenter (ms)
     DRAWER_TWEAKER_HEIGHT_PERCENT: 0,    // Hauteur du drawer quand Tweaker ouvert (% de l'écran)
     DRAWER_TOP_SPACING: 32,               // Espacement entre la dernière carte et le haut du tiroir (px)
@@ -1803,19 +1803,9 @@ const getNextAvailableGradientIndex = () => {
     return randomIndex;
 };
 
-const initializeGradientUsage = (playlists) => {
-    // Réinitialiser le compteur
+const initializeGradientUsage = () => {
+    // Réinitialiser le compteur (les couleurs sont maintenant gérées par vibeColorIndices)
     gradientUsageCount = new Array(ALL_GRADIENTS.length).fill(0);
-    // Compter les utilisations actuelles
-    if (playlists) {
-        Object.keys(playlists).forEach(vibeId => {
-            const vibe = playlists[vibeId];
-            const index = vibe?.songs?.[0]?.gradientIndex;
-            if (index !== undefined && index >= 0 && index < gradientUsageCount.length) {
-                gradientUsageCount[index]++;
-            }
-        });
-    }
 };
 
 const getInitialGradientIndex = (folderName) => {
@@ -4946,7 +4936,7 @@ const vibeSearchResults = () => {
     if (newVibeIds.length > 0) {
         setVibeColorIndices(prev => {
             const updated = { ...prev };
-            initializeGradientUsage(null);
+            initializeGradientUsage();
             Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
             newVibeIds.forEach(vibeId => {
                 if (updated[vibeId] === undefined) {
@@ -5085,7 +5075,7 @@ const vibeSearchResults = () => {
     if (newVibeIds.length > 0) {
         setVibeColorIndices(prev => {
             const updated = { ...prev };
-            initializeGradientUsage(null);
+            initializeGradientUsage();
             Object.values(updated).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
             newVibeIds.forEach(vibeId => {
                 if (updated[vibeId] === undefined) {
@@ -6798,7 +6788,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     setScrollTrigger(prev => prev + 1);
   };
   const saveNewVibe = (name, songs) => {
-    const vibeSongs = songs.map(s => ({...s, type: 'vibe'}));
+    const songIds = songs.map(s => s.id);
     let finalName = name;
     setPlaylists(prev => {
       let counter = 2;
@@ -6806,12 +6796,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         finalName = `${name} (${counter})`;
         counter++;
       }
-      return { ...prev, [finalName]: vibeSongs };
+      return { ...prev, [finalName]: { name: finalName, songIds } };
     });
     // Attribuer une couleur unique si cette vibe n'en a pas encore
     setVibeColorIndices(prev => {
       if (prev[finalName] === undefined) {
-        initializeGradientUsage(null);
+        initializeGradientUsage();
         Object.values(prev).forEach(idx => { if (idx !== undefined) gradientUsageCount[idx]++; });
         return { ...prev, [finalName]: getNextAvailableGradientIndex() };
       }
