@@ -263,6 +263,7 @@ const SmartImport = ({
     const [swipeTouchStartY, setSwipeTouchStartY] = useState(null);
     const [swipeDirection, setSwipeDirection] = useState(null); // 'horizontal', 'vertical', ou null
     const [swipePreview, setSwipePreview] = useState(null); // { gradient, gradientName } pour preview locale
+    const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false); // Animation de rattrapage
     const cardWidthRef = useRef(0); // Largeur de la carte pour limiter le swipe à 50%
 
     // État pour la sélection des cartes (toutes sélectionnées par défaut)
@@ -727,6 +728,9 @@ const SmartImport = ({
         if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 setSwipeDirection('horizontal');
+                // Activer l'animation de rattrapage
+                setIsSwipeCatchingUp(true);
+                setTimeout(() => setIsSwipeCatchingUp(false), 120);
                 // Afficher immédiatement le dégradé actuel
                 const currentIdx = importPreview?.folderGradients?.[cardName] ?? 0;
                 const currentGradient = getGradientByIndex(currentIdx);
@@ -1105,7 +1109,7 @@ const SmartImport = ({
                                                     height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
                                                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                                                     transform: swipingCard === name ? `translateX(${swipeOffset}px)` : 'translateX(0)',
-                                                    transition: swipingCard === name ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                                                    transition: swipingCard === name ? (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none') : 'transform 0.2s ease-out, opacity 0.2s ease-out',
                                                     opacity: isSelected ? 1 : (vibeCardMinOpacity ?? 0.3)
                                                 }}
                                                 onTouchStart={(e) => handleCardSwipeStart(e, name)}

@@ -1096,6 +1096,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const [cardSwipeOffset, setCardSwipeOffset] = useState(0);
     const [cardSwipeDirection, setCardSwipeDirection] = useState(null);
     const [previewGradientIndex, setPreviewGradientIndex] = useState(null);
+    const [isCardSwipeCatchingUp, setIsCardSwipeCatchingUp] = useState(false); // Animation de rattrapage
     const cardTouchStartX = useRef(null);
     const cardTouchStartY = useRef(null);
     
@@ -1165,17 +1166,24 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         const diffY = clientY - cardTouchStartY.current;
         
         if (cardSwipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-            setCardSwipeDirection(Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical');
+            const newDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+            setCardSwipeDirection(newDirection);
+
+            // Si horizontal, activer l'animation de rattrapage
+            if (newDirection === 'horizontal') {
+                setIsCardSwipeCatchingUp(true);
+                setTimeout(() => setIsCardSwipeCatchingUp(false), 120);
+            }
         }
-        
+
         if (cardSwipeDirection === 'vertical') return;
-        
+
         if (cardSwipeDirection === 'horizontal') {
             if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
                 setCardSwipeOffset(diffX);
-                
+
                 // Calculer la preview du gradient en temps réel (en utilisant la liste ordonnée)
-                if (Math.abs(diffX) > 10) {
+                if (diffX !== 0) {
                     const direction = diffX > 0 ? -1 : 1;
                     // Calculer combien de couleurs on a parcouru (0 à totalGradients)
                     const stepsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * orderedGradientIndices.length);
@@ -1543,18 +1551,25 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         
         // Déterminer la direction
         if (cardSwipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-            setCardSwipeDirection(Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical');
+            const newDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+            setCardSwipeDirection(newDirection);
+
+            // Si horizontal, activer l'animation de rattrapage
+            if (newDirection === 'horizontal') {
+                setIsCardSwipeCatchingUp(true);
+                setTimeout(() => setIsCardSwipeCatchingUp(false), 120);
+            }
         }
-        
+
         if (cardSwipeDirection === 'vertical') return;
-        
+
         if (cardSwipeDirection === 'horizontal') {
             if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
                 setCardSwipeOffset(diffX);
-                
+
                 // Calculer la preview : cycle simple sur les indices
                 const stepsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * gradientCount);
-                if (stepsTraversed >= 1) {
+                if (stepsTraversed >= 1 || diffX !== 0) {
                     const direction = diffX > 0 ? -1 : 1; // droite = précédent, gauche = suivant
                     const newIndex = ((chosenGradientIndex + (direction * stepsTraversed)) % gradientCount + gradientCount) % gradientCount;
                     setPreviewGradientIndex(newIndex);
@@ -1768,7 +1783,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                 className="absolute inset-0 rounded-full flex items-center justify-center z-40"
                                 style={{
                                     background: futureGradient,
-                                    opacity: 0.3 + (progress * 0.7),
+                                    opacity: 1,
                                     boxShadow: `0 0 25px ${futureGradientColors[Math.floor(futureGradientColors.length / 2)]}66, 0 0 50px ${futureGradientColors[Math.floor(futureGradientColors.length / 2)]}33`
                                 }}
                             >
@@ -2125,7 +2140,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                     className="absolute inset-0 pointer-events-none rounded-[10px]"
                                     style={{
                                         transform: `translateX(${cardSwipeOffset}px)`,
-                                        transition: 'none',
+                                        transition: isCardSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none',
                                         border: `${CONFIG.DUPLICATE_BORDER_WIDTH}px ${isColorAlreadyUsed && !allColorsUsed ? 'dashed' : 'solid'} rgba(255,255,255,${CONFIG.DUPLICATE_BORDER_OPACITY})`
                                     }}
                                 />

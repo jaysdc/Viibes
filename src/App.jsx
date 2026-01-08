@@ -186,7 +186,7 @@ const CONFIG = {
     // DÉGRADÉS & COULEURS
     // ══════════════════════════════════════════════════════════════════════════
     GRADIENT_OPACITY: 1,              // Opacité des dégradés (0 = transparent, 1 = opaque)
-    MAX_SWIPE_DISTANCE: 350,          // Distance max pour parcourir les 20 couleurs en swipant
+    MAX_SWIPE_DISTANCE: 320,          // Distance max pour parcourir les 20 couleurs en swipant
 
     // ══════════════════════════════════════════════════════════════════════════
     // VIBE CARDS (Dashboard)
@@ -1840,6 +1840,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
     const [swipeOffset, setSwipeOffset] = useState(0);
+    const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false); // Animation de rattrapage
 
     // Animation d'entrée stagger
     const [hasAnimated, setHasAnimated] = useState(false);
@@ -1876,6 +1877,12 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
             // Déterminer la direction au premier mouvement significatif (verrouillage)
             if (swipeDirectionRef.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
                 swipeDirectionRef.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+
+                // Si horizontal, activer l'animation de rattrapage
+                if (swipeDirectionRef.current === 'horizontal') {
+                    setIsSwipeCatchingUp(true);
+                    setTimeout(() => setIsSwipeCatchingUp(false), 120); // Durée du rattrapage
+                }
             }
 
             // Si c'est un swipe vertical, on laisse le scroll natif faire son travail
@@ -1888,7 +1895,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
                 if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
                     setSwipeOffset(diffX);
 
-                    if (Math.abs(diffX) > 10 && onSwipeProgress) {
+                    if (onSwipeProgress) {
                         const direction = diffX > 0 ? 1 : -1;
 
                         // Calculer combien de couleurs on a parcouru (0 à 19)
@@ -1908,7 +1915,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
         element.addEventListener('touchmove', handleTouchMove, { passive: false });
         return () => element.removeEventListener('touchmove', handleTouchMove);
-    }, [colorIndex, vibeId, onSwipeProgress]);
+    }, [colorIndex, vibeId, onSwipeProgress, isSwipeCatchingUp]);
 
     const handleTouchStart = (e) => {
         if (!e.touches || !e.touches[0]) return;
@@ -1966,8 +1973,8 @@ return (
                   ? `translateX(${swipeOffset * 0.8}px)` 
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
-              transition: hasAnimated 
-                  ? (swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : 'none')
+              transition: hasAnimated
+                  ? (swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none'))
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
@@ -7007,7 +7014,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               glowRGB="236, 72, 153"
                               enabled={!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0)}
                               igniteOnMount={builderBtnIgniting}
-                              flickerEnabled={false}
+                              flickerEnabled={!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode}
                               className="absolute inset-0 rounded-full"
                               style={{
                                   background: '#ec4899',
