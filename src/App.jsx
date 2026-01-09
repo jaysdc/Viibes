@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2 } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -1563,6 +1563,43 @@ const styles = `
   @keyframes search-fade-out {
     0% { opacity: 1; }
     100% { opacity: 0; }
+  }
+
+  /* Animations pour le scan Dropbox sur le bouton Import */
+  @keyframes icon-crossfade-out {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes icon-crossfade-in {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  @keyframes scan-border-pulse {
+    0%, 100% {
+      opacity: 0.6;
+      box-shadow: 0 0 4px cyan, inset 0 0 2px rgba(0,255,255,0.2);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 12px cyan, inset 0 0 6px rgba(0,255,255,0.4);
+    }
+  }
+
+  @keyframes scan-complete-flash {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
   }
 `;
 
@@ -4236,6 +4273,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
+    const [scanCompleteFlash, setScanCompleteFlash] = useState(false); // Flash cyan quand scan terminé
     const [scanDebugInfo, setScanDebugInfo] = useState({ hasRefreshToken: false, triggered: false, started: false, pathsCount: 0 });
     const [pendingDropboxData, setPendingDropboxData] = useState(null);
     const [nukeConfirmMode, setNukeConfirmMode] = useState(false);
@@ -6308,8 +6346,10 @@ const cancelKillVibe = () => {
         }
     }
 
-    // Scan terminé
+    // Scan terminé - déclencher le flash cyan
     setDropboxScanProgress(null);
+    setScanCompleteFlash(true);
+    setTimeout(() => setScanCompleteFlash(false), 600); // Flash de 600ms
     setScanDebugInfo(prev => ({ ...prev, unavailableCount: unavailablePaths.size }));
 
     // Mettre à jour la library directement (plus besoin d'itérer les vibes)
@@ -7062,29 +7102,76 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       </button>
                   
                       {/* Bouton Import */}
-                      <button 
-                          data-import-btn
-                          onClick={() => {
-                            if (showImportMenu) return;
-                            setShowImportMenu(true);
-                            setImportMenuVisible(false);
-                            setImportButtonsReady(false);
-                            // Attendre 2 frames pour que le fade in commence
-                            requestAnimationFrame(() => {
+                      <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+                          {/* Flash cyan de fin de scan */}
+                          {scanCompleteFlash && (
+                              <div
+                                  className="absolute inset-0 rounded-full pointer-events-none z-20"
+                                  style={{
+                                      background: 'cyan',
+                                      boxShadow: '0 0 20px cyan, 0 0 40px cyan',
+                                      animation: 'scan-complete-flash 600ms ease-out forwards'
+                                  }}
+                              />
+                          )}
+                          {/* Contour cyan animé pendant le scan */}
+                          {dropboxScanProgress !== null && (
+                              <div
+                                  className="absolute inset-0 rounded-full pointer-events-none z-10"
+                                  style={{
+                                      border: '1px solid cyan',
+                                      boxShadow: '0 0 8px cyan, inset 0 0 4px rgba(0,255,255,0.3)',
+                                      animation: 'scan-border-pulse 1.5s ease-in-out infinite'
+                                  }}
+                              />
+                          )}
+                          <button
+                              data-import-btn
+                              onClick={() => {
+                                if (showImportMenu) return;
+                                setShowImportMenu(true);
+                                setImportMenuVisible(false);
+                                setImportButtonsReady(false);
+                                // Attendre 2 frames pour que le fade in commence
                                 requestAnimationFrame(() => {
-                                    setImportMenuVisible(true);
-                                    // Déclencher les animations ON après le fade in
-                                    setTimeout(() => {
-                                        setImportButtonsReady(true);
-                                    }, CONFIG.IMPORT_HEADER_FADE_IN_DURATION);
+                                    requestAnimationFrame(() => {
+                                        setImportMenuVisible(true);
+                                        // Déclencher les animations ON après le fade in
+                                        setTimeout(() => {
+                                            setImportButtonsReady(true);
+                                        }, CONFIG.IMPORT_HEADER_FADE_IN_DURATION);
+                                    });
                                 });
-                            });
-                        }}
-                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
-                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent' }}
-                      >
-                          <FolderDown style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </button>
+                            }}
+                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
+                              style={{ WebkitTapHighlightColor: 'transparent' }}
+                          >
+                              {/* Crossfade FolderDown ↔ Radar pendant le scan */}
+                              <div className="relative" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
+                                  <FolderDown
+                                      className="absolute inset-0"
+                                      style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          opacity: dropboxScanProgress !== null ? 0 : 1,
+                                          transition: 'opacity 0.4s ease-in-out',
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 1.2s ease-in-out infinite' : 'none'
+                                      }}
+                                  />
+                                  <Radar
+                                      className="absolute inset-0"
+                                      style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          opacity: dropboxScanProgress !== null ? 1 : 0,
+                                          transition: 'opacity 0.4s ease-in-out',
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 1.2s ease-in-out infinite' : 'none',
+                                          color: 'cyan'
+                                      }}
+                                  />
+                              </div>
+                          </button>
+                      </div>
 
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
@@ -7377,23 +7464,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             )}
 
           </div>
-
-            {/* Barre de progression scan Dropbox */}
-            {dropboxScanProgress !== null && (
-                <div
-                    className="absolute bottom-0 left-0 right-0 h-1"
-                    style={{ background: 'rgba(0,0,0,0.05)' }}
-                >
-                    <div
-                        className="h-full transition-all duration-300 ease-out"
-                        style={{
-                            width: `${dropboxScanProgress}%`,
-                            background: 'cyan'
-                        }}
-                    />
-                </div>
-            )}
-
 
             </div>
         {/* FIN HEADER */}
