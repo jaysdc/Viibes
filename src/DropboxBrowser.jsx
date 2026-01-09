@@ -554,24 +554,27 @@ const DropboxBrowser = ({
                 setProcessedFiles(processed);
             });
 
-            // Fermer le browser et passer les données à SmartImport
-            setScanning(false);
-            setScanPhase(null);
-            setProcessedFiles(0);
-            setTotalFilesToProcess(0);
-
-            // Fermer le browser avec animation
-            setIsFadingOut(true);
+            // Laisser la barre de progression finir son animation vers 100%
+            // avant de fermer le dialog
             setTimeout(() => {
-                onClose();
-                // Passer les données scannées à SmartImport via le callback
-                if (onScanComplete) {
-                    onScanComplete({
-                        folders: scannedFolders,
-                        rootName: folderName
-                    });
-                }
-            }, 150);
+                setScanning(false);
+                setScanPhase(null);
+                setProcessedFiles(0);
+                setTotalFilesToProcess(0);
+
+                // Fermer le browser avec animation
+                setIsFadingOut(true);
+                setTimeout(() => {
+                    onClose();
+                    // Passer les données scannées à SmartImport via le callback
+                    if (onScanComplete) {
+                        onScanComplete({
+                            folders: scannedFolders,
+                            rootName: folderName
+                        });
+                    }
+                }, 150);
+            }, 400); // Délai pour que l'animation atteigne 100%
 
         } catch (error) {
             console.error('Erreur import:', error);
