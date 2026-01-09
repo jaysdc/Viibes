@@ -749,9 +749,11 @@ const DropboxBrowser = ({
 
         const interval = setInterval(() => {
             setSmoothedProcessedFiles(current => {
-                if (current >= targetProgress) return targetProgress;
-                // Avancer de 0.5% par frame (~60fps)
-                const next = Math.min(current + 0.5, targetProgress);
+                const diff = targetProgress - current;
+                // Si très proche, snap à la cible
+                if (Math.abs(diff) < 0.1) return targetProgress;
+                // Easing: avancer de 8% de la distance restante (ralentit vers la fin)
+                const next = current + diff * 0.08;
                 return next;
             });
         }, 16); // ~60fps
