@@ -7137,12 +7137,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           >
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
                               <div
-                                  className="absolute rounded-full bg-gray-100"
+                                  className="absolute rounded-full"
                                   style={{
                                       top: '1px',
                                       left: '1px',
                                       right: '1px',
-                                      bottom: '1px'
+                                      bottom: '1px',
+                                      background: scanCompleteFlash ? 'cyan' : '#f3f4f6',
+                                      transition: 'background 0.15s ease-out'
                                   }}
                               />
                               {/* Crossfade FolderDown ↔ Radar pendant le scan */}
