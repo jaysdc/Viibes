@@ -4247,6 +4247,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxFiles, setDropboxFiles] = useState([]);
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
+    const [smoothedScanProgress, setSmoothedScanProgress] = useState(null); // Progression lissée pour l'UI
     const [scanCompleteFlash, setScanCompleteFlash] = useState(false); // Flash cyan quand scan terminé
     const [scanDebugInfo, setScanDebugInfo] = useState({ hasRefreshToken: false, triggered: false, started: false, pathsCount: 0 });
     const [pendingDropboxData, setPendingDropboxData] = useState(null);
@@ -4824,6 +4825,32 @@ useEffect(() => {
     element.addEventListener('touchmove', handleTouchMove, { passive: false });
     return () => element.removeEventListener('touchmove', handleTouchMove);
 }, [vibeTheseGradientIndex, isVibeTheseCatchingUp]);
+
+// Interpolation fluide de la progression du scan
+useEffect(() => {
+    if (dropboxScanProgress === null) {
+        setSmoothedScanProgress(null);
+        return;
+    }
+
+    // Initialiser si on démarre
+    if (smoothedScanProgress === null) {
+        setSmoothedScanProgress(0);
+    }
+
+    // Interpoler vers la valeur cible
+    const interval = setInterval(() => {
+        setSmoothedScanProgress(current => {
+            if (current === null) return dropboxScanProgress;
+            if (current >= dropboxScanProgress) return dropboxScanProgress;
+            // Avancer de 0.5% par frame (smooth)
+            const next = Math.min(current + 0.5, dropboxScanProgress);
+            return next;
+        });
+    }, 16); // ~60fps
+
+    return () => clearInterval(interval);
+}, [dropboxScanProgress]);
 
 // Gérer les actions import en attente
 useEffect(() => {
@@ -7098,9 +7125,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               className="relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600"
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
-                                  // Bordure progressive cyan pendant le scan, sinon bg-gray-100 normal
-                                  background: dropboxScanProgress !== null
-                                      ? `conic-gradient(from 0deg, cyan ${dropboxScanProgress * 3.6}deg, transparent ${dropboxScanProgress * 3.6}deg)`
+                                  // Bordure progressive cyan pendant le scan (lissée), sinon bg-gray-100 normal
+                                  background: smoothedScanProgress !== null
+                                      ? `conic-gradient(from 0deg, cyan ${smoothedScanProgress * 3.6}deg, transparent ${smoothedScanProgress * 3.6}deg)`
                                       : (scanCompleteFlash ? 'cyan' : '#f3f4f6'),
                                   boxShadow: scanCompleteFlash ? '0 0 8px rgba(0,255,255,0.5)' : 'none',
                                   transition: scanCompleteFlash ? 'box-shadow 0.4s ease-out' : 'none'
