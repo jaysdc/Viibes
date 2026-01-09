@@ -6937,73 +6937,98 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           {/* 3 boutons capsules OU barre de recherche OU barre d'import */}
           <div ref={headerButtonsRef} className="flex flex-col items-center">
           {(isLibrarySearching || searchOverlayAnim !== 'none') ? (
-                <div 
-                    className="w-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible"
-                    style={{
-                        height: CONFIG.HEADER_BUTTONS_HEIGHT,
-                        backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
-                        boxShadow: `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`,
-                        animation: searchOverlayAnim === 'opening'
-                            ? `search-fade-in ${CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION}ms ease-out forwards`
-                            : searchOverlayAnim === 'closing'
-                                ? `search-fade-out ${CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION}ms ease-in forwards`
-                                : 'none'
-                    }}
-                >
-                    <div 
-                        className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
+                <div className="w-full relative">
+                    <div
+                        className="w-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible"
                         style={{
-                            paddingLeft: CONFIG.SEARCH_LIBRARY_PADDING_X,
-                            paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
+                            height: CONFIG.HEADER_BUTTONS_HEIGHT,
+                            backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
+                            boxShadow: `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`,
+                            animation: searchOverlayAnim === 'opening'
+                                ? `search-fade-in ${CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION}ms ease-out forwards`
+                                : searchOverlayAnim === 'closing'
+                                    ? `search-fade-out ${CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION}ms ease-in forwards`
+                                    : 'none'
                         }}
                     >
-                        <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
-                        <input
-                            autoFocus
-                            type="search"
-                            inputMode="search"
-                            value={librarySearchQuery}
-                            onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                            placeholder=""
-                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none"
-                            spellCheck={false}
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            autoComplete="off"
-                            enterKeyHint="search"
-                            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-                        />
-                    </div>
-                    <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX }}>
-                        <NeonGlow
-                            key={searchCloseBtnAnimKey}
-                            colorName="pink"
-                            glowRGB={CONFIG.SEARCH_LIBRARY_GLOW_COLOR}
-                            enabled={true}
-                            igniteOnMount={searchCloseBtnAnimKey > 0}
-                            flickerEnabled={searchOverlayAnim !== 'closing'}
-                            className="absolute inset-0 rounded-r-full"
+                        <div
+                            className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
                             style={{
-                                background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
-                                zIndex: 0
+                                paddingLeft: CONFIG.SEARCH_LIBRARY_PADDING_X,
+                                paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
                             }}
-                        />
-                        <button 
-                            onClick={() => {
-                                if (searchOverlayAnim !== 'none') return;
-                                setSearchCloseBtnAnimKey(k => k + 1);
-                                setSearchOverlayAnim('closing');
-                                setTimeout(() => {
-                                    setIsLibrarySearching(false);
-                                    setLibrarySearchQuery('');
-                                    setSearchOverlayAnim('none');
-                                }, CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION);
-                            }}
-                            className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
                         >
-                            <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
-                        </button>
+                            <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
+                            <input
+                                autoFocus
+                                type="search"
+                                inputMode="search"
+                                value={librarySearchQuery}
+                                onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                                placeholder=""
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-gray-900 placeholder-gray-400 p-0 outline-none"
+                                spellCheck={false}
+                                autoCorrect="off"
+                                autoCapitalize="off"
+                                autoComplete="off"
+                                enterKeyHint="search"
+                                onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+                            />
+                        </div>
+                        <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX }}>
+                            <NeonGlow
+                                key={searchCloseBtnAnimKey}
+                                colorName="pink"
+                                glowRGB={CONFIG.SEARCH_LIBRARY_GLOW_COLOR}
+                                enabled={true}
+                                igniteOnMount={searchCloseBtnAnimKey > 0}
+                                flickerEnabled={searchOverlayAnim !== 'closing'}
+                                className="absolute inset-0 rounded-r-full"
+                                style={{
+                                    background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
+                                    zIndex: 0
+                                }}
+                            />
+                            <button
+                                onClick={() => {
+                                    if (searchOverlayAnim !== 'none') return;
+                                    setSearchCloseBtnAnimKey(k => k + 1);
+                                    setSearchOverlayAnim('closing');
+                                    setTimeout(() => {
+                                        setIsLibrarySearching(false);
+                                        setLibrarySearchQuery('');
+                                        setSearchOverlayAnim('none');
+                                    }, CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION);
+                                }}
+                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
+                            >
+                                <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
+                            </button>
+                        </div>
                     </div>
+                    {/* Overlay de preview du dégradé VIBE THESE - par-dessus la barre de recherche */}
+                    {vibeSwipePreview && vibeSwipePreview.progress > 0 && (() => {
+                        const { nextGradient, previewIndex } = vibeSwipePreview;
+                        const gradientName = getGradientName(previewIndex);
+                        const step = 100 / (nextGradient.length - 1);
+                        const gradientStyle = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
+                        return (
+                            <div
+                                className="absolute inset-0 rounded-full flex items-center justify-center z-50 pointer-events-none"
+                                style={{
+                                    background: gradientStyle,
+                                    boxShadow: `0 4px 15px ${nextGradient[0]}66`
+                                }}
+                            >
+                                <div className="flex items-center gap-2 text-white font-black tracking-widest text-sm uppercase"
+                                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                    <ChevronLeft size={14} />
+                                    <span>{gradientName}</span>
+                                    <ChevronRight size={14} />
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             ) : (
               <>
@@ -7318,25 +7343,28 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     vibeTheseSwipeDirectionRef.current = null;
                                     setVibeSwipePreview(null);
                                 }}
-                                className="w-full h-8 rounded-full font-black flex items-center justify-center gap-2 text-base text-white relative overflow-hidden"
+                                className="w-full h-8 rounded-full font-black flex items-center justify-center gap-2 text-base text-white relative overflow-visible"
                                 style={{
                                     background: gradient,
-                                    boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`,
-                                    transform: `translateX(${vibeTheseSwipeOffset * 0.3}px)`,
-                                    transition: vibeTheseSwipeOffset === 0
-                                        ? 'transform 0.2s ease-out'
-                                        : (isVibeTheseCatchingUp ? 'transform 0.12s ease-out' : 'none')
+                                    boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`
                                 }}
                             >
-                                {/* Bordure overlay - pointillée si dégradé dupliqué */}
+                                {/* Bordure overlay - pointillée si dégradé dupliqué, se déplace avec le swipe */}
                                 <div
-                                    className="absolute inset-0 rounded-full pointer-events-none"
+                                    className="absolute rounded-full pointer-events-none"
                                     style={{
+                                        top: -2,
+                                        left: -2,
+                                        right: -2,
+                                        bottom: -2,
                                         border: isDuplicateGradient
                                             ? '2px dashed rgba(255,255,255,0.7)'
                                             : '2px solid rgba(255,255,255,0.4)',
                                         opacity: vibeTheseSwipeOffset !== 0 ? 1 : 0,
-                                        transition: 'opacity 0.15s ease-out'
+                                        transform: `translateX(${vibeTheseSwipeOffset * 0.3}px)`,
+                                        transition: vibeTheseSwipeOffset === 0
+                                            ? 'transform 0.2s ease-out, opacity 0.15s ease-out'
+                                            : (isVibeTheseCatchingUp ? 'transform 0.12s ease-out, opacity 0.15s ease-out' : 'opacity 0.15s ease-out')
                                     }}
                                 />
                                 <Flame size={18} className="fill-white" />

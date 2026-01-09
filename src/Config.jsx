@@ -193,7 +193,7 @@ export const UNIFIED_CONFIG = {
     // Cartes Vibes
     VIBECARD_HEIGHT_VH: 10.5,               // Hauteur des cartes vibes du dashboard (% hauteur écran)
     VIBECARD_BUILDER_HEIGHT_VH: 12,       // Hauteur de la carte vibe du VibeBuilder (% hauteur écran)
-    COLOR_SWIPE_DISTANCE: 250,            // Distance de swipe (px) pour parcourir tous les dégradés
+    COLOR_SWIPE_DISTANCE: 225,            // Distance de swipe (px) pour parcourir tous les dégradés
 
     // Écrans d'import (SmartImport + DropboxBrowser)
     IMPORT_SCREEN_WIDTH: 92,             // % de la largeur totale de l'écran
