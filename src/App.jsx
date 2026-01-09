@@ -1576,17 +1576,6 @@ const styles = `
     50% { opacity: 0; }
   }
 
-  @keyframes scan-border-pulse {
-    0%, 100% {
-      opacity: 0.6;
-      box-shadow: 0 0 4px cyan, inset 0 0 2px rgba(0,255,255,0.2);
-    }
-    50% {
-      opacity: 1;
-      box-shadow: 0 0 12px cyan, inset 0 0 6px rgba(0,255,255,0.4);
-    }
-  }
-
   @keyframes scan-complete-flash {
     0% {
       opacity: 1;
@@ -7114,17 +7103,40 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   }}
                               />
                           )}
-                          {/* Contour cyan animé pendant le scan */}
-                          {dropboxScanProgress !== null && (
-                              <div
-                                  className="absolute inset-0 rounded-full pointer-events-none z-10"
-                                  style={{
-                                      border: '1px solid cyan',
-                                      boxShadow: '0 0 8px cyan, inset 0 0 4px rgba(0,255,255,0.3)',
-                                      animation: 'scan-border-pulse 1.5s ease-in-out infinite'
-                                  }}
-                              />
-                          )}
+                          {/* Contour cyan progressif pendant le scan (SVG) */}
+                          {dropboxScanProgress !== null && (() => {
+                              // Calculer le périmètre approximatif d'une capsule (pill shape)
+                              // Pour une capsule de hauteur h et largeur w : périmètre ≈ 2*(w-h) + π*h
+                              const height = parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT);
+                              const width = height * 2.5; // Approximation flex-1 dans un conteneur à 3 boutons
+                              const perimeter = 2 * (width - height) + Math.PI * height;
+                              const progress = dropboxScanProgress / 100;
+                              const dashOffset = perimeter * (1 - progress);
+
+                              return (
+                                  <svg
+                                      className="absolute inset-0 pointer-events-none z-10"
+                                      style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 4px cyan)' }}
+                                      viewBox={`0 0 ${width} ${height}`}
+                                      preserveAspectRatio="none"
+                                  >
+                                      <rect
+                                          x="0.5"
+                                          y="0.5"
+                                          width={width - 1}
+                                          height={height - 1}
+                                          rx={(height - 1) / 2}
+                                          ry={(height - 1) / 2}
+                                          fill="none"
+                                          stroke="cyan"
+                                          strokeWidth="2"
+                                          strokeDasharray={perimeter}
+                                          strokeDashoffset={dashOffset}
+                                          style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
+                                      />
+                                  </svg>
+                              );
+                          })()}
                           <button
                               data-import-btn
                               onClick={() => {
@@ -7159,14 +7171,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       }}
                                   />
                                   <Radar
-                                      className="absolute inset-0"
+                                      className="absolute inset-0 text-gray-600"
                                       style={{
                                           width: '100%',
                                           height: '100%',
                                           opacity: dropboxScanProgress !== null ? 1 : 0,
                                           transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 1.2s ease-in-out infinite' : 'none',
-                                          color: 'cyan'
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 1.2s ease-in-out infinite' : 'none'
                                       }}
                                   />
                               </div>
