@@ -7105,33 +7105,36 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           )}
                           {/* Contour cyan progressif pendant le scan (SVG) */}
                           {dropboxScanProgress !== null && (() => {
-                              // Calculer le périmètre approximatif d'une capsule (pill shape)
-                              // Pour une capsule de hauteur h et largeur w : périmètre ≈ 2*(w-h) + π*h
-                              const height = parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT);
-                              const width = height * 2.5; // Approximation flex-1 dans un conteneur à 3 boutons
-                              const perimeter = 2 * (width - height) + Math.PI * height;
+                              // Utiliser un viewBox normalisé 100x36 (ratio ~2.8:1 pour une capsule)
+                              // Le SVG s'adaptera à la taille réelle du bouton
+                              const vbWidth = 100;
+                              const vbHeight = 36;
+                              const strokeW = 1;
+                              // Périmètre d'une capsule : 2*(w-h) + π*h
+                              const perimeter = 2 * (vbWidth - vbHeight) + Math.PI * vbHeight;
                               const progress = dropboxScanProgress / 100;
                               const dashOffset = perimeter * (1 - progress);
 
                               return (
                                   <svg
                                       className="absolute inset-0 pointer-events-none z-10"
-                                      style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 4px cyan)' }}
-                                      viewBox={`0 0 ${width} ${height}`}
-                                      preserveAspectRatio="none"
+                                      style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 3px cyan)' }}
+                                      viewBox={`0 0 ${vbWidth} ${vbHeight}`}
+                                      preserveAspectRatio="xMidYMid meet"
                                   >
                                       <rect
-                                          x="0.5"
-                                          y="0.5"
-                                          width={width - 1}
-                                          height={height - 1}
-                                          rx={(height - 1) / 2}
-                                          ry={(height - 1) / 2}
+                                          x={strokeW / 2}
+                                          y={strokeW / 2}
+                                          width={vbWidth - strokeW}
+                                          height={vbHeight - strokeW}
+                                          rx={(vbHeight - strokeW) / 2}
+                                          ry={(vbHeight - strokeW) / 2}
                                           fill="none"
                                           stroke="cyan"
-                                          strokeWidth="2"
+                                          strokeWidth={strokeW}
                                           strokeDasharray={perimeter}
                                           strokeDashoffset={dashOffset}
+                                          strokeLinecap="round"
                                           style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
                                       />
                                   </svg>

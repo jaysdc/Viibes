@@ -12,7 +12,7 @@ export const SMARTIMPORT_CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // SEUILS ET LIMITES
     // ══════════════════════════════════════════════════════════════════════════
-    WARNING_THRESHOLD: 600,              // Seuil de fichiers pour avertissement (warning visuel)
+    WARNING_THRESHOLD: 2000,              // Seuil de fichiers pour avertissement (warning visuel)
     AUTO_THRESHOLD: 600,                 // Seuil max pour import automatique (sans dialog)
     MIN_FILES_PER_VIBE: 5,               // Minimum de fichiers pour créer une Vibe (évite micro-Vibes)
 
