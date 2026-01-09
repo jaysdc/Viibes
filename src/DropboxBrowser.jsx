@@ -186,7 +186,6 @@ const DropboxBrowser = ({
     const [totalFilesToProcess, setTotalFilesToProcess] = useState(0);
     const [processedFiles, setProcessedFiles] = useState(0);
     const [smoothedProcessedFiles, setSmoothedProcessedFiles] = useState(0); // Progression lissée pour l'UI
-    const [importCompleteFlash, setImportCompleteFlash] = useState(false); // Flash quand import terminé
     const [scrollPercent, setScrollPercent] = useState(0);
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [closingButton, setClosingButton] = useState(null); // 'close' | 'disconnect' | null
@@ -765,15 +764,6 @@ const DropboxBrowser = ({
         return () => clearInterval(interval);
     }, [processedFiles, totalFilesToProcess, scanPhase]);
 
-    // Flash quand la progression atteint 100%
-    useEffect(() => {
-        if (smoothedProcessedFiles >= 99.5 && processedFiles === totalFilesToProcess && totalFilesToProcess > 0) {
-            setImportCompleteFlash(true);
-            const timer = setTimeout(() => setImportCompleteFlash(false), 300);
-            return () => clearTimeout(timer);
-        }
-    }, [smoothedProcessedFiles, processedFiles, totalFilesToProcess]);
-
     // NOTE: Le return null est maintenant juste avant le JSX, plus bas
 
     const isAtRoot = !currentPath;
@@ -861,14 +851,11 @@ const DropboxBrowser = ({
                             }}
                         >
                             <div
-                                className="flex items-center rounded-full px-3 border w-full relative overflow-hidden"
+                                className="flex items-center rounded-full px-3 border border-gray-200 w-full relative overflow-hidden"
                                 style={{
-                                    background: importCompleteFlash ? CONFIG.DROPBOX_BLUE : 'white',
-                                    borderColor: importCompleteFlash ? CONFIG.DROPBOX_BLUE : '#e5e7eb',
-                                    boxShadow: importCompleteFlash ? `0 0 12px ${CONFIG.DROPBOX_BLUE}80, 0 0 24px ${CONFIG.DROPBOX_BLUE}40` : 'none',
+                                    background: 'white',
                                     height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                     minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
-                                    transition: 'background 0.15s ease-out, border-color 0.15s ease-out, box-shadow 0.15s ease-out',
                                 }}
                             >
                                 {/* Barre de progression - se remplit de gauche à droite */}
