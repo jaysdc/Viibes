@@ -185,6 +185,7 @@ const DropboxBrowser = ({
     const [scanPhase, setScanPhase] = useState(null); // 'counting' | 'processing' | null
     const [totalFilesToProcess, setTotalFilesToProcess] = useState(0);
     const [processedFiles, setProcessedFiles] = useState(0);
+    const [smoothedProcessedFiles, setSmoothedProcessedFiles] = useState(0); // Progression lissée pour l'UI
     const [scrollPercent, setScrollPercent] = useState(0);
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [closingButton, setClosingButton] = useState(null); // 'close' | 'disconnect' | null
@@ -737,6 +738,27 @@ const DropboxBrowser = ({
         }
     }, [loading, pendingScrollRestore]);
 
+    // Interpolation fluide de la progression de l'import
+    useEffect(() => {
+        if (scanPhase !== 'processing' || totalFilesToProcess === 0) {
+            setSmoothedProcessedFiles(0);
+            return;
+        }
+
+        const targetProgress = (processedFiles / totalFilesToProcess) * 100;
+
+        const interval = setInterval(() => {
+            setSmoothedProcessedFiles(current => {
+                if (current >= targetProgress) return targetProgress;
+                // Avancer de 0.5% par frame (~60fps)
+                const next = Math.min(current + 0.5, targetProgress);
+                return next;
+            });
+        }, 16); // ~60fps
+
+        return () => clearInterval(interval);
+    }, [processedFiles, totalFilesToProcess, scanPhase]);
+
     // NOTE: Le return null est maintenant juste avant le JSX, plus bas
 
     const isAtRoot = !currentPath;
@@ -836,10 +858,9 @@ const DropboxBrowser = ({
                                     <div
                                         className="absolute left-0 top-0 bottom-0 z-0"
                                         style={{
-                                            width: `${(processedFiles / totalFilesToProcess) * 100}%`,
+                                            width: `${smoothedProcessedFiles}%`,
                                             background: CONFIG.DROPBOX_BLUE,
                                             opacity: 0.15,
-                                            transition: 'width 0.1s ease-out'
                                         }}
                                     />
                                 )}
