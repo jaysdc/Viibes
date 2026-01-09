@@ -1575,21 +1575,6 @@ const styles = `
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
-
-  @keyframes scan-complete-flash {
-    0% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.05);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1);
-    }
-  }
 `;
 
 // Composant pour les boutons de la barre d'import
@@ -7092,54 +7077,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                   
                       {/* Bouton Import */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
-                          {/* Flash cyan de fin de scan */}
-                          {scanCompleteFlash && (
-                              <div
-                                  className="absolute inset-0 rounded-full pointer-events-none z-20"
-                                  style={{
-                                      background: 'cyan',
-                                      boxShadow: '0 0 20px cyan, 0 0 40px cyan',
-                                      animation: 'scan-complete-flash 600ms ease-out forwards'
-                                  }}
-                              />
-                          )}
-                          {/* Contour cyan progressif pendant le scan (SVG) */}
-                          {dropboxScanProgress !== null && (() => {
-                              // Utiliser un viewBox normalisé 100x36 (ratio ~2.8:1 pour une capsule)
-                              // Le SVG s'adaptera à la taille réelle du bouton
-                              const vbWidth = 100;
-                              const vbHeight = 36;
-                              const strokeW = 1;
-                              // Périmètre d'une capsule : 2*(w-h) + π*h
-                              const perimeter = 2 * (vbWidth - vbHeight) + Math.PI * vbHeight;
-                              const progress = dropboxScanProgress / 100;
-                              const dashOffset = perimeter * (1 - progress);
-
-                              return (
-                                  <svg
-                                      className="absolute inset-0 pointer-events-none z-10"
-                                      style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 3px cyan)' }}
-                                      viewBox={`0 0 ${vbWidth} ${vbHeight}`}
-                                      preserveAspectRatio="xMidYMid meet"
-                                  >
-                                      <rect
-                                          x={strokeW / 2}
-                                          y={strokeW / 2}
-                                          width={vbWidth - strokeW}
-                                          height={vbHeight - strokeW}
-                                          rx={(vbHeight - strokeW) / 2}
-                                          ry={(vbHeight - strokeW) / 2}
-                                          fill="none"
-                                          stroke="cyan"
-                                          strokeWidth={strokeW}
-                                          strokeDasharray={perimeter}
-                                          strokeDashoffset={dashOffset}
-                                          strokeLinecap="round"
-                                          style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
-                                      />
-                                  </svg>
-                              );
-                          })()}
                           <button
                               data-import-btn
                               onClick={() => {
@@ -7158,11 +7095,29 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
-                              style={{ WebkitTapHighlightColor: 'transparent' }}
+                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600"
+                              style={{
+                                  WebkitTapHighlightColor: 'transparent',
+                                  // Bordure progressive cyan pendant le scan, sinon bg-gray-100 normal
+                                  background: dropboxScanProgress !== null
+                                      ? `conic-gradient(from 0deg, cyan ${dropboxScanProgress * 3.6}deg, transparent ${dropboxScanProgress * 3.6}deg)`
+                                      : (scanCompleteFlash ? 'cyan' : '#f3f4f6'),
+                                  boxShadow: scanCompleteFlash ? '0 0 8px rgba(0,255,255,0.5)' : 'none',
+                                  transition: scanCompleteFlash ? 'box-shadow 0.4s ease-out' : 'none'
+                              }}
                           >
+                              {/* Fond intérieur gris pour que seule la bordure soit colorée */}
+                              <div
+                                  className="absolute rounded-full bg-gray-100"
+                                  style={{
+                                      top: '1px',
+                                      left: '1px',
+                                      right: '1px',
+                                      bottom: '1px'
+                                  }}
+                              />
                               {/* Crossfade FolderDown ↔ Radar pendant le scan */}
-                              <div className="relative" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
+                              <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderDown
                                       className="absolute inset-0"
                                       style={{
