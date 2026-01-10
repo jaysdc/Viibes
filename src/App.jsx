@@ -19,38 +19,51 @@ import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, get
 const artworkCache = new Map();
 
 // Extraire l'artwork d'un fichier audio (via URL ou Blob)
-const extractArtwork = (audioSource, songId) => {
-    return new Promise((resolve) => {
-        // Vérifier le cache d'abord
-        if (artworkCache.has(songId)) {
-            resolve(artworkCache.get(songId));
-            return;
+const extractArtwork = async (audioSource, songId) => {
+    // Vérifier le cache d'abord
+    if (artworkCache.has(songId)) {
+        return artworkCache.get(songId);
+    }
+
+    try {
+        let source = audioSource;
+        
+        // Si c'est une blob URL, on doit fetch le blob pour jsmediatags
+        if (typeof audioSource === 'string' && audioSource.startsWith('blob:')) {
+            const response = await fetch(audioSource);
+            source = await response.blob();
         }
 
-        jsmediatags.read(audioSource, {
-            onSuccess: (tag) => {
-                const picture = tag.tags.picture;
-                if (picture) {
-                    const { data, format } = picture;
-                    const byteArray = new Uint8Array(data);
-                    const blob = new Blob([byteArray], { type: format });
-                    const artworkUrl = URL.createObjectURL(blob);
-                    
-                    // Mettre en cache
-                    artworkCache.set(songId, artworkUrl);
-                    console.log('[Artwork] Extracted for:', songId);
-                    
-                    resolve(artworkUrl);
-                } else {
+        return new Promise((resolve) => {
+            jsmediatags.read(source, {
+                onSuccess: (tag) => {
+                    const picture = tag.tags.picture;
+                    if (picture) {
+                        const { data, format } = picture;
+                        const byteArray = new Uint8Array(data);
+                        const blob = new Blob([byteArray], { type: format });
+                        const artworkUrl = URL.createObjectURL(blob);
+                        
+                        // Mettre en cache
+                        artworkCache.set(songId, artworkUrl);
+                        console.log('[Artwork] Extracted for:', songId);
+                        
+                        resolve(artworkUrl);
+                    } else {
+                        console.log('[Artwork] No picture found for:', songId);
+                        resolve(null);
+                    }
+                },
+                onError: (error) => {
+                    console.log('[Artwork] Failed to extract:', error.type, error.info);
                     resolve(null);
                 }
-            },
-            onError: (error) => {
-                console.log('[Artwork] Failed to extract:', error.type, error.info);
-                resolve(null);
-            }
+            });
         });
-    });
+    } catch (error) {
+        console.log('[Artwork] Error:', error.message);
+        return null;
+    }
 };
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -5881,6 +5894,25 @@ const vibeSearchResults = () => {
             }
           });
         }
+      }
+
+      // Re-définir les handlers pour que iOS active les boutons
+      const currentIndex = queueRef.current.findIndex(s => s.id === currentSong.id);
+      const hasPrev = currentIndex > 0;
+      const hasNext = currentIndex < queueRef.current.length - 1;
+      
+      // iOS active les boutons uniquement si les handlers sont définis
+      if (hasPrev) {
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+          if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
+        });
+      }
+      if (hasNext) {
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+          if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
+        });
       }
     }
   }, [currentSong]);
