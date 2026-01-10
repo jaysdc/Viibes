@@ -207,7 +207,7 @@ export const UNIFIED_CONFIG = {
     // Player Header
     PLAYER_HEADER_BORDER_WIDTH: 1,       // Largeur bordure bas du header (px)
     PLAYER_HEADER_HANDLE_MARGIN_BOTTOM: '0.5rem',  // Marge sous le handle du header
-    PLAYER_HEADER_TITLE_HEIGHT: 37,      // Hauteur du titre "Vibing" (100 * 0.37 = 37px CSS)
+    PLAYER_HEADER_TITLE_HEIGHT: 47,      // Hauteur du titre "Viibing" (100 * 0.47 = 47px CSS)
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗

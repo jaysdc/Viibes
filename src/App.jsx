@@ -389,7 +389,7 @@ const CONFIG = {
     BEACON_SCRUB_LONG_PRESS_DELAY: 300,   // Durée appui long pour activer (ms)
     BEACON_SCRUB_ARC_SIZE: 50,            // Taille de l'arc zoomé (% de la hauteur écran)
     BEACON_SCRUB_ARC_X: 30,               // Position X du centre de l'arc (% écran, 50 = centré)
-    BEACON_SCRUB_ARC_Y: 50,               // Position Y du centre de l'arc (% écran, 50 = centré)
+    BEACON_SCRUB_ARC_Y: 58,               // Position Y du centre de l'arc (% écran, 50 = centré)
     BEACON_SCRUB_ARC_THICKNESS: 24,        // Épaisseur de l'arc zoomé (px)
     BEACON_SCRUB_TUBE_COLOR: 'rgba(85, 226, 226, 1)',  // Couleur du tube rempli
     BEACON_SCRUB_TUBE_GLOW_COLOR: 'rgba(85, 226, 226, 0.5)',  // Couleur du glow du tube
@@ -3907,14 +3907,14 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 }}
               />
 
-              {/* Texte au centre : titre, artiste, numéro */}
+              {/* Texte AU-DESSUS de l'arc : titre, artiste, numéro */}
               <div
-                className="absolute text-center text-white flex flex-col items-center justify-center"
+                className="absolute text-center text-white flex flex-col items-center"
                 style={{
                   left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  maxWidth: '70%',
+                  bottom: containerRect.height - (centerY - arcRadius) + 20,
+                  transform: 'translateX(-50%)',
+                  maxWidth: '80%',
                 }}
               >
                 <div
