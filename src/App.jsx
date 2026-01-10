@@ -3784,13 +3784,13 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     <div
                       className="absolute"
                       style={{
-                        left: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
+                        right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
                         top: topCss,
                         width: heightCss,
                         height: heightCss,
                         borderRadius: '50%',
                         border: '1px solid rgba(34, 197, 94, 1)',
-                        clipPath: 'inset(0 50% 0 0)',
+                        clipPath: 'inset(0 0 0 50%)',
                       }}
                     />
                     {/* DEBUG: Overlay valeurs */}
