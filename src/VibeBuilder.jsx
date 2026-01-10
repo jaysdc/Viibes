@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines, Pencil } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.jsx';
+import { VibesWave } from './Assets.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    VIBEBUILDER - PARAMÈTRES TWEAKABLES                    ║
@@ -731,7 +732,7 @@ const VibeLogo = ({ size = CONFIG.VIBELOGO_SIZE }) => (
 
 const VibeBuilderTitle = () => (
     <div className="flex items-center select-none justify-center" style={{ gap: UNIFIED_CONFIG.TITLE_ICON_GAP }}>
-        <AudioLines size={UNIFIED_CONFIG.TITLE_ICON_SIZE} className="text-pink-500" />
+        <VibesWave size={UNIFIED_CONFIG.TITLE_ICON_SIZE} />
         <span
             className="font-black text-gray-900"
             style={{

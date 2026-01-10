@@ -16,7 +16,8 @@
       "Bash(npm run build:*)",
       "Bash(npx esbuild:*)",
       "Bash(git checkout:*)",
-      "Bash(timeout 10 npm run dev:*)"
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

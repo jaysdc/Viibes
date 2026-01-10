@@ -5,7 +5,7 @@ import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
-import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave } from './Assets.jsx';
+import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
 
@@ -1507,6 +1507,16 @@ const styles = `
     }
   }
   .animate-neon-cyan-to-pink { animation: neon-cyan-to-pink 0.4s ease-out forwards; }
+@keyframes neon-rainbow-cycle {
+    0%, 100% { box-shadow: 0 -7px 14px rgba(237, 28, 36, 0.55), 0 7px 14px rgba(237, 28, 36, 0.55); }
+    14.28% { box-shadow: 0 -7px 14px rgba(247, 148, 30, 0.55), 0 7px 14px rgba(247, 148, 30, 0.55); }
+    28.57% { box-shadow: 0 -7px 14px rgba(255, 242, 0, 0.55), 0 7px 14px rgba(255, 242, 0, 0.55); }
+    42.85% { box-shadow: 0 -7px 14px rgba(171, 208, 55, 0.55), 0 7px 14px rgba(171, 208, 55, 0.55); }
+    57.14% { box-shadow: 0 -7px 14px rgba(0, 174, 239, 0.55), 0 7px 14px rgba(0, 174, 239, 0.55); }
+    71.42% { box-shadow: 0 -7px 14px rgba(46, 49, 146, 0.55), 0 7px 14px rgba(46, 49, 146, 0.55); }
+    85.71% { box-shadow: 0 -7px 14px rgba(146, 39, 143, 0.55), 0 7px 14px rgba(146, 39, 143, 0.55); }
+  }
+  .animate-neon-rainbow-cycle { animation: neon-rainbow-cycle 7s ease-in-out infinite; }
   
   @keyframes search-overlay-in {
     0% { transform: translateY(-100%); }
@@ -7175,16 +7185,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
-                          <NeonGlow
-                              key={`builder-glow-${builderBtnIgniting}`}
-                              colorName="pink"
-                              glowRGB="236, 72, 153"
-                              enabled={!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0)}
-                              igniteOnMount={builderBtnIgniting}
-                              flickerEnabled={!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode}
-                              className="absolute inset-0 rounded-full"
+                          <div
+                              className={`absolute inset-0 rounded-full ${!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-rainbow-cycle' : ''}`}
                               style={{
-                                  background: '#ec4899',
+                                  background: 'white',
                                   zIndex: 0
                               }}
                           />
@@ -7197,7 +7201,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               }} 
                               className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                           >
-                              <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16} />
+                              <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
                           </button>
                       </div>
                   </div>
@@ -7454,7 +7458,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             : (isVibeTheseCatchingUp ? 'transform 0.12s ease-out, opacity 0.15s ease-out' : 'opacity 0.15s ease-out')
                                     }}
                                 />
-                                <Flame size={18} className="fill-white" />
+                                <FlameWhiteVector size={18} />
                                 <span>VIBE THESE</span>
                                 <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
                             </button>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer, Copy } from 'lucide-react';
+import { FlameWhiteVector } from './Assets.jsx';
 import { UNIFIED_CONFIG } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -1265,7 +1266,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-2"
                                         style={{ background: btnIgniting === 'vibes' ? 'transparent' : '#ec4899' }}
                                     >
-                                        <Flame size={16} />
+                                        <FlameWhiteVector size={16} />
                                         1 VIBE
                                     </button>
                                 </div>
@@ -1329,7 +1330,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{ background: btnIgniting === 'vibes' ? 'transparent' : '#ec4899' }}
                                     >
-                                        <Flame size={14} />
+                                        <FlameWhiteVector size={14} />
                                         {selectedCount} VIBE{selectedCount > 1 ? 'S' : ''}
                                     </button>
                                 </div>
