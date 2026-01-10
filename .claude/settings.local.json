@@ -17,7 +17,9 @@
       "Bash(npx esbuild:*)",
       "Bash(git checkout:*)",
       "Bash(timeout 10 npm run dev:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

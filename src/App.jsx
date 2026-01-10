@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
+import * as musicMetadata from 'music-metadata';
 import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
@@ -8,6 +9,58 @@ import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// ARTWORK CACHE & EXTRACTION
+// ══════════════════════════════════════════════════════════════════════════
+
+// Cache pour les artworks extraits (songId -> blob URL)
+const artworkCache = new Map();
+
+// Extraire l'artwork d'un fichier audio (via URL ou Blob)
+const extractArtwork = async (audioSource, songId) => {
+    // Vérifier le cache d'abord
+    if (artworkCache.has(songId)) {
+        return artworkCache.get(songId);
+    }
+
+    try {
+        let blob;
+        
+        if (typeof audioSource === 'string') {
+            // C'est une URL - fetch les premiers 256KB pour les métadonnées
+            const response = await fetch(audioSource, {
+                headers: { 'Range': 'bytes=0-262144' }
+            });
+            blob = await response.blob();
+        } else if (audioSource instanceof Blob) {
+            // C'est déjà un Blob
+            blob = audioSource;
+        } else {
+            return null;
+        }
+
+        // Parser les métadonnées
+        const metadata = await musicMetadata.parseBlob(blob);
+        
+        if (metadata.common.picture && metadata.common.picture.length > 0) {
+            const picture = metadata.common.picture[0];
+            const artworkBlob = new Blob([picture.data], { type: picture.format });
+            const artworkUrl = URL.createObjectURL(artworkBlob);
+            
+            // Mettre en cache
+            artworkCache.set(songId, artworkUrl);
+            console.log('[Artwork] Extracted for:', songId);
+            
+            return artworkUrl;
+        }
+    } catch (error) {
+        console.log('[Artwork] Failed to extract:', error.message);
+    }
+    
+    return null;
+};
 
 // ══════════════════════════════════════════════════════════════════════════
 // ERROR BOUNDARY (pour debug)
@@ -5800,18 +5853,41 @@ const vibeSearchResults = () => {
     if (!('mediaSession' in navigator)) return;
 
     if (currentSong) {
+      // Artwork par défaut (icône de l'app)
+      const defaultArtwork = [
+        { src: '/icon-192.png', sizes: '96x96', type: 'image/png' },
+        { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
+      ];
+
+      // Mettre à jour immédiatement avec l'artwork par défaut ou en cache
+      const cachedArtwork = artworkCache.get(currentSong.id);
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentSong.title || 'Unknown Title',
         artist: currentSong.artist || 'Unknown Artist',
-        // NOTE: Sur iOS, l'album n'apparaît pas si artist est défini
-        artwork: [
-          // iOS préfère les petites images en premier (96x96 ou 128x128)
-          { src: '/icon-192.png', sizes: '96x96', type: 'image/png' },
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
-        ]
+        artwork: cachedArtwork 
+          ? [{ src: cachedArtwork, sizes: '512x512', type: 'image/jpeg' }]
+          : defaultArtwork
       });
-      console.log('[MediaSession] metadata updated:', currentSong.title);
+      console.log('[MediaSession] metadata updated:', currentSong.title, cachedArtwork ? '(with artwork)' : '(default icon)');
+
+      // Si pas d'artwork en cache, essayer d'extraire en arrière-plan
+      if (!cachedArtwork) {
+        const audioSrc = currentSong.file || (audioRef.current?.src);
+        if (audioSrc) {
+          extractArtwork(audioSrc, currentSong.id).then(artworkUrl => {
+            if (artworkUrl && navigator.mediaSession.metadata?.title === currentSong.title) {
+              // Mettre à jour avec le nouvel artwork
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: currentSong.title || 'Unknown Title',
+                artist: currentSong.artist || 'Unknown Artist',
+                artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
+              });
+              console.log('[MediaSession] artwork updated for:', currentSong.title);
+            }
+          });
+        }
+      }
     }
   }, [currentSong]);
 
