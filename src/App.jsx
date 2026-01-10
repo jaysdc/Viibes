@@ -5834,6 +5834,28 @@ const vibeSearchResults = () => {
     const handleLoadedMetadata = () => {
       console.log('[MediaSession] loadedmetadata event');
       updatePositionState();
+      
+      // Re-définir les handlers prev/next pour activer les boutons sur iOS
+      try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
+      
+      // Extraire l'artwork maintenant que l'audio est chargé
+      const song = currentSongRef.current;
+      if (song && !artworkCache.has(song.id)) {
+        const audioSrc = song.file || audio.src;
+        if (audioSrc) {
+          extractArtwork(audioSrc, song.id).then(artworkUrl => {
+            if (artworkUrl && currentSongRef.current?.id === song.id) {
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: song.title || 'Unknown Title',
+                artist: song.artist || 'Unknown Artist',
+                artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
+              });
+              console.log('[MediaSession] artwork set on loadedmetadata for:', song.title);
+            }
+          });
+        }
+      }
     };
 
     audio.addEventListener('play', handlePlay);
