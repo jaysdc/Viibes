@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
-import * as musicMetadata from 'music-metadata';
+import jsmediatags from 'jsmediatags';
 import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
@@ -19,47 +19,38 @@ import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, get
 const artworkCache = new Map();
 
 // Extraire l'artwork d'un fichier audio (via URL ou Blob)
-const extractArtwork = async (audioSource, songId) => {
-    // Vérifier le cache d'abord
-    if (artworkCache.has(songId)) {
-        return artworkCache.get(songId);
-    }
-
-    try {
-        let blob;
-        
-        if (typeof audioSource === 'string') {
-            // C'est une URL - fetch les premiers 256KB pour les métadonnées
-            const response = await fetch(audioSource, {
-                headers: { 'Range': 'bytes=0-262144' }
-            });
-            blob = await response.blob();
-        } else if (audioSource instanceof Blob) {
-            // C'est déjà un Blob
-            blob = audioSource;
-        } else {
-            return null;
+const extractArtwork = (audioSource, songId) => {
+    return new Promise((resolve) => {
+        // Vérifier le cache d'abord
+        if (artworkCache.has(songId)) {
+            resolve(artworkCache.get(songId));
+            return;
         }
 
-        // Parser les métadonnées
-        const metadata = await musicMetadata.parseBlob(blob);
-        
-        if (metadata.common.picture && metadata.common.picture.length > 0) {
-            const picture = metadata.common.picture[0];
-            const artworkBlob = new Blob([picture.data], { type: picture.format });
-            const artworkUrl = URL.createObjectURL(artworkBlob);
-            
-            // Mettre en cache
-            artworkCache.set(songId, artworkUrl);
-            console.log('[Artwork] Extracted for:', songId);
-            
-            return artworkUrl;
-        }
-    } catch (error) {
-        console.log('[Artwork] Failed to extract:', error.message);
-    }
-    
-    return null;
+        jsmediatags.read(audioSource, {
+            onSuccess: (tag) => {
+                const picture = tag.tags.picture;
+                if (picture) {
+                    const { data, format } = picture;
+                    const byteArray = new Uint8Array(data);
+                    const blob = new Blob([byteArray], { type: format });
+                    const artworkUrl = URL.createObjectURL(blob);
+                    
+                    // Mettre en cache
+                    artworkCache.set(songId, artworkUrl);
+                    console.log('[Artwork] Extracted for:', songId);
+                    
+                    resolve(artworkUrl);
+                } else {
+                    resolve(null);
+                }
+            },
+            onError: (error) => {
+                console.log('[Artwork] Failed to extract:', error.type, error.info);
+                resolve(null);
+            }
+        });
+    });
 };
 
 // ══════════════════════════════════════════════════════════════════════════

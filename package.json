@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "idb-keyval": "^6.2.2",
+    "jsmediatags": "^3.9.7",
     "lucide-react": "^0.555.0",
-    "music-metadata": "^11.10.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.17"
