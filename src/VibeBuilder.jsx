@@ -732,7 +732,7 @@ const VibeLogo = ({ size = CONFIG.VIBELOGO_SIZE }) => (
 
 const VibeBuilderTitle = () => (
     <div className="flex items-center select-none justify-center" style={{ gap: UNIFIED_CONFIG.TITLE_ICON_GAP }}>
-        <VibesWave size={UNIFIED_CONFIG.TITLE_ICON_SIZE} />
+        <VibesWave size={UNIFIED_CONFIG.TITLE_ICON_SIZE * 2} />
         <span
             className="font-black text-gray-900"
             style={{

@@ -1507,16 +1507,11 @@ const styles = `
     }
   }
   .animate-neon-cyan-to-pink { animation: neon-cyan-to-pink 0.4s ease-out forwards; }
-@keyframes neon-rainbow-cycle {
-    0%, 100% { box-shadow: 0 -7px 14px rgba(237, 28, 36, 0.55), 0 7px 14px rgba(237, 28, 36, 0.55); }
-    14.28% { box-shadow: 0 -7px 14px rgba(247, 148, 30, 0.55), 0 7px 14px rgba(247, 148, 30, 0.55); }
-    28.57% { box-shadow: 0 -7px 14px rgba(255, 242, 0, 0.55), 0 7px 14px rgba(255, 242, 0, 0.55); }
-    42.85% { box-shadow: 0 -7px 14px rgba(171, 208, 55, 0.55), 0 7px 14px rgba(171, 208, 55, 0.55); }
-    57.14% { box-shadow: 0 -7px 14px rgba(0, 174, 239, 0.55), 0 7px 14px rgba(0, 174, 239, 0.55); }
-    71.42% { box-shadow: 0 -7px 14px rgba(46, 49, 146, 0.55), 0 7px 14px rgba(46, 49, 146, 0.55); }
-    85.71% { box-shadow: 0 -7px 14px rgba(146, 39, 143, 0.55), 0 7px 14px rgba(146, 39, 143, 0.55); }
+@keyframes neon-pink-soft {
+    0%, 100% { box-shadow: 0 -3.5px 7px rgba(236, 72, 153, 0.275), 0 3.5px 7px rgba(236, 72, 153, 0.275); }
+    50% { box-shadow: 0 -4px 8px rgba(236, 72, 153, 0.325), 0 4px 8px rgba(236, 72, 153, 0.325); }
   }
-  .animate-neon-rainbow-cycle { animation: neon-rainbow-cycle 7s ease-in-out infinite; }
+  .animate-neon-pink-soft { animation: neon-pink-soft 2.5s ease-in-out infinite; }
   
   @keyframes search-overlay-in {
     0% { transform: translateY(-100%); }
@@ -7186,7 +7181,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                           <div
-                              className={`absolute inset-0 rounded-full ${!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-rainbow-cycle' : ''}`}
+                              className={`absolute inset-0 rounded-full ${!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : ''}`}
                               style={{
                                   background: 'white',
                                   zIndex: 0
