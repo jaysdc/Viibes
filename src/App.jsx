@@ -5781,8 +5781,11 @@ const vibeSearchResults = () => {
       }
     });
 
-    // NOTE: On n'utilise PAS seekbackward/seekforward car sur iOS ça cache les boutons Previous/Next
-    // À la place, on utilise seekto pour la barre de progression
+    // Désactiver explicitement seekbackward/seekforward pour forcer iOS à afficher prev/next
+    try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
+    try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
+
+    // seekto pour la barre de progression
     try {
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         console.log('[MediaSession] seekto handler called', details);
