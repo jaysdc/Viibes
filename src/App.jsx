@@ -387,7 +387,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     BEACON_SCRUB_MIN_SONGS: 21,           // Nombre minimum de chansons pour activer le scrubbing
     BEACON_SCRUB_LONG_PRESS_DELAY: 300,   // Durée appui long pour activer (ms)
-    BEACON_SCRUB_ARC_SIZE: 50,            // Taille de l'arc zoomé (% de la hauteur écran)
+    BEACON_SCRUB_ARC_SIZE: 40,            // Taille de l'arc zoomé (% de la hauteur écran)
     BEACON_SCRUB_ARC_X: 30,               // Position X du centre de l'arc (% écran, 50 = centré)
     BEACON_SCRUB_ARC_Y: 58,               // Position Y du centre de l'arc (% écran, 50 = centré)
     BEACON_SCRUB_ARC_THICKNESS: 24,        // Épaisseur de l'arc zoomé (px)
@@ -3912,7 +3912,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 className="absolute text-center text-white flex flex-col items-center"
                 style={{
                   left: '50%',
-                  bottom: containerRect.height - (centerY - arcRadius) + 20,
+                  bottom: containerRect.height - (centerY - arcRadius) + 16 + 16,
                   transform: 'translateX(-50%)',
                   maxWidth: '80%',
                 }}
