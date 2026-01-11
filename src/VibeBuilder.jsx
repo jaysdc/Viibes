@@ -1671,9 +1671,11 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                 const clampedX = Math.max(-maxSlide, Math.min(maxSlide, previewSwipeX));
                 const slideProgress = maxSlide > 0 ? clampedX / maxSlide : 0;
 
-                const isAtLeftThreshold = hasActiveQueue && slideProgress <= -CONFIG.PREVIEW_PILL_THRESHOLD;
-                const isAtRightThreshold = slideProgress >= CONFIG.PREVIEW_PILL_THRESHOLD;
-                const isAtCenter = Math.abs(slideProgress) < 0.15;
+                // Seuils unifiés - l'action se déclenche dès que le pulse s'active
+                const threshold = CONFIG.PREVIEW_PILL_THRESHOLD;
+                const isAtLeftThreshold = hasActiveQueue && slideProgress <= -threshold;
+                const isAtRightThreshold = slideProgress >= threshold;
+                const isAtCenter = Math.abs(slideProgress) < 0.2;
 
                 return (
                 <div
@@ -1757,9 +1759,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                     setPreviewFeedback(null);
                                 }, 400);
                             } else if (isAtCenter && previewSwipeStart !== null) {
-                                // Centre = Annuler (tap sans slide)
-                                stopVibing(false);
-                                setPreviewSwipeX(0);
+                                // Centre = Annuler avec animation ignite rouge
+                                setPreviewFeedback({ type: 'cancel' });
+                                setTimeout(() => {
+                                    stopVibing(false);
+                                    setPreviewSwipeX(0);
+                                    setPreviewFeedback(null);
+                                }, 400);
                             } else {
                                 // Retour au centre
                                 setPreviewSwipeX(0);
@@ -1784,11 +1790,36 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             />
                         </div>
 
-                        {/* Curseur central draggable */}
+                        {/* X rouge au centre de la pill (fixe, pas dans le curseur) */}
+                        <div
+                            className={`absolute flex items-center justify-center pointer-events-none ${
+                                previewFeedback?.type === 'cancel' ? 'animate-ignite-pill-red' : ''
+                            }`}
+                            style={{
+                                '--pulse-scale-min': 1,
+                                '--pulse-scale-max': pulseScaleMax,
+                                left: '50%',
+                                top: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: cursorSize,
+                                height: cursorSize,
+                                borderRadius: '50%',
+                                opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 1,
+                                transition: 'opacity 150ms ease-out',
+                            }}
+                        >
+                            <X
+                                size={iconSize * 0.6}
+                                className="text-red-400"
+                                strokeWidth={2.5}
+                            />
+                        </div>
+
+                        {/* Curseur transparent draggable */}
                         <div
                             className={`absolute flex items-center justify-center ${
                                 previewFeedback
-                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : 'animate-ignite-pill-red')
+                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : '')
                                     : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
                             }`}
                             style={{
@@ -1801,29 +1832,22 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                     ? 'rgba(6, 182, 212, 0.9)'  // Cyan
                                     : isAtRightThreshold
                                         ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                        : CONFIG.PREVIEW_PILL_CURSOR_COLOR,
+                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
+                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
-                            {/* Chevrons ou X au centre (état neutre) */}
+                            {/* Chevrons dans le curseur (état neutre) */}
                             {!isAtLeftThreshold && !isAtRightThreshold && (
                                 <div
                                     className="flex items-center"
                                     style={{ opacity: 0.6 }}
                                 >
-                                    {hasActiveQueue ? (
-                                        <>
-                                            <ChevronLeft size={iconSize * 0.5} className="text-gray-500 -mr-2" strokeWidth={2} />
-                                            <X size={iconSize * 0.4} className="text-gray-500" strokeWidth={2} />
-                                            <ChevronRight size={iconSize * 0.5} className="text-gray-500 -ml-2" strokeWidth={2} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <X size={iconSize * 0.4} className="text-gray-500 mr-1" strokeWidth={2} />
-                                            <ChevronRight size={iconSize * 0.5} className="text-gray-500" strokeWidth={2} />
-                                        </>
+                                    {hasActiveQueue && (
+                                        <ChevronLeft size={iconSize * 0.5} className="text-gray-400" strokeWidth={2} />
                                     )}
+                                    <ChevronRight size={iconSize * 0.5} className="text-gray-400" strokeWidth={2} />
                                 </div>
                             )}
                             {/* Icône ListPlus quand au seuil gauche */}
