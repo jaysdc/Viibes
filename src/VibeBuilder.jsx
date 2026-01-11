@@ -1645,13 +1645,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                         ? `rotateZ(${titleSwipeX / CONFIG.TITLE_SWIPE_THRESHOLD * CONFIG.SWIPE_MAX_ROTATION}deg)`
                         : isVisible ? 'rotateZ(0deg)' : `rotateZ(-${cardAnimConfig.closeRotation}deg)`,
                 borderRadius: (closingDirection || !isVisible || titleSwipeX !== 0) ? cardAnimConfig.radius : '0',
-                border: (closingDirection || !isVisible || isOpenAnimating || titleSwipeX !== 0) ? `${cardAnimConfig.borderWidth}px solid ${cardAnimConfig.borderColor}` : 'none',
+                outline: (closingDirection || !isVisible || isOpenAnimating || titleSwipeX !== 0) ? `${cardAnimConfig.borderWidth}px solid ${cardAnimConfig.borderColor}` : 'none',
                 overflow: 'hidden',
                 transition: titleSwipeX !== 0
                     ? 'none'
                     : closingDirection
-                        ? `transform ${cardAnimConfig.closeDuration}ms linear, border-radius ${cardAnimConfig.closeDuration}ms linear, border ${cardAnimConfig.closeDuration}ms linear`
-                        : `transform ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1), border-radius ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1), border ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1)`
+                        ? `transform ${cardAnimConfig.closeDuration}ms linear, border-radius ${cardAnimConfig.closeDuration}ms linear, outline ${cardAnimConfig.closeDuration}ms linear`
+                        : `transform ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1), border-radius ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1), outline ${cardAnimConfig.openDuration}ms cubic-bezier(0, ${cardAnimConfig.openDecel}, ${1 - cardAnimConfig.openDecel}, 1)`
             }}
         >
             <style>{styles}</style>
