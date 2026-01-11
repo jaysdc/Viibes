@@ -1667,6 +1667,20 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                     }}
                     onClick={(e) => { if (e.target === e.currentTarget) stopVibing(false); }}
                 >
+                    {/* Titre et artiste */}
+                    <h2
+                        className="font-black text-black text-center px-8 mb-1 tracking-tight"
+                        style={{ fontSize: CONFIG.PREVIEW_TITLE_SIZE }}
+                    >
+                        {vibingSong.title}
+                    </h2>
+                    <p
+                        className="text-pink-500 font-bold text-center px-8"
+                        style={{ fontSize: CONFIG.PREVIEW_ARTIST_SIZE, marginBottom: CONFIG.PREVIEW_TEXT_MARGIN_BOTTOM }}
+                    >
+                        {vibingSong.artist}
+                    </p>
+
                     {/* Disc qui tourne avec glow cyan */}
                     <div style={{ marginBottom: CONFIG.PREVIEW_DISC_MARGIN_BOTTOM }}>
                         <div
@@ -1684,20 +1698,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             />
                         </div>
                     </div>
-                    
-                    {/* Titre et artiste */}
-                    <h2
-                        className="font-black text-black text-center px-8 mb-1 tracking-tight"
-                        style={{ fontSize: CONFIG.PREVIEW_TITLE_SIZE }}
-                    >
-                        {vibingSong.title}
-                    </h2>
-                    <p
-                        className="text-pink-500 font-bold text-center px-8"
-                        style={{ fontSize: CONFIG.PREVIEW_ARTIST_SIZE, marginBottom: CONFIG.PREVIEW_TEXT_MARGIN_BOTTOM }}
-                    >
-                        {vibingSong.artist}
-                    </p>
                     
                     {/* Boutons avec style néon */}
                     <div className="flex items-center" style={{ gap: CONFIG.PREVIEW_BTN_GAP }}>
