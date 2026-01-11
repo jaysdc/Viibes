@@ -112,8 +112,8 @@ const CONFIG = {
     PREVIEW_DISC_COLOR: '#06b6d4',        // Couleur du disque (cyan)
     PREVIEW_DISC_BG: 'rgba(6, 182, 212, 0.15)', // Fond du disque (cyan transparent)
 
-    PREVIEW_TITLE_SIZE: 24,               // Taille du titre (px)
-    PREVIEW_ARTIST_SIZE: 16,              // Taille de l'artiste (px)
+    PREVIEW_TITLE_SIZE: 20,               // Taille du titre (px) - comme beacon: TEXT_SIZE + 4
+    PREVIEW_ARTIST_SIZE: 14,              // Taille de l'artiste (px) - comme beacon: TEXT_SIZE - 2
     PREVIEW_TEXT_MARGIN_BOTTOM: 40,       // Marge sous le texte avant les boutons (px)
 
     PREVIEW_BTN_GAP: 16,                  // Espacement entre les boutons (px)
