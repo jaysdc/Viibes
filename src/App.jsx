@@ -4739,49 +4739,62 @@ useEffect(() => {
     }
   };
 
-  // Ancienne fonction pour les autres cas (duck, fade in)
+  // Ducking pour la pré-écoute
+  // Sur iOS: utilise muted (seule option qui fonctionne)
+  // Sur autres: utilise GainNode pour un vrai ducking progressif
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
 
     if (fadeInterval.current) clearInterval(fadeInterval.current);
 
     const step = 0.05;
-    const intervalTime = 50;
+    const intervalTime = 20;
 
     if (direction === 'duck') {
-        // Duck : baisser le volume SANS couper l'audio
         // Mémoriser si le lecteur jouait avant le duck
         wasPlayingBeforeDuck.current = !audioRef.current.paused;
-        savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-        const duckTarget = targetVolume || 0.15;
 
-        fadeInterval.current = setInterval(() => {
-          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol > duckTarget + step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
-              else audioRef.current.volume = currentVol - step;
-          } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = duckTarget;
-              else audioRef.current.volume = duckTarget;
-              clearInterval(fadeInterval.current);
-          }
-        }, 20);
+        // Sur iOS (pas de GainNode), utiliser muted
+        if (isIOSDevice.current || !gainNodeRef.current) {
+            audioRef.current.muted = true;
+            console.log('[fadeMainAudio] iOS duck: muted = true');
+        } else {
+            // Sur desktop/Android: vrai ducking progressif via GainNode
+            savedVolume.current = gainNodeRef.current.gain.value;
+            const duckTarget = targetVolume || 0.15;
+
+            fadeInterval.current = setInterval(() => {
+                const currentVol = gainNodeRef.current.gain.value;
+                if (currentVol > duckTarget + step) {
+                    gainNodeRef.current.gain.value = currentVol - step;
+                } else {
+                    gainNodeRef.current.gain.value = duckTarget;
+                    clearInterval(fadeInterval.current);
+                }
+            }, intervalTime);
+        }
     } else if (direction === 'in') {
-        // Fade In - restaurer le volume seulement si le lecteur jouait avant le duck
+        // Sur iOS, unmute
+        if (isIOSDevice.current || !gainNodeRef.current) {
+            audioRef.current.muted = false;
+            console.log('[fadeMainAudio] iOS unduck: muted = false');
+        } else {
+            // Sur desktop/Android: restaurer le volume progressivement
+            fadeInterval.current = setInterval(() => {
+                const currentVol = gainNodeRef.current.gain.value;
+                if (currentVol < savedVolume.current - step) {
+                    gainNodeRef.current.gain.value = currentVol + step;
+                } else {
+                    gainNodeRef.current.gain.value = savedVolume.current;
+                    clearInterval(fadeInterval.current);
+                }
+            }, intervalTime);
+        }
+
+        // Reprendre la lecture si elle était en cours avant le duck
         if (wasPlayingBeforeDuck.current && audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
-        fadeInterval.current = setInterval(() => {
-          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol < savedVolume.current - step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol + step;
-              else audioRef.current.volume = currentVol + step;
-          } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = savedVolume.current;
-              else audioRef.current.volume = savedVolume.current;
-              clearInterval(fadeInterval.current);
-          }
-        }, intervalTime);
     }
   };
 
