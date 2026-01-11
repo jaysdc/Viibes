@@ -7305,7 +7305,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                           <div
-                              className={`absolute inset-0 rounded-full ${builderBtnIgniting ? 'animate-neon-ignite-red' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
+                              className={`absolute inset-0 rounded-full ${builderBtnIgniting ? 'animate-neon-ignite-pink' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
                               style={{
                                   background: 'white',
                                   zIndex: 0
