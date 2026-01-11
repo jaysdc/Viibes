@@ -962,8 +962,12 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
     const longPressTimer = useRef(null);
     const touchMoved = useRef(false);
     const longPressTriggered = useRef(false);
-    
+    const songAvailable = isSongAvailable(song);
+
     const handleTouchStart = (e) => {
+        // Ne pas activer le long press si le morceau n'est pas disponible
+        if (!songAvailable) return;
+
         touchMoved.current = false;
         longPressTriggered.current = false;
         longPressTimer.current = setTimeout(() => {
