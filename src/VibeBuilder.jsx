@@ -246,6 +246,7 @@ const CONFIG = {
     ADDALL_ICON_SIZE: '0.75rem',          // Taille icône Music2 dans AddAll
     BLINK_ANIMATION_DURATION: 500,        // Durée de l'animation de clignotement (ms)
     LONG_PRESS_DURATION: 500,             // Durée avant déclenchement du long press (ms)
+    BOTTOM_BAR_HEIGHT: 'calc(9vh + 24px + env(safe-area-inset-bottom, 0px))', // Hauteur bottom bar (carte + padding + safe area)
 };
 
 // --- 1. STYLE CSS ---
@@ -2002,14 +2003,14 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
             {/* LIST CONTAINER */}
             <div className="relative flex-1 overflow-hidden">
                 
-                {/* ICONES FANTOMES GAUCHE (STATIQUE - GRIS 33%) - Position fixe */}
+                {/* ICONES FANTOMES GAUCHE (STATIQUE - GRIS 33%) - Centré sur zone de liste */}
                 <div
                     className="absolute left-0 z-10 pointer-events-none flex flex-col items-center justify-center text-gray-300"
                     style={{
                         width: CONFIG.SIDEBAR_WIDTH,
                         gap: CONFIG.SIDEBAR_ICON_GAP,
                         top: 0,
-                        bottom: 0 // Position fixe, ne change pas avec la sélection
+                        bottom: CONFIG.BOTTOM_BAR_HEIGHT // Exclure la zone de la bottom bar
                     }}
                 >
                     <ChevronsUp style={{ width: CONFIG.SIDEBAR_ICON_SIZE, height: CONFIG.SIDEBAR_ICON_SIZE }} strokeWidth={2.5} />

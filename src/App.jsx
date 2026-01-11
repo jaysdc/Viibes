@@ -3598,13 +3598,24 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         setScrubMorphProgress(0);
         setIsScrubMorphing(true);
         scrubCenterYRef.current = window.innerHeight * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-        requestAnimationFrame(() => {
-          setScrubMorphProgress(1);
-        });
-        // Désactiver le morphing après la durée de l'animation
-        scrubMorphTimeoutRef.current = setTimeout(() => {
-          setIsScrubMorphing(false);
-        }, CONFIG.BEACON_SCRUB_MORPH_DURATION);
+
+        // Animation fluide de 0 à 1 avec requestAnimationFrame
+        const startTime = performance.now();
+        const duration = CONFIG.BEACON_SCRUB_MORPH_DURATION;
+
+        const animateMorph = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(1, elapsed / duration);
+          setScrubMorphProgress(progress);
+
+          if (progress < 1) {
+            requestAnimationFrame(animateMorph);
+          } else {
+            setIsScrubMorphing(false);
+          }
+        };
+
+        requestAnimationFrame(animateMorph);
       }, CONFIG.BEACON_SCRUB_LONG_PRESS_DELAY);
     };
     
@@ -3759,16 +3770,37 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           );
         })()}
         
-        {/* OVERLAY SCRUBBING - version simple sans morph */}
+        {/* OVERLAY SCRUBBING - avec animation morph */}
         {isScrubbing && effectivePortalRef.current && ReactDOM.createPortal((() => {
           const portalRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
           const containerRect = portalRect;
 
-          // Position fixe au centre (pas de morph)
-          const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-          const centerX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
-          const centerY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-          const thickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+          // === MORPH ANIMATION ===
+          // Position FINALE (tube de scrubbing)
+          const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+          const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+          const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+          const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+
+          // Position INITIALE (arc du beacon = demi-cercle droit de la capsule)
+          const isMini = false; // Le beacon n'est pas mini pendant le scrubbing
+          const beaconHeightVh = isMini ? CONFIG.CAPSULE_HEIGHT_MINI_VH : CONFIG.CAPSULE_HEIGHT_VH;
+          const beaconHeightPx = containerRect.height * beaconHeightVh / 100;
+          const initialArcRadius = beaconHeightPx / 2;
+          const horizontalMarginPercent = (100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2;
+          // Centre du demi-cercle droit de la capsule
+          const initialCenterX = containerRect.width * (1 - horizontalMarginPercent / 100) - initialArcRadius;
+          const initialCenterY = containerRect.height / 2;
+          const initialThickness = CONFIG.BEACON_NEON_WIDTH;
+
+          // Interpolation avec easing cubic
+          const t = scrubMorphProgress;
+          const easeOut = 1 - Math.pow(1 - t, 3); // cubic ease-out
+
+          const arcRadius = initialArcRadius + (finalArcRadius - initialArcRadius) * easeOut;
+          const centerX = initialCenterX + (finalCenterX - initialCenterX) * easeOut;
+          const centerY = initialCenterY + (finalCenterY - initialCenterY) * easeOut;
+          const thickness = initialThickness + (finalThickness - initialThickness) * easeOut;
 
           const totalSongs = queue.length;
 
@@ -3797,75 +3829,30 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           const tubeGlowColor = CONFIG.BEACON_SCRUB_TUBE_GLOW_COLOR;
           const bubbleColor = CONFIG.BEACON_SCRUB_BUBBLE_COLOR;
 
+          // Interpoler aussi l'opacité du fond
+          const overlayOpacity = CONFIG.BEACON_SCRUB_OVERLAY_OPACITY * easeOut;
+
+          // Interpoler la couleur du tube (gris beacon → cyan)
+          // Couleur initiale RGB du beacon
+          const beaconRGB = CONFIG.BEACON_NEON_COLOR.split(',').map(n => parseInt(n.trim()));
+          // Couleur finale RGB du tube (cyan: 85, 226, 226)
+          const tubeRGB = [85, 226, 226];
+          // Interpoler chaque composante
+          const currentR = Math.round(beaconRGB[0] + (tubeRGB[0] - beaconRGB[0]) * easeOut);
+          const currentG = Math.round(beaconRGB[1] + (tubeRGB[1] - beaconRGB[1]) * easeOut);
+          const currentB = Math.round(beaconRGB[2] + (tubeRGB[2] - beaconRGB[2]) * easeOut);
+          const morphedTubeColor = `rgba(${currentR}, ${currentG}, ${currentB}, 1)`;
+          const morphedGlowColor = `rgba(${currentR}, ${currentG}, ${currentB}, 0.5)`;
+
           return (
             <div
               className="absolute inset-0 z-[100] flex items-center justify-center"
               style={{
-                backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
+                backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
               }}
               onTouchMove={handleScrubTouchMove}
               onTouchEnd={handleScrubTouchEnd}
             >
-              {/* DEBUG: Capsule verte (test positionnement avec variables px) */}
-              {(() => {
-                const dpr = window.devicePixelRatio;
-                const screenRealPx = window.innerHeight * dpr;
-                const headerPx = getPlayerHeaderHeightPx();
-                const footerPx = getPlayerFooterHeightPx();
-                const beaconPx = getBeaconHeightPx();
-                const zonePx = screenRealPx - headerPx - footerPx;
-                // Convertir en pixels CSS pour le positionnement
-                const topCss = (headerPx + zonePx / 2 - beaconPx / 2) / dpr;
-                const heightCss = beaconPx / dpr;
-                // Lire safe-area-inset-top directement
-                const safeDiv = document.createElement('div');
-                safeDiv.style.position = 'fixed';
-                safeDiv.style.top = '0';
-                safeDiv.style.height = 'env(safe-area-inset-top, 0px)';
-                safeDiv.style.visibility = 'hidden';
-                document.body.appendChild(safeDiv);
-                const safeAreaTopCss = safeDiv.getBoundingClientRect().height;
-                document.body.removeChild(safeDiv);
-                const safeAreaTopReal = safeAreaTopCss * dpr;
-                // Lire safe-area-inset-bottom
-                const safeDivBottom = document.createElement('div');
-                safeDivBottom.style.position = 'fixed';
-                safeDivBottom.style.bottom = '0';
-                safeDivBottom.style.height = 'env(safe-area-inset-bottom, 0px)';
-                safeDivBottom.style.visibility = 'hidden';
-                document.body.appendChild(safeDivBottom);
-                const safeAreaBottomCss = safeDivBottom.getBoundingClientRect().height;
-                document.body.removeChild(safeDivBottom);
-                return (
-                  <>
-                    <div
-                      className="absolute"
-                      style={{
-                        right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
-                        top: topCss,
-                        width: heightCss,
-                        height: heightCss,
-                        borderRadius: '50%',
-                        border: '1px solid rgba(34, 197, 94, 1)',
-                        clipPath: 'inset(0 0 0 50%)',
-                      }}
-                    />
-                    {/* DEBUG: Overlay valeurs */}
-                    <div
-                      className="absolute left-4 right-4 bg-black/80 text-white text-xs p-2 rounded"
-                      style={{ bottom: '25%' }}
-                    >
-                      <div>SafeTop: {safeAreaTopReal.toFixed(1)} real px ({safeAreaTopCss.toFixed(1)} css)</div>
-                      <div>Header: {headerPx.toFixed(1)} real px</div>
-                      <div>Footer: {footerPx.toFixed(1)} real px</div>
-                      <div>Beacon: {beaconPx.toFixed(1)} real px</div>
-                      <div>Zone: {zonePx.toFixed(1)} real px</div>
-                      <div>Screen: {screenRealPx.toFixed(1)} real px</div>
-                      <div>DPR: {dpr}</div>
-                    </div>
-                  </>
-                );
-              })()}
               {/* Tube rempli avec glow */}
               <svg
                 className="absolute"
@@ -3890,8 +3877,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   className="scrub-tube-glow"
                   d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
                   fill="none"
-                  stroke={tubeGlowColor}
-                  strokeWidth={thickness + CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE}
+                  stroke={morphedGlowColor}
+                  strokeWidth={thickness + CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE * easeOut}
                   strokeLinecap="round"
                   filter="url(#tubeGlow)"
                 />
@@ -3899,7 +3886,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 <path
                   d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
                   fill="none"
-                  stroke={tubeColor}
+                  stroke={morphedTubeColor}
                   strokeWidth={thickness}
                   strokeLinecap="round"
                 />
@@ -3916,7 +3903,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   backgroundColor: bubbleColor,
                   color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
                   fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
-                  boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  boxShadow: `0 0 8px ${morphedGlowColor}`,
+                  opacity: easeOut,
                 }}
               >
                 1
@@ -3933,7 +3921,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   backgroundColor: bubbleColor,
                   color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
                   fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
-                  boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  boxShadow: `0 0 8px ${morphedGlowColor}`,
+                  opacity: easeOut,
                 }}
               >
                 {totalSongs}
@@ -3949,6 +3938,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
                   backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
                   boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
+                  opacity: easeOut,
                 }}
               />
 
@@ -3962,6 +3952,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
                   backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
                   boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
+                  opacity: easeOut,
                 }}
               />
 
@@ -3973,6 +3964,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   bottom: containerRect.height - (centerY - arcRadius) + 20 + 32,
                   transform: 'translateX(-50%)',
                   maxWidth: '80%',
+                  opacity: easeOut,
                 }}
               >
                 <div
