@@ -124,7 +124,7 @@ const CONFIG = {
     PREVIEW_PILL_BG_COLOR: 'rgba(110, 110, 110, 0.15)', // Fond du pill
     PREVIEW_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
     PREVIEW_PILL_BLUR: 20,                       // Blur du pill (px)
-    PREVIEW_PILL_THRESHOLD: 0.9,                 // Seuil de déclenchement (90%)
+    PREVIEW_PILL_THRESHOLD: 0.85,                // Seuil de déclenchement (85%) - pas de zone morte
     
     PREVIEW_FADEIN_DURATION: 200,         // Durée du fade in en ms (0 = pas de fade)
     PREVIEW_FADEOUT_DURATION: 300,        // Durée du fade out en ms (0 = pas de fade)
