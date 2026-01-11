@@ -6884,7 +6884,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             setPendingVibe(null);
             setConfirmFeedback(null);
             setConfirmSwipeX(0);
-            doLaunchVibe(vibeToLaunch);
+            // Cas spécial: VIBE THESE depuis les résultats de recherche
+            if (vibeToLaunch === '__SEARCH_RESULTS__') {
+                vibeSearchResults();
+            } else {
+                doLaunchVibe(vibeToLaunch);
+            }
         } else if (confirmFeedback?.type === 'nuke') {
             setConfirmOverlayVisible(false);
             setNukeConfirmMode(false);
