@@ -112,8 +112,8 @@ const CONFIG = {
     PREVIEW_DISC_COLOR: '#06b6d4',        // Couleur du disque (cyan)
     PREVIEW_DISC_BG: 'rgba(6, 182, 212, 0.15)', // Fond du disque (cyan transparent)
 
-    PREVIEW_TITLE_SIZE: 20,               // Taille du titre (px) - comme beacon: TEXT_SIZE + 4
-    PREVIEW_ARTIST_SIZE: 14,              // Taille de l'artiste (px) - comme beacon: TEXT_SIZE - 2
+    PREVIEW_TITLE_SIZE: 28,               // Taille du titre (px)
+    PREVIEW_ARTIST_SIZE: 20,              // Taille de l'artiste (px)
     PREVIEW_TEXT_MARGIN_BOTTOM: 40,       // Marge sous le texte avant les boutons (px)
 
     // PILL DE CONFIRMATION (style identique à kill/nuke)
@@ -1677,9 +1677,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                 const isAtRightThreshold = slideProgress >= threshold;
                 const isAtCenter = Math.abs(slideProgress) < 0.2;
 
-                // Action qui sera déclenchée
-                const actionToTrigger = isAtRightThreshold ? 'ADD' : isAtLeftThreshold ? 'QUEUE' : isAtCenter ? 'CANCEL' : 'NONE';
-
                 return (
                 <div
                     className="absolute inset-0 z-[100] flex flex-col items-center justify-center animate-in fade-in duration-300"
@@ -1689,27 +1686,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                         backgroundColor: CONFIG.PREVIEW_BG_OVERLAY
                     }}
                 >
-                    {/* DEBUG OVERLAY */}
-                    <div
-                        className="absolute top-20 left-4 right-4 p-3 rounded-lg font-mono text-xs z-[200]"
-                        style={{
-                            background: 'rgba(0, 0, 0, 0.85)',
-                            color: '#0f0',
-                        }}
-                    >
-                        <div className="mb-1">previewSwipeX: <span className="text-yellow-400">{previewSwipeX.toFixed(1)}</span></div>
-                        <div className="mb-1">clampedX: <span className="text-yellow-400">{clampedX.toFixed(1)}</span></div>
-                        <div className="mb-1">maxSlide: <span className="text-yellow-400">{maxSlide.toFixed(1)}</span></div>
-                        <div className="mb-1">slideProgress: <span className="text-cyan-400">{slideProgress.toFixed(3)}</span></div>
-                        <div className="mb-1">threshold: <span className="text-cyan-400">{threshold}</span></div>
-                        <div className="mb-1">isAtRightThreshold: <span className={isAtRightThreshold ? 'text-green-400' : 'text-red-400'}>{isAtRightThreshold ? 'TRUE' : 'FALSE'}</span></div>
-                        <div className="mb-1">isAtLeftThreshold: <span className={isAtLeftThreshold ? 'text-green-400' : 'text-red-400'}>{isAtLeftThreshold ? 'TRUE' : 'FALSE'}</span></div>
-                        <div className="mb-1">isAtCenter: <span className={isAtCenter ? 'text-green-400' : 'text-red-400'}>{isAtCenter ? 'TRUE' : 'FALSE'}</span></div>
-                        <div className="mb-1">previewSwipeStart: <span className="text-yellow-400">{previewSwipeStart !== null ? previewSwipeStart.toFixed(1) : 'null'}</span></div>
-                        <div className="mt-2 pt-2 border-t border-gray-600">
-                            Action on release: <span className={`font-bold ${actionToTrigger === 'ADD' ? 'text-green-400' : actionToTrigger === 'QUEUE' ? 'text-cyan-400' : actionToTrigger === 'CANCEL' ? 'text-red-400' : 'text-gray-400'}`}>{actionToTrigger}</span>
-                        </div>
-                    </div>
                     {/* Titre et artiste */}
                     <h2
                         className="font-black text-black text-center px-8 mb-1 tracking-tight"
