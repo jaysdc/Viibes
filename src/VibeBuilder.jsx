@@ -1836,18 +1836,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
-                            {/* Chevrons dans le curseur (état neutre) */}
-                            {!isAtLeftThreshold && !isAtRightThreshold && (
-                                <div
-                                    className="flex items-center"
-                                    style={{ opacity: 0.6 }}
-                                >
-                                    {hasActiveQueue && (
-                                        <ChevronLeft size={iconSize * 0.5} className="text-gray-400" strokeWidth={2} />
-                                    )}
-                                    <ChevronRight size={iconSize * 0.5} className="text-gray-400" strokeWidth={2} />
-                                </div>
-                            )}
                             {/* Icône ListPlus quand au seuil gauche */}
                             {isAtLeftThreshold && (
                                 <ListPlus size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
