@@ -8422,11 +8422,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 // === FORMAT BIBLIOTHÈQUE - récupérer les songs pour l'édition ===
                 const editingVibeSongs = isEditMode ? getVibeSongs(editingVibeId) : [];
 
-                // Calculer l'index initial UNE SEULE FOIS au montage
+                // Calculer l'index initial aléatoire parmi les gradients non utilisés
                 const usedIndices = Object.values(vibeColorIndices);
                 const allIndices = Array.from({ length: ALL_GRADIENTS.length }, (_, i) => i);
                 const unusedIndices = allIndices.filter(i => !usedIndices.includes(i));
-                const initialIdx = unusedIndices.length > 0 ? unusedIndices[0] : 0;
+                const initialIdx = unusedIndices.length > 0
+                    ? unusedIndices[Math.floor(Math.random() * unusedIndices.length)]
+                    : Math.floor(Math.random() * ALL_GRADIENTS.length);
 
                 return (
                   <div className="absolute inset-0 z-[200]">
