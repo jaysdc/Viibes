@@ -7305,19 +7305,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                           <div
-                              className={`absolute inset-0 rounded-full ${!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : ''}`}
+                              className={`absolute inset-0 rounded-full ${builderBtnIgniting ? 'animate-neon-ignite-red' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
                               style={{
                                   background: 'white',
                                   zIndex: 0
                               }}
                           />
-                          <button 
+                          <button
                               onClick={() => {
                                   if (showImportMenu) return;
                                   setBuilderBtnIgniting(true);
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
-                              }} 
+                              }}
                               className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                           >
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />

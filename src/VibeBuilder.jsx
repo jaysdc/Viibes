@@ -1687,14 +1687,14 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                     
                     {/* Titre et artiste */}
                     <h2
-                        className="font-bold text-black text-center px-8 mb-1 tracking-tight"
+                        className="font-black text-white text-center px-8 mb-1 tracking-tight"
                         style={{ fontSize: CONFIG.PREVIEW_TITLE_SIZE }}
                     >
                         {vibingSong.title}
                     </h2>
                     <p
-                        className="font-bold text-center px-8"
-                        style={{ fontSize: CONFIG.PREVIEW_ARTIST_SIZE, marginBottom: CONFIG.PREVIEW_TEXT_MARGIN_BOTTOM, color: '#FF2D55' }}
+                        className="text-pink-400 font-medium text-center px-8"
+                        style={{ fontSize: CONFIG.PREVIEW_ARTIST_SIZE, marginBottom: CONFIG.PREVIEW_TEXT_MARGIN_BOTTOM }}
                     >
                         {vibingSong.artist}
                     </p>
