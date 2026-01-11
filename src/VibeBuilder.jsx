@@ -116,17 +116,15 @@ const CONFIG = {
     PREVIEW_ARTIST_SIZE: 14,              // Taille de l'artiste (px) - comme beacon: TEXT_SIZE - 2
     PREVIEW_TEXT_MARGIN_BOTTOM: 40,       // Marge sous le texte avant les boutons (px)
 
-    PREVIEW_BTN_GAP: 16,                  // Espacement entre les boutons (px)
-    PREVIEW_BTN_CLOSE_SIZE: 56,           // Taille bouton X (px)
-    PREVIEW_BTN_PLAYNEXT_SIZE: 56,        // Taille bouton Play Next (px)
-    PREVIEW_BTN_ADD_SIZE: 56,             // Taille bouton Ajouter (px)
-    PREVIEW_BTN_CLOSE_ICON: 26,           // Taille icône X (px)
-    PREVIEW_BTN_PLAYNEXT_ICON: 28,        // Taille icône Play Next (px)
-    PREVIEW_BTN_ADD_ICON: 28,             // Taille icône Check (px)
-
-    PREVIEW_BTN_CLOSE_COLOR: 'rgba(100, 100, 100, 0.5)',    // Fond bouton X (gris foncé)
-    PREVIEW_BTN_PLAYNEXT_COLOR: '#06b6d4',                   // Fond bouton Play Next (cyan)
-    PREVIEW_BTN_ADD_COLOR: '#00ff88',                        // Fond bouton Ajouter (vert néon)
+    // PILL DE CONFIRMATION (style identique à kill/nuke)
+    PREVIEW_PILL_HEIGHT_PERCENT: 25,             // Hauteur du pill (% largeur écran)
+    PREVIEW_PILL_WIDTH_PERCENT: 80,              // Largeur du pill (% largeur écran)
+    PREVIEW_PILL_ICON_SIZE_PERCENT: 50,          // Taille icônes (% hauteur pill)
+    PREVIEW_PILL_CURSOR_SIZE_PERCENT: 80,        // Taille du curseur (% hauteur pill)
+    PREVIEW_PILL_BG_COLOR: 'rgba(110, 110, 110, 0.15)', // Fond du pill
+    PREVIEW_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
+    PREVIEW_PILL_BLUR: 20,                       // Blur du pill (px)
+    PREVIEW_PILL_THRESHOLD: 0.9,                 // Seuil de déclenchement (90%)
     
     PREVIEW_FADEIN_DURATION: 200,         // Durée du fade in en ms (0 = pas de fade)
     PREVIEW_FADEOUT_DURATION: 300,        // Durée du fade out en ms (0 = pas de fade)
@@ -1095,8 +1093,11 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const [isAnimatingAddAll, setIsAnimatingAddAll] = useState(false);
     const [isAnimatingCreate, setIsAnimatingCreate] = useState(false);
     
-    const [vibingSong, setVibingSong] = useState(null); 
-    
+    const [vibingSong, setVibingSong] = useState(null);
+    const [previewSwipeX, setPreviewSwipeX] = useState(0);
+    const [previewSwipeStart, setPreviewSwipeStart] = useState(null);
+    const [previewFeedback, setPreviewFeedback] = useState(null); // { type: 'add' | 'queue' | 'cancel' }
+
     // État pour le gradient de la future Vibe (fixe au montage, modifiable par swipe)
     const [chosenGradientIndex, setChosenGradientIndex] = useState(editMode ? editVibeGradientIndex : (initialGradientIndex || 0));
     const [cardSwipeOffset, setCardSwipeOffset] = useState(0);
@@ -1657,7 +1658,24 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
             <style>{styles}</style>
 
             {/* OVERLAY PRÉ-ÉCOUTE */}
-            {vibingSong && (
+            {vibingSong && (() => {
+                const screenWidth = window.innerWidth;
+                const pillHeight = screenWidth * CONFIG.PREVIEW_PILL_HEIGHT_PERCENT / 100;
+                const pillWidth = screenWidth * CONFIG.PREVIEW_PILL_WIDTH_PERCENT / 100;
+                const cursorSize = pillHeight * CONFIG.PREVIEW_PILL_CURSOR_SIZE_PERCENT / 100;
+                const iconSize = pillHeight * CONFIG.PREVIEW_PILL_ICON_SIZE_PERCENT / 100;
+                const pillPadding = (pillHeight - cursorSize) / 2;
+                const pulseScaleMax = pillHeight / cursorSize;
+                const maxBubbleSize = pillHeight;
+                const maxSlide = (pillWidth / 2) - (maxBubbleSize / 2);
+                const clampedX = Math.max(-maxSlide, Math.min(maxSlide, previewSwipeX));
+                const slideProgress = maxSlide > 0 ? clampedX / maxSlide : 0;
+
+                const isAtLeftThreshold = hasActiveQueue && slideProgress <= -CONFIG.PREVIEW_PILL_THRESHOLD;
+                const isAtRightThreshold = slideProgress >= CONFIG.PREVIEW_PILL_THRESHOLD;
+                const isAtCenter = Math.abs(slideProgress) < 0.15;
+
+                return (
                 <div
                     className="absolute inset-0 z-[100] flex flex-col items-center justify-center animate-in fade-in duration-300"
                     style={{
@@ -1665,7 +1683,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                         WebkitBackdropFilter: `blur(${CONFIG.PREVIEW_BLUR}px)`,
                         backgroundColor: CONFIG.PREVIEW_BG_OVERLAY
                     }}
-                    onClick={(e) => { if (e.target === e.currentTarget) stopVibing(false); }}
                 >
                     {/* Titre et artiste */}
                     <h2
@@ -1698,53 +1715,147 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             />
                         </div>
                     </div>
-                    
-                    {/* Boutons avec style néon */}
-                    <div className="flex items-center" style={{ gap: CONFIG.PREVIEW_BTN_GAP }}>
-                        {/* Bouton X - Fermer (gris discret) */}
-                        <button
-                            onClick={() => stopVibing(false)}
-                            className="rounded-full flex items-center justify-center text-white/90 transition-all hover:scale-105"
+
+                    {/* Pill de confirmation à 3 zones */}
+                    <div
+                        className="relative flex items-center justify-between"
+                        style={{
+                            width: pillWidth,
+                            height: pillHeight,
+                            borderRadius: pillHeight / 2,
+                            backgroundColor: CONFIG.PREVIEW_PILL_BG_COLOR,
+                            backdropFilter: `blur(${CONFIG.PREVIEW_PILL_BLUR}px)`,
+                            WebkitBackdropFilter: `blur(${CONFIG.PREVIEW_PILL_BLUR}px)`,
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                            padding: pillPadding,
+                        }}
+                        onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setPreviewSwipeStart(e.touches[0].clientX - previewSwipeX);
+                        }}
+                        onTouchMove={(e) => {
+                            if (previewSwipeStart === null) return;
+                            const newX = e.touches[0].clientX - previewSwipeStart;
+                            setPreviewSwipeX(newX);
+                        }}
+                        onTouchEnd={() => {
+                            if (isAtRightThreshold) {
+                                // Droite = Ajouter à la vibe
+                                setPreviewFeedback({ type: 'add' });
+                                setTimeout(() => {
+                                    stopVibing('add');
+                                    setPreviewSwipeX(0);
+                                    setPreviewFeedback(null);
+                                }, 400);
+                            } else if (isAtLeftThreshold) {
+                                // Gauche = Queue Next (si disponible)
+                                setPreviewFeedback({ type: 'queue' });
+                                setTimeout(() => {
+                                    stopVibing('playNext');
+                                    setPreviewSwipeX(0);
+                                    setPreviewFeedback(null);
+                                }, 400);
+                            } else if (isAtCenter && previewSwipeStart !== null) {
+                                // Centre = Annuler (tap sans slide)
+                                stopVibing(false);
+                                setPreviewSwipeX(0);
+                            } else {
+                                // Retour au centre
+                                setPreviewSwipeX(0);
+                            }
+                            setPreviewSwipeStart(null);
+                        }}
+                    >
+                        {/* Icône gauche - Queue Next (cyan) */}
+                        <div
+                            className="flex items-center justify-center"
                             style={{
-                                width: CONFIG.PREVIEW_BTN_CLOSE_SIZE,
-                                height: CONFIG.PREVIEW_BTN_CLOSE_SIZE,
-                                background: CONFIG.PREVIEW_BTN_CLOSE_COLOR,
-                                border: '1px solid rgba(255, 255, 255, 0.15)'
+                                width: cursorSize,
+                                height: cursorSize,
+                                opacity: isAtLeftThreshold ? 0 : (hasActiveQueue ? 0.5 : 0.2),
+                                transition: 'opacity 150ms ease-out',
                             }}
                         >
-                            <X size={CONFIG.PREVIEW_BTN_CLOSE_ICON} />
-                        </button>
+                            <ListPlus
+                                size={iconSize}
+                                className={hasActiveQueue ? "text-cyan-400" : "text-gray-400"}
+                                strokeWidth={2.5}
+                            />
+                        </div>
 
-                        {/* Bouton Play Next - Cyan (si queue active) */}
-                        {hasActiveQueue && (
-                            <button
-                                onClick={() => stopVibing('playNext')}
-                                className="rounded-full flex items-center justify-center text-gray-900 transition-all hover:scale-105 animate-neon-breathe-cyan"
-                                style={{
-                                    width: CONFIG.PREVIEW_BTN_PLAYNEXT_SIZE,
-                                    height: CONFIG.PREVIEW_BTN_PLAYNEXT_SIZE,
-                                    background: CONFIG.PREVIEW_BTN_PLAYNEXT_COLOR
-                                }}
-                            >
-                                <ListPlus size={CONFIG.PREVIEW_BTN_PLAYNEXT_ICON} strokeWidth={2.5} />
-                            </button>
-                        )}
-
-                        {/* Bouton Check - Ajouter à la Vibe (vert néon) */}
-                        <button
-                            onClick={() => stopVibing('add')}
-                            className="rounded-full flex items-center justify-center text-gray-900 transition-all hover:scale-105 animate-neon-breathe-green"
+                        {/* Curseur central draggable */}
+                        <div
+                            className={`absolute flex items-center justify-center ${
+                                previewFeedback
+                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : 'animate-ignite-pill-red')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
+                            }`}
                             style={{
-                                width: CONFIG.PREVIEW_BTN_ADD_SIZE,
-                                height: CONFIG.PREVIEW_BTN_ADD_SIZE,
-                                background: CONFIG.PREVIEW_BTN_ADD_COLOR
+                                '--pulse-scale-min': 1,
+                                '--pulse-scale-max': pulseScaleMax,
+                                width: cursorSize,
+                                height: cursorSize,
+                                borderRadius: '50%',
+                                backgroundColor: isAtLeftThreshold
+                                    ? 'rgba(6, 182, 212, 0.9)'  // Cyan
+                                    : isAtRightThreshold
+                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
+                                        : CONFIG.PREVIEW_PILL_CURSOR_COLOR,
+                                left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                                transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
-                            <Check size={CONFIG.PREVIEW_BTN_ADD_ICON} strokeWidth={3} />
-                        </button>
+                            {/* Chevrons ou X au centre (état neutre) */}
+                            {!isAtLeftThreshold && !isAtRightThreshold && (
+                                <div
+                                    className="flex items-center"
+                                    style={{ opacity: 0.6 }}
+                                >
+                                    {hasActiveQueue ? (
+                                        <>
+                                            <ChevronLeft size={iconSize * 0.5} className="text-gray-500 -mr-2" strokeWidth={2} />
+                                            <X size={iconSize * 0.4} className="text-gray-500" strokeWidth={2} />
+                                            <ChevronRight size={iconSize * 0.5} className="text-gray-500 -ml-2" strokeWidth={2} />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <X size={iconSize * 0.4} className="text-gray-500 mr-1" strokeWidth={2} />
+                                            <ChevronRight size={iconSize * 0.5} className="text-gray-500" strokeWidth={2} />
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                            {/* Icône ListPlus quand au seuil gauche */}
+                            {isAtLeftThreshold && (
+                                <ListPlus size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                            )}
+                            {/* Icône Check quand au seuil droite */}
+                            {isAtRightThreshold && (
+                                <Check size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                            )}
+                        </div>
+
+                        {/* Icône droite - Check (vert) */}
+                        <div
+                            className="flex items-center justify-center"
+                            style={{
+                                width: cursorSize,
+                                height: cursorSize,
+                                opacity: isAtRightThreshold ? 0 : 0.5,
+                                transition: 'opacity 150ms ease-out',
+                            }}
+                        >
+                            <Check
+                                size={iconSize}
+                                className="text-green-400"
+                                strokeWidth={2.5}
+                            />
+                        </div>
                     </div>
                 </div>
-            )}
+                );
+            })()}
 
             {/* HEADER */}
             <div
