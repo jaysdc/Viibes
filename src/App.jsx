@@ -4427,6 +4427,7 @@ const handlePlayerTouchEnd = () => {
       }
   }, [volume]);
     const savedVolume = useRef(50);
+    const wasPlayingBeforeDuck = useRef(true); // Pour la pré-écoute: mémoriser si le lecteur jouait avant le duck
     const dragStartY = useRef(null);
     const startHeight = useRef(0);
     const drawerRafRef = useRef(null);
@@ -4766,6 +4767,8 @@ useEffect(() => {
 
     if (direction === 'duck') {
         // Duck : baisser le volume SANS couper l'audio
+        // Mémoriser si le lecteur jouait avant le duck
+        wasPlayingBeforeDuck.current = !audioRef.current.paused;
         savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
         const duckTarget = targetVolume || 0.15;
 
@@ -4781,8 +4784,8 @@ useEffect(() => {
           }
         }, 20);
     } else if (direction === 'in') {
-        // Fade In - restaurer le volume
-        if (audioRef.current.paused) {
+        // Fade In - restaurer le volume seulement si le lecteur jouait avant le duck
+        if (wasPlayingBeforeDuck.current && audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
         fadeInterval.current = setInterval(() => {
