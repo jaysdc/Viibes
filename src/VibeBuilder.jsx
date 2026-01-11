@@ -1870,7 +1870,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             <div className="w-full h-full flex items-center gap-2 overflow-visible relative">
                                 {/* CAPSULE TRI (4 boutons égaux) */}
                                 <div
-                                    className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-hidden relative"
+                                    className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible relative"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
                                     <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
@@ -2002,14 +2002,14 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
             {/* LIST CONTAINER */}
             <div className="relative flex-1 overflow-hidden">
                 
-                {/* ICONES FANTOMES GAUCHE (STATIQUE - GRIS 33%) - Centrées sur zone visible */}
-                <div 
+                {/* ICONES FANTOMES GAUCHE (STATIQUE - GRIS 33%) - Position fixe */}
+                <div
                     className="absolute left-0 z-10 pointer-events-none flex flex-col items-center justify-center text-gray-300"
-                    style={{ 
+                    style={{
                         width: CONFIG.SIDEBAR_WIDTH,
                         gap: CONFIG.SIDEBAR_ICON_GAP,
-                        top: 0, 
-                        bottom: selectedSongs.length > 0 ? '120px' : '0px' // 120px = hauteur bottom bar quand visible
+                        top: 0,
+                        bottom: 0 // Position fixe, ne change pas avec la sélection
                     }}
                 >
                     <ChevronsUp style={{ width: CONFIG.SIDEBAR_ICON_SIZE, height: CONFIG.SIDEBAR_ICON_SIZE }} strokeWidth={2.5} />
