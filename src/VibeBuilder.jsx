@@ -1790,7 +1790,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             />
                         </div>
 
-                        {/* X rouge au centre de la pill (fixe, pas dans le curseur) */}
+                        {/* X rouge au centre de la pill (fixe, toujours visible) */}
                         <div
                             className={`absolute flex items-center justify-center pointer-events-none ${
                                 previewFeedback?.type === 'cancel' ? 'animate-ignite-pill-red' : ''
@@ -1804,12 +1804,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
-                                opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 1,
-                                transition: 'opacity 150ms ease-out',
                             }}
                         >
                             <X
-                                size={iconSize * 0.6}
+                                size={iconSize}
                                 className="text-red-400"
                                 strokeWidth={2.5}
                             />
