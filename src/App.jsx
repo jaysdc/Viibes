@@ -649,6 +649,7 @@ const CONFIG = {
     VIBE_THIS_GLOW_COLOR: '138, 255, 8',
     VIBE_THIS_BG_COLOR: '#8CFF00',       // Couleur de fond bouton VIBE THESE
     VIBE_THESE_SWIPE_DISTANCE: 100,      // Distance de swipe (px) pour parcourir tous les dégradés (plus petit = plus sensible)
+    VIBE_THESE_MAX_VISUAL_OFFSET: 30,    // Limite visuelle du déplacement de la bordure (px)
     
     // ══════════════════════════════════════════════════════════════════════════
     // LIQUID GLASS (Effet bande horizontale)
@@ -7607,7 +7608,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`
                                 }}
                             >
-                                {/* Bordure overlay - pointillée si dégradé dupliqué, suit exactement le doigt */}
+                                {/* Bordure overlay - pointillée si dégradé dupliqué, suit le doigt avec limite */}
                                 <div
                                     className="absolute rounded-full pointer-events-none"
                                     style={{
@@ -7619,7 +7620,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             ? '2px dashed rgba(255,255,255,0.7)'
                                             : '2px solid rgba(255,255,255,0.4)',
                                         opacity: vibeTheseSwipeOffset !== 0 ? 1 : 0,
-                                        transform: `translateX(${vibeTheseSwipeOffset}px)`,
+                                        transform: `translateX(${Math.max(-CONFIG.VIBE_THESE_MAX_VISUAL_OFFSET, Math.min(CONFIG.VIBE_THESE_MAX_VISUAL_OFFSET, vibeTheseSwipeOffset))}px)`,
                                         transition: vibeTheseSwipeOffset === 0
                                             ? 'transform 0.2s ease-out, opacity 0.15s ease-out'
                                             : 'opacity 0.15s ease-out'
