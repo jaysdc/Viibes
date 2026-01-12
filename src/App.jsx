@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -2598,7 +2598,7 @@ const LibrarySongRow = ({ song, onClick }) => (
     >
         <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-400">
-                <Music2 size={20} />
+                <Music size={20} />
             </div>
             <div className="flex flex-col overflow-hidden">
                 <span className="text-sm font-bold text-gray-900 truncate">{song.title}</span>
@@ -7611,9 +7611,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             : (isVibeTheseCatchingUp ? 'transform 0.12s ease-out, opacity 0.15s ease-out' : 'opacity 0.15s ease-out')
                                     }}
                                 />
+                                {/* Chevron gauche - indicateur swipe */}
+                                <ChevronLeft size={14} className="text-white/40" strokeWidth={2} />
                                 <FlameWhiteVector size={18} />
                                 <span>VIBE THESE</span>
-                                <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
+                                <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music size={10} className="inline -mt-0.5" />)</span>
+                                {/* Chevron droite - indicateur swipe */}
+                                <ChevronRight size={14} className="text-white/40" strokeWidth={2} />
                             </button>
                         );
                     })()}
