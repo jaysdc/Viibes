@@ -134,24 +134,24 @@ const smartImportStyles = `
     100% { transform: translateY(-120%); }
   }
 
-  @keyframes smartimport-neon-ignite-pink {
-    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(236, 72, 153, 0.2), 0 4px 8px rgba(236, 72, 153, 0.2); }
-    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(236, 72, 153, 0.8), 0 7px 15px rgba(236, 72, 153, 0.8); }
-    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(236, 72, 153, 0.3), 0 5px 10px rgba(236, 72, 153, 0.3); }
-    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(236, 72, 153, 0.9), 0 8px 18px rgba(236, 72, 153, 0.9); }
-    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(236, 72, 153, 0.5), 0 6px 12px rgba(236, 72, 153, 0.5); }
-    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(236, 72, 153, 0.7), 0 7px 14px rgba(236, 72, 153, 0.7); }
-    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(236, 72, 153, 0.5), 0 7px 12px rgba(236, 72, 153, 0.5); }
+  @keyframes smartimport-neon-ignite-fuchsia {
+    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(236, 72, 153, 0.2), 0 4px 8px rgba(255, 7, 163, 0.2); }
+    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(236, 72, 153, 0.8), 0 7px 15px rgba(255, 7, 163, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(236, 72, 153, 0.3), 0 5px 10px rgba(255, 7, 163, 0.3); }
+    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(236, 72, 153, 0.9), 0 8px 18px rgba(255, 7, 163, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(236, 72, 153, 0.5), 0 6px 12px rgba(255, 7, 163, 0.5); }
+    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(236, 72, 153, 0.7), 0 7px 14px rgba(255, 7, 163, 0.7); }
+    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(236, 72, 153, 0.5), 0 7px 12px rgba(255, 7, 163, 0.5); }
   }
 
-  @keyframes smartimport-neon-ignite-orange {
-    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(249, 115, 22, 0.2), 0 4px 8px rgba(220, 38, 38, 0.2); }
-    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(249, 115, 22, 0.8), 0 7px 15px rgba(220, 38, 38, 0.8); }
-    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(249, 115, 22, 0.3), 0 5px 10px rgba(220, 38, 38, 0.3); }
-    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(249, 115, 22, 0.9), 0 8px 18px rgba(220, 38, 38, 0.9); }
-    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(249, 115, 22, 0.5), 0 6px 12px rgba(220, 38, 38, 0.5); }
-    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(249, 115, 22, 0.7), 0 7px 14px rgba(220, 38, 38, 0.7); }
-    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(249, 115, 22, 0.5), 0 7px 12px rgba(220, 38, 38, 0.5); }
+  @keyframes smartimport-neon-ignite-solar {
+    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(250, 204, 21, 0.2), 0 4px 8px rgba(220, 38, 38, 0.2); }
+    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(250, 204, 21, 0.8), 0 7px 15px rgba(220, 38, 38, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(250, 204, 21, 0.3), 0 5px 10px rgba(220, 38, 38, 0.3); }
+    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(250, 204, 21, 0.9), 0 8px 18px rgba(220, 38, 38, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(250, 204, 21, 0.5), 0 6px 12px rgba(220, 38, 38, 0.5); }
+    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(250, 204, 21, 0.7), 0 7px 14px rgba(220, 38, 38, 0.7); }
+    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(250, 204, 21, 0.5), 0 7px 12px rgba(220, 38, 38, 0.5); }
   }
 
   @keyframes smartimport-neon-ignite-red {
@@ -164,8 +164,8 @@ const smartImportStyles = `
     100% { opacity: 1; box-shadow: 0 -7px 12px rgba(239, 68, 68, 0.5), 0 7px 12px rgba(239, 68, 68, 0.5); }
   }
 
-  .smartimport-ignite-pink { animation: smartimport-neon-ignite-pink 0.4s ease-out forwards; }
-  .smartimport-ignite-orange { animation: smartimport-neon-ignite-orange 0.4s ease-out forwards; }
+  .smartimport-ignite-fuchsia { animation: smartimport-neon-ignite-fuchsia 0.4s ease-out forwards; }
+  .smartimport-ignite-solar { animation: smartimport-neon-ignite-solar 0.4s ease-out forwards; }
   .smartimport-ignite-red { animation: smartimport-neon-ignite-red 0.4s ease-out forwards; }
 `;
 
@@ -1256,15 +1256,21 @@ const SmartImport = ({
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-pink"
-                                            style={{ background: '#ec4899', zIndex: 0 }}
+                                            className="absolute inset-0 rounded-full smartimport-ignite-fuchsia"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
+                                                zIndex: 0
+                                            }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('vibes')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-2"
-                                        style={{ background: btnIgniting === 'vibes' ? 'transparent' : '#ec4899' }}
+                                        style={{
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
+                                            boxShadow: 'inset 0 0 0 1px #ec4899'
+                                        }}
                                     >
                                         <FlameWhiteVector size={16} />
                                         1 VIBE
@@ -1296,10 +1302,9 @@ const SmartImport = ({
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'fusion' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-orange"
+                                            className="absolute inset-0 rounded-full smartimport-ignite-solar"
                                             style={{
                                                 background: 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
-                                                border: '1px solid #dc2626',
                                                 zIndex: 0
                                             }}
                                         />
@@ -1307,10 +1312,10 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('fusion')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
+                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1 text-white"
                                         style={{
-                                            background: btnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                            color: btnIgniting === 'fusion' ? 'white' : '#6b7280'
+                                            background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
+                                            boxShadow: 'inset 0 0 0 1px #dc2626'
                                         }}
                                     >
                                         <Layers size={14} />
@@ -1319,16 +1324,22 @@ const SmartImport = ({
                                 </div>
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
-                                        <div 
-                                            className="absolute inset-0 rounded-full smartimport-ignite-pink"
-                                            style={{ background: '#ec4899', zIndex: 0 }}
+                                        <div
+                                            className="absolute inset-0 rounded-full smartimport-ignite-fuchsia"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
+                                                zIndex: 0
+                                            }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('vibes')}
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
-                                        style={{ background: btnIgniting === 'vibes' ? 'transparent' : '#ec4899' }}
+                                        style={{
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
+                                            boxShadow: 'inset 0 0 0 1px #ec4899'
+                                        }}
                                     >
                                         <FlameWhiteVector size={14} />
                                         {selectedCount} VIBE{selectedCount > 1 ? 'S' : ''}
