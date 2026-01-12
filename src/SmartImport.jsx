@@ -1269,7 +1269,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-2"
                                         style={{
                                             background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
-                                            boxShadow: 'inset 0 0 0 1px #ec4899'
+                                            boxShadow: 'inset 0 0 0 1px #be185d'
                                         }}
                                     >
                                         <FlameWhiteVector size={16} />
@@ -1338,7 +1338,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{
                                             background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
-                                            boxShadow: 'inset 0 0 0 1px #ec4899'
+                                            boxShadow: 'inset 0 0 0 1px #be185d'
                                         }}
                                     >
                                         <FlameWhiteVector size={14} />
