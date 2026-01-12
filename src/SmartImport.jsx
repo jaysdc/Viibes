@@ -1269,7 +1269,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-2"
                                         style={{
                                             background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
-                                            boxShadow: 'inset 0 0 0 1px #be185d'
+                                            border: '2px solid #9d174d'
                                         }}
                                     >
                                         <FlameWhiteVector size={16} />
@@ -1315,7 +1315,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1 text-white"
                                         style={{
                                             background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
-                                            boxShadow: 'inset 0 0 0 1px #dc2626'
+                                            border: '2px solid #991b1b'
                                         }}
                                     >
                                         <Layers size={14} />
@@ -1338,7 +1338,7 @@ const SmartImport = ({
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{
                                             background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
-                                            boxShadow: 'inset 0 0 0 1px #be185d'
+                                            border: '2px solid #9d174d'
                                         }}
                                     >
                                         <FlameWhiteVector size={14} />
