@@ -3183,7 +3183,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
     );
 };
 
-const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding }) => {
+const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
     const rowRef = useRef(null);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
@@ -3197,6 +3197,9 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         if (!element) return;
 
         const handleTouchMove = (e) => {
+            // Si verrou global sur vertical (drawer drag/inertie), ignorer les swipes horizontaux
+            if (globalSwipeLockRef?.current === 'vertical') return;
+
             const { x: touchStartX, y: touchStartY } = touchStartRef.current;
             if (touchStartX === null || touchStartY === null) return;
 
@@ -3224,9 +3227,12 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
 
         element.addEventListener('touchmove', handleTouchMove, { passive: false });
         return () => element.removeEventListener('touchmove', handleTouchMove);
-    }, []);
+    }, [globalSwipeLockRef]);
 
     const onTouchStart = (e) => {
+        // Si verrou global sur vertical, ne pas démarrer de swipe horizontal
+        if (globalSwipeLockRef?.current === 'vertical') return;
+
         touchStartRef.current = {
             x: e.targetTouches[0].clientX,
             y: e.targetTouches[0].clientY
@@ -3236,6 +3242,14 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     };
 
     const onTouchEnd = () => {
+        // Si verrou global sur vertical, reset et ignorer
+        if (globalSwipeLockRef?.current === 'vertical') {
+            touchStartRef.current = { x: null, y: null };
+            swipeDirectionRef.current = null;
+            setOffset(0);
+            return;
+        }
+
         if (swipeDirectionRef.current === 'horizontal' && touchStartRef.current.x !== null) {
             if (offset < -50) {
                 // Déclencher l'animation de sortie vers la gauche
@@ -3406,7 +3420,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     );
 };
 
-const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null }) => {
+const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
     
@@ -4068,20 +4082,21 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 ); 
               } else {
                 elements.push(
-                  <SwipeableSongRow 
-                    key={`${song.id}-${index}`} 
-                    song={song} 
-                    index={index} 
-                    isVisualCenter={isCenter} 
-                    queueLength={queue.length} 
-                    itemHeight={itemHeight} 
-                    isMini={isMini} 
+                  <SwipeableSongRow
+                    key={`${song.id}-${index}`}
+                    song={song}
+                    index={index}
+                    isVisualCenter={isCenter}
+                    queueLength={queue.length}
+                    itemHeight={itemHeight}
+                    isMini={isMini}
                     scrollTop={scrollTop}
                     containerHeight={containerHeight}
                     centerPadding={centerPadding}
-                    onClick={() => onSongSelect(song)} 
-                    onSwipeRight={(s) => onReorder(s, 'next')} 
-                    onSwipeLeft={(s) => onReorder(s, 'archive')} 
+                    onClick={() => onSongSelect(song)}
+                    onSwipeRight={(s) => onReorder(s, 'next')}
+                    onSwipeLeft={(s) => onReorder(s, 'archive')}
+                    globalSwipeLockRef={globalSwipeLockRef}
                   />
                 );
               }
@@ -4305,6 +4320,7 @@ const handlePlayerTouchEnd = () => {
     const drawerTopPercentRef = useRef(100);
     const [isInTriggerZone, setIsInTriggerZone] = useState(false);
     const isDraggingDrawer = useRef(false);
+    const globalSwipeLockRef = useRef(null); // 'vertical' quand drawer drag actif (y compris inertie)
     const lastOpacityRef = useRef(0);
     const [activeFilter, setActiveFilter] = useState('initialShuffle');
     const [sortDirection, setSortDirection] = useState('asc');
@@ -5303,6 +5319,8 @@ const vibeSearchResults = () => {
       lastDragY.current = e.touches[0].clientY;
       lastDragTime.current = Date.now();
       dragVelocity.current = 0;
+      // Verrouiller globalement sur vertical pour empêcher les swipes horizontaux parasites
+      globalSwipeLockRef.current = 'vertical';
       if (inertiaRafRef.current) {
         cancelAnimationFrame(inertiaRafRef.current);
         inertiaRafRef.current = null;
@@ -5391,6 +5409,8 @@ const vibeSearchResults = () => {
           const drawerTopY = containerHeight - footerHeight - currentDrawerHeight;
           openFullPlayer(drawerTopY);
           setDashboardHeight(mainContainerRef.current.offsetHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+          // Libérer le verrou global après l'animation d'ouverture
+          setTimeout(() => { globalSwipeLockRef.current = null; }, CONFIG.PLAYER_SLIDE_DURATION);
         } else if (dashboardRef.current && Math.abs(dragVelocity.current) > 0.3) {
           // Appliquer l'inertie si vélocité suffisante (> 0.3 px/ms)
           const containerHeight = mainContainerRef.current.offsetHeight;
@@ -5425,6 +5445,8 @@ const vibeSearchResults = () => {
               inertiaRafRef.current = null;
               openFullPlayer(drawerTopY);
               setDashboardHeight(containerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+              // Libérer le verrou global après l'animation d'ouverture
+              setTimeout(() => { globalSwipeLockRef.current = null; }, CONFIG.PLAYER_SLIDE_DURATION);
               return;
             }
 
@@ -5435,17 +5457,26 @@ const vibeSearchResults = () => {
             if (Math.abs(velocity) > 0.5) {
               inertiaRafRef.current = requestAnimationFrame(animateInertia);
             } else {
-              // Inertie terminée - vérifier si on est dans la zone de trigger
+              // Inertie terminée - libérer le verrou global
+              globalSwipeLockRef.current = null;
               inertiaRafRef.current = null;
               if (topPositionPercent <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) {
                 openFullPlayer(drawerTopY);
                 setDashboardHeight(containerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+                // Re-verrouiller pendant l'animation d'ouverture
+                globalSwipeLockRef.current = 'vertical';
+                setTimeout(() => { globalSwipeLockRef.current = null; }, CONFIG.PLAYER_SLIDE_DURATION);
               }
             }
           };
           inertiaRafRef.current = requestAnimationFrame(animateInertia);
         } else if (dashboardRef.current) {
           setDashboardHeight(dashboardRef.current.offsetHeight);
+          // Pas d'inertie, libérer le verrou immédiatement
+          globalSwipeLockRef.current = null;
+        } else {
+          // Cas de fallback - libérer le verrou
+          globalSwipeLockRef.current = null;
         }
 
         dragStartY.current = null;
@@ -7828,13 +7859,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 playNext={playNext} 
                                 onReorder={handleReorder} 
                                 visibleItems={Math.max(3, Math.floor((((typeof dashboardHeight === 'number' ? dashboardHeight : window.innerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100)) - (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100) / (window.innerHeight * CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH / 100))))} 
-                                scrollTrigger={scrollTrigger} 
+                                scrollTrigger={scrollTrigger}
                                 isMini={true}
                                 realHeight={(typeof dashboardHeight === 'number' ? dashboardHeight : window.innerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100)) - (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}
                                 portalTarget={mainContainerRef}
                                 beaconNeonRef={drawerBeaconRef}
                                 onCenteredIndexChange={setDrawerCenteredIndex}
                                 initialIndex={playerCenteredIndex}
+                                globalSwipeLockRef={globalSwipeLockRef}
                                 />
                                 </div>
                                 )}
@@ -8391,7 +8423,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} />}</div>
                   </div>
                 )}
         
