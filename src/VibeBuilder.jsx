@@ -124,7 +124,8 @@ const CONFIG = {
     PREVIEW_PILL_BG_COLOR: 'rgba(110, 110, 110, 0.15)', // Fond du pill
     PREVIEW_PILL_CURSOR_COLOR: 'rgba(255, 255, 255, 0.9)', // Couleur du curseur
     PREVIEW_PILL_BLUR: 20,                       // Blur du pill (px)
-    PREVIEW_PILL_THRESHOLD: 0.85,                // Seuil de déclenchement (85%) - pas de zone morte
+    PREVIEW_PILL_THRESHOLD: 0.85,                // Seuil extrémités gauche/droite (85%)
+    PREVIEW_PILL_CENTER_THRESHOLD: 0.15,         // Seuil zone centrale (15% de chaque côté)
     
     PREVIEW_FADEIN_DURATION: 200,         // Durée du fade in en ms (0 = pas de fade)
     PREVIEW_FADEOUT_DURATION: 300,        // Durée du fade out en ms (0 = pas de fade)
@@ -1671,11 +1672,14 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                 const clampedX = Math.max(-maxSlide, Math.min(maxSlide, previewSwipeX));
                 const slideProgress = maxSlide > 0 ? clampedX / maxSlide : 0;
 
-                // Seuils unifiés - l'action se déclenche dès que le pulse s'active
+                // Seuils des 3 zones
                 const threshold = CONFIG.PREVIEW_PILL_THRESHOLD;
+                const centerThreshold = CONFIG.PREVIEW_PILL_CENTER_THRESHOLD;
                 const isAtLeftThreshold = hasActiveQueue && slideProgress <= -threshold;
                 const isAtRightThreshold = slideProgress >= threshold;
-                const isAtCenter = Math.abs(slideProgress) < 0.2;
+                const isAtCenter = Math.abs(slideProgress) <= centerThreshold;
+                // Zone neutre = entre les seuils (ni centre, ni extrémités)
+                const isInDeadZone = !isAtCenter && !isAtLeftThreshold && !isAtRightThreshold;
 
                 return (
                 <div
@@ -1790,20 +1794,17 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             />
                         </div>
 
-                        {/* X rouge au centre de la pill (fixe, toujours visible) */}
+                        {/* Icône centre - X (rouge) - masquée quand curseur au centre */}
                         <div
-                            className={`absolute flex items-center justify-center pointer-events-none ${
-                                previewFeedback?.type === 'cancel' ? 'animate-ignite-pill-red' : ''
-                            }`}
+                            className="absolute flex items-center justify-center pointer-events-none"
                             style={{
-                                '--pulse-scale-min': 1,
-                                '--pulse-scale-max': pulseScaleMax,
                                 left: '50%',
                                 top: '50%',
                                 transform: 'translate(-50%, -50%)',
                                 width: cursorSize,
                                 height: cursorSize,
-                                borderRadius: '50%',
+                                opacity: isAtCenter ? 0 : 0.5,
+                                transition: 'opacity 150ms ease-out',
                             }}
                         >
                             <X
@@ -1813,12 +1814,12 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             />
                         </div>
 
-                        {/* Curseur transparent draggable */}
+                        {/* Curseur draggable - 3 zones actives avec dead zones entre elles */}
                         <div
                             className={`absolute flex items-center justify-center ${
                                 previewFeedback
-                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : '')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
+                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : previewFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : '')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : isAtCenter ? 'animate-pulse-pill-red' : '')
                             }`}
                             style={{
                                 '--pulse-scale-min': 1,
@@ -1827,11 +1828,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                 height: cursorSize,
                                 borderRadius: '50%',
                                 backgroundColor: isAtLeftThreshold
-                                    ? 'rgba(6, 182, 212, 0.9)'  // Cyan
+                                    ? 'rgba(6, 182, 212, 0.9)'  // Cyan - gauche
                                     : isAtRightThreshold
-                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
-                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon - droite
+                                        : isAtCenter
+                                            ? 'rgba(239, 68, 68, 0.9)'  // Rouge - centre
+                                            : 'rgba(255, 255, 255, 0.15)',  // Transparent - dead zone
+                                border: (isAtLeftThreshold || isAtRightThreshold || isAtCenter) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
@@ -1839,6 +1842,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                             {/* Icône ListPlus quand au seuil gauche */}
                             {isAtLeftThreshold && (
                                 <ListPlus size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                            )}
+                            {/* Icône X quand au centre */}
+                            {isAtCenter && !isAtLeftThreshold && !isAtRightThreshold && (
+                                <X size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
                             )}
                             {/* Icône Check quand au seuil droite */}
                             {isAtRightThreshold && (
