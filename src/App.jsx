@@ -5205,16 +5205,7 @@ const vibeSearchResults = () => {
         }
     });
 
-    // Map nom -> vibeId pour trouver vibes existantes
-    const nameToVibeIdMap = new Map();
-    Object.keys(newPlaylists).forEach(vibeId => {
-        const vibe = newPlaylists[vibeId];
-        if (vibe.name) {
-            nameToVibeIdMap.set(vibe.name, vibeId);
-        }
-    });
-
-    // Signatures de vibes existantes
+    // Signatures de vibes existantes (pour éviter doublons de contenu identique)
     const existingVibeSignatures = new Set();
     Object.values(newPlaylists).forEach(vibe => {
         const ids = vibe.songIds || (vibe.songs ? vibe.songs.map(s => s.id) : []);
@@ -5267,29 +5258,20 @@ const vibeSearchResults = () => {
             songIdsForVibe.push(songId);
         });
 
-        // Vérifier doublon de vibe
+        // Vérifier doublon de vibe (même contenu exact = skip)
         const vibeSignature = [...songIdsForVibe].sort().join('|');
         if (vibeSignature && existingVibeSignatures.has(vibeSignature)) {
             return;
         }
         existingVibeSignatures.add(vibeSignature);
 
-        // Chercher vibe existante par nom ou créer nouvelle
-        const existingVibeId = nameToVibeIdMap.get(folderName);
-        if (existingVibeId) {
-            newPlaylists[existingVibeId] = {
-                ...newPlaylists[existingVibeId],
-                songIds: songIdsForVibe
-            };
-        } else {
-            const newVibeId = generateVibeId();
-            newPlaylists[newVibeId] = {
-                name: folderName,
-                songIds: songIdsForVibe
-            };
-            newVibeIds.push(newVibeId);
-            nameToVibeIdMap.set(folderName, newVibeId);
-        }
+        // Toujours créer une nouvelle vibe (les noms peuvent être dupliqués)
+        const newVibeId = generateVibeId();
+        newPlaylists[newVibeId] = {
+            name: folderName,
+            songIds: songIdsForVibe
+        };
+        newVibeIds.push(newVibeId);
     });
 
     // Mettre à jour les états

@@ -164,9 +164,20 @@ const smartImportStyles = `
     100% { opacity: 1; box-shadow: 0 -7px 12px rgba(239, 68, 68, 0.5), 0 7px 12px rgba(239, 68, 68, 0.5); }
   }
 
+  @keyframes smartimport-neon-ignite-roseMagenta {
+    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(255, 7, 58, 0.2), 0 4px 8px rgba(255, 0, 255, 0.2); }
+    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(255, 7, 58, 0.8), 0 7px 15px rgba(255, 0, 255, 0.8); }
+    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(255, 7, 58, 0.3), 0 5px 10px rgba(255, 0, 255, 0.3); }
+    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(255, 7, 58, 0.9), 0 8px 18px rgba(255, 0, 255, 0.9); }
+    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(255, 7, 58, 0.5), 0 6px 12px rgba(255, 0, 255, 0.5); }
+    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(255, 7, 58, 0.7), 0 7px 14px rgba(255, 0, 255, 0.7); }
+    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(255, 7, 58, 0.5), 0 7px 12px rgba(255, 0, 255, 0.5); }
+  }
+
   .smartimport-ignite-fuchsia { animation: smartimport-neon-ignite-fuchsia 0.4s ease-out forwards; }
   .smartimport-ignite-solar { animation: smartimport-neon-ignite-solar 0.4s ease-out forwards; }
   .smartimport-ignite-red { animation: smartimport-neon-ignite-red 0.4s ease-out forwards; }
+  .smartimport-ignite-roseMagenta { animation: smartimport-neon-ignite-roseMagenta 0.4s ease-out forwards; }
 `;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1256,9 +1267,9 @@ const SmartImport = ({
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-fuchsia"
+                                            className="absolute inset-0 rounded-full smartimport-ignite-roseMagenta"
                                             style={{
-                                                background: 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
+                                                background: 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
                                                 zIndex: 0
                                             }}
                                         />
@@ -1268,8 +1279,8 @@ const SmartImport = ({
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-2"
                                         style={{
-                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
-                                            border: '1px solid #9d174d'
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
+                                            border: '1px solid #e11d48'
                                         }}
                                     >
                                         <FlameWhiteVector size={16} />
@@ -1325,9 +1336,9 @@ const SmartImport = ({
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-fuchsia"
+                                            className="absolute inset-0 rounded-full smartimport-ignite-roseMagenta"
                                             style={{
-                                                background: 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
+                                                background: 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
                                                 zIndex: 0
                                             }}
                                         />
@@ -1337,8 +1348,8 @@ const SmartImport = ({
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{
-                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)',
-                                            border: '1px solid #9d174d'
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
+                                            border: '1px solid #e11d48'
                                         }}
                                     >
                                         <FlameWhiteVector size={14} />
