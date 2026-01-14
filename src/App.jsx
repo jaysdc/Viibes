@@ -7115,7 +7115,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 const touch = e.touches[0];
                 const rect = scrubTubeRectRef.current;
                 const relativeX = Math.max(0, Math.min(rect.width, touch.clientX - rect.left));
-                const newTime = (relativeX / rect.width) * dur;
+                const newTime = Math.min((relativeX / rect.width) * dur, dur - 0.01);
                 audioRef.current.currentTime = newTime;
                 setProgress(newTime);
             };
@@ -7126,7 +7126,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 if (!dur) return;
                 const rect = scrubTubeRectRef.current;
                 const relativeX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-                const newTime = (relativeX / rect.width) * dur;
+                const newTime = Math.min((relativeX / rect.width) * dur, dur - 0.01);
                 audioRef.current.currentTime = newTime;
                 setProgress(newTime);
             };
