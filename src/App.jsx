@@ -2383,7 +2383,7 @@ const ControlBar = ({
             className="absolute left-0 right-0 flex items-start"
             style={{
                 top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
-                padding: 0,
+                padding: '0 0.5rem',
                 gap: 0
             }}
         >
