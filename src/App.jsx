@@ -649,7 +649,6 @@ const CONFIG = {
     VIBE_THIS_GLOW_OPACITY: 0.4,
     VIBE_THIS_GLOW_COLOR: '138, 255, 8',
     VIBE_THIS_BG_COLOR: '#8CFF00',       // Couleur de fond bouton VIBE THESE
-    VIBE_THESE_MAX_VISUAL_OFFSET: 30,    // Limite visuelle du déplacement de la bordure (px)
     
     // ══════════════════════════════════════════════════════════════════════════
     // LIQUID GLASS (Effet bande horizontale)
@@ -5094,30 +5093,24 @@ useEffect(() => {
             e.preventDefault();
 
             const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+
+            // Le contour suit le doigt mais est limité par maxSwipeDistance
             if (Math.abs(diffX) < maxSwipeDistance) {
                 setVibeTheseSwipeOffset(diffX);
-
-                const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
-                const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
-                const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
-                const previewGradient = getGradientByIndex(normalizedPreviewIdx);
-                const progress = Math.min(Math.abs(diffX) / 50, 1);
-
-                setVibeThesePreviewIndex(normalizedPreviewIdx);
-                setVibeSwipePreview({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
             } else {
-                // Au-delà de la limite, garder l'offset max mais continuer à calculer les couleurs
                 setVibeTheseSwipeOffset(diffX > 0 ? maxSwipeDistance : -maxSwipeDistance);
+            }
 
-                const direction = diffX > 0 ? 1 : -1;
+            // Calculer la preview (même direction que VibeBuilder: swipe droite = couleur précédente)
+            if (diffX !== 0) {
+                const direction = diffX > 0 ? -1 : 1;
                 const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
                 const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
                 const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
                 const previewGradient = getGradientByIndex(normalizedPreviewIdx);
 
                 setVibeThesePreviewIndex(normalizedPreviewIdx);
-                setVibeSwipePreview({ direction, progress: 1, nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
+                setVibeSwipePreview({ direction, progress: Math.min(1, Math.abs(diffX) / 50), nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
             }
         }
     };
@@ -7802,11 +7795,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     if (e.currentTarget) vibeTheseBtnWidthRef.current = e.currentTarget.offsetWidth;
                                 }}
                                 onTouchEnd={() => {
-                                    // Changer la couleur si swipe horizontal significatif
-                                    const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
-                                    const colorsTraversed = Math.floor((Math.abs(vibeTheseSwipeOffset) / maxSwipeDistance) * 20);
-                                    if (vibeTheseSwipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
-                                        const direction = vibeTheseSwipeOffset > 0 ? 1 : -1;
+                                    // Changer la couleur si swipe horizontal significatif (seuil > 30px comme VibeBuilder)
+                                    if (vibeTheseSwipeDirectionRef.current === 'horizontal' && Math.abs(vibeTheseSwipeOffset) > 30) {
+                                        const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+                                        const direction = vibeTheseSwipeOffset > 0 ? -1 : 1;
+                                        const colorsTraversed = Math.max(1, Math.floor((Math.abs(vibeTheseSwipeOffset) / maxSwipeDistance) * 20));
                                         const newIndex = vibeTheseGradientIndex + (direction * colorsTraversed);
                                         setVibeTheseGradientIndex(((newIndex % 20) + 20) % 20);
                                     }
@@ -7822,7 +7815,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`
                                 }}
                             >
-                                {/* Bordure overlay - pointillée si dégradé dupliqué, suit le doigt avec limite */}
+                                {/* Bordure overlay - pointillée si dégradé dupliqué, suit exactement le doigt */}
                                 <div
                                     className="absolute rounded-full pointer-events-none"
                                     style={{
@@ -7834,10 +7827,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             ? '2px dashed rgba(255,255,255,0.7)'
                                             : '2px solid rgba(255,255,255,0.4)',
                                         opacity: vibeTheseSwipeOffset !== 0 ? 1 : 0,
-                                        transform: `translateX(${Math.max(-CONFIG.VIBE_THESE_MAX_VISUAL_OFFSET, Math.min(CONFIG.VIBE_THESE_MAX_VISUAL_OFFSET, vibeTheseSwipeOffset))}px)`,
+                                        transform: `translateX(${vibeTheseSwipeOffset}px)`,
                                         transition: vibeTheseSwipeOffset === 0
                                             ? 'transform 0.2s ease-out, opacity 0.15s ease-out'
-                                            : 'opacity 0.15s ease-out'
+                                            : 'none'
                                     }}
                                 />
                                 {/* Chevron gauche - indicateur swipe (extrémité) */}
