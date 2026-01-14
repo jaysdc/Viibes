@@ -2751,27 +2751,54 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
                         style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
                     />
-                    {/* Temps - positionnés en % par rapport à la progress bar */}
-                    <div 
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                    {/* Temps en SVG (vecteur) pour éviter la loupe iOS */}
+                    <svg
+                        className="absolute pointer-events-none"
+                        style={{
                             top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
                             left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
+                            overflow: 'visible'
                         }}
+                        width="50"
+                        height="20"
                     >
-                        {formatTime(currentTime)}
-                    </div>
-                    <div 
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                        <text
+                            x="0"
+                            y="50%"
+                            dominantBaseline="middle"
+                            fill="#9ca3af"
+                            fontFamily="ui-monospace, monospace"
+                            fontWeight="bold"
+                            fontSize={`${CONFIG.TC_TIME_FONT_SIZE}rem`}
+                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                        >
+                            {formatTime(currentTime)}
+                        </text>
+                    </svg>
+                    <svg
+                        className="absolute pointer-events-none"
+                        style={{
                             top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
                             right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
+                            overflow: 'visible'
                         }}
+                        width="50"
+                        height="20"
                     >
-                        -{formatTime(duration - currentTime)}
-                    </div>
+                        <text
+                            x="100%"
+                            y="50%"
+                            dominantBaseline="middle"
+                            textAnchor="end"
+                            fill="#9ca3af"
+                            fontFamily="ui-monospace, monospace"
+                            fontWeight="bold"
+                            fontSize={`${CONFIG.TC_TIME_FONT_SIZE}rem`}
+                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                        >
+                            -{formatTime(duration - currentTime)}
+                        </text>
+                    </svg>
                 </div>
                 
                 {/* Bouton +10s */}
