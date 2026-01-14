@@ -7107,33 +7107,26 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 }
             }
 
-            // Stocker la position X initiale et le temps actuel pour le scrub relatif
-            const initialX = event?.touches?.[0]?.clientX || event?.clientX || 0;
-            scrubStartXRef.current = initialX;
-            scrubStartTimeRef.current = audioRef.current?.currentTime || 0;
-
-            // Handler global pour touch move (permet scrub même hors du tube) - RELATIF
+            // Handler global pour touch move - scrub ABSOLU (position X = temps)
             const handleGlobalTouchMove = (e) => {
-                if (!scrubTubeRectRef.current || !audioRef.current || !durationRef.current) return;
+                if (!scrubTubeRectRef.current || !audioRef.current) return;
+                const dur = durationRef.current || audioRef.current.duration || 0;
+                if (!dur) return;
                 const touch = e.touches[0];
                 const rect = scrubTubeRectRef.current;
-                const dur = durationRef.current;
-                // Calcul relatif : déplacement depuis le point de départ
-                const deltaX = touch.clientX - scrubStartXRef.current;
-                const deltaTime = (deltaX / rect.width) * dur;
-                const newTime = Math.max(0, Math.min(dur, scrubStartTimeRef.current + deltaTime));
+                const relativeX = Math.max(0, Math.min(rect.width, touch.clientX - rect.left));
+                const newTime = (relativeX / rect.width) * dur;
                 audioRef.current.currentTime = newTime;
                 setProgress(newTime);
             };
 
             const handleGlobalMouseMove = (e) => {
-                if (!scrubTubeRectRef.current || !audioRef.current || !durationRef.current) return;
+                if (!scrubTubeRectRef.current || !audioRef.current) return;
+                const dur = durationRef.current || audioRef.current.duration || 0;
+                if (!dur) return;
                 const rect = scrubTubeRectRef.current;
-                const dur = durationRef.current;
-                // Calcul relatif : déplacement depuis le point de départ
-                const deltaX = e.clientX - scrubStartXRef.current;
-                const deltaTime = (deltaX / rect.width) * dur;
-                const newTime = Math.max(0, Math.min(dur, scrubStartTimeRef.current + deltaTime));
+                const relativeX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+                const newTime = (relativeX / rect.width) * dur;
                 audioRef.current.currentTime = newTime;
                 setProgress(newTime);
             };
