@@ -7513,29 +7513,29 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600"
+                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
                                   // Bordure progressive cyan pendant le scan (lissée), sinon bg-gray-100 normal
                                   background: smoothedScanProgress !== null
                                       ? `conic-gradient(from 0deg, cyan ${smoothedScanProgress * 3.6}deg, transparent ${smoothedScanProgress * 3.6}deg)`
-                                      : (scanCompleteFlash ? 'cyan' : '#f3f4f6'),
-                                  boxShadow: scanCompleteFlash ? '0 0 8px rgba(0,255,255,0.5)' : 'none',
-                                  transition: scanCompleteFlash ? 'box-shadow 0.4s ease-out' : 'none'
+                                      : (scanCompleteFlash ? undefined : '#f3f4f6')
                               }}
                           >
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
-                              <div
-                                  className="absolute rounded-full"
-                                  style={{
-                                      top: '1px',
-                                      left: '1px',
-                                      right: '1px',
-                                      bottom: '1px',
-                                      background: scanCompleteFlash ? 'cyan' : '#f3f4f6',
-                                      transition: 'background 0.15s ease-out'
-                                  }}
-                              />
+                              {!scanCompleteFlash && (
+                                  <div
+                                      className="absolute rounded-full"
+                                      style={{
+                                          top: '1px',
+                                          left: '1px',
+                                          right: '1px',
+                                          bottom: '1px',
+                                          background: '#f3f4f6',
+                                          transition: 'background 0.15s ease-out'
+                                      }}
+                                  />
+                              )}
                               {/* Crossfade FolderDown ↔ Radar pendant le scan */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderDown
