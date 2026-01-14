@@ -2627,6 +2627,30 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, isScrubbing = false }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
+    const tubeRef = useRef(null);
+
+    // Empêcher la loupe iOS sur double-tap
+    useEffect(() => {
+        const tube = tubeRef.current;
+        if (!tube) return;
+
+        let dblTapTimer = 0;
+        let dblTapPressed = false;
+
+        const preventDoubleTap = (e) => {
+            clearTimeout(dblTapTimer);
+            if (dblTapPressed) {
+                e.preventDefault();
+                dblTapPressed = false;
+            } else {
+                dblTapPressed = true;
+                dblTapTimer = setTimeout(() => { dblTapPressed = false; }, 500);
+            }
+        };
+
+        tube.addEventListener('touchstart', preventDoubleTap, { passive: false });
+        return () => tube.removeEventListener('touchstart', preventDoubleTap);
+    }, []);
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
     if (vibeSwipePreview && vibeSwipePreview.progress > 0) {
@@ -2719,6 +2743,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
                 {/* Tube de progression qui se remplit */}
                 <div
+                    ref={tubeRef}
                     className="absolute z-10 rounded-full overflow-hidden"
                     style={{
                         top: '50%',
@@ -2728,10 +2753,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         transform: 'translateY(-50%)',
                         background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
                         opacity: isScrubbing ? 0.3 : 1,
-                        transition: 'opacity 0.2s ease-out',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        WebkitTouchCallout: 'none'
+                        transition: 'opacity 0.2s ease-out'
                     }}
                 >
                     {/* Zone de touch invisible pour le scrub */}
