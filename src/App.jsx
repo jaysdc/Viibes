@@ -2827,74 +2827,85 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         className="absolute inset-0 w-full h-full cursor-pointer z-20"
                         style={{ touchAction: 'none' }}
                     />
-                    {/* Texte noir (couche fond, visible sur zone claire) - caché pendant scrub */}
-                    {!isScrubbing && (
-                        <>
-                            <div
-                                className="absolute font-bold font-mono pointer-events-none z-10"
-                                style={{
-                                    fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                    left: '8px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: '#374151'
-                                }}
-                            >
-                                {formatTime(currentTime)}
-                            </div>
-                            <div
-                                className="absolute font-bold font-mono pointer-events-none z-10"
-                                style={{
-                                    fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                    right: '8px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: '#374151'
-                                }}
-                            >
-                                -{formatTime(duration - currentTime)}
-                            </div>
-                            {/* Remplissage rose avec texte blanc dedans (clippé par overflow:hidden) */}
-                            <div
-                                className="absolute left-0 top-0 bottom-0 rounded-l-full overflow-hidden z-20"
-                                style={{
-                                    width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
-                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                                    borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`,
-                                    transition: 'width 0.1s linear'
-                                }}
-                            >
+                    {/* Contenu caché pendant scrub */}
+                    {!isScrubbing && (() => {
+                        const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+                        return (
+                            <>
+                                {/* Texte noir (couche fond, visible sur zone claire) */}
                                 <div
-                                    className="absolute font-bold font-mono pointer-events-none"
+                                    className="absolute font-bold font-mono pointer-events-none z-10"
                                     style={{
                                         fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
                                         left: '8px',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        color: 'white',
-                                        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                        whiteSpace: 'nowrap'
+                                        color: '#374151'
                                     }}
                                 >
                                     {formatTime(currentTime)}
                                 </div>
                                 <div
-                                    className="absolute font-bold font-mono pointer-events-none"
+                                    className="absolute font-bold font-mono pointer-events-none z-10"
                                     style={{
                                         fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
                                         right: '8px',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        color: 'white',
-                                        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                        whiteSpace: 'nowrap'
+                                        color: '#374151'
                                     }}
                                 >
                                     -{formatTime(duration - currentTime)}
                                 </div>
-                            </div>
-                        </>
-                    )}
+                                {/* Remplissage rose */}
+                                <div
+                                    className="absolute left-0 top-0 bottom-0 rounded-l-full z-15"
+                                    style={{
+                                        width: `${progressPercent}%`,
+                                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                        borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`,
+                                        transition: 'width 0.1s linear'
+                                    }}
+                                />
+                                {/* Texte blanc (clippé sur la zone rose avec clip-path) */}
+                                <div
+                                    className="absolute inset-0 z-20 pointer-events-none"
+                                    style={{
+                                        clipPath: `inset(0 ${100 - progressPercent}% 0 0)`
+                                    }}
+                                >
+                                    <div
+                                        className="absolute font-bold font-mono"
+                                        style={{
+                                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                                            left: '8px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            color: 'white',
+                                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        {formatTime(currentTime)}
+                                    </div>
+                                    <div
+                                        className="absolute font-bold font-mono"
+                                        style={{
+                                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                                            right: '8px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            color: 'white',
+                                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        -{formatTime(duration - currentTime)}
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
 
                 {/* Bouton +10s */}
@@ -8228,17 +8239,24 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             >
                                 -{formatTime(duration - progress)}
                             </div>
-                            {/* Remplissage rose avec texte blanc dedans (clippé par overflow:hidden) */}
+                            {/* Remplissage rose */}
                             <div
-                                className="absolute left-0 top-0 bottom-0 rounded-l-full overflow-hidden z-20"
+                                className="absolute left-0 top-0 bottom-0 rounded-l-full z-15"
                                 style={{
                                     width: `${progressPercent}%`,
                                     background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
                                     borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
                                 }}
+                            />
+                            {/* Texte blanc (clippé sur la zone rose avec clip-path) */}
+                            <div
+                                className="absolute inset-0 z-20 pointer-events-none"
+                                style={{
+                                    clipPath: `inset(0 ${100 - progressPercent}% 0 0)`
+                                }}
                             >
                                 <div
-                                    className="absolute font-bold font-mono pointer-events-none"
+                                    className="absolute font-bold font-mono"
                                     style={{
                                         fontSize: `${currentFontSize}rem`,
                                         left: '12px',
@@ -8252,7 +8270,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     {formatTime(progress)}
                                 </div>
                                 <div
-                                    className="absolute font-bold font-mono pointer-events-none"
+                                    className="absolute font-bold font-mono"
                                     style={{
                                         fontSize: `${currentFontSize}rem`,
                                         right: '12px',
