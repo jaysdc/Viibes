@@ -8039,8 +8039,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const footerPaddingTopPx = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16;
                     const controlBarSpacingPercent = CONFIG.CONTROL_BAR_SPACING_PERCENT / 4;
 
-                    // Hauteur : même hauteur du début à la fin (FOOTER_BTN_HEIGHT)
-                    const height = parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 16;
+                    // Hauteur : même hauteur du début à la fin (FOOTER_BTN_HEIGHT est déjà en px)
+                    const height = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
 
                     // Bottom : initial dans le footer, final au-dessus
                     const initialBottomPx = safeAreaBottom + footerPaddingTopPx;
@@ -8052,9 +8052,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const finalLeftPx = 16; // 1rem
                     const currentLeftPx = initialLeftPx + (finalLeftPx - initialLeftPx) * t;
 
-                    // Right : après PlayPause + Recenter + gaps vers 1rem
-                    const playPauseWidth = parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 16;
-                    const recenterWidth = parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 1.6 * 16;
+                    // Right : après PlayPause + Recenter + gaps vers 1rem (FOOTER_BTN_HEIGHT est déjà en px)
+                    const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
+                    const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
                     const gapWidth = screenWidth * controlBarSpacingPercent / 100;
                     const initialRightPx = gapWidth * 3 + playPauseWidth + recenterWidth;
                     const finalRightPx = 16; // 1rem
