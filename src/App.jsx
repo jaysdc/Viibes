@@ -2384,7 +2384,7 @@ const ControlBar = ({
             style={{
                 top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
                 padding: '0 0.5rem',
-                gap: 0
+                gap: '0.5rem'
             }}
         >
             <TimeCapsule
