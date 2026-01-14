@@ -2347,7 +2347,7 @@ const RecenterCapsule = ({ onClick }) => (
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
-  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange,
+  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange, isScrubbing,
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
@@ -2374,6 +2374,7 @@ const ControlBar = ({
                 confirmType={confirmType}
                 vibeSwipePreview={vibeSwipePreview}
                 onScrubChange={onScrubChange}
+                isScrubbing={isScrubbing}
             />
             {!vibeSwipePreview && (
                 <>
@@ -2629,7 +2630,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, isScrubbing = false }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
@@ -2720,16 +2721,21 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     <SkipButton direction="back" onClick={onSkipBack} />
                 </div>
                 
-                {/* Progress bar - positionnée en % par rapport à la capsule */}
-                <div 
-                    className="absolute z-10"
+                {/* Tube de progression qui se remplit */}
+                <div
+                    className="absolute z-10 rounded-full overflow-hidden"
                     style={{
-                        top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
+                        top: '50%',
                         left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
                         right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
+                        height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
+                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
+                        opacity: isScrubbing ? 0.3 : 1,
+                        transition: 'opacity 0.2s ease-out'
                     }}
                 >
+                    {/* Zone de touch invisible pour le scrub */}
                     <input
                         type="range"
                         min="0"
@@ -2742,26 +2748,39 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
                         onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
                         onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
-                        className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
-                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                        style={{ touchAction: 'none' }}
                     />
-                    {/* Temps - positionnés en % par rapport à la progress bar */}
-                    <div 
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
+                    {/* Remplissage rose */}
+                    <div
+                        className="absolute left-0 top-0 bottom-0 rounded-full"
+                        style={{
+                            width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                            background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                            transition: 'width 0.1s linear'
+                        }}
+                    />
+                    {/* Temps écoulé - dans le tube à gauche */}
+                    <div
+                        className="absolute text-white font-bold font-mono pointer-events-none leading-none z-10 flex items-center"
+                        style={{
                             fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
-                            left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
+                            left: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                         }}
                     >
                         {formatTime(currentTime)}
                     </div>
-                    <div 
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
+                    {/* Temps restant - dans le tube à droite */}
+                    <div
+                        className="absolute text-gray-500 font-bold font-mono pointer-events-none leading-none z-10 flex items-center"
+                        style={{
                             fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
-                            right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
+                            right: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)'
                         }}
                     >
                         -{formatTime(duration - currentTime)}
@@ -7933,90 +7952,76 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmType={null}
                         vibeSwipePreview={null}
                         onScrubChange={handleScrubChange}
+                        isScrubbing={isProgressScrubbing}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
                 </div>
 
-                {/* SCRUB OVERLAY - morph depuis TimeCapsule vers position haute */}
+                {/* SCRUB OVERLAY - tube qui morph depuis la position originale */}
                 {isProgressScrubbing && (() => {
-                    // Position initiale = position de la TimeCapsule (dans le footer)
-                    // Position finale = au-dessus du footer
-                    const finalOffsetPx = parseFloat(CONFIG.SCRUB_OVERLAY_FINAL_OFFSET_REM) * 16; // rem to px
+                    // Morph: position initiale (dans le footer) → position finale (au-dessus)
+                    const finalOffsetPx = parseFloat(CONFIG.SCRUB_OVERLAY_FINAL_OFFSET_REM) * 16;
                     const currentOffset = scrubMorphProgress * finalOffsetPx;
-                    const opacity = 0.3 + scrubMorphProgress * 0.7; // Fade in de 0.3 à 1
+
+                    // Hauteur du tube: initiale (petite) → finale (plus grande)
+                    const initialHeight = CONFIG.TC_PROGRESS_HEIGHT * 2.5 * 16; // rem to px
+                    const finalHeight = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
+                    const currentHeight = initialHeight + (finalHeight - initialHeight) * scrubMorphProgress;
+
+                    // Taille de police: initiale → finale (plus grande)
+                    const initialFontSize = CONFIG.TC_TIME_FONT_SIZE;
+                    const finalFontSize = CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE;
+                    const currentFontSize = initialFontSize + (finalFontSize - initialFontSize) * scrubMorphProgress;
+
+                    const formatTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
 
                     return (
                         <div
-                            className="absolute left-4 right-4 flex items-center justify-between z-[100]"
+                            className="absolute z-[100] rounded-full overflow-hidden"
                             style={{
+                                left: '1rem',
+                                right: '1rem',
                                 bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${currentOffset}px)`,
-                                height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                                background: CONFIG.SCRUB_OVERLAY_BG,
-                                borderRadius: 9999,
-                                padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
-                                boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.05 + scrubMorphProgress * 0.1})`,
-                                opacity,
-                                border: '1px solid rgb(229, 231, 235)'
+                                height: currentHeight,
+                                background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
+                                boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.1 + scrubMorphProgress * 0.1})`
                             }}
                         >
-                            {/* Temps écoulé */}
-                            <span
-                                className="font-bold font-mono"
-                                style={{
-                                    fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
-                                    color: CONFIG.SCRUB_OVERLAY_TIME_COLOR,
-                                    opacity: scrubMorphProgress
-                                }}
-                            >
-                                {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
-                            </span>
-
-                            {/* Barre de progression visuelle */}
+                            {/* Remplissage rose */}
                             <div
-                                className="flex-1 mx-4 relative"
-                                style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
-                            >
-                                {/* Fond */}
-                                <div
-                                    className="absolute inset-0 rounded-full"
-                                    style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
-                                />
-                                {/* Remplissage */}
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 rounded-full"
-                                    style={{
-                                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                                        width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
-                                    }}
-                                />
-                                {/* Thumb */}
-                                <div
-                                    className="absolute rounded-full"
-                                    style={{
-                                        width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
-                                        height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
-                                        background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
-                                        left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
-                                        top: '50%',
-                                        transform: 'translate(-50%, -50%)',
-                                        boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
-                                    }}
-                                />
-                            </div>
-
-                            {/* Temps restant */}
-                            <span
-                                className="font-bold font-mono"
+                                className="absolute left-0 top-0 bottom-0 rounded-full"
                                 style={{
-                                    fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
-                                    color: CONFIG.SCRUB_OVERLAY_TIME_COLOR,
-                                    opacity: scrubMorphProgress
+                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL
+                                }}
+                            />
+                            {/* Temps écoulé - dans le tube à gauche */}
+                            <div
+                                className="absolute text-white font-bold font-mono pointer-events-none z-10 flex items-center"
+                                style={{
+                                    fontSize: `${currentFontSize}rem`,
+                                    left: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                                 }}
                             >
-                                -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
-                            </span>
+                                {formatTime(progress)}
+                            </div>
+                            {/* Temps restant - dans le tube à droite */}
+                            <div
+                                className="absolute text-gray-500 font-bold font-mono pointer-events-none z-10 flex items-center"
+                                style={{
+                                    fontSize: `${currentFontSize}rem`,
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)'
+                                }}
+                            >
+                                -{formatTime(duration - progress)}
+                            </div>
                         </div>
                     );
                 })()}
