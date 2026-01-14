@@ -681,6 +681,13 @@ const CONFIG = {
     HEADER_BUTTONS_GAP: '1rem',       // Espace entre les boutons
 
     // ══════════════════════════════════════════════════════════════════════════
+    // SPLASH SCREEN
+    // ══════════════════════════════════════════════════════════════════════════
+    SPLASH_LOGO_MULTIPLIER: 2,            // Multiplicateur taille logo splash vs dashboard
+    SPLASH_MORPH_DURATION: 600,           // Durée de l'animation morph (ms)
+    SPLASH_FADE_DURATION: 400,            // Durée du fade out du fond blanc (ms)
+
+    // ══════════════════════════════════════════════════════════════════════════
     // BACK TO VIBES (Overlay quand on étire le tiroir)
     // ══════════════════════════════════════════════════════════════════════════
     BACK_TO_VIBES_MAX_BLUR: 20,           // Blur maximum en pixels (à opacité 100%)
@@ -1251,6 +1258,11 @@ const styles = `
   }
   .animate-appear-fade {
     animation: appear-then-fade 1.2s ease-out forwards;
+  }
+
+  @keyframes splash-fade-out {
+    0% { background-color: white; }
+    100% { background-color: transparent; }
   }
 
   /* ========== PARAMÈTRES ANIMATION MENU RADIAL ========== 
@@ -4333,6 +4345,12 @@ export default function App() {
     const [volumeBeaconRect, setVolumeBeaconRect] = useState(null); // Coordonnées du beacon capturées au touchStart
     const [showFullPlayer, setShowFullPlayer] = useState(false);
     const [playerVisible, setPlayerVisible] = useState(false);           // Animation d'entrée
+
+    // Splash screen
+    const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'morphing' | 'done'
+    const [splashLogoRect, setSplashLogoRect] = useState(null); // Position/taille du logo splash
+    const [dashboardLogoRect, setDashboardLogoRect] = useState(null); // Position/taille du logo dashboard
+    const dashboardLogoRef = useRef(null); // Ref pour le logo dans le header
     const [playerOpenAnimating, setPlayerOpenAnimating] = useState(false); // En cours d'ouverture
     const [playerSwipeY, setPlayerSwipeY] = useState(0);
     const [playerTouchStartY, setPlayerTouchStartY] = useState(null);
@@ -7250,14 +7268,48 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     });
   };
 
-  // ÉCRAN DE CHARGEMENT
-    if (playlists === null) {
-        return (
-            <div className="w-full h-screen sm:h-[800px] sm:w-[390px] bg-white sm:rounded-[3rem] flex justify-center items-center">
-                <VibesLogo size={60} />
-            </div>
-        );
-    }
+  // Splash screen: déclencher le morph quand les données sont chargées
+  useEffect(() => {
+      if (playlists !== null && splashPhase === 'waiting') {
+          // Attendre que le dashboard soit rendu pour capturer la position du logo
+          requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                  if (dashboardLogoRef.current) {
+                      const rect = dashboardLogoRef.current.getBoundingClientRect();
+                      setDashboardLogoRect({
+                          left: rect.left,
+                          top: rect.top,
+                          width: rect.width,
+                          height: rect.height
+                      });
+                  }
+                  // Capturer la position initiale du splash logo (centre de l'écran)
+                  const screenW = window.innerWidth;
+                  const screenH = window.innerHeight;
+                  const splashSize = CONFIG.HEADER_LOGO_SIZE * CONFIG.SPLASH_LOGO_MULTIPLIER;
+                  const splashHeight = splashSize * 0.54; // ratio du logo VibesLogoVector
+                  setSplashLogoRect({
+                      left: (screenW - splashSize * 3) / 2, // *3 car VibesLogo fait size*3
+                      top: (screenH - splashHeight * 3) / 2,
+                      width: splashSize * 3,
+                      height: splashHeight * 3
+                  });
+                  // Démarrer le morph
+                  setSplashPhase('morphing');
+              });
+          });
+      }
+  }, [playlists, splashPhase]);
+
+  // Terminer le splash après l'animation
+  useEffect(() => {
+      if (splashPhase === 'morphing') {
+          const timer = setTimeout(() => {
+              setSplashPhase('done');
+          }, CONFIG.SPLASH_MORPH_DURATION);
+          return () => clearTimeout(timer);
+      }
+  }, [splashPhase]);
 
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
@@ -7297,8 +7349,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           
           {/* Logo centré */}
           <div className="flex justify-center items-center" style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}>
-             <VibesLogo size={CONFIG.HEADER_LOGO_SIZE} />
-             <span className="text-[10px] text-gray-300 ml-1 font-bold">v72</span>
+             <div ref={dashboardLogoRef} style={{ opacity: splashPhase === 'done' ? 1 : 0 }}>
+                <VibesLogo size={CONFIG.HEADER_LOGO_SIZE} />
+             </div>
+             <span className="text-[10px] text-gray-300 ml-1 font-bold" style={{ opacity: splashPhase === 'done' ? 1 : 0 }}>v72</span>
           </div>
 
           {/* Input file caché (toujours présent) */}
@@ -8837,6 +8891,54 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         totalGradients={ALL_GRADIENTS.length}
                     />
                   </ErrorBoundary>
+                    </div>
+                );
+            })()}
+
+            {/* SPLASH SCREEN OVERLAY */}
+            {splashPhase !== 'done' && (() => {
+                // Calculer les positions et scales
+                const splashLogoSize = CONFIG.HEADER_LOGO_SIZE * CONFIG.SPLASH_LOGO_MULTIPLIER;
+                const dashboardLogoSize = CONFIG.HEADER_LOGO_SIZE;
+                const scale = dashboardLogoSize / splashLogoSize;
+
+                // Position initiale : centre de l'écran (le logo est rendu à taille splash)
+                // Position finale : là où est le logo dashboard
+                // On utilise transform pour animer de façon fluide
+
+                return (
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            zIndex: 9999,
+                            backgroundColor: 'white',
+                            animation: splashPhase === 'morphing' ? `splash-fade-out ${CONFIG.SPLASH_FADE_DURATION}ms ease-out forwards` : 'none'
+                        }}
+                    >
+                        <div
+                            style={{
+                                position: 'absolute',
+                                // Taille du logo splash (fixe, on anime avec transform)
+                                width: splashLogoSize * 3, // VibesLogo fait size*3
+                                height: splashLogoSize * 3 * 0.54, // ratio du SVG
+                                // Position initiale : centré
+                                left: splashPhase === 'morphing' && dashboardLogoRect
+                                    ? dashboardLogoRect.left
+                                    : '50%',
+                                top: splashPhase === 'morphing' && dashboardLogoRect
+                                    ? dashboardLogoRect.top
+                                    : '50%',
+                                transform: splashPhase === 'morphing' && dashboardLogoRect
+                                    ? `scale(${scale})`
+                                    : 'translate(-50%, -50%)',
+                                transformOrigin: 'top left',
+                                transition: splashPhase === 'morphing'
+                                    ? `all ${CONFIG.SPLASH_MORPH_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
+                                    : 'none'
+                            }}
+                        >
+                            <VibesLogo size={splashLogoSize} />
+                        </div>
                     </div>
                 );
             })()}
