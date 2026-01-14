@@ -831,6 +831,8 @@ const CONFIG = {
     // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
+    TC_SCRUB_LONG_PRESS_MS: 300,          // Durée tap long pour activer scrub (ms)
+    TC_SCRUB_SENSITIVITY: 0.5,            // Secondes par pixel de déplacement
     
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Indicateurs Temps (position relative à la progress bar)
@@ -2652,6 +2654,73 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
+
+    // États pour le scrub relatif
+    const [isScrubbing, setIsScrubbing] = useState(false);
+    const [scrubStartX, setScrubStartX] = useState(null);
+    const [scrubStartTime, setScrubStartTime] = useState(null);
+    const [scrubPreviewTime, setScrubPreviewTime] = useState(null);
+    const longPressTimerRef = useRef(null);
+
+    // Le temps à afficher : preview pendant scrub, sinon currentTime
+    const displayTime = isScrubbing && scrubPreviewTime !== null ? scrubPreviewTime : currentTime;
+
+    // Handlers touch pour scrub relatif
+    const handleTouchStart = (e) => {
+        e.stopPropagation();
+        const touch = e.touches[0];
+        const startX = touch.clientX;
+        const startTime = currentTime;
+
+        // Démarrer le timer tap long
+        longPressTimerRef.current = setTimeout(() => {
+            setIsScrubbing(true);
+            setScrubStartX(startX);
+            setScrubStartTime(startTime);
+            setScrubPreviewTime(startTime);
+            if (onScrubChange) onScrubChange(true);
+        }, CONFIG.TC_SCRUB_LONG_PRESS_MS);
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isScrubbing || scrubStartX === null || scrubStartTime === null) return;
+        e.stopPropagation();
+
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - scrubStartX;
+        const deltaTime = deltaX * CONFIG.TC_SCRUB_SENSITIVITY;
+        const newTime = Math.max(0, Math.min(duration, scrubStartTime + deltaTime));
+
+        setScrubPreviewTime(newTime);
+        // Mettre à jour en temps réel
+        if (onSeek) onSeek({ target: { value: newTime } });
+    };
+
+    const handleTouchEnd = () => {
+        // Annuler le timer si pas encore déclenché
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+
+        if (isScrubbing && scrubPreviewTime !== null) {
+            // Appliquer la position finale
+            if (onSeek) onSeek({ target: { value: scrubPreviewTime } });
+        }
+
+        setIsScrubbing(false);
+        setScrubStartX(null);
+        setScrubStartTime(null);
+        setScrubPreviewTime(null);
+        if (onScrubChange) onScrubChange(false);
+    };
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        };
+    }, []);
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
     if (vibeSwipePreview && vibeSwipePreview.progress > 0) {
@@ -2743,33 +2812,15 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
                     WebkitTouchCallout: 'none',
+                    touchAction: 'none',
                 }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             >
-                {/* Input range invisible mais fonctionnel pour le scrub */}
-                <input
-                    type="range"
-                    min="0"
-                    max={duration || 100}
-                    value={currentTime}
-                    onChange={onSeek}
-                    onInput={onSeek}
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                    onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
-                    onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                    onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
-                    className="absolute inset-0 w-full h-full cursor-pointer z-20"
-                    style={{
-                        touchAction: 'none',
-                        opacity: 0,
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none',
-                        WebkitTouchCallout: 'none',
-                    }}
-                />
                 {/* Tube visuel avec remplissage */}
                 {(() => {
-                    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+                    const progressPercent = duration > 0 ? (displayTime / duration) * 100 : 0;
                     return (
                         <div
                             className="absolute inset-0 rounded-full overflow-hidden"
@@ -2797,8 +2848,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                     color: '#6b7280',
                                 }}
                             >
-                                <span>{formatTime(currentTime)}</span>
-                                <span>-{formatTime(duration - currentTime)}</span>
+                                <span>{formatTime(displayTime)}</span>
+                                <span>-{formatTime(duration - displayTime)}</span>
                             </div>
                             {/* Texte blanc (fond rose) - clippé selon la progression */}
                             <div
@@ -2813,8 +2864,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                     clipPath: `inset(0 ${100 - progressPercent}% 0 0)`,
                                 }}
                             >
-                                <span>{formatTime(currentTime)}</span>
-                                <span>-{formatTime(duration - currentTime)}</span>
+                                <span>{formatTime(displayTime)}</span>
+                                <span>-{formatTime(duration - displayTime)}</span>
                             </div>
                         </div>
                     );
