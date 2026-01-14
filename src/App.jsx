@@ -2727,13 +2727,17 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 </div>
                 
                 {/* Progress bar - positionnée en % par rapport à la capsule */}
-                <div 
+                <div
                     className="absolute z-10"
                     style={{
                         top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
                         left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
                         right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
                         transform: 'translateY(-50%)',
+                        // Anti-loupe iOS sur le conteneur parent
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        WebkitTouchCallout: 'none',
                     }}
                 >
                     <input
@@ -2749,7 +2753,15 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
                         onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
                         className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
-                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
+                        style={{
+                            touchAction: 'none',
+                            height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
+                            '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px`,
+                            // Anti-loupe iOS directement sur l'input
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
+                            WebkitTouchCallout: 'none',
+                        }}
                     />
                     {/* Temps en SVG (vecteur) pour éviter la loupe iOS */}
                     <svg
