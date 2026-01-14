@@ -68,7 +68,7 @@ const CONFIG = {
     ADDALL_BG_COLOR: '#8CFF00',
 
     // SWIPE VIBECARD PREVIEW
-    MAX_SWIPE_DISTANCE: UNIFIED_CONFIG.COLOR_SWIPE_DISTANCE,  // Distance de swipe pour parcourir les dégradés (depuis Config.jsx)
+    COLOR_SWIPE_PERCENT: UNIFIED_CONFIG.COLOR_SWIPE_PERCENT,  // Distance de swipe pour parcourir les dégradés (% largeur élément)
     
     // SWIPE TITRE (fermeture)
     TITLE_SWIPE_THRESHOLD: 100,           // Seuil de swipe pour confirmer/annuler (px)
@@ -1106,6 +1106,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const [isCardSwipeCatchingUp, setIsCardSwipeCatchingUp] = useState(false); // Animation de rattrapage
     const cardTouchStartX = useRef(null);
     const cardTouchStartY = useRef(null);
+    const cardWidthRef = useRef(300);
     
     // Nombre total de dégradés pour le cycle
     const gradientCount = totalGradients || 20;
@@ -1163,6 +1164,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         cardTouchStartX.current = clientX;
         cardTouchStartY.current = clientY;
         setCardSwipeDirection(null);
+        if (e.currentTarget) cardWidthRef.current = e.currentTarget.offsetWidth;
     };
     
     const handleCardTouchMove = (e) => {
@@ -1186,14 +1188,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         if (cardSwipeDirection === 'vertical') return;
 
         if (cardSwipeDirection === 'horizontal') {
-            if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
+            const maxSwipeDistance = cardWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+
+            if (Math.abs(diffX) < maxSwipeDistance) {
                 setCardSwipeOffset(diffX);
 
                 // Calculer la preview du gradient en temps réel (en utilisant la liste ordonnée)
                 if (diffX !== 0) {
                     const direction = diffX > 0 ? -1 : 1;
                     // Calculer combien de couleurs on a parcouru (0 à totalGradients)
-                    const stepsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * orderedGradientIndices.length);
+                    const stepsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * orderedGradientIndices.length);
                     const newPositionInOrder = ((currentPositionInOrder + (direction * stepsTraversed)) % orderedGradientIndices.length + orderedGradientIndices.length) % orderedGradientIndices.length;
                     setPreviewGradientIndex(orderedGradientIndices[newPositionInOrder]);
                 } else {
@@ -1206,7 +1210,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const handleCardTouchEnd = () => {
         if (cardSwipeDirection === 'horizontal' && Math.abs(cardSwipeOffset) > 30) {
             const direction = cardSwipeOffset > 0 ? -1 : 1;
-            const stepsTraversed = Math.max(1, Math.floor((Math.abs(cardSwipeOffset) / CONFIG.MAX_SWIPE_DISTANCE) * orderedGradientIndices.length));
+            const maxSwipeDistance = cardWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+            const stepsTraversed = Math.max(1, Math.floor((Math.abs(cardSwipeOffset) / maxSwipeDistance) * orderedGradientIndices.length));
             const newPositionInOrder = ((currentPositionInOrder + (direction * stepsTraversed)) % orderedGradientIndices.length + orderedGradientIndices.length) % orderedGradientIndices.length;
             setChosenGradientIndex(orderedGradientIndices[newPositionInOrder]);
         }
@@ -1546,8 +1551,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         cardTouchStartX.current = clientX;
         cardTouchStartY.current = clientY;
         setCardSwipeDirection(null);
+        if (e.currentTarget) cardWidthRef.current = e.currentTarget.offsetWidth;
     };
-    
+
     const handleCardSwipeMove = (e) => {
         if (cardTouchStartX.current === null || cardTouchStartY.current === null) return;
         
@@ -1571,11 +1577,12 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
         if (cardSwipeDirection === 'vertical') return;
 
         if (cardSwipeDirection === 'horizontal') {
-            if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
+            const maxSwipeDistance = cardWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+            if (Math.abs(diffX) < maxSwipeDistance) {
                 setCardSwipeOffset(diffX);
 
                 // Calculer la preview : cycle simple sur les indices
-                const stepsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * gradientCount);
+                const stepsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * gradientCount);
                 if (stepsTraversed >= 1 || diffX !== 0) {
                     const direction = diffX > 0 ? -1 : 1; // droite = précédent, gauche = suivant
                     const newIndex = ((chosenGradientIndex + (direction * stepsTraversed)) % gradientCount + gradientCount) % gradientCount;
@@ -1589,7 +1596,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     
     const handleCardSwipeEnd = () => {
         // Appliquer le changement de couleur si swipe suffisant
-        const stepsTraversed = Math.floor((Math.abs(cardSwipeOffset) / CONFIG.MAX_SWIPE_DISTANCE) * gradientCount);
+        const maxSwipeDistance = cardWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+        const stepsTraversed = Math.floor((Math.abs(cardSwipeOffset) / maxSwipeDistance) * gradientCount);
         if (cardSwipeDirection === 'horizontal' && stepsTraversed >= 1) {
             const direction = cardSwipeOffset > 0 ? -1 : 1;
             const newIndex = ((chosenGradientIndex + (direction * stepsTraversed)) % gradientCount + gradientCount) % gradientCount;

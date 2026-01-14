@@ -243,7 +243,7 @@ const CONFIG = {
     // DÉGRADÉS & COULEURS
     // ══════════════════════════════════════════════════════════════════════════
     GRADIENT_OPACITY: 1,              // Opacité des dégradés (0 = transparent, 1 = opaque)
-    MAX_SWIPE_DISTANCE: UNIFIED_CONFIG.COLOR_SWIPE_DISTANCE,  // Distance de swipe pour parcourir les dégradés (depuis Config.jsx)
+    COLOR_SWIPE_PERCENT: UNIFIED_CONFIG.COLOR_SWIPE_PERCENT,  // Distance de swipe pour parcourir les dégradés (% largeur élément)
 
     // ══════════════════════════════════════════════════════════════════════════
     // VIBE CARDS (Dashboard)
@@ -2030,14 +2030,17 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
             if (swipeDirectionRef.current === 'horizontal') {
                 e.preventDefault(); // Fonctionne car passive: false
 
-                if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
+                const elementWidth = element.offsetWidth;
+                const maxSwipeDistance = elementWidth * CONFIG.COLOR_SWIPE_PERCENT / 100;
+
+                if (Math.abs(diffX) < maxSwipeDistance) {
                     setSwipeOffset(diffX);
 
                     if (onSwipeProgress) {
                         const direction = diffX > 0 ? 1 : -1;
 
                         // Calculer combien de couleurs on a parcouru (0 à 19)
-                        const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                        const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
                         const currentIdx = colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId);
                         const previewIdx = currentIdx + (direction * colorsTraversed);
                         const previewGradient = getGradientByIndex(previewIdx);
@@ -2066,7 +2069,9 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     const handleTouchEnd = () => {
         // Ne changer la couleur que si c'était un swipe horizontal
-        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+        const elementWidth = cardRef.current?.offsetWidth || 300;
+        const maxSwipeDistance = elementWidth * CONFIG.COLOR_SWIPE_PERCENT / 100;
+        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
         if (swipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
             const direction = swipeOffset > 0 ? 1 : -1;
             if (onColorChange) onColorChange(direction * colorsTraversed);

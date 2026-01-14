@@ -8,7 +8,7 @@ import { UNIFIED_CONFIG } from './Config.jsx';
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export const SMARTIMPORT_CONFIG = {
-    MAX_SWIPE_DISTANCE: UNIFIED_CONFIG.COLOR_SWIPE_DISTANCE,  // Distance de swipe pour parcourir les dégradés (depuis Config.jsx)
+    COLOR_SWIPE_PERCENT: UNIFIED_CONFIG.COLOR_SWIPE_PERCENT,  // Distance de swipe pour parcourir les dégradés (% largeur élément)
     
     // ══════════════════════════════════════════════════════════════════════════
     // SEUILS ET LIMITES
@@ -761,11 +761,14 @@ const SmartImport = ({
         
         // Si direction pas encore déterminée ou si c'est horizontal, on gère le swipe couleur
         if (swipeDirection === 'horizontal') {
-            if (Math.abs(diffX) < SMARTIMPORT_CONFIG.MAX_SWIPE_DISTANCE) {
+            const elementWidth = cardWidthRef.current || 300;
+            const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
+
+            if (Math.abs(diffX) < maxSwipeDistance) {
                 setSwipeOffset(diffX);
 
                 const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / SMARTIMPORT_CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
                 const currentIdx = importPreview?.folderGradients?.[cardName] ?? 0;
                 const previewIdx = currentIdx + (direction * colorsTraversed);
                 const previewGradient = getGradientByIndex(previewIdx);
@@ -783,7 +786,9 @@ const SmartImport = ({
     const handleCardSwipeEnd = (cardName) => {
         if (swipingCard !== cardName) return;
 
-        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / SMARTIMPORT_CONFIG.MAX_SWIPE_DISTANCE) * 20);
+        const elementWidth = cardWidthRef.current || 300;
+        const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
+        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
 
         // Si c'est un tap (pas de swipe horizontal significatif et pas de scroll vertical)
         const isTap = swipeDirection === null && Math.abs(swipeOffset) < 10;
