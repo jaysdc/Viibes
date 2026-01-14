@@ -821,18 +821,13 @@ const CONFIG = {
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
-    TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
-    TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
-    TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
-    
+    TC_SKIP_EDGE_PADDING: 0.25,           // Distance entre bord de la capsule et bouton skip (rem)
+    TC_SKIP_TUBE_GAP: 0.25,               // Distance entre bouton skip et tube de progression (rem)
+
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 0.5,              // Hauteur progress bar (rem)
-    TC_PROGRESS_THUMB_SIZE: 16,           // Taille du thumb rose (px)
-    TC_PROGRESS_TOP_PERCENT: 40,          // Position Y en % (50 = centré verticalement)
-    TC_PROGRESS_LEFT_PERCENT: 14,         // Distance depuis la gauche en %
-    TC_PROGRESS_RIGHT_PERCENT: 14,        // Distance depuis la droite en %
     
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Indicateurs Temps (position relative à la progress bar)
@@ -2710,29 +2705,33 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
       >
             <div className="w-full h-full relative">
                 {/* Bouton -10s */}
-                <div 
+                {/* Bouton -10s */}
+                <div
                     className="absolute z-20"
-                    style={{ 
-                        left: `${CONFIG.TC_SKIP_BACK_X_PERCENT}%`,
-                        top: `${CONFIG.TC_SKIP_Y_PERCENT}%`,
+                    style={{
+                        left: `${CONFIG.TC_SKIP_EDGE_PADDING}rem`,
+                        top: '50%',
                         transform: 'translateY(-50%)'
                     }}
                 >
                     <SkipButton direction="back" onClick={onSkipBack} />
                 </div>
-                
+
                 {/* Tube de progression qui se remplit */}
                 <div
                     className="absolute z-10 rounded-full overflow-hidden"
                     style={{
                         top: '50%',
-                        left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
-                        right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
+                        left: `calc(${CONFIG.TC_SKIP_EDGE_PADDING}rem + ${CONFIG.TC_SKIP_BUTTON_SIZE}rem + ${CONFIG.TC_SKIP_TUBE_GAP}rem)`,
+                        right: `calc(${CONFIG.TC_SKIP_EDGE_PADDING}rem + ${CONFIG.TC_SKIP_BUTTON_SIZE}rem + ${CONFIG.TC_SKIP_TUBE_GAP}rem)`,
                         height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
                         background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
                         opacity: isScrubbing ? 0.3 : 1,
-                        transition: 'opacity 0.2s ease-out'
+                        transition: 'opacity 0.2s ease-out',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        WebkitTouchCallout: 'none'
                     }}
                 >
                     {/* Zone de touch invisible pour le scrub */}
@@ -2785,13 +2784,13 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         -{formatTime(duration - currentTime)}
                     </div>
                 </div>
-                
+
                 {/* Bouton +10s */}
-                <div 
+                <div
                     className="absolute z-20"
-                    style={{ 
-                        right: `${CONFIG.TC_SKIP_FORWARD_X_PERCENT}%`,
-                        top: `${CONFIG.TC_SKIP_Y_PERCENT}%`,
+                    style={{
+                        right: `${CONFIG.TC_SKIP_EDGE_PADDING}rem`,
+                        top: '50%',
                         transform: 'translateY(-50%)'
                     }}
                 >
