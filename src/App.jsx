@@ -4314,6 +4314,7 @@ export default function App() {
     const [duration, setDuration] = useState(0);
     const durationRef = useRef(0); // Ref pour éviter closure stale dans les handlers
     const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
+    const isProgressScrubbingRef = useRef(false);
     const [scrubMorphProgress, setScrubMorphProgress] = useState(0); // 0 = footer, 1 = overlay position
     const scrubMorphAnimRef = useRef(null);
     const scrubTubeRectRef = useRef(null); // Rectangle du tube au moment du start
@@ -6165,7 +6166,7 @@ const vibeSearchResults = () => {
     const duration = audioRef.current.duration || 0;
 
     // Ne pas écraser progress pendant le scrub (on le gère manuellement)
-    if (!isProgressScrubbing) {
+    if (!isProgressScrubbingRef.current) {
         setProgress(currentTime);
     }
     setDuration(duration);
@@ -7175,6 +7176,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             }, 2000);
 
             // Montrer immédiatement et animer vers le haut
+            isProgressScrubbingRef.current = true;
             setIsProgressScrubbing(true);
             const startTime = performance.now();
             const startProgress = scrubMorphProgress;
@@ -7211,6 +7213,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 if (t < 1) {
                     scrubMorphAnimRef.current = requestAnimationFrame(animateMorphDown);
                 } else {
+                    isProgressScrubbingRef.current = false;
                     setIsProgressScrubbing(false);
                     setScrubMorphProgress(0);
                 }
