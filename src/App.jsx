@@ -843,7 +843,7 @@ const CONFIG = {
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
 
     // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
-    SCRUB_OVERLAY_MORPH_DURATION: 200,    // Durée de l'animation morph (ms)
+    SCRUB_OVERLAY_MORPH_DURATION: 125,    // Durée de l'animation morph (ms)
     SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
     SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
     SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
@@ -8026,6 +8026,35 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
+
+                    {/* DOTTED OVERLAY sur TimeCapsule pendant le scrub */}
+                    {isProgressScrubbing && (() => {
+                        const controlBarSpacingPercent = CONFIG.CONTROL_BAR_SPACING_PERCENT / 4;
+                        const screenWidth = window.innerWidth;
+                        const gapWidth = screenWidth * controlBarSpacingPercent / 100;
+                        const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
+                        const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
+                        // TimeCapsule: left = gapWidth, right = après playPause + recenter + gaps
+                        const tcLeft = gapWidth;
+                        const tcRight = gapWidth * 3 + playPauseWidth + recenterWidth;
+                        return (
+                            <div
+                                className="absolute rounded-full"
+                                style={{
+                                    left: tcLeft,
+                                    right: tcRight,
+                                    top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
+                                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                                    backgroundColor: 'rgba(229, 231, 235, 0.9)',
+                                    backgroundImage: 'radial-gradient(circle, #9ca3af 1px, transparent 1px)',
+                                    backgroundSize: '8px 8px',
+                                    opacity: scrubMorphProgress,
+                                    transition: 'opacity 0.1s ease-out',
+                                    pointerEvents: 'none',
+                                }}
+                            />
+                        );
+                    })()}
                 </div>
 
                 {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub avec animation morph */}
