@@ -1666,17 +1666,17 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
-  /* Chaque icône reste visible 30% du temps avant de fade */
+  /* Chaque icône reste visible 40% du temps, transition rapide 10% */
   @keyframes icon-crossfade-out {
-    0%, 15% { opacity: 0; }
-    35%, 65% { opacity: 1; }
-    85%, 100% { opacity: 0; }
+    0%, 40% { opacity: 0; }
+    50%, 90% { opacity: 1; }
+    100% { opacity: 0; }
   }
 
   @keyframes icon-crossfade-in {
-    0%, 15% { opacity: 1; }
-    35%, 65% { opacity: 0; }
-    85%, 100% { opacity: 1; }
+    0%, 40% { opacity: 1; }
+    50%, 90% { opacity: 0; }
+    100% { opacity: 1; }
   }
 `;
 
@@ -7014,6 +7014,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
 
     // === HANDLER SCRUB OVERLAY MORPH ===
+    const scrubStartXRef = useRef(0);
+    const scrubStartTimeRef = useRef(0);
+
     const handleScrubChange = (isScrubbing, event) => {
         if (scrubMorphAnimRef.current) {
             cancelAnimationFrame(scrubMorphAnimRef.current);
@@ -7029,14 +7032,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 }
             }
 
-            // Handler global pour touch move (permet scrub même hors du tube)
+            // Stocker la position X initiale et le temps actuel pour le scrub relatif
+            const initialX = event?.touches?.[0]?.clientX || event?.clientX || 0;
+            scrubStartXRef.current = initialX;
+            scrubStartTimeRef.current = audioRef.current?.currentTime || 0;
+
+            // Handler global pour touch move (permet scrub même hors du tube) - RELATIF
             const handleGlobalTouchMove = (e) => {
                 if (!scrubTubeRectRef.current || !audioRef.current || !duration) return;
                 const touch = e.touches[0];
                 const rect = scrubTubeRectRef.current;
-                const x = touch.clientX;
-                const relativeX = Math.max(0, Math.min(rect.width, x - rect.left));
-                const newTime = (relativeX / rect.width) * duration;
+                // Calcul relatif : déplacement depuis le point de départ
+                const deltaX = touch.clientX - scrubStartXRef.current;
+                const deltaTime = (deltaX / rect.width) * duration;
+                const newTime = Math.max(0, Math.min(duration, scrubStartTimeRef.current + deltaTime));
                 audioRef.current.currentTime = newTime;
                 setProgress(newTime);
             };
@@ -7044,9 +7053,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             const handleGlobalMouseMove = (e) => {
                 if (!scrubTubeRectRef.current || !audioRef.current || !duration) return;
                 const rect = scrubTubeRectRef.current;
-                const x = e.clientX;
-                const relativeX = Math.max(0, Math.min(rect.width, x - rect.left));
-                const newTime = (relativeX / rect.width) * duration;
+                // Calcul relatif : déplacement depuis le point de départ
+                const deltaX = e.clientX - scrubStartXRef.current;
+                const deltaTime = (deltaX / rect.width) * duration;
+                const newTime = Math.max(0, Math.min(duration, scrubStartTimeRef.current + deltaTime));
                 audioRef.current.currentTime = newTime;
                 setProgress(newTime);
             };
