@@ -2661,6 +2661,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     const [scrubStartX, setScrubStartX] = useState(null);
     const [scrubStartTime, setScrubStartTime] = useState(null);
     const [scrubPreviewTime, setScrubPreviewTime] = useState(null);
+    const [scrubAtEnd, setScrubAtEnd] = useState(false); // True si l'utilisateur a scrub jusqu'à la fin
     const longPressTimerRef = useRef(null);
 
     // Le temps à afficher : preview pendant scrub, sinon currentTime
@@ -2690,7 +2691,14 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         const touch = e.touches[0];
         const deltaX = touch.clientX - scrubStartX;
         const deltaTime = deltaX * CONFIG.TC_SCRUB_SENSITIVITY;
-        const newTime = Math.max(0, Math.min(duration, scrubStartTime + deltaTime));
+        const rawTime = scrubStartTime + deltaTime;
+
+        // Clamper à duration - 0.5s pour ne jamais déclencher onEnded pendant le scrub
+        const maxTime = duration > 0.5 ? duration - 0.5 : duration;
+        const newTime = Math.max(0, Math.min(maxTime, rawTime));
+
+        // Tracker si l'utilisateur veut aller au-delà de la fin
+        setScrubAtEnd(rawTime >= duration - 0.5);
 
         setScrubPreviewTime(newTime);
         // Mettre à jour en temps réel
@@ -2704,11 +2712,11 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
             longPressTimerRef.current = null;
         }
 
-        if (isScrubbing && scrubPreviewTime !== null) {
-            // Si on relâche à la fin (ou très proche), passer à la chanson suivante
-            if (duration > 0 && scrubPreviewTime >= duration - 0.5) {
+        if (isScrubbing) {
+            // Si on relâche alors qu'on était à la fin, passer à la chanson suivante
+            if (scrubAtEnd) {
                 if (onScrubEndAtEnd) onScrubEndAtEnd();
-            } else {
+            } else if (scrubPreviewTime !== null) {
                 // Appliquer la position finale
                 if (onSeek) onSeek({ target: { value: scrubPreviewTime } });
             }
@@ -2718,6 +2726,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         setScrubStartX(null);
         setScrubStartTime(null);
         setScrubPreviewTime(null);
+        setScrubAtEnd(false);
         if (onScrubChange) onScrubChange(false);
     };
 
