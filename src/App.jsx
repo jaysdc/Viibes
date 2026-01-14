@@ -1666,14 +1666,17 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
+  /* Chaque icône reste visible 30% du temps avant de fade */
   @keyframes icon-crossfade-out {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
+    0%, 15% { opacity: 0; }
+    35%, 65% { opacity: 1; }
+    85%, 100% { opacity: 0; }
   }
 
   @keyframes icon-crossfade-in {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    0%, 15% { opacity: 1; }
+    35%, 65% { opacity: 0; }
+    85%, 100% { opacity: 1; }
   }
 `;
 
@@ -2812,18 +2815,12 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         transition: 'opacity 0.2s ease-out'
                     }}
                 >
-                    {/* Zone de touch invisible pour le scrub */}
-                    <input
-                        type="range"
-                        min="0"
-                        max={duration || 100}
-                        value={currentTime}
-                        onChange={onSeek}
-                        onInput={onSeek}
+                    {/* Zone de touch pour le scrub (pas d'input range pour éviter loupe iOS) */}
+                    <div
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true, e); }}
                         onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true, e); }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                        className="absolute inset-0 w-full h-full cursor-pointer z-20"
                         style={{ touchAction: 'none' }}
                     />
                     {/* Remplissage rose avec bordure droite */}
