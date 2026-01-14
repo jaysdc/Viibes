@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -19,38 +19,51 @@ import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, get
 const artworkCache = new Map();
 
 // Extraire l'artwork d'un fichier audio (via URL ou Blob)
-const extractArtwork = (audioSource, songId) => {
-    return new Promise((resolve) => {
-        // Vérifier le cache d'abord
-        if (artworkCache.has(songId)) {
-            resolve(artworkCache.get(songId));
-            return;
+const extractArtwork = async (audioSource, songId) => {
+    // Vérifier le cache d'abord
+    if (artworkCache.has(songId)) {
+        return artworkCache.get(songId);
+    }
+
+    try {
+        let source = audioSource;
+        
+        // Si c'est une blob URL, on doit fetch le blob pour jsmediatags
+        if (typeof audioSource === 'string' && audioSource.startsWith('blob:')) {
+            const response = await fetch(audioSource);
+            source = await response.blob();
         }
 
-        jsmediatags.read(audioSource, {
-            onSuccess: (tag) => {
-                const picture = tag.tags.picture;
-                if (picture) {
-                    const { data, format } = picture;
-                    const byteArray = new Uint8Array(data);
-                    const blob = new Blob([byteArray], { type: format });
-                    const artworkUrl = URL.createObjectURL(blob);
-                    
-                    // Mettre en cache
-                    artworkCache.set(songId, artworkUrl);
-                    console.log('[Artwork] Extracted for:', songId);
-                    
-                    resolve(artworkUrl);
-                } else {
+        return new Promise((resolve) => {
+            jsmediatags.read(source, {
+                onSuccess: (tag) => {
+                    const picture = tag.tags.picture;
+                    if (picture) {
+                        const { data, format } = picture;
+                        const byteArray = new Uint8Array(data);
+                        const blob = new Blob([byteArray], { type: format });
+                        const artworkUrl = URL.createObjectURL(blob);
+                        
+                        // Mettre en cache
+                        artworkCache.set(songId, artworkUrl);
+                        console.log('[Artwork] Extracted for:', songId);
+                        
+                        resolve(artworkUrl);
+                    } else {
+                        console.log('[Artwork] No picture found for:', songId);
+                        resolve(null);
+                    }
+                },
+                onError: (error) => {
+                    console.log('[Artwork] Failed to extract:', error.type, error.info);
                     resolve(null);
                 }
-            },
-            onError: (error) => {
-                console.log('[Artwork] Failed to extract:', error.type, error.info);
-                resolve(null);
-            }
+            });
         });
-    });
+    } catch (error) {
+        console.log('[Artwork] Error:', error.message);
+        return null;
+    }
 };
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -635,6 +648,8 @@ const CONFIG = {
     VIBE_THIS_GLOW_OPACITY: 0.4,
     VIBE_THIS_GLOW_COLOR: '138, 255, 8',
     VIBE_THIS_BG_COLOR: '#8CFF00',       // Couleur de fond bouton VIBE THESE
+    VIBE_THESE_SWIPE_DISTANCE: 100,      // Distance de swipe (px) pour parcourir tous les dégradés (plus petit = plus sensible)
+    VIBE_THESE_MAX_VISUAL_OFFSET: 30,    // Limite visuelle du déplacement de la bordure (px)
     
     // ══════════════════════════════════════════════════════════════════════════
     // LIQUID GLASS (Effet bande horizontale)
@@ -826,6 +841,20 @@ const CONFIG = {
     TC_TIME_Y_PERCENT: 95,               // Position Y en % par rapport à la progress bar
     TC_TIME_ELAPSED_X_PERCENT: 0,         // Position X temps écoulé (0 = gauche)
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
+
+    // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
+    SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
+    SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
+    SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
+    SCRUB_OVERLAY_BORDER_RADIUS: 9999,    // Border radius (px, 9999 = full)
+    SCRUB_OVERLAY_PADDING_X: 16,          // Padding horizontal (px)
+    SCRUB_OVERLAY_TIME_FONT_SIZE: 0.875,  // Taille police temps (rem)
+    SCRUB_OVERLAY_TIME_COLOR: '#6b7280',  // Couleur du texte temps (gray-500)
+    SCRUB_OVERLAY_PROGRESS_HEIGHT: 6,     // Hauteur de la barre de progression (px)
+    SCRUB_OVERLAY_PROGRESS_BG: '#e5e7eb', // Couleur fond progress (gray-200)
+    SCRUB_OVERLAY_PROGRESS_FILL: '#ec4899', // Couleur remplissage progress (pink-500)
+    SCRUB_OVERLAY_THUMB_SIZE: 16,         // Taille du thumb (px)
+    SCRUB_OVERLAY_THUMB_COLOR: '#ec4899', // Couleur du thumb (pink-500)
 };
 
 
@@ -1169,6 +1198,35 @@ const styles = `
   }
   .animate-ignite-pill-red {
     animation: ignite-pill-red 0.5s ease-out forwards;
+  }
+
+  /* Animation pulse pour QUEUE NEXT - Cyan (#06b6d4) */
+  @keyframes pulse-pill-cyan {
+    0%, 100% {
+      transform: scale(var(--pulse-scale-min, 1));
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.6), 0 0 25px rgba(6, 182, 212, 0.3);
+    }
+    50% {
+      transform: scale(var(--pulse-scale-max, 1.25));
+      box-shadow: 0 0 30px rgba(6, 182, 212, 1), 0 0 50px rgba(6, 182, 212, 0.6);
+    }
+  }
+  .animate-pulse-pill-cyan {
+    animation: pulse-pill-cyan 0.6s ease-in-out infinite;
+  }
+
+  /* Animation ignite pour QUEUE NEXT - Cyan (#06b6d4) */
+  @keyframes ignite-pill-cyan {
+    0% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.2); }
+    15% { box-shadow: 0 0 25px rgba(6, 182, 212, 1), 0 0 50px rgba(6, 182, 212, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.5), 0 0 30px rgba(6, 182, 212, 0.4); }
+    40% { box-shadow: 0 0 35px rgba(6, 182, 212, 1), 0 0 70px rgba(6, 182, 212, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.5); }
+    70% { box-shadow: 0 0 30px rgba(6, 182, 212, 0.9), 0 0 60px rgba(6, 182, 212, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.7), 0 0 50px rgba(6, 182, 212, 0.5); }
+  }
+  .animate-ignite-pill-cyan {
+    animation: ignite-pill-cyan 0.5s ease-out forwards;
   }
 
   @keyframes appear-then-fade {
@@ -2290,7 +2348,7 @@ const RecenterCapsule = ({ onClick }) => (
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
-  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview,
+  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange,
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
@@ -2305,17 +2363,18 @@ const ControlBar = ({
                 gap: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
             }}
         >
-            <TimeCapsule 
-                currentTime={currentTime} 
-                duration={duration} 
-                onSeek={onSeek} 
-                onSkipBack={onSkipBack} 
-                onSkipForward={onSkipForward} 
-                isMini={true} 
-                isLive={true} 
+            <TimeCapsule
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={onSeek}
+                onSkipBack={onSkipBack}
+                onSkipForward={onSkipForward}
+                isMini={true}
+                isLive={true}
                 confirmMode={confirmMode}
                 confirmType={confirmType}
                 vibeSwipePreview={vibeSwipePreview}
+                onScrubChange={onScrubChange}
             />
             {!vibeSwipePreview && (
                 <>
@@ -2556,7 +2615,7 @@ const LibrarySongRow = ({ song, onClick }) => (
     >
         <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-400">
-                <Music2 size={20} />
+                <Music size={20} />
             </div>
             <div className="flex flex-col overflow-hidden">
                 <span className="text-sm font-bold text-gray-900 truncate">{song.title}</span>
@@ -2571,7 +2630,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
@@ -2672,16 +2731,18 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         transform: 'translateY(-50%)',
                     }}
                 >
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max={duration || 100} 
-                        value={currentTime} 
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
                         onChange={onSeek}
                         onInput={onSeek}
                         onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
+                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
                         className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
                         style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
                     />
@@ -3139,7 +3200,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
     );
 };
 
-const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding }) => {
+const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
     const rowRef = useRef(null);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
@@ -3153,6 +3214,9 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         if (!element) return;
 
         const handleTouchMove = (e) => {
+            // Si verrou global sur vertical (drawer drag/inertie), ignorer les swipes horizontaux
+            if (globalSwipeLockRef?.current === 'vertical') return;
+
             const { x: touchStartX, y: touchStartY } = touchStartRef.current;
             if (touchStartX === null || touchStartY === null) return;
 
@@ -3180,9 +3244,12 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
 
         element.addEventListener('touchmove', handleTouchMove, { passive: false });
         return () => element.removeEventListener('touchmove', handleTouchMove);
-    }, []);
+    }, [globalSwipeLockRef]);
 
     const onTouchStart = (e) => {
+        // Si verrou global sur vertical, ne pas démarrer de swipe horizontal
+        if (globalSwipeLockRef?.current === 'vertical') return;
+
         touchStartRef.current = {
             x: e.targetTouches[0].clientX,
             y: e.targetTouches[0].clientY
@@ -3192,6 +3259,14 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     };
 
     const onTouchEnd = () => {
+        // Si verrou global sur vertical, reset et ignorer
+        if (globalSwipeLockRef?.current === 'vertical') {
+            touchStartRef.current = { x: null, y: null };
+            swipeDirectionRef.current = null;
+            setOffset(0);
+            return;
+        }
+
         if (swipeDirectionRef.current === 'horizontal' && touchStartRef.current.x !== null) {
             if (offset < -50) {
                 // Déclencher l'animation de sortie vers la gauche
@@ -3362,7 +3437,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     );
 };
 
-const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null }) => {
+const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
     
@@ -3479,6 +3554,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
         if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         if (snapAnimationRef.current) cancelAnimationFrame(snapAnimationRef.current);
+        if (scrubMorphTimeoutRef.current) cancelAnimationFrame(scrubMorphTimeoutRef.current);
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       };
     }, []);
     
@@ -3585,13 +3662,25 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         setScrubMorphProgress(0);
         setIsScrubMorphing(true);
         scrubCenterYRef.current = window.innerHeight * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-        requestAnimationFrame(() => {
-          setScrubMorphProgress(1);
-        });
-        // Désactiver le morphing après la durée de l'animation
-        scrubMorphTimeoutRef.current = setTimeout(() => {
-          setIsScrubMorphing(false);
-        }, CONFIG.BEACON_SCRUB_MORPH_DURATION);
+
+        // Animer progressivement scrubMorphProgress de 0 à 1
+        const startTime = performance.now();
+        const duration = CONFIG.BEACON_SCRUB_MORPH_DURATION;
+
+        const animateMorph = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const rawProgress = Math.min(elapsed / duration, 1);
+
+          setScrubMorphProgress(rawProgress);
+
+          if (rawProgress < 1) {
+            scrubMorphTimeoutRef.current = requestAnimationFrame(animateMorph);
+          } else {
+            setIsScrubMorphing(false);
+          }
+        };
+
+        scrubMorphTimeoutRef.current = requestAnimationFrame(animateMorph);
       }, CONFIG.BEACON_SCRUB_LONG_PRESS_DELAY);
     };
     
@@ -3646,7 +3735,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           setScrollTop(scrubIndex * itemHeight);
         }
         if (scrubMorphTimeoutRef.current) {
-          clearTimeout(scrubMorphTimeoutRef.current);
+          cancelAnimationFrame(scrubMorphTimeoutRef.current);
           scrubMorphTimeoutRef.current = null;
         }
         setScrubMorphProgress(0);
@@ -3746,16 +3835,45 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           );
         })()}
         
-        {/* OVERLAY SCRUBBING - version simple sans morph */}
+        {/* OVERLAY SCRUBBING - avec animation morph */}
         {isScrubbing && effectivePortalRef.current && ReactDOM.createPortal((() => {
           const portalRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
           const containerRect = portalRect;
 
-          // Position fixe au centre (pas de morph)
-          const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-          const centerX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
-          const centerY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-          const thickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+          // Position finale de l'arc (cible)
+          const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+          const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+          const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+          const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+
+          // Position initiale (depuis le beacon) - demi-cercle droit
+          const beaconEl = beaconNeonRef?.current;
+          let initialArcRadius, initialCenterX, initialCenterY, initialThickness;
+
+          if (beaconEl) {
+            const beaconRect = beaconEl.getBoundingClientRect();
+            initialArcRadius = beaconRect.height / 2;
+            initialCenterX = beaconRect.right - initialArcRadius - containerRect.left;
+            initialCenterY = beaconRect.top + initialArcRadius - containerRect.top;
+            initialThickness = 2;
+          } else {
+            // Fallback si pas de beacon ref
+            initialArcRadius = finalArcRadius * 0.1;
+            initialCenterX = containerRect.width * 0.85;
+            initialCenterY = containerRect.height * 0.5;
+            initialThickness = 2;
+          }
+
+          // Interpolation avec easing
+          const t = scrubMorphProgress;
+          const easeOut = t => 1 - Math.pow(1 - t, 3); // Cubic ease-out
+          const progress = easeOut(t);
+
+          // Valeurs interpolées
+          const arcRadius = initialArcRadius + (finalArcRadius - initialArcRadius) * progress;
+          const centerX = initialCenterX + (finalCenterX - initialCenterX) * progress;
+          const centerY = initialCenterY + (finalCenterY - initialCenterY) * progress;
+          const thickness = initialThickness + (finalThickness - initialThickness) * progress;
 
           const totalSongs = queue.length;
 
@@ -3793,66 +3911,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               onTouchMove={handleScrubTouchMove}
               onTouchEnd={handleScrubTouchEnd}
             >
-              {/* DEBUG: Capsule verte (test positionnement avec variables px) */}
-              {(() => {
-                const dpr = window.devicePixelRatio;
-                const screenRealPx = window.innerHeight * dpr;
-                const headerPx = getPlayerHeaderHeightPx();
-                const footerPx = getPlayerFooterHeightPx();
-                const beaconPx = getBeaconHeightPx();
-                const zonePx = screenRealPx - headerPx - footerPx;
-                // Convertir en pixels CSS pour le positionnement
-                const topCss = (headerPx + zonePx / 2 - beaconPx / 2) / dpr;
-                const heightCss = beaconPx / dpr;
-                // Lire safe-area-inset-top directement
-                const safeDiv = document.createElement('div');
-                safeDiv.style.position = 'fixed';
-                safeDiv.style.top = '0';
-                safeDiv.style.height = 'env(safe-area-inset-top, 0px)';
-                safeDiv.style.visibility = 'hidden';
-                document.body.appendChild(safeDiv);
-                const safeAreaTopCss = safeDiv.getBoundingClientRect().height;
-                document.body.removeChild(safeDiv);
-                const safeAreaTopReal = safeAreaTopCss * dpr;
-                // Lire safe-area-inset-bottom
-                const safeDivBottom = document.createElement('div');
-                safeDivBottom.style.position = 'fixed';
-                safeDivBottom.style.bottom = '0';
-                safeDivBottom.style.height = 'env(safe-area-inset-bottom, 0px)';
-                safeDivBottom.style.visibility = 'hidden';
-                document.body.appendChild(safeDivBottom);
-                const safeAreaBottomCss = safeDivBottom.getBoundingClientRect().height;
-                document.body.removeChild(safeDivBottom);
-                return (
-                  <>
-                    <div
-                      className="absolute"
-                      style={{
-                        right: `${(100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2}%`,
-                        top: topCss,
-                        width: heightCss,
-                        height: heightCss,
-                        borderRadius: '50%',
-                        border: '1px solid rgba(34, 197, 94, 1)',
-                        clipPath: 'inset(0 0 0 50%)',
-                      }}
-                    />
-                    {/* DEBUG: Overlay valeurs */}
-                    <div
-                      className="absolute left-4 right-4 bg-black/80 text-white text-xs p-2 rounded"
-                      style={{ bottom: '25%' }}
-                    >
-                      <div>SafeTop: {safeAreaTopReal.toFixed(1)} real px ({safeAreaTopCss.toFixed(1)} css)</div>
-                      <div>Header: {headerPx.toFixed(1)} real px</div>
-                      <div>Footer: {footerPx.toFixed(1)} real px</div>
-                      <div>Beacon: {beaconPx.toFixed(1)} real px</div>
-                      <div>Zone: {zonePx.toFixed(1)} real px</div>
-                      <div>Screen: {screenRealPx.toFixed(1)} real px</div>
-                      <div>DPR: {dpr}</div>
-                    </div>
-                  </>
-                );
-              })()}
               {/* Tube rempli avec glow */}
               <svg
                 className="absolute"
@@ -4041,20 +4099,21 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 ); 
               } else {
                 elements.push(
-                  <SwipeableSongRow 
-                    key={`${song.id}-${index}`} 
-                    song={song} 
-                    index={index} 
-                    isVisualCenter={isCenter} 
-                    queueLength={queue.length} 
-                    itemHeight={itemHeight} 
-                    isMini={isMini} 
+                  <SwipeableSongRow
+                    key={`${song.id}-${index}`}
+                    song={song}
+                    index={index}
+                    isVisualCenter={isCenter}
+                    queueLength={queue.length}
+                    itemHeight={itemHeight}
+                    isMini={isMini}
                     scrollTop={scrollTop}
                     containerHeight={containerHeight}
                     centerPadding={centerPadding}
-                    onClick={() => onSongSelect(song)} 
-                    onSwipeRight={(s) => onReorder(s, 'next')} 
-                    onSwipeLeft={(s) => onReorder(s, 'archive')} 
+                    onClick={() => onSongSelect(song)}
+                    onSwipeRight={(s) => onReorder(s, 'next')}
+                    onSwipeLeft={(s) => onReorder(s, 'archive')}
+                    globalSwipeLockRef={globalSwipeLockRef}
                   />
                 );
               }
@@ -4114,6 +4173,7 @@ export default function App() {
     const [currentSong, setCurrentSong] = useState(null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -4278,6 +4338,7 @@ const handlePlayerTouchEnd = () => {
     const drawerTopPercentRef = useRef(100);
     const [isInTriggerZone, setIsInTriggerZone] = useState(false);
     const isDraggingDrawer = useRef(false);
+    const globalSwipeLockRef = useRef(null); // 'vertical' quand drawer drag actif (y compris inertie)
     const lastOpacityRef = useRef(0);
     const [activeFilter, setActiveFilter] = useState('initialShuffle');
     const [sortDirection, setSortDirection] = useState('asc');
@@ -4414,6 +4475,7 @@ const handlePlayerTouchEnd = () => {
       }
   }, [volume]);
     const savedVolume = useRef(50);
+    const wasPlayingBeforeDuck = useRef(true); // Pour la pré-écoute: mémoriser si le lecteur jouait avant le duck
     const dragStartY = useRef(null);
     const startHeight = useRef(0);
     const drawerRafRef = useRef(null);
@@ -4742,47 +4804,62 @@ useEffect(() => {
     }
   };
 
-  // Ancienne fonction pour les autres cas (duck, fade in)
+  // Ducking pour la pré-écoute
+  // Sur iOS: utilise muted (seule option qui fonctionne)
+  // Sur autres: utilise GainNode pour un vrai ducking progressif
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
 
     if (fadeInterval.current) clearInterval(fadeInterval.current);
 
     const step = 0.05;
-    const intervalTime = 50;
+    const intervalTime = 20;
 
     if (direction === 'duck') {
-        // Duck : baisser le volume SANS couper l'audio
-        savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-        const duckTarget = targetVolume || 0.15;
+        // Mémoriser si le lecteur jouait avant le duck
+        wasPlayingBeforeDuck.current = !audioRef.current.paused;
 
-        fadeInterval.current = setInterval(() => {
-          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol > duckTarget + step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
-              else audioRef.current.volume = currentVol - step;
-          } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = duckTarget;
-              else audioRef.current.volume = duckTarget;
-              clearInterval(fadeInterval.current);
-          }
-        }, 20);
+        // Sur iOS (pas de GainNode), utiliser muted
+        if (isIOSDevice.current || !gainNodeRef.current) {
+            audioRef.current.muted = true;
+            console.log('[fadeMainAudio] iOS duck: muted = true');
+        } else {
+            // Sur desktop/Android: vrai ducking progressif via GainNode
+            savedVolume.current = gainNodeRef.current.gain.value;
+            const duckTarget = targetVolume || 0.15;
+
+            fadeInterval.current = setInterval(() => {
+                const currentVol = gainNodeRef.current.gain.value;
+                if (currentVol > duckTarget + step) {
+                    gainNodeRef.current.gain.value = currentVol - step;
+                } else {
+                    gainNodeRef.current.gain.value = duckTarget;
+                    clearInterval(fadeInterval.current);
+                }
+            }, intervalTime);
+        }
     } else if (direction === 'in') {
-        // Fade In - restaurer le volume
-        if (audioRef.current.paused) {
+        // Sur iOS, unmute
+        if (isIOSDevice.current || !gainNodeRef.current) {
+            audioRef.current.muted = false;
+            console.log('[fadeMainAudio] iOS unduck: muted = false');
+        } else {
+            // Sur desktop/Android: restaurer le volume progressivement
+            fadeInterval.current = setInterval(() => {
+                const currentVol = gainNodeRef.current.gain.value;
+                if (currentVol < savedVolume.current - step) {
+                    gainNodeRef.current.gain.value = currentVol + step;
+                } else {
+                    gainNodeRef.current.gain.value = savedVolume.current;
+                    clearInterval(fadeInterval.current);
+                }
+            }, intervalTime);
+        }
+
+        // Reprendre la lecture si elle était en cours avant le duck
+        if (wasPlayingBeforeDuck.current && audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
-        fadeInterval.current = setInterval(() => {
-          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol < savedVolume.current - step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol + step;
-              else audioRef.current.volume = currentVol + step;
-          } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = savedVolume.current;
-              else audioRef.current.volume = savedVolume.current;
-              clearInterval(fadeInterval.current);
-          }
-        }, intervalTime);
     }
   };
 
@@ -4856,11 +4933,12 @@ useEffect(() => {
         if (vibeTheseSwipeDirectionRef.current === 'horizontal') {
             e.preventDefault();
 
-            if (Math.abs(diffX) < CONFIG.MAX_SWIPE_DISTANCE) {
+            // Utilise VIBE_THESE_SWIPE_DISTANCE pour plus de sensibilité
+            if (Math.abs(diffX) < CONFIG.VIBE_THESE_SWIPE_DISTANCE) {
                 setVibeTheseSwipeOffset(diffX);
 
                 const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.VIBE_THESE_SWIPE_DISTANCE) * 20);
                 const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
                 const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
                 const previewGradient = getGradientByIndex(normalizedPreviewIdx);
@@ -4868,6 +4946,18 @@ useEffect(() => {
 
                 setVibeThesePreviewIndex(normalizedPreviewIdx);
                 setVibeSwipePreview({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
+            } else {
+                // Au-delà de la limite, garder l'offset max mais continuer à calculer les couleurs
+                setVibeTheseSwipeOffset(diffX > 0 ? CONFIG.VIBE_THESE_SWIPE_DISTANCE : -CONFIG.VIBE_THESE_SWIPE_DISTANCE);
+
+                const direction = diffX > 0 ? 1 : -1;
+                const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.VIBE_THESE_SWIPE_DISTANCE) * 20);
+                const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
+                const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
+                const previewGradient = getGradientByIndex(normalizedPreviewIdx);
+
+                setVibeThesePreviewIndex(normalizedPreviewIdx);
+                setVibeSwipePreview({ direction, progress: 1, nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
             }
         }
     };
@@ -5133,16 +5223,7 @@ const vibeSearchResults = () => {
         }
     });
 
-    // Map nom -> vibeId pour trouver vibes existantes
-    const nameToVibeIdMap = new Map();
-    Object.keys(newPlaylists).forEach(vibeId => {
-        const vibe = newPlaylists[vibeId];
-        if (vibe.name) {
-            nameToVibeIdMap.set(vibe.name, vibeId);
-        }
-    });
-
-    // Signatures de vibes existantes
+    // Signatures de vibes existantes (pour éviter doublons de contenu identique)
     const existingVibeSignatures = new Set();
     Object.values(newPlaylists).forEach(vibe => {
         const ids = vibe.songIds || (vibe.songs ? vibe.songs.map(s => s.id) : []);
@@ -5195,29 +5276,20 @@ const vibeSearchResults = () => {
             songIdsForVibe.push(songId);
         });
 
-        // Vérifier doublon de vibe
+        // Vérifier doublon de vibe (même contenu exact = skip)
         const vibeSignature = [...songIdsForVibe].sort().join('|');
         if (vibeSignature && existingVibeSignatures.has(vibeSignature)) {
             return;
         }
         existingVibeSignatures.add(vibeSignature);
 
-        // Chercher vibe existante par nom ou créer nouvelle
-        const existingVibeId = nameToVibeIdMap.get(folderName);
-        if (existingVibeId) {
-            newPlaylists[existingVibeId] = {
-                ...newPlaylists[existingVibeId],
-                songIds: songIdsForVibe
-            };
-        } else {
-            const newVibeId = generateVibeId();
-            newPlaylists[newVibeId] = {
-                name: folderName,
-                songIds: songIdsForVibe
-            };
-            newVibeIds.push(newVibeId);
-            nameToVibeIdMap.set(folderName, newVibeId);
-        }
+        // Toujours créer une nouvelle vibe (les noms peuvent être dupliqués)
+        const newVibeId = generateVibeId();
+        newPlaylists[newVibeId] = {
+            name: folderName,
+            songIds: songIdsForVibe
+        };
+        newVibeIds.push(newVibeId);
     });
 
     // Mettre à jour les états
@@ -5247,6 +5319,8 @@ const vibeSearchResults = () => {
       lastDragY.current = e.touches[0].clientY;
       lastDragTime.current = Date.now();
       dragVelocity.current = 0;
+      // Verrouiller globalement sur vertical pour empêcher les swipes horizontaux parasites
+      globalSwipeLockRef.current = 'vertical';
       if (inertiaRafRef.current) {
         cancelAnimationFrame(inertiaRafRef.current);
         inertiaRafRef.current = null;
@@ -5335,6 +5409,8 @@ const vibeSearchResults = () => {
           const drawerTopY = containerHeight - footerHeight - currentDrawerHeight;
           openFullPlayer(drawerTopY);
           setDashboardHeight(mainContainerRef.current.offsetHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+          // Libérer le verrou global après l'animation d'ouverture
+          setTimeout(() => { globalSwipeLockRef.current = null; }, CONFIG.PLAYER_SLIDE_DURATION);
         } else if (dashboardRef.current && Math.abs(dragVelocity.current) > 0.3) {
           // Appliquer l'inertie si vélocité suffisante (> 0.3 px/ms)
           const containerHeight = mainContainerRef.current.offsetHeight;
@@ -5369,6 +5445,8 @@ const vibeSearchResults = () => {
               inertiaRafRef.current = null;
               openFullPlayer(drawerTopY);
               setDashboardHeight(containerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+              // Libérer le verrou global après l'animation d'ouverture
+              setTimeout(() => { globalSwipeLockRef.current = null; }, CONFIG.PLAYER_SLIDE_DURATION);
               return;
             }
 
@@ -5379,17 +5457,26 @@ const vibeSearchResults = () => {
             if (Math.abs(velocity) > 0.5) {
               inertiaRafRef.current = requestAnimationFrame(animateInertia);
             } else {
-              // Inertie terminée - vérifier si on est dans la zone de trigger
+              // Inertie terminée - libérer le verrou global
+              globalSwipeLockRef.current = null;
               inertiaRafRef.current = null;
               if (topPositionPercent <= CONFIG.BACK_TO_VIBES_TRIGGER_PERCENT) {
                 openFullPlayer(drawerTopY);
                 setDashboardHeight(containerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100));
+                // Re-verrouiller pendant l'animation d'ouverture
+                globalSwipeLockRef.current = 'vertical';
+                setTimeout(() => { globalSwipeLockRef.current = null; }, CONFIG.PLAYER_SLIDE_DURATION);
               }
             }
           };
           inertiaRafRef.current = requestAnimationFrame(animateInertia);
         } else if (dashboardRef.current) {
           setDashboardHeight(dashboardRef.current.offsetHeight);
+          // Pas d'inertie, libérer le verrou immédiatement
+          globalSwipeLockRef.current = null;
+        } else {
+          // Cas de fallback - libérer le verrou
+          globalSwipeLockRef.current = null;
         }
 
         dragStartY.current = null;
@@ -5781,8 +5868,11 @@ const vibeSearchResults = () => {
       }
     });
 
-    // NOTE: On n'utilise PAS seekbackward/seekforward car sur iOS ça cache les boutons Previous/Next
-    // À la place, on utilise seekto pour la barre de progression
+    // Désactiver explicitement seekbackward/seekforward pour forcer iOS à afficher prev/next
+    try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
+    try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
+
+    // seekto pour la barre de progression
     try {
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         console.log('[MediaSession] seekto handler called', details);
@@ -5818,6 +5908,28 @@ const vibeSearchResults = () => {
     const handleLoadedMetadata = () => {
       console.log('[MediaSession] loadedmetadata event');
       updatePositionState();
+      
+      // Re-définir les handlers prev/next pour activer les boutons sur iOS
+      try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
+      
+      // Extraire l'artwork maintenant que l'audio est chargé
+      const song = currentSongRef.current;
+      if (song && !artworkCache.has(song.id)) {
+        const audioSrc = song.file || audio.src;
+        if (audioSrc) {
+          extractArtwork(audioSrc, song.id).then(artworkUrl => {
+            if (artworkUrl && currentSongRef.current?.id === song.id) {
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: song.title || 'Unknown Title',
+                artist: song.artist || 'Unknown Artist',
+                artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
+              });
+              console.log('[MediaSession] artwork set on loadedmetadata for:', song.title);
+            }
+          });
+        }
+      }
     };
 
     audio.addEventListener('play', handlePlay);
@@ -5879,6 +5991,7 @@ const vibeSearchResults = () => {
           });
         }
       }
+
     }
   }, [currentSong]);
 
@@ -6799,7 +6912,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             setPendingVibe(null);
             setConfirmFeedback(null);
             setConfirmSwipeX(0);
-            doLaunchVibe(vibeToLaunch);
+            // Cas spécial: VIBE THESE depuis les résultats de recherche
+            if (vibeToLaunch === '__SEARCH_RESULTS__') {
+                vibeSearchResults();
+            } else {
+                doLaunchVibe(vibeToLaunch);
+            }
         } else if (confirmFeedback?.type === 'nuke') {
             setConfirmOverlayVisible(false);
             setNukeConfirmMode(false);
@@ -7249,19 +7367,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                           <div
-                              className={`absolute inset-0 rounded-full ${!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : ''}`}
+                              className={`absolute inset-0 rounded-full ${builderBtnIgniting ? 'animate-neon-ignite-pink' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
                               style={{
                                   background: 'white',
                                   zIndex: 0
                               }}
                           />
-                          <button 
+                          <button
                               onClick={() => {
                                   if (showImportMenu) return;
                                   setBuilderBtnIgniting(true);
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
-                              }} 
+                              }}
                               className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                           >
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
@@ -7484,8 +7602,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     vibeTheseSwipeDirectionRef.current = null;
                                 }}
                                 onTouchEnd={() => {
-                                    // Changer la couleur si swipe horizontal significatif
-                                    const colorsTraversed = Math.floor((Math.abs(vibeTheseSwipeOffset) / CONFIG.MAX_SWIPE_DISTANCE) * 20);
+                                    // Changer la couleur si swipe horizontal significatif (utilise VIBE_THESE_SWIPE_DISTANCE)
+                                    const colorsTraversed = Math.floor((Math.abs(vibeTheseSwipeOffset) / CONFIG.VIBE_THESE_SWIPE_DISTANCE) * 20);
                                     if (vibeTheseSwipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
                                         const direction = vibeTheseSwipeOffset > 0 ? 1 : -1;
                                         const newIndex = vibeTheseGradientIndex + (direction * colorsTraversed);
@@ -7503,7 +7621,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`
                                 }}
                             >
-                                {/* Bordure overlay - pointillée si dégradé dupliqué, se déplace avec le swipe */}
+                                {/* Bordure overlay - pointillée si dégradé dupliqué, suit le doigt avec limite */}
                                 <div
                                     className="absolute rounded-full pointer-events-none"
                                     style={{
@@ -7515,15 +7633,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             ? '2px dashed rgba(255,255,255,0.7)'
                                             : '2px solid rgba(255,255,255,0.4)',
                                         opacity: vibeTheseSwipeOffset !== 0 ? 1 : 0,
-                                        transform: `translateX(${vibeTheseSwipeOffset * 0.3}px)`,
+                                        transform: `translateX(${Math.max(-CONFIG.VIBE_THESE_MAX_VISUAL_OFFSET, Math.min(CONFIG.VIBE_THESE_MAX_VISUAL_OFFSET, vibeTheseSwipeOffset))}px)`,
                                         transition: vibeTheseSwipeOffset === 0
                                             ? 'transform 0.2s ease-out, opacity 0.15s ease-out'
-                                            : (isVibeTheseCatchingUp ? 'transform 0.12s ease-out, opacity 0.15s ease-out' : 'opacity 0.15s ease-out')
+                                            : 'opacity 0.15s ease-out'
                                     }}
                                 />
+                                {/* Chevron gauche - indicateur swipe (extrémité) */}
+                                <ChevronLeft size={14} className="absolute left-2 text-white/40" strokeWidth={2} />
                                 <FlameWhiteVector size={18} />
                                 <span>VIBE THESE</span>
-                                <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
+                                <span className="font-normal opacity-70 text-xs">({librarySearchResults.length} <Music size={10} className="inline -mt-0.5" />)</span>
+                                {/* Chevron droite - indicateur swipe (extrémité) */}
+                                <ChevronRight size={14} className="absolute right-2 text-white/40" strokeWidth={2} />
                             </button>
                         );
                     })()}
@@ -7719,13 +7841,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 playNext={playNext} 
                                 onReorder={handleReorder} 
                                 visibleItems={Math.max(3, Math.floor((((typeof dashboardHeight === 'number' ? dashboardHeight : window.innerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100)) - (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100) / (window.innerHeight * CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH / 100))))} 
-                                scrollTrigger={scrollTrigger} 
+                                scrollTrigger={scrollTrigger}
                                 isMini={true}
                                 realHeight={(typeof dashboardHeight === 'number' ? dashboardHeight : window.innerHeight * (CONFIG.DRAWER_DEFAULT_HEIGHT_PERCENT / 100)) - (mainContainerRef.current?.offsetHeight || window.innerHeight) * CONFIG.DRAWER_HANDLE_HEIGHT_PERCENT / 100}
                                 portalTarget={mainContainerRef}
                                 beaconNeonRef={drawerBeaconRef}
                                 onCenteredIndexChange={setDrawerCenteredIndex}
                                 initialIndex={playerCenteredIndex}
+                                globalSwipeLockRef={globalSwipeLockRef}
                                 />
                                 </div>
                                 )}
@@ -7755,11 +7878,82 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmMode={false}
                         confirmType={null}
                         vibeSwipePreview={null}
+                        onScrubChange={setIsProgressScrubbing}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
                 </div>
+
+                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
+                {isProgressScrubbing && (
+                    <div
+                        className="absolute left-4 right-4 flex items-center justify-between z-[100]"
+                        style={{
+                            bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
+                            height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
+                            background: CONFIG.SCRUB_OVERLAY_BG,
+                            borderRadius: CONFIG.SCRUB_OVERLAY_BORDER_RADIUS,
+                            padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+                        }}
+                    >
+                        {/* Temps écoulé */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+
+                        {/* Barre de progression visuelle */}
+                        <div
+                            className="flex-1 mx-4 relative"
+                            style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
+                        >
+                            {/* Fond */}
+                            <div
+                                className="absolute inset-0 rounded-full"
+                                style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
+                            />
+                            {/* Remplissage */}
+                            <div
+                                className="absolute left-0 top-0 bottom-0 rounded-full"
+                                style={{
+                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
+                                }}
+                            />
+                            {/* Thumb */}
+                            <div
+                                className="absolute rounded-full"
+                                style={{
+                                    width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
+                                    left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
+                                }}
+                            />
+                        </div>
+
+                        {/* Temps restant */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+                    </div>
+                )}
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
@@ -8282,7 +8476,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} />}</div>
                   </div>
                 )}
         
@@ -8337,11 +8531,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 // === FORMAT BIBLIOTHÈQUE - récupérer les songs pour l'édition ===
                 const editingVibeSongs = isEditMode ? getVibeSongs(editingVibeId) : [];
 
-                // Calculer l'index initial UNE SEULE FOIS au montage
+                // Calculer l'index initial aléatoire parmi les gradients non utilisés
                 const usedIndices = Object.values(vibeColorIndices);
                 const allIndices = Array.from({ length: ALL_GRADIENTS.length }, (_, i) => i);
                 const unusedIndices = allIndices.filter(i => !usedIndices.includes(i));
-                const initialIdx = unusedIndices.length > 0 ? unusedIndices[0] : 0;
+                const initialIdx = unusedIndices.length > 0
+                    ? unusedIndices[Math.floor(Math.random() * unusedIndices.length)]
+                    : Math.floor(Math.random() * ALL_GRADIENTS.length);
 
                 return (
                   <div className="absolute inset-0 z-[200]">
