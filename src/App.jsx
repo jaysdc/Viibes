@@ -831,8 +831,8 @@ const CONFIG = {
     // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
-    TC_SCRUB_LONG_PRESS_MS: 300,          // Durée tap long pour activer scrub (ms)
-    TC_SCRUB_SENSITIVITY: 0.5,            // Secondes par pixel de déplacement
+    TC_SCRUB_LONG_PRESS_MS: 100,          // Durée tap long pour activer scrub (ms)
+    TC_SCRUB_SENSITIVITY: 1.5,            // Secondes par pixel de déplacement
     
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Indicateurs Temps (position relative à la progress bar)
@@ -6152,6 +6152,8 @@ const vibeSearchResults = () => {
     }
   };
   const handleSongEnd = () => {
+    // Ignorer si on est en train de scrubber (évite de passer à la chanson suivante)
+    if (isProgressScrubbing) return;
     if (currentSong) updatePlayCount(currentSong);
     const currentIndex = queue.findIndex(s => s === currentSong);
     if (currentIndex < queue.length - 1) {
