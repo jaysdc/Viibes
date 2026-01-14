@@ -1492,18 +1492,13 @@ const styles = `
   .animate-neon-ignite-yellow { animation: neon-ignite-yellow 0.5s ease-out forwards; }
 
   @keyframes neon-ignite-cyan {
-    0% { 
-      background-color: rgba(50, 50, 50, 0.3);
-      filter: drop-shadow(0 0 0px transparent);
-    }
-    30% { 
-      background-color: rgba(150, 255, 255, 1);
-      filter: drop-shadow(0 0 30px rgba(85, 226, 226, 0.9));
-    }
-    100% { 
-      background-color: rgba(85, 226, 226, 1);
-      filter: drop-shadow(0 0 50px rgba(85, 226, 226, 0.5));
-    }
+    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(0, 255, 255, 0.2), 0 4px 8px rgba(0, 255, 255, 0.2); background-color: #f3f4f6; }
+    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(0, 255, 255, 0.8), 0 7px 15px rgba(0, 255, 255, 0.8); background-color: rgba(150, 255, 255, 1); }
+    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(0, 255, 255, 0.3), 0 5px 10px rgba(0, 255, 255, 0.3); background-color: rgba(120, 255, 255, 0.8); }
+    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(0, 255, 255, 0.9), 0 8px 18px rgba(0, 255, 255, 0.9); background-color: rgba(150, 255, 255, 1); }
+    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(0, 255, 255, 0.5), 0 6px 12px rgba(0, 255, 255, 0.5); background-color: rgba(100, 255, 255, 0.9); }
+    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(0, 255, 255, 0.7), 0 7px 14px rgba(0, 255, 255, 0.7); background-color: rgba(85, 226, 226, 1); }
+    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(0, 255, 255, 0.5), 0 7px 12px rgba(0, 255, 255, 0.5); background-color: #f3f4f6; }
   }
   .animate-neon-ignite-cyan { animation: neon-ignite-cyan 0.5s ease-out forwards; }
 
@@ -1666,16 +1661,16 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
-  /* Cycle: Dossier visible (40%) → fade (10%) → Radar visible (40%) → fade (10%) → repeat */
+  /* Cycle 4s: folder visible 1s (0-25%) → crossfade 1s (25-50%) → radar visible 1s (50-75%) → crossfade 1s (75-100%) */
   @keyframes icon-folder-cycle {
-    0%, 40% { opacity: 1; }
-    50%, 90% { opacity: 0; }
+    0%, 25% { opacity: 1; }
+    50%, 75% { opacity: 0; }
     100% { opacity: 1; }
   }
 
   @keyframes icon-radar-cycle {
-    0%, 40% { opacity: 0; }
-    50%, 90% { opacity: 1; }
+    0%, 25% { opacity: 0; }
+    50%, 75% { opacity: 1; }
     100% { opacity: 0; }
   }
 `;
@@ -2810,9 +2805,10 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         right: `${CONFIG.TC_EDGE_PADDING + CONFIG.TC_SKIP_SIZE + CONFIG.TC_TUBE_GAP}rem`,
                         height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
-                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
-                        opacity: isScrubbing ? 0.3 : 1,
-                        transition: 'opacity 0.2s ease-out'
+                        background: isScrubbing ? '#e5e7eb' : CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
+                        backgroundImage: isScrubbing ? 'radial-gradient(circle, #d1d5db 1px, transparent 1px)' : 'none',
+                        backgroundSize: '6px 6px',
+                        transition: 'background 0.2s ease-out'
                     }}
                 >
                     {/* Zone de touch pour le scrub (pas d'input range pour éviter loupe iOS) */}
@@ -2823,21 +2819,25 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         className="absolute inset-0 w-full h-full cursor-pointer z-20"
                         style={{ touchAction: 'none' }}
                     />
-                    {/* Remplissage rose avec bordure droite */}
-                    <div
-                        className="absolute left-0 top-0 bottom-0 rounded-l-full"
-                        style={{
-                            width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
-                            background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                            borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`,
-                            transition: 'width 0.1s linear'
-                        }}
-                    />
-                    {/* Canvas pour afficher les temps (évite la loupe iOS) */}
-                    <canvas
-                        ref={canvasRef}
-                        className="absolute inset-0 w-full h-full pointer-events-none z-10"
-                    />
+                    {/* Remplissage rose avec bordure droite - caché pendant scrub */}
+                    {!isScrubbing && (
+                        <div
+                            className="absolute left-0 top-0 bottom-0 rounded-l-full"
+                            style={{
+                                width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                                background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`,
+                                transition: 'width 0.1s linear'
+                            }}
+                        />
+                    )}
+                    {/* Canvas pour afficher les temps (évite la loupe iOS) - caché pendant scrub */}
+                    {!isScrubbing && (
+                        <canvas
+                            ref={canvasRef}
+                            className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                        />
+                    )}
                 </div>
 
                 {/* Bouton +10s */}
@@ -5040,7 +5040,7 @@ useEffect(() => {
     return () => element.removeEventListener('touchmove', handleTouchMove);
 }, [vibeTheseGradientIndex, isVibeTheseCatchingUp]);
 
-// Interpolation fluide de la progression du scan
+// Interpolation fluide de la progression du scan - vitesse constante
 useEffect(() => {
     if (dropboxScanProgress === null) {
         setSmoothedScanProgress(null);
@@ -5052,16 +5052,20 @@ useEffect(() => {
         setSmoothedScanProgress(0);
     }
 
-    // Interpoler vers la valeur cible avec easing
+    // Interpoler vers la valeur cible avec vitesse constante (comme l'import)
     const interval = setInterval(() => {
         setSmoothedScanProgress(current => {
-            if (current === null) return dropboxScanProgress;
+            if (current === null) return 0;
             const diff = dropboxScanProgress - current;
             // Si très proche, snap à la cible
-            if (Math.abs(diff) < 0.1) return dropboxScanProgress;
-            // Easing: avancer de 8% de la distance restante (ralentit vers la fin)
-            const next = current + diff * 0.08;
-            return next;
+            if (Math.abs(diff) < 0.5) return dropboxScanProgress;
+            // Vitesse constante: avancer de 0.8% par frame (~48%/s à 60fps)
+            const speed = 0.8;
+            if (diff > 0) {
+                return Math.min(current + speed, dropboxScanProgress);
+            } else {
+                return Math.max(current - speed, dropboxScanProgress);
+            }
         });
     }, 16); // ~60fps
 
@@ -7518,7 +7522,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   WebkitTapHighlightColor: 'transparent',
                                   // Bordure progressive cyan pendant le scan (lissée), sinon bg-gray-100 normal
                                   background: smoothedScanProgress !== null
-                                      ? `conic-gradient(from 0deg, cyan ${smoothedScanProgress * 3.6}deg, transparent ${smoothedScanProgress * 3.6}deg)`
+                                      ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
                                       : (scanCompleteFlash ? undefined : '#f3f4f6')
                               }}
                           >
@@ -7544,8 +7548,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                           width: '100%',
                                           height: '100%',
                                           opacity: dropboxScanProgress !== null ? undefined : 1,
-                                          transition: dropboxScanProgress === null ? 'opacity 0.3s ease-out' : 'none',
-                                          animation: dropboxScanProgress !== null ? 'icon-folder-cycle 2.5s ease-in-out infinite' : 'none'
+                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-folder-cycle 4s ease-in-out infinite' : 'none'
                                       }}
                                   />
                                   <Radar
@@ -7554,8 +7558,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                           width: '100%',
                                           height: '100%',
                                           opacity: dropboxScanProgress !== null ? undefined : 0,
-                                          transition: dropboxScanProgress === null ? 'opacity 0.3s ease-out' : 'none',
-                                          animation: dropboxScanProgress !== null ? 'icon-radar-cycle 2.5s ease-in-out infinite' : 'none'
+                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-radar-cycle 4s ease-in-out infinite' : 'none'
                                       }}
                                   />
                               </div>
@@ -8132,9 +8136,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 right: currentRightPx,
                                 bottom: currentBottomPx,
                                 height: height,
-                                background: '#e5e7eb',
-                                backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
-                                backgroundSize: '8px 8px',
+                                background: CONFIG.SCRUB_OVERLAY_BG,
                                 boxShadow: `0 0 20px rgba(236, 72, 153, ${0.3 + scrubMorphProgress * 0.4}), 0 0 40px rgba(236, 72, 153, ${0.1 + scrubMorphProgress * 0.2}), 0 4px 20px rgba(0, 0, 0, 0.15)`
                             }}
                         >
