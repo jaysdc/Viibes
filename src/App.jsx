@@ -831,7 +831,7 @@ const CONFIG = {
     // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
-    TC_SCRUB_LONG_PRESS_MS: 100,          // Durée tap long pour activer scrub (ms)
+    TC_SCRUB_LONG_PRESS_MS: 50,           // Durée tap long pour activer scrub (ms)
     TC_SCRUB_SENSITIVITY: 1.5,            // Secondes par pixel de déplacement
     
     // ══════════════════════════════════════════════════════════════════════════
