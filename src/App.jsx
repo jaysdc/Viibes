@@ -8034,18 +8034,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const gapWidth = screenWidth * controlBarSpacingPercent / 100;
                         const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
                         const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
+                        const borderWidth = CONFIG.TIMECAPSULE_NEON_ENABLED ? CONFIG.TIMECAPSULE_NEON_WIDTH : 1;
                         // TimeCapsule: left = gapWidth, right = après playPause + recenter + gaps
-                        const tcLeft = gapWidth;
-                        const tcRight = gapWidth * 3 + playPauseWidth + recenterWidth;
+                        // Inset par la bordure pour être à l'intérieur
+                        const tcLeft = gapWidth + borderWidth;
+                        const tcRight = gapWidth * 3 + playPauseWidth + recenterWidth + borderWidth;
+                        const tcTop = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16 + borderWidth;
+                        const tcHeight = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT - borderWidth * 2;
                         return (
                             <div
                                 className="absolute rounded-full"
                                 style={{
                                     left: tcLeft,
                                     right: tcRight,
-                                    top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
-                                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                                    backgroundColor: 'rgba(229, 231, 235, 0.9)',
+                                    top: tcTop,
+                                    height: tcHeight,
+                                    backgroundColor: '#e5e7eb',
                                     backgroundImage: 'radial-gradient(circle, #9ca3af 1px, transparent 1px)',
                                     backgroundSize: '8px 8px',
                                     opacity: scrubMorphProgress,
