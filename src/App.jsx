@@ -818,15 +818,21 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Boutons Skip
     // ══════════════════════════════════════════════════════════════════════════
-    TC_SKIP_SIZE: 1.5,                    // Taille boutons skip = taille icône (rem)
+    TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
+    TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
-    TC_EDGE_PADDING: 0.4,                 // Padding entre bordure capsule et boutons 10s (rem)
-    TC_TUBE_GAP: 0.25,                    // Gap entre boutons 10s et barre de progression (rem)
-
+    TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
+    TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
+    TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
+    
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 0.5,              // Hauteur progress bar (rem)
+    TC_PROGRESS_THUMB_SIZE: 16,           // Taille du thumb rose (px)
+    TC_PROGRESS_TOP_PERCENT: 40,          // Position Y en % (50 = centré verticalement)
+    TC_PROGRESS_LEFT_PERCENT: 20,         // Distance depuis la gauche en %
+    TC_PROGRESS_RIGHT_PERCENT: 20,        // Distance depuis la droite en %
     
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Indicateurs Temps (position relative à la progress bar)
@@ -837,8 +843,10 @@ const CONFIG = {
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
 
     // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
-    SCRUB_OVERLAY_FINAL_OFFSET_REM: 3,    // Distance finale au-dessus du footer (rem)
+    SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
+    SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
     SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
+    SCRUB_OVERLAY_BORDER_RADIUS: 9999,    // Border radius (px, 9999 = full)
     SCRUB_OVERLAY_PADDING_X: 16,          // Padding horizontal (px)
     SCRUB_OVERLAY_TIME_FONT_SIZE: 0.875,  // Taille police temps (rem)
     SCRUB_OVERLAY_TIME_COLOR: '#6b7280',  // Couleur du texte temps (gray-500)
@@ -847,7 +855,6 @@ const CONFIG = {
     SCRUB_OVERLAY_PROGRESS_FILL: '#ec4899', // Couleur remplissage progress (pink-500)
     SCRUB_OVERLAY_THUMB_SIZE: 16,         // Taille du thumb (px)
     SCRUB_OVERLAY_THUMB_COLOR: '#ec4899', // Couleur du thumb (pink-500)
-    SCRUB_OVERLAY_MORPH_DURATION: 200,    // Durée de l'animation morph (ms)
 };
 
 
@@ -1492,13 +1499,18 @@ const styles = `
   .animate-neon-ignite-yellow { animation: neon-ignite-yellow 0.5s ease-out forwards; }
 
   @keyframes neon-ignite-cyan {
-    0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(0, 255, 255, 0.2), 0 4px 8px rgba(0, 255, 255, 0.2); background-color: #f3f4f6; }
-    15% { opacity: 1; box-shadow: 0 -7px 15px rgba(0, 255, 255, 0.8), 0 7px 15px rgba(0, 255, 255, 0.8); background-color: rgba(150, 255, 255, 1); }
-    25% { opacity: 0.4; box-shadow: 0 -5px 10px rgba(0, 255, 255, 0.3), 0 5px 10px rgba(0, 255, 255, 0.3); background-color: rgba(120, 255, 255, 0.8); }
-    40% { opacity: 1; box-shadow: 0 -8px 18px rgba(0, 255, 255, 0.9), 0 8px 18px rgba(0, 255, 255, 0.9); background-color: rgba(150, 255, 255, 1); }
-    55% { opacity: 0.7; box-shadow: 0 -6px 12px rgba(0, 255, 255, 0.5), 0 6px 12px rgba(0, 255, 255, 0.5); background-color: rgba(100, 255, 255, 0.9); }
-    70% { opacity: 1; box-shadow: 0 -7px 14px rgba(0, 255, 255, 0.7), 0 7px 14px rgba(0, 255, 255, 0.7); background-color: rgba(85, 226, 226, 1); }
-    100% { opacity: 1; box-shadow: 0 -7px 12px rgba(0, 255, 255, 0.5), 0 7px 12px rgba(0, 255, 255, 0.5); background-color: #f3f4f6; }
+    0% { 
+      background-color: rgba(50, 50, 50, 0.3);
+      filter: drop-shadow(0 0 0px transparent);
+    }
+    30% { 
+      background-color: rgba(150, 255, 255, 1);
+      filter: drop-shadow(0 0 30px rgba(85, 226, 226, 0.9));
+    }
+    100% { 
+      background-color: rgba(85, 226, 226, 1);
+      filter: drop-shadow(0 0 50px rgba(85, 226, 226, 0.5));
+    }
   }
   .animate-neon-ignite-cyan { animation: neon-ignite-cyan 0.5s ease-out forwards; }
 
@@ -1661,17 +1673,14 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
-  /* Cycle 4s: folder visible 1s (0-25%) → crossfade 1s (25-50%) → radar visible 1s (50-75%) → crossfade 1s (75-100%) */
-  @keyframes icon-folder-cycle {
-    0%, 25% { opacity: 1; }
-    50%, 75% { opacity: 0; }
-    100% { opacity: 1; }
+  @keyframes icon-crossfade-out {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
   }
 
-  @keyframes icon-radar-cycle {
-    0%, 25% { opacity: 0; }
-    50%, 75% { opacity: 1; }
-    100% { opacity: 0; }
+  @keyframes icon-crossfade-in {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 `;
 
@@ -2296,17 +2305,19 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
   const SkipButton = ({ direction, onClick }) => (
     <button
         onClick={onClick}
-        className="relative flex items-center justify-center text-gray-400"
-        style={{ width: `${CONFIG.TC_SKIP_SIZE}rem`, height: `${CONFIG.TC_SKIP_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
+        className="flex items-center justify-center text-gray-400 rounded-full"
+        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
     >
-        {direction === 'back'
-            ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
-            : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
-        }
-        <span
-            className="absolute inset-0 flex items-center justify-center font-bold"
-            style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
-        >10</span>
+        <div className="relative" style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }}>
+            {direction === 'back'
+                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
+                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
+            }
+            <span
+                className="absolute inset-0 flex items-center justify-center font-bold"
+                style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
+            >10</span>
+        </div>
     </button>
 );
 
@@ -2337,7 +2348,7 @@ const RecenterCapsule = ({ onClick }) => (
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
-  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange, isScrubbing,
+  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange,
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
@@ -2364,7 +2375,6 @@ const ControlBar = ({
                 confirmType={confirmType}
                 vibeSwipePreview={vibeSwipePreview}
                 onScrubChange={onScrubChange}
-                isScrubbing={isScrubbing}
             />
             {!vibeSwipePreview && (
                 <>
@@ -2620,92 +2630,8 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, isScrubbing = false }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
-    const tubeRef = useRef(null);
-    const canvasRef = useRef(null);
-
-    // Dessiner les temps sur le canvas
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
-        const rect = canvas.getBoundingClientRect();
-
-        // Ajuster la taille du canvas pour le DPR
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        ctx.scale(dpr, dpr);
-
-        // Effacer le canvas
-        ctx.clearRect(0, 0, rect.width, rect.height);
-
-        const fontSize = CONFIG.TC_TIME_FONT_SIZE * 16; // rem to px
-        ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
-        ctx.textBaseline = 'middle';
-
-        // Temps écoulé (gauche, blanc)
-        ctx.fillStyle = 'white';
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 2;
-        ctx.shadowOffsetY = 1;
-        ctx.textAlign = 'left';
-        ctx.fillText(formatTime(currentTime), 8, rect.height / 2);
-
-        // Temps restant (droite, gris)
-        ctx.fillStyle = '#6b7280';
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.textAlign = 'right';
-        ctx.fillText('-' + formatTime(duration - currentTime), rect.width - 8, rect.height / 2);
-    }, [currentTime, duration]);
-
-    // Empêcher la loupe iOS en bloquant touchend/touchcancel après 100ms
-    useEffect(() => {
-        const tube = tubeRef.current;
-        if (!tube) return;
-
-        let blockEvents = false;
-        let timer = null;
-
-        const onTouchStart = () => {
-            blockEvents = false;
-            timer = setTimeout(() => {
-                blockEvents = true;
-            }, 100);
-        };
-
-        const onTouchEnd = (e) => {
-            if (blockEvents) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            clearTimeout(timer);
-            blockEvents = false;
-        };
-
-        const onTouchCancel = (e) => {
-            if (blockEvents) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            clearTimeout(timer);
-            blockEvents = false;
-        };
-
-        tube.addEventListener('touchstart', onTouchStart, { passive: true });
-        tube.addEventListener('touchend', onTouchEnd, { passive: false });
-        tube.addEventListener('touchcancel', onTouchCancel, { passive: false });
-
-        return () => {
-            tube.removeEventListener('touchstart', onTouchStart);
-            tube.removeEventListener('touchend', onTouchEnd);
-            tube.removeEventListener('touchcancel', onTouchCancel);
-            clearTimeout(timer);
-        };
-    }, []);
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
     if (vibeSwipePreview && vibeSwipePreview.progress > 0) {
@@ -2773,7 +2699,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center shadow-sm relative transition-all duration-200 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             ...glowStyle,
@@ -2782,138 +2708,73 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 : '1px solid rgb(229, 231, 235)'
         }}
       >
-            {/* Overlay gris pointillé qui fade in pendant le scrub */}
-            <div
-                className="absolute inset-0 rounded-full z-50 transition-opacity duration-200"
-                style={{
-                    background: '#e5e7eb',
-                    backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
-                    backgroundSize: '6px 6px',
-                    opacity: isScrubbing ? 1 : 0,
-                    pointerEvents: 'none'
-                }}
-            />
             <div className="w-full h-full relative">
                 {/* Bouton -10s */}
-                <div
+                <div 
                     className="absolute z-20"
-                    style={{
-                        left: `${CONFIG.TC_EDGE_PADDING}rem`,
-                        top: '50%',
+                    style={{ 
+                        left: `${CONFIG.TC_SKIP_BACK_X_PERCENT}%`,
+                        top: `${CONFIG.TC_SKIP_Y_PERCENT}%`,
                         transform: 'translateY(-50%)'
                     }}
                 >
                     <SkipButton direction="back" onClick={onSkipBack} />
                 </div>
-
-                {/* Tube de progression qui se remplit */}
-                <div
-                    ref={tubeRef}
-                    className="absolute z-10 rounded-full overflow-hidden"
+                
+                {/* Progress bar - positionnée en % par rapport à la capsule */}
+                <div 
+                    className="absolute z-10"
                     style={{
-                        top: '50%',
-                        left: `${CONFIG.TC_EDGE_PADDING + CONFIG.TC_SKIP_SIZE + CONFIG.TC_TUBE_GAP}rem`,
-                        right: `${CONFIG.TC_EDGE_PADDING + CONFIG.TC_SKIP_SIZE + CONFIG.TC_TUBE_GAP}rem`,
-                        height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
+                        top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
+                        left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
+                        right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
                         transform: 'translateY(-50%)',
-                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG
                     }}
                 >
-                    {/* Zone de touch pour le scrub (pas d'input range pour éviter loupe iOS) */}
-                    <div
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
+                        onChange={onSeek}
+                        onInput={onSeek}
                         onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true, e); }}
-                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true, e); }}
-                        className="absolute inset-0 w-full h-full cursor-pointer z-20"
-                        style={{ touchAction: 'none' }}
+                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
+                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
+                        className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
+                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
                     />
-                    {/* Contenu caché pendant scrub */}
-                    {!isScrubbing && (() => {
-                        const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-                        return (
-                            <>
-                                {/* Texte noir (couche fond, visible sur zone claire) */}
-                                <div
-                                    className="absolute font-bold font-mono pointer-events-none z-10"
-                                    style={{
-                                        fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                        left: '8px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        color: '#374151'
-                                    }}
-                                >
-                                    {formatTime(currentTime)}
-                                </div>
-                                <div
-                                    className="absolute font-bold font-mono pointer-events-none z-10"
-                                    style={{
-                                        fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                        right: '8px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        color: '#374151'
-                                    }}
-                                >
-                                    -{formatTime(duration - currentTime)}
-                                </div>
-                                {/* Remplissage rose */}
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 rounded-l-full z-15"
-                                    style={{
-                                        width: `${progressPercent}%`,
-                                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                                        borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`,
-                                        transition: 'width 0.1s linear'
-                                    }}
-                                />
-                                {/* Texte blanc (clippé sur la zone rose avec clip-path) */}
-                                <div
-                                    className="absolute inset-0 z-20 pointer-events-none"
-                                    style={{
-                                        clipPath: `inset(0 ${100 - progressPercent}% 0 0)`
-                                    }}
-                                >
-                                    <div
-                                        className="absolute font-bold font-mono"
-                                        style={{
-                                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                            left: '8px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            color: 'white',
-                                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        {formatTime(currentTime)}
-                                    </div>
-                                    <div
-                                        className="absolute font-bold font-mono"
-                                        style={{
-                                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                            right: '8px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            color: 'white',
-                                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        -{formatTime(duration - currentTime)}
-                                    </div>
-                                </div>
-                            </>
-                        );
-                    })()}
+                    {/* Temps - positionnés en % par rapport à la progress bar */}
+                    <div 
+                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
+                        style={{ 
+                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
+                            left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
+                        }}
+                    >
+                        {formatTime(currentTime)}
+                    </div>
+                    <div 
+                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
+                        style={{ 
+                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
+                            right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
+                        }}
+                    >
+                        -{formatTime(duration - currentTime)}
+                    </div>
                 </div>
-
+                
                 {/* Bouton +10s */}
-                <div
+                <div 
                     className="absolute z-20"
-                    style={{
-                        right: `${CONFIG.TC_EDGE_PADDING}rem`,
-                        top: '50%',
+                    style={{ 
+                        right: `${CONFIG.TC_SKIP_FORWARD_X_PERCENT}%`,
+                        top: `${CONFIG.TC_SKIP_Y_PERCENT}%`,
                         transform: 'translateY(-50%)'
                     }}
                 >
@@ -4312,12 +4173,7 @@ export default function App() {
     const [currentSong, setCurrentSong] = useState(null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
-    const durationRef = useRef(0); // Ref pour éviter closure stale dans les handlers
     const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
-    const isProgressScrubbingRef = useRef(false);
-    const [scrubMorphProgress, setScrubMorphProgress] = useState(0); // 0 = footer, 1 = overlay position
-    const scrubMorphAnimRef = useRef(null);
-    const scrubTubeRectRef = useRef(null); // Rectangle du tube au moment du start
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -5110,7 +4966,7 @@ useEffect(() => {
     return () => element.removeEventListener('touchmove', handleTouchMove);
 }, [vibeTheseGradientIndex, isVibeTheseCatchingUp]);
 
-// Interpolation fluide de la progression du scan - vitesse constante
+// Interpolation fluide de la progression du scan
 useEffect(() => {
     if (dropboxScanProgress === null) {
         setSmoothedScanProgress(null);
@@ -5122,20 +4978,16 @@ useEffect(() => {
         setSmoothedScanProgress(0);
     }
 
-    // Interpoler vers la valeur cible avec vitesse constante (comme l'import)
+    // Interpoler vers la valeur cible avec easing
     const interval = setInterval(() => {
         setSmoothedScanProgress(current => {
-            if (current === null) return 0;
+            if (current === null) return dropboxScanProgress;
             const diff = dropboxScanProgress - current;
             // Si très proche, snap à la cible
-            if (Math.abs(diff) < 0.5) return dropboxScanProgress;
-            // Vitesse constante: avancer de 0.8% par frame (~48%/s à 60fps)
-            const speed = 0.8;
-            if (diff > 0) {
-                return Math.min(current + speed, dropboxScanProgress);
-            } else {
-                return Math.max(current - speed, dropboxScanProgress);
-            }
+            if (Math.abs(diff) < 0.1) return dropboxScanProgress;
+            // Easing: avancer de 8% de la distance restante (ralentit vers la fin)
+            const next = current + diff * 0.08;
+            return next;
         });
     }, 16); // ~60fps
 
@@ -6161,13 +6013,12 @@ const vibeSearchResults = () => {
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
-
+    
     const currentTime = audioRef.current.currentTime;
     const duration = audioRef.current.duration || 0;
-
+    
     setProgress(currentTime);
     setDuration(duration);
-    durationRef.current = duration;
     
     // Préchargement du morceau suivant 10 secondes avant la fin
     const timeRemaining = duration - currentTime;
@@ -6207,9 +6058,6 @@ const vibeSearchResults = () => {
     }
   };
   const handleSongEnd = () => {
-    // Ignorer si on est en train de scrubber
-    if (isProgressScrubbingRef.current) return;
-
     if (currentSong) updatePlayCount(currentSong);
     const currentIndex = queue.findIndex(s => s === currentSong);
     if (currentIndex < queue.length - 1) {
@@ -7090,132 +6938,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const playPrev = () => { if (audioRef.current && audioRef.current.currentTime > 3) { audioRef.current.currentTime = 0; return; } const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex > 0) { setCurrentSong(queue[currentIndex - 1]); setScrollTrigger(t => t + 1); } else audioRef.current.currentTime = 0; };
     const skipForward10 = () => { if (audioRef.current) audioRef.current.currentTime += 10; };
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
-
-    // === HANDLER SCRUB OVERLAY MORPH ===
-    const scrubTimeRef = useRef(0); // Temps actuel pendant le scrub (pour éviter closure)
-
-    const handleScrubChange = (isScrubbing, event) => {
-        if (scrubMorphAnimRef.current) {
-            cancelAnimationFrame(scrubMorphAnimRef.current);
-            scrubMorphAnimRef.current = null;
-        }
-
-        if (isScrubbing) {
-            // Stocker la position du tube pour le calcul global
-            if (event?.target) {
-                const tubeContainer = event.target.parentElement;
-                if (tubeContainer) {
-                    scrubTubeRectRef.current = tubeContainer.getBoundingClientRect();
-                }
-            }
-
-            // Handler global pour touch move - scrub ABSOLU (position X = temps)
-            const handleGlobalTouchMove = (e) => {
-                if (!scrubTubeRectRef.current || !audioRef.current) return;
-                const dur = durationRef.current || audioRef.current.duration || 0;
-                if (!dur) return;
-                const touch = e.touches[0];
-                const rect = scrubTubeRectRef.current;
-                const relativeX = Math.max(0, Math.min(rect.width, touch.clientX - rect.left));
-                const newTime = Math.min((relativeX / rect.width) * dur, dur - 0.01);
-                scrubTimeRef.current = newTime;
-                setProgress(newTime);
-            };
-
-            const handleGlobalMouseMove = (e) => {
-                if (!scrubTubeRectRef.current || !audioRef.current) return;
-                const dur = durationRef.current || audioRef.current.duration || 0;
-                if (!dur) return;
-                const rect = scrubTubeRectRef.current;
-                const relativeX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-                const newTime = Math.min((relativeX / rect.width) * dur, dur - 0.01);
-                scrubTimeRef.current = newTime;
-                setProgress(newTime);
-            };
-
-            let safetyInterval = null;
-
-            const handleGlobalEnd = () => {
-                if (safetyInterval) clearInterval(safetyInterval);
-                document.removeEventListener('touchmove', handleGlobalTouchMove);
-                document.removeEventListener('touchend', handleGlobalEnd);
-                document.removeEventListener('touchcancel', handleGlobalEnd);
-                document.removeEventListener('mousemove', handleGlobalMouseMove);
-                document.removeEventListener('mouseup', handleGlobalEnd);
-
-                // Appliquer le temps exact de l'overlay à l'audio
-                if (audioRef.current) {
-                    audioRef.current.currentTime = scrubTimeRef.current;
-                }
-
-                handleScrubChange(false);
-            };
-
-            document.addEventListener('touchmove', handleGlobalTouchMove, { passive: true });
-            document.addEventListener('touchend', handleGlobalEnd);
-            document.addEventListener('touchcancel', handleGlobalEnd);
-            document.addEventListener('mousemove', handleGlobalMouseMove);
-            document.addEventListener('mouseup', handleGlobalEnd);
-
-            // Sécurité: si aucun touch après 2s, forcer la fin
-            safetyInterval = setInterval(() => {
-                // Utiliser un listener temporaire pour vérifier les touches actives
-                const checkHandler = (e) => {
-                    if (!e.touches || e.touches.length === 0) {
-                        handleGlobalEnd();
-                    }
-                };
-                document.addEventListener('touchstart', checkHandler, { once: true, passive: true });
-                setTimeout(() => document.removeEventListener('touchstart', checkHandler), 100);
-            }, 2000);
-
-            // Montrer immédiatement et animer vers le haut
-            isProgressScrubbingRef.current = true;
-            setIsProgressScrubbing(true);
-            const startTime = performance.now();
-            const startProgress = scrubMorphProgress;
-            const animDuration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
-
-            const animateMorphUp = (currentTime) => {
-                const elapsed = currentTime - startTime;
-                const t = Math.min(elapsed / animDuration, 1);
-                const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
-                const newProgress = startProgress + (1 - startProgress) * easeOut;
-                setScrubMorphProgress(newProgress);
-
-                if (t < 1) {
-                    scrubMorphAnimRef.current = requestAnimationFrame(animateMorphUp);
-                }
-            };
-            scrubMorphAnimRef.current = requestAnimationFrame(animateMorphUp);
-        } else {
-            // Nettoyer la ref
-            scrubTubeRectRef.current = null;
-
-            // Animer vers le bas puis cacher
-            const startTime = performance.now();
-            const startProgress = scrubMorphProgress;
-            const animDuration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
-
-            const animateMorphDown = (currentTime) => {
-                const elapsed = currentTime - startTime;
-                const t = Math.min(elapsed / animDuration, 1);
-                const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
-                const newProgress = startProgress * (1 - easeOut);
-                setScrubMorphProgress(newProgress);
-
-                if (t < 1) {
-                    scrubMorphAnimRef.current = requestAnimationFrame(animateMorphDown);
-                } else {
-                    isProgressScrubbingRef.current = false;
-                    setIsProgressScrubbing(false);
-                    setScrubMorphProgress(0);
-                }
-            };
-            scrubMorphAnimRef.current = requestAnimationFrame(animateMorphDown);
-        }
-    };
-
     // === HANDLERS VOLUME SLIDER ===
     const handleVolumeTouchStart = (e) => {
       const touch = e.touches[0];
@@ -7593,29 +7315,29 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
+                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600"
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
                                   // Bordure progressive cyan pendant le scan (lissée), sinon bg-gray-100 normal
                                   background: smoothedScanProgress !== null
-                                      ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
-                                      : (scanCompleteFlash ? undefined : '#f3f4f6')
+                                      ? `conic-gradient(from 0deg, cyan ${smoothedScanProgress * 3.6}deg, transparent ${smoothedScanProgress * 3.6}deg)`
+                                      : (scanCompleteFlash ? 'cyan' : '#f3f4f6'),
+                                  boxShadow: scanCompleteFlash ? '0 0 8px rgba(0,255,255,0.5)' : 'none',
+                                  transition: scanCompleteFlash ? 'box-shadow 0.4s ease-out' : 'none'
                               }}
                           >
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
-                              {!scanCompleteFlash && (
-                                  <div
-                                      className="absolute rounded-full"
-                                      style={{
-                                          top: '1px',
-                                          left: '1px',
-                                          right: '1px',
-                                          bottom: '1px',
-                                          background: '#f3f4f6',
-                                          transition: 'background 0.15s ease-out'
-                                      }}
-                                  />
-                              )}
+                              <div
+                                  className="absolute rounded-full"
+                                  style={{
+                                      top: '1px',
+                                      left: '1px',
+                                      right: '1px',
+                                      bottom: '1px',
+                                      background: scanCompleteFlash ? 'cyan' : '#f3f4f6',
+                                      transition: 'background 0.15s ease-out'
+                                  }}
+                              />
                               {/* Crossfade FolderDown ↔ Radar pendant le scan */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderDown
@@ -7623,9 +7345,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? undefined : 1,
-                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
-                                          animation: dropboxScanProgress !== null ? 'icon-folder-cycle 4s ease-in-out infinite' : 'none'
+                                          opacity: dropboxScanProgress !== null ? 0 : 1,
+                                          transition: 'opacity 0.4s ease-in-out',
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 2.5s ease-in-out infinite' : 'none'
                                       }}
                                   />
                                   <Radar
@@ -7633,9 +7355,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? undefined : 0,
-                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
-                                          animation: dropboxScanProgress !== null ? 'icon-radar-cycle 4s ease-in-out infinite' : 'none'
+                                          opacity: dropboxScanProgress !== null ? 1 : 0,
+                                          transition: 'opacity 0.4s ease-in-out',
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 2.5s ease-in-out infinite' : 'none'
                                       }}
                                   />
                               </div>
@@ -8156,139 +7878,82 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmMode={false}
                         confirmType={null}
                         vibeSwipePreview={null}
-                        onScrubChange={handleScrubChange}
-                        isScrubbing={isProgressScrubbing}
+                        onScrubChange={setIsProgressScrubbing}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
                 </div>
 
-                {/* SCRUB OVERLAY - tube qui morph depuis la position de la TimeCapsule */}
-                {isProgressScrubbing && (() => {
-                    // Position initiale = TimeCapsule (overlay vert)
-                    // Position finale = au-dessus du footer, pleine largeur avec 1rem de marge
-
-                    const screenWidth = window.innerWidth;
-                    const footerPaddingTopPx = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16;
-                    const controlBarSpacingPercent = CONFIG.CONTROL_BAR_SPACING_PERCENT / 4;
-
-                    // Hauteur : même hauteur (FOOTER_BTN_HEIGHT) du début à la fin
-                    const height = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
-
-                    // Bottom : initial dans le footer, final au-dessus
-                    const initialBottomPx = safeAreaBottom + footerPaddingTopPx;
-                    const finalOffsetPx = CONFIG.SCRUB_OVERLAY_FINAL_OFFSET_REM * 16;
-                    const finalBottomPx = safeAreaBottom + footerPaddingTopPx + height + finalOffsetPx;
-                    const currentBottomPx = initialBottomPx + (finalBottomPx - initialBottomPx) * scrubMorphProgress;
-
-                    // Left : convertir % en px pour interpoler
-                    const initialLeftPx = screenWidth * controlBarSpacingPercent / 100;
-                    const finalLeftPx = 16; // 1rem
-                    const currentLeftPx = initialLeftPx + (finalLeftPx - initialLeftPx) * scrubMorphProgress;
-
-                    // Right : convertir calc en px pour interpoler
-                    // Initial right = spacing% + playPauseWidth + spacing% + recenterWidth + spacing%
-                    const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
-                    const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
-                    const initialRightPx = (screenWidth * controlBarSpacingPercent / 100) * 3 + playPauseWidth + recenterWidth;
-                    const finalRightPx = 16; // 1rem
-                    const currentRightPx = initialRightPx + (finalRightPx - initialRightPx) * scrubMorphProgress;
-
-                    // Taille de police: initiale → finale
-                    const initialFontSize = CONFIG.TC_TIME_FONT_SIZE;
-                    const finalFontSize = CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE;
-                    const currentFontSize = initialFontSize + (finalFontSize - initialFontSize) * scrubMorphProgress;
-
-                    const formatTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
-
-                    const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
-
-                    return (
-                        <div
-                            className="absolute z-[100] rounded-full overflow-hidden"
+                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
+                {isProgressScrubbing && (
+                    <div
+                        className="absolute left-4 right-4 flex items-center justify-between z-[100]"
+                        style={{
+                            bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
+                            height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
+                            background: CONFIG.SCRUB_OVERLAY_BG,
+                            borderRadius: CONFIG.SCRUB_OVERLAY_BORDER_RADIUS,
+                            padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+                        }}
+                    >
+                        {/* Temps écoulé */}
+                        <span
+                            className="font-bold font-mono"
                             style={{
-                                left: currentLeftPx,
-                                right: currentRightPx,
-                                bottom: currentBottomPx,
-                                height: height,
-                                background: CONFIG.SCRUB_OVERLAY_BG,
-                                boxShadow: `0 0 20px rgba(236, 72, 153, ${0.3 + scrubMorphProgress * 0.4}), 0 0 40px rgba(236, 72, 153, ${0.1 + scrubMorphProgress * 0.2}), 0 4px 20px rgba(0, 0, 0, 0.15)`
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
                             }}
                         >
-                            {/* Texte noir (couche fond, visible sur zone claire) */}
+                            {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+
+                        {/* Barre de progression visuelle */}
+                        <div
+                            className="flex-1 mx-4 relative"
+                            style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
+                        >
+                            {/* Fond */}
                             <div
-                                className="absolute font-bold font-mono pointer-events-none z-10"
-                                style={{
-                                    fontSize: `${currentFontSize}rem`,
-                                    left: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: '#374151'
-                                }}
-                            >
-                                {formatTime(progress)}
-                            </div>
+                                className="absolute inset-0 rounded-full"
+                                style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
+                            />
+                            {/* Remplissage */}
                             <div
-                                className="absolute font-bold font-mono pointer-events-none z-10"
+                                className="absolute left-0 top-0 bottom-0 rounded-full"
                                 style={{
-                                    fontSize: `${currentFontSize}rem`,
-                                    right: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: '#374151'
-                                }}
-                            >
-                                -{formatTime(duration - progress)}
-                            </div>
-                            {/* Remplissage rose */}
-                            <div
-                                className="absolute left-0 top-0 bottom-0 rounded-l-full z-15"
-                                style={{
-                                    width: `${progressPercent}%`,
                                     background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                                    borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
+                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
                                 }}
                             />
-                            {/* Texte blanc (clippé sur la zone rose avec clip-path) */}
+                            {/* Thumb */}
                             <div
-                                className="absolute inset-0 z-20 pointer-events-none"
+                                className="absolute rounded-full"
                                 style={{
-                                    clipPath: `inset(0 ${100 - progressPercent}% 0 0)`
+                                    width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
+                                    left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
                                 }}
-                            >
-                                <div
-                                    className="absolute font-bold font-mono"
-                                    style={{
-                                        fontSize: `${currentFontSize}rem`,
-                                        left: '12px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        color: 'white',
-                                        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    {formatTime(progress)}
-                                </div>
-                                <div
-                                    className="absolute font-bold font-mono"
-                                    style={{
-                                        fontSize: `${currentFontSize}rem`,
-                                        right: '12px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        color: 'white',
-                                        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    -{formatTime(duration - progress)}
-                                </div>
-                            </div>
+                            />
                         </div>
-                    );
-                })()}
+
+                        {/* Temps restant */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+                    </div>
+                )}
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
