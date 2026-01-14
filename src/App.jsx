@@ -7061,9 +7061,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 setProgress(newTime);
             };
 
+            let safetyInterval = null;
+
             const handleGlobalEnd = () => {
+                if (safetyInterval) clearInterval(safetyInterval);
                 document.removeEventListener('touchmove', handleGlobalTouchMove);
                 document.removeEventListener('touchend', handleGlobalEnd);
+                document.removeEventListener('touchcancel', handleGlobalEnd);
                 document.removeEventListener('mousemove', handleGlobalMouseMove);
                 document.removeEventListener('mouseup', handleGlobalEnd);
                 handleScrubChange(false);
@@ -7071,8 +7075,21 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
             document.addEventListener('touchmove', handleGlobalTouchMove, { passive: true });
             document.addEventListener('touchend', handleGlobalEnd);
+            document.addEventListener('touchcancel', handleGlobalEnd);
             document.addEventListener('mousemove', handleGlobalMouseMove);
             document.addEventListener('mouseup', handleGlobalEnd);
+
+            // Sécurité: si aucun touch après 2s, forcer la fin
+            safetyInterval = setInterval(() => {
+                // Utiliser un listener temporaire pour vérifier les touches actives
+                const checkHandler = (e) => {
+                    if (!e.touches || e.touches.length === 0) {
+                        handleGlobalEnd();
+                    }
+                };
+                document.addEventListener('touchstart', checkHandler, { once: true, passive: true });
+                setTimeout(() => document.removeEventListener('touchstart', checkHandler), 100);
+            }, 2000);
 
             // Montrer immédiatement et animer vers le haut
             setIsProgressScrubbing(true);
@@ -8105,6 +8122,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                     const formatTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
 
+                    const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+
                     return (
                         <div
                             className="absolute z-[100] rounded-full overflow-hidden"
@@ -8113,7 +8132,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 right: currentRightPx,
                                 bottom: currentBottomPx,
                                 height: height,
-                                background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
+                                background: '#e5e7eb',
+                                backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
+                                backgroundSize: '8px 8px',
                                 boxShadow: `0 0 20px rgba(236, 72, 153, ${0.3 + scrubMorphProgress * 0.4}), 0 0 40px rgba(236, 72, 153, ${0.1 + scrubMorphProgress * 0.2}), 0 4px 20px rgba(0, 0, 0, 0.15)`
                             }}
                         >
@@ -8121,32 +8142,63 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <div
                                 className="absolute left-0 top-0 bottom-0 rounded-l-full"
                                 style={{
-                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                    width: `${progressPercent}%`,
                                     background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
                                     borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
                                 }}
                             />
-                            {/* Temps écoulé - dans le tube à gauche */}
+                            {/* Temps écoulé - couche noire (fond) */}
                             <div
-                                className="absolute text-white font-bold font-mono pointer-events-none z-10 flex items-center"
+                                className="absolute font-bold font-mono pointer-events-none z-10 flex items-center"
                                 style={{
                                     fontSize: `${currentFontSize}rem`,
                                     left: '12px',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
-                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                                    color: '#374151'
                                 }}
                             >
                                 {formatTime(progress)}
                             </div>
-                            {/* Temps restant - dans le tube à droite */}
+                            {/* Temps écoulé - couche blanche (clippée sur la zone rose) */}
                             <div
-                                className="absolute text-gray-500 font-bold font-mono pointer-events-none z-10 flex items-center"
+                                className="absolute font-bold font-mono pointer-events-none z-20 flex items-center"
+                                style={{
+                                    fontSize: `${currentFontSize}rem`,
+                                    left: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: 'white',
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                                    clipPath: `inset(0 ${100 - progressPercent}% 0 0)`
+                                }}
+                            >
+                                {formatTime(progress)}
+                            </div>
+                            {/* Temps restant - couche noire (fond) */}
+                            <div
+                                className="absolute font-bold font-mono pointer-events-none z-10 flex items-center"
                                 style={{
                                     fontSize: `${currentFontSize}rem`,
                                     right: '12px',
                                     top: '50%',
-                                    transform: 'translateY(-50%)'
+                                    transform: 'translateY(-50%)',
+                                    color: '#374151'
+                                }}
+                            >
+                                -{formatTime(duration - progress)}
+                            </div>
+                            {/* Temps restant - couche blanche (clippée sur la zone rose) */}
+                            <div
+                                className="absolute font-bold font-mono pointer-events-none z-20 flex items-center"
+                                style={{
+                                    fontSize: `${currentFontSize}rem`,
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: 'white',
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                                    clipPath: `inset(0 ${100 - progressPercent}% 0 0)`
                                 }}
                             >
                                 -{formatTime(duration - progress)}
