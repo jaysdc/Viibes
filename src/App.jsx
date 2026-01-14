@@ -2635,6 +2635,149 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
+// Progress bar custom (sans input range pour éviter la loupe iOS)
+const ProgressBar = ({ currentTime, duration, onSeek, onScrubChange, formatTime }) => {
+    const barRef = useRef(null);
+    const isDragging = useRef(false);
+
+    const calculateTimeFromPosition = (clientX) => {
+        if (!barRef.current || !duration) return null;
+        const rect = barRef.current.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const percent = Math.max(0, Math.min(1, x / rect.width));
+        return percent * duration;
+    };
+
+    const handleInteraction = (clientX) => {
+        const time = calculateTimeFromPosition(clientX);
+        if (time !== null) {
+            // Simuler l'event attendu par onSeek
+            onSeek({ target: { value: time } });
+        }
+    };
+
+    const handleTouchStart = (e) => {
+        e.stopPropagation();
+        isDragging.current = true;
+        if (onScrubChange) onScrubChange(true);
+        handleInteraction(e.touches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isDragging.current) return;
+        handleInteraction(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        isDragging.current = false;
+        if (onScrubChange) onScrubChange(false);
+    };
+
+    const handleMouseDown = (e) => {
+        e.stopPropagation();
+        isDragging.current = true;
+        if (onScrubChange) onScrubChange(true);
+        handleInteraction(e.clientX);
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging.current) return;
+        handleInteraction(e.clientX);
+    };
+
+    const handleMouseUp = () => {
+        isDragging.current = false;
+        if (onScrubChange) onScrubChange(false);
+    };
+
+    // Global mouse events pour le drag en dehors de l'élément
+    useEffect(() => {
+        const onMouseMove = (e) => handleMouseMove(e);
+        const onMouseUp = () => handleMouseUp();
+
+        if (isDragging.current) {
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+        };
+    }, []);
+
+    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+    return (
+        <div
+            className="absolute z-10"
+            style={{
+                top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
+                left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
+                right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
+                transform: 'translateY(-50%)',
+            }}
+        >
+            {/* Barre de progression custom */}
+            <div
+                ref={barRef}
+                className="w-full bg-gray-200 rounded-lg cursor-pointer relative"
+                style={{
+                    height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
+                    touchAction: 'none'
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onMouseDown={handleMouseDown}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Remplissage rose */}
+                <div
+                    className="absolute left-0 top-0 bottom-0 rounded-l-lg"
+                    style={{
+                        width: `${progressPercent}%`,
+                        background: 'linear-gradient(90deg, #ec4899, #f472b6)',
+                        pointerEvents: 'none'
+                    }}
+                />
+                {/* Thumb */}
+                <div
+                    className="absolute top-1/2 -translate-y-1/2 rounded-full bg-pink-500 shadow-md"
+                    style={{
+                        left: `${progressPercent}%`,
+                        width: `${CONFIG.TC_PROGRESS_THUMB_SIZE}px`,
+                        height: `${CONFIG.TC_PROGRESS_THUMB_SIZE}px`,
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                    }}
+                />
+            </div>
+            {/* Temps - positionnés en % par rapport à la progress bar */}
+            <div
+                className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
+                style={{
+                    fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                    top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
+                    left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
+                }}
+            >
+                {formatTime(currentTime)}
+            </div>
+            <div
+                className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
+                style={{
+                    fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                    top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
+                    right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
+                }}
+            >
+                -{formatTime(duration - currentTime)}
+            </div>
+        </div>
+    );
+};
+
 const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     
@@ -2727,52 +2870,13 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 </div>
                 
                 {/* Progress bar - positionnée en % par rapport à la capsule */}
-                <div 
-                    className="absolute z-10"
-                    style={{
-                        top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
-                        left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
-                        right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
-                        transform: 'translateY(-50%)',
-                    }}
-                >
-                    <input
-                        type="range"
-                        min="0"
-                        max={duration || 100}
-                        value={currentTime}
-                        onChange={onSeek}
-                        onInput={onSeek}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
-                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
-                        className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
-                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
-                    />
-                    {/* Temps - positionnés en % par rapport à la progress bar */}
-                    <div 
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
-                            left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
-                        }}
-                    >
-                        {formatTime(currentTime)}
-                    </div>
-                    <div 
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
-                            right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
-                        }}
-                    >
-                        -{formatTime(duration - currentTime)}
-                    </div>
-                </div>
+                <ProgressBar
+                    currentTime={currentTime}
+                    duration={duration}
+                    onSeek={onSeek}
+                    onScrubChange={onScrubChange}
+                    formatTime={formatTime}
+                />
                 
                 {/* Bouton +10s */}
                 <div 
