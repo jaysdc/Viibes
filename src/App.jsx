@@ -2773,19 +2773,27 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center shadow-sm relative transition-all duration-200 overflow-hidden ${isScrubbing ? '' : feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 rounded-full flex items-center shadow-sm relative transition-all duration-200 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             ...glowStyle,
-            background: isScrubbing ? '#e5e7eb' : undefined,
-            backgroundImage: isScrubbing ? 'radial-gradient(circle, #d1d5db 1px, transparent 1px)' : 'none',
-            backgroundSize: '6px 6px',
             border: CONFIG.TIMECAPSULE_NEON_ENABLED
                 ? `${CONFIG.TIMECAPSULE_NEON_WIDTH}px solid ${CONFIG.TIMECAPSULE_NEON_COLOR}`
                 : '1px solid rgb(229, 231, 235)'
         }}
       >
-            <div className="w-full h-full relative" style={{ background: 'transparent' }}>
+            {/* Overlay gris pointillé qui fade in pendant le scrub */}
+            <div
+                className="absolute inset-0 rounded-full z-50 transition-opacity duration-200"
+                style={{
+                    background: '#e5e7eb',
+                    backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
+                    backgroundSize: '6px 6px',
+                    opacity: isScrubbing ? 1 : 0,
+                    pointerEvents: 'none'
+                }}
+            />
+            <div className="w-full h-full relative">
                 {/* Bouton -10s */}
                 <div
                     className="absolute z-20"
@@ -2808,7 +2816,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         right: `${CONFIG.TC_EDGE_PADDING + CONFIG.TC_SKIP_SIZE + CONFIG.TC_TUBE_GAP}rem`,
                         height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
-                        background: isScrubbing ? 'transparent' : CONFIG.SCRUB_OVERLAY_PROGRESS_BG
+                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG
                     }}
                 >
                     {/* Zone de touch pour le scrub (pas d'input range pour éviter loupe iOS) */}
