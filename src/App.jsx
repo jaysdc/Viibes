@@ -818,21 +818,19 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Boutons Skip
     // ══════════════════════════════════════════════════════════════════════════
-    TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
-    TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
+    TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem) - aussi largeur du conteneur
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
-    TC_SKIP_BACK_X_PERCENT: 0,            // Position X bouton -10s (% depuis la gauche)
-    TC_SKIP_FORWARD_X_PERCENT: 0,         // Position X bouton +10s (% depuis la droite)
-    TC_SKIP_Y_PERCENT: 50,                // Position Y boutons skip (% depuis le haut, 50 = centré)
-    
+
     // ══════════════════════════════════════════════════════════════════════════
-    // TIME CAPSULE - Progress Bar (position relative à la capsule)
+    // TIME CAPSULE - Layout horizontal (rem)
+    // ══════════════════════════════════════════════════════════════════════════
+    TC_EDGE_PADDING: 0.4,                 // Marge entre bords capsule et boutons skip (rem)
+    TC_TUBE_GAP: 0.25,                    // Marge entre boutons skip et progress bar (rem)
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
-    TC_PROGRESS_THUMB_SIZE: 16,           // Taille du thumb rose (px)
-    TC_PROGRESS_TOP_PERCENT: 40,          // Position Y en % (50 = centré verticalement)
-    TC_PROGRESS_LEFT_PERCENT: 20,         // Distance depuis la gauche en %
-    TC_PROGRESS_RIGHT_PERCENT: 20,        // Distance depuis la droite en %
     
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Indicateurs Temps (position relative à la progress bar)
@@ -2310,10 +2308,14 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
   const SkipButton = ({ direction, onClick }) => (
     <button
         onClick={onClick}
-        className="flex items-center justify-center text-gray-400 rounded-full"
-        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
+        className="flex items-center justify-center text-gray-400 flex-shrink-0"
+        style={{
+            width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`,
+            height: `${CONFIG.TC_SKIP_ICON_SIZE}rem`,
+            WebkitTapHighlightColor: 'transparent'
+        }}
     >
-        <div className="relative" style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }}>
+        <div className="relative w-full h-full">
             {direction === 'back'
                 ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
                 : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
@@ -2704,133 +2706,112 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 rounded-full flex items-center shadow-sm transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+            paddingLeft: `${CONFIG.TC_EDGE_PADDING}rem`,
+            paddingRight: `${CONFIG.TC_EDGE_PADDING}rem`,
             ...glowStyle,
             border: CONFIG.TIMECAPSULE_NEON_ENABLED
                 ? `${CONFIG.TIMECAPSULE_NEON_WIDTH}px solid ${CONFIG.TIMECAPSULE_NEON_COLOR}`
                 : '1px solid rgb(229, 231, 235)'
         }}
       >
-            <div className="w-full h-full relative">
-                {/* Bouton -10s */}
-                <div 
-                    className="absolute z-20"
-                    style={{ 
-                        left: `${CONFIG.TC_SKIP_BACK_X_PERCENT}%`,
-                        top: `${CONFIG.TC_SKIP_Y_PERCENT}%`,
-                        transform: 'translateY(-50%)'
-                    }}
-                >
-                    <SkipButton direction="back" onClick={onSkipBack} />
-                </div>
-                
-                {/* Progress bar - positionnée en % par rapport à la capsule */}
-                <div
-                    className="absolute z-10"
+            {/* Bouton -10s */}
+            <SkipButton direction="back" onClick={onSkipBack} />
+
+            {/* Progress bar - centrée verticalement, occupe l'espace restant */}
+            <div
+                className="flex-1 relative"
+                style={{
+                    marginLeft: `${CONFIG.TC_TUBE_GAP}rem`,
+                    marginRight: `${CONFIG.TC_TUBE_GAP}rem`,
+                    height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                }}
+            >
+                {/* Input range invisible mais fonctionnel pour le scrub */}
+                <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    value={currentTime}
+                    onChange={onSeek}
+                    onInput={onSeek}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                    onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
+                    onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                    onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
+                    className="absolute inset-0 w-full h-full cursor-pointer z-20"
                     style={{
-                        top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
-                        left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
-                        right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
-                        transform: 'translateY(-50%)',
-                        height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
-                        // Anti-loupe iOS sur le conteneur parent
+                        touchAction: 'none',
+                        opacity: 0,
                         WebkitUserSelect: 'none',
                         userSelect: 'none',
                         WebkitTouchCallout: 'none',
                     }}
-                >
-                    {/* Input range invisible mais fonctionnel pour le scrub */}
-                    <input
-                        type="range"
-                        min="0"
-                        max={duration || 100}
-                        value={currentTime}
-                        onChange={onSeek}
-                        onInput={onSeek}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
-                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
-                        className="absolute inset-0 w-full h-full cursor-pointer z-20"
-                        style={{
-                            touchAction: 'none',
-                            opacity: 0,
-                            WebkitUserSelect: 'none',
-                            userSelect: 'none',
-                            WebkitTouchCallout: 'none',
-                        }}
-                    />
-                    {/* Tube visuel avec remplissage */}
-                    {(() => {
-                        const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-                        return (
+                />
+                {/* Tube visuel avec remplissage */}
+                {(() => {
+                    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+                    return (
+                        <div
+                            className="absolute inset-0 rounded-full overflow-hidden"
+                            style={{
+                                background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            {/* Remplissage rose avec dégradé et bord vertical */}
                             <div
-                                className="absolute inset-0 rounded-full overflow-hidden"
+                                className="absolute left-0 top-0 bottom-0"
                                 style={{
-                                    background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
-                                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+                                    width: `${progressPercent}%`,
+                                    background: 'linear-gradient(180deg, #f472b6 0%, #ec4899 50%, #db2777 100%)',
+                                    borderRight: progressPercent > 0 && progressPercent < 100 ? '2px solid #be185d' : 'none',
+                                    boxShadow: progressPercent > 0 ? 'inset 0 1px 0 rgba(255,255,255,0.3)' : 'none',
+                                }}
+                            />
+                            {/* Texte gris (fond clair) - couche de base */}
+                            <div
+                                className="absolute inset-0 flex items-center justify-between pointer-events-none"
+                                style={{
+                                    padding: '0 8px',
+                                    fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                                    fontFamily: 'ui-monospace, monospace',
+                                    fontWeight: 'bold',
+                                    color: '#6b7280',
                                 }}
                             >
-                                {/* Remplissage rose avec dégradé et bord vertical */}
-                                <div
-                                    className="absolute left-0 top-0 bottom-0"
-                                    style={{
-                                        width: `${progressPercent}%`,
-                                        background: 'linear-gradient(180deg, #f472b6 0%, #ec4899 50%, #db2777 100%)',
-                                        borderRight: progressPercent > 0 && progressPercent < 100 ? '2px solid #be185d' : 'none',
-                                        boxShadow: progressPercent > 0 ? 'inset 0 1px 0 rgba(255,255,255,0.3)' : 'none',
-                                    }}
-                                />
-                                {/* Texte gris (fond clair) - couche de base */}
-                                <div
-                                    className="absolute inset-0 flex items-center justify-between pointer-events-none"
-                                    style={{
-                                        padding: '0 8px',
-                                        fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                        fontFamily: 'ui-monospace, monospace',
-                                        fontWeight: 'bold',
-                                        color: '#6b7280',
-                                    }}
-                                >
-                                    <span>{formatTime(currentTime)}</span>
-                                    <span>-{formatTime(duration - currentTime)}</span>
-                                </div>
-                                {/* Texte blanc (fond rose) - clippé selon la progression */}
-                                <div
-                                    className="absolute inset-0 flex items-center justify-between pointer-events-none"
-                                    style={{
-                                        padding: '0 8px',
-                                        fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                                        fontFamily: 'ui-monospace, monospace',
-                                        fontWeight: 'bold',
-                                        color: 'white',
-                                        textShadow: '0 1px 1px rgba(0,0,0,0.2)',
-                                        clipPath: `inset(0 ${100 - progressPercent}% 0 0)`,
-                                    }}
-                                >
-                                    <span>{formatTime(currentTime)}</span>
-                                    <span>-{formatTime(duration - currentTime)}</span>
-                                </div>
+                                <span>{formatTime(currentTime)}</span>
+                                <span>-{formatTime(duration - currentTime)}</span>
                             </div>
-                        );
-                    })()}
-                </div>
-                
-                {/* Bouton +10s */}
-                <div 
-                    className="absolute z-20"
-                    style={{ 
-                        right: `${CONFIG.TC_SKIP_FORWARD_X_PERCENT}%`,
-                        top: `${CONFIG.TC_SKIP_Y_PERCENT}%`,
-                        transform: 'translateY(-50%)'
-                    }}
-                >
-                    <SkipButton direction="forward" onClick={onSkipForward} />
-                </div>
+                            {/* Texte blanc (fond rose) - clippé selon la progression */}
+                            <div
+                                className="absolute inset-0 flex items-center justify-between pointer-events-none"
+                                style={{
+                                    padding: '0 8px',
+                                    fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                                    fontFamily: 'ui-monospace, monospace',
+                                    fontWeight: 'bold',
+                                    color: 'white',
+                                    textShadow: '0 1px 1px rgba(0,0,0,0.2)',
+                                    clipPath: `inset(0 ${100 - progressPercent}% 0 0)`,
+                                }}
+                            >
+                                <span>{formatTime(currentTime)}</span>
+                                <span>-{formatTime(duration - currentTime)}</span>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
+
+            {/* Bouton +10s */}
+            <SkipButton direction="forward" onClick={onSkipForward} />
         </div>
     );
 };
