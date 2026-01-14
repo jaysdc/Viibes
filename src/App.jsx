@@ -841,6 +841,20 @@ const CONFIG = {
     TC_TIME_Y_PERCENT: 95,               // Position Y en % par rapport à la progress bar
     TC_TIME_ELAPSED_X_PERCENT: 0,         // Position X temps écoulé (0 = gauche)
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
+
+    // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
+    SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
+    SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
+    SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
+    SCRUB_OVERLAY_BORDER_RADIUS: 9999,    // Border radius (px, 9999 = full)
+    SCRUB_OVERLAY_PADDING_X: 16,          // Padding horizontal (px)
+    SCRUB_OVERLAY_TIME_FONT_SIZE: 0.875,  // Taille police temps (rem)
+    SCRUB_OVERLAY_TIME_COLOR: '#6b7280',  // Couleur du texte temps (gray-500)
+    SCRUB_OVERLAY_PROGRESS_HEIGHT: 6,     // Hauteur de la barre de progression (px)
+    SCRUB_OVERLAY_PROGRESS_BG: '#e5e7eb', // Couleur fond progress (gray-200)
+    SCRUB_OVERLAY_PROGRESS_FILL: '#ec4899', // Couleur remplissage progress (pink-500)
+    SCRUB_OVERLAY_THUMB_SIZE: 16,         // Taille du thumb (px)
+    SCRUB_OVERLAY_THUMB_COLOR: '#ec4899', // Couleur du thumb (pink-500)
 };
 
 
@@ -1485,20 +1499,20 @@ const styles = `
   .animate-neon-ignite-yellow { animation: neon-ignite-yellow 0.5s ease-out forwards; }
 
   @keyframes neon-ignite-cyan {
-    0% { 
-      background-color: rgba(50, 50, 50, 0.3);
-      filter: drop-shadow(0 0 0px transparent);
+    0% {
+      background-color: #f3f4f6;
+      box-shadow: 0 0 0px transparent;
     }
-    30% { 
-      background-color: rgba(150, 255, 255, 1);
-      filter: drop-shadow(0 0 30px rgba(85, 226, 226, 0.9));
+    30% {
+      background-color: rgba(0, 255, 255, 1);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), 0 0 50px rgba(0, 255, 255, 0.6);
     }
-    100% { 
-      background-color: rgba(85, 226, 226, 1);
-      filter: drop-shadow(0 0 50px rgba(85, 226, 226, 0.5));
+    100% {
+      background-color: #f3f4f6;
+      box-shadow: 0 0 0px transparent;
     }
   }
-  .animate-neon-ignite-cyan { animation: neon-ignite-cyan 0.5s ease-out forwards; }
+  .animate-neon-ignite-cyan { animation: neon-ignite-cyan 0.6s ease-out forwards; }
 
   @keyframes neon-breathe-orange {
     0%, 100% { box-shadow: 0 -7px 12px rgba(255, 107, 0, 0.45), 0 7px 12px rgba(255, 107, 0, 0.45); transform: scale(1); }
@@ -1659,14 +1673,19 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
-  @keyframes icon-crossfade-out {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
+  /* Cycle 4s: 1s visible folder, 1s fade to radar, 1s visible radar, 1s fade to folder */
+  @keyframes icon-folder-cycle {
+    0%, 25% { opacity: 1; }      /* 0-1s: folder visible */
+    50% { opacity: 0; }          /* 1-2s: fade out */
+    50.1%, 75% { opacity: 0; }   /* 2-3s: folder hidden (radar visible) */
+    100% { opacity: 1; }         /* 3-4s: fade in */
   }
 
-  @keyframes icon-crossfade-in {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+  @keyframes icon-radar-cycle {
+    0%, 25% { opacity: 0; }      /* 0-1s: radar hidden (folder visible) */
+    50% { opacity: 1; }          /* 1-2s: fade in */
+    50.1%, 75% { opacity: 1; }   /* 2-3s: radar visible */
+    100% { opacity: 0; }         /* 3-4s: fade out */
   }
 `;
 
@@ -2334,7 +2353,7 @@ const RecenterCapsule = ({ onClick }) => (
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
-  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview,
+  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange,
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
@@ -2349,17 +2368,18 @@ const ControlBar = ({
                 gap: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
             }}
         >
-            <TimeCapsule 
-                currentTime={currentTime} 
-                duration={duration} 
-                onSeek={onSeek} 
-                onSkipBack={onSkipBack} 
-                onSkipForward={onSkipForward} 
-                isMini={true} 
-                isLive={true} 
+            <TimeCapsule
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={onSeek}
+                onSkipBack={onSkipBack}
+                onSkipForward={onSkipForward}
+                isMini={true}
+                isLive={true}
                 confirmMode={confirmMode}
                 confirmType={confirmType}
                 vibeSwipePreview={vibeSwipePreview}
+                onScrubChange={onScrubChange}
             />
             {!vibeSwipePreview && (
                 <>
@@ -2615,7 +2635,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
@@ -2707,32 +2727,46 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 </div>
                 
                 {/* Progress bar - positionnée en % par rapport à la capsule */}
-                <div 
+                <div
                     className="absolute z-10"
                     style={{
                         top: `${CONFIG.TC_PROGRESS_TOP_PERCENT}%`,
                         left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
                         right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
                         transform: 'translateY(-50%)',
+                        // Anti-loupe iOS sur le conteneur parent
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        WebkitTouchCallout: 'none',
                     }}
                 >
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max={duration || 100} 
-                        value={currentTime} 
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
                         onChange={onSeek}
                         onInput={onSeek}
                         onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
+                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
                         className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
-                        style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
+                        style={{
+                            touchAction: 'none',
+                            height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
+                            '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px`,
+                            // Anti-loupe iOS directement sur l'input
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
+                            WebkitTouchCallout: 'none',
+                        }}
                     />
                     {/* Temps - positionnés en % par rapport à la progress bar */}
-                    <div 
+                    <div
                         className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
+                        style={{
                             fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
                             top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
                             left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
@@ -2740,9 +2774,9 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     >
                         {formatTime(currentTime)}
                     </div>
-                    <div 
+                    <div
                         className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{ 
+                        style={{
                             fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
                             top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
                             right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
@@ -4156,6 +4190,7 @@ export default function App() {
     const [currentSong, setCurrentSong] = useState(null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -4960,15 +4995,16 @@ useEffect(() => {
         setSmoothedScanProgress(0);
     }
 
-    // Interpoler vers la valeur cible avec easing
+    // Interpoler vers la valeur cible à vitesse constante (pas de ralentissement à la fin)
     const interval = setInterval(() => {
         setSmoothedScanProgress(current => {
             if (current === null) return dropboxScanProgress;
             const diff = dropboxScanProgress - current;
             // Si très proche, snap à la cible
-            if (Math.abs(diff) < 0.1) return dropboxScanProgress;
-            // Easing: avancer de 8% de la distance restante (ralentit vers la fin)
-            const next = current + diff * 0.08;
+            if (Math.abs(diff) < 0.5) return dropboxScanProgress;
+            // Vitesse constante: 0.8% par frame (~60fps)
+            const step = 0.8;
+            const next = diff > 0 ? current + step : current - step;
             return next;
         });
     }, 16); // ~60fps
@@ -5974,24 +6010,6 @@ const vibeSearchResults = () => {
         }
       }
 
-      // Re-définir les handlers pour que iOS active les boutons
-      const currentIndex = queueRef.current.findIndex(s => s.id === currentSong.id);
-      const hasPrev = currentIndex > 0;
-      const hasNext = currentIndex < queueRef.current.length - 1;
-      
-      // iOS active les boutons uniquement si les handlers sont définis
-      if (hasPrev) {
-        navigator.mediaSession.setActionHandler('previoustrack', () => {
-          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-          if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
-        });
-      }
-      if (hasNext) {
-        navigator.mediaSession.setActionHandler('nexttrack', () => {
-          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-          if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
-        });
-      }
     }
   }, [currentSong]);
 
@@ -7315,39 +7333,39 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600"
+                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
-                                  // Bordure progressive cyan pendant le scan (lissée), sinon bg-gray-100 normal
+                                  // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
                                   background: smoothedScanProgress !== null
-                                      ? `conic-gradient(from 0deg, cyan ${smoothedScanProgress * 3.6}deg, transparent ${smoothedScanProgress * 3.6}deg)`
-                                      : (scanCompleteFlash ? 'cyan' : '#f3f4f6'),
-                                  boxShadow: scanCompleteFlash ? '0 0 8px rgba(0,255,255,0.5)' : 'none',
-                                  transition: scanCompleteFlash ? 'box-shadow 0.4s ease-out' : 'none'
+                                      ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
+                                      : (scanCompleteFlash ? undefined : '#f3f4f6')
                               }}
                           >
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
-                              <div
-                                  className="absolute rounded-full"
-                                  style={{
-                                      top: '1px',
-                                      left: '1px',
-                                      right: '1px',
-                                      bottom: '1px',
-                                      background: scanCompleteFlash ? 'cyan' : '#f3f4f6',
-                                      transition: 'background 0.15s ease-out'
-                                  }}
-                              />
-                              {/* Crossfade FolderDown ↔ Radar pendant le scan */}
+                              {!scanCompleteFlash && (
+                                  <div
+                                      className="absolute rounded-full"
+                                      style={{
+                                          top: '1px',
+                                          left: '1px',
+                                          right: '1px',
+                                          bottom: '1px',
+                                          background: '#f3f4f6',
+                                          transition: 'background 0.15s ease-out'
+                                      }}
+                                  />
+                              )}
+                              {/* Crossfade FolderDown ↔ Radar pendant le scan (cycle 4s) */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderDown
                                       className="absolute inset-0"
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? 0 : 1,
-                                          transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 2.5s ease-in-out infinite' : 'none'
+                                          opacity: dropboxScanProgress !== null ? undefined : 1,
+                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-folder-cycle 4s ease-in-out infinite' : 'none'
                                       }}
                                   />
                                   <Radar
@@ -7355,9 +7373,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? 1 : 0,
-                                          transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 2.5s ease-in-out infinite' : 'none'
+                                          opacity: dropboxScanProgress !== null ? undefined : 0,
+                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-radar-cycle 4s ease-in-out infinite' : 'none'
                                       }}
                                   />
                               </div>
@@ -7878,11 +7896,82 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmMode={false}
                         confirmType={null}
                         vibeSwipePreview={null}
+                        onScrubChange={setIsProgressScrubbing}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
                 </div>
+
+                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
+                {isProgressScrubbing && (
+                    <div
+                        className="absolute left-4 right-4 flex items-center justify-between z-[100]"
+                        style={{
+                            bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
+                            height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
+                            background: CONFIG.SCRUB_OVERLAY_BG,
+                            borderRadius: CONFIG.SCRUB_OVERLAY_BORDER_RADIUS,
+                            padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+                        }}
+                    >
+                        {/* Temps écoulé */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+
+                        {/* Barre de progression visuelle */}
+                        <div
+                            className="flex-1 mx-4 relative"
+                            style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
+                        >
+                            {/* Fond */}
+                            <div
+                                className="absolute inset-0 rounded-full"
+                                style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
+                            />
+                            {/* Remplissage */}
+                            <div
+                                className="absolute left-0 top-0 bottom-0 rounded-full"
+                                style={{
+                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
+                                }}
+                            />
+                            {/* Thumb */}
+                            <div
+                                className="absolute rounded-full"
+                                style={{
+                                    width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
+                                    left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
+                                }}
+                            />
+                        </div>
+
+                        {/* Temps restant */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+                    </div>
+                )}
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
