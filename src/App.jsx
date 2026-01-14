@@ -1499,20 +1499,20 @@ const styles = `
   .animate-neon-ignite-yellow { animation: neon-ignite-yellow 0.5s ease-out forwards; }
 
   @keyframes neon-ignite-cyan {
-    0% { 
-      background-color: rgba(50, 50, 50, 0.3);
-      filter: drop-shadow(0 0 0px transparent);
+    0% {
+      background-color: #f3f4f6;
+      box-shadow: 0 0 0px transparent;
     }
-    30% { 
-      background-color: rgba(150, 255, 255, 1);
-      filter: drop-shadow(0 0 30px rgba(85, 226, 226, 0.9));
+    30% {
+      background-color: rgba(0, 255, 255, 1);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), 0 0 50px rgba(0, 255, 255, 0.6);
     }
-    100% { 
-      background-color: rgba(85, 226, 226, 1);
-      filter: drop-shadow(0 0 50px rgba(85, 226, 226, 0.5));
+    100% {
+      background-color: #f3f4f6;
+      box-shadow: 0 0 0px transparent;
     }
   }
-  .animate-neon-ignite-cyan { animation: neon-ignite-cyan 0.5s ease-out forwards; }
+  .animate-neon-ignite-cyan { animation: neon-ignite-cyan 0.6s ease-out forwards; }
 
   @keyframes neon-breathe-orange {
     0%, 100% { box-shadow: 0 -7px 12px rgba(255, 107, 0, 0.45), 0 7px 12px rgba(255, 107, 0, 0.45); transform: scale(1); }
@@ -1673,14 +1673,19 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
-  @keyframes icon-crossfade-out {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
+  /* Cycle 4s: 1s visible folder, 1s fade to radar, 1s visible radar, 1s fade to folder */
+  @keyframes icon-folder-cycle {
+    0%, 25% { opacity: 1; }      /* 0-1s: folder visible */
+    50% { opacity: 0; }          /* 1-2s: fade out */
+    50.1%, 75% { opacity: 0; }   /* 2-3s: folder hidden (radar visible) */
+    100% { opacity: 1; }         /* 3-4s: fade in */
   }
 
-  @keyframes icon-crossfade-in {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+  @keyframes icon-radar-cycle {
+    0%, 25% { opacity: 0; }      /* 0-1s: radar hidden (folder visible) */
+    50% { opacity: 1; }          /* 1-2s: fade in */
+    50.1%, 75% { opacity: 1; }   /* 2-3s: radar visible */
+    100% { opacity: 0; }         /* 3-4s: fade out */
   }
 `;
 
@@ -4978,15 +4983,16 @@ useEffect(() => {
         setSmoothedScanProgress(0);
     }
 
-    // Interpoler vers la valeur cible avec easing
+    // Interpoler vers la valeur cible à vitesse constante (pas de ralentissement à la fin)
     const interval = setInterval(() => {
         setSmoothedScanProgress(current => {
             if (current === null) return dropboxScanProgress;
             const diff = dropboxScanProgress - current;
             // Si très proche, snap à la cible
-            if (Math.abs(diff) < 0.1) return dropboxScanProgress;
-            // Easing: avancer de 8% de la distance restante (ralentit vers la fin)
-            const next = current + diff * 0.08;
+            if (Math.abs(diff) < 0.5) return dropboxScanProgress;
+            // Vitesse constante: 0.8% par frame (~60fps)
+            const step = 0.8;
+            const next = diff > 0 ? current + step : current - step;
             return next;
         });
     }, 16); // ~60fps
@@ -7315,39 +7321,39 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className="relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600"
+                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
-                                  // Bordure progressive cyan pendant le scan (lissée), sinon bg-gray-100 normal
+                                  // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
                                   background: smoothedScanProgress !== null
-                                      ? `conic-gradient(from 0deg, cyan ${smoothedScanProgress * 3.6}deg, transparent ${smoothedScanProgress * 3.6}deg)`
-                                      : (scanCompleteFlash ? 'cyan' : '#f3f4f6'),
-                                  boxShadow: scanCompleteFlash ? '0 0 8px rgba(0,255,255,0.5)' : 'none',
-                                  transition: scanCompleteFlash ? 'box-shadow 0.4s ease-out' : 'none'
+                                      ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
+                                      : (scanCompleteFlash ? undefined : '#f3f4f6')
                               }}
                           >
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
-                              <div
-                                  className="absolute rounded-full"
-                                  style={{
-                                      top: '1px',
-                                      left: '1px',
-                                      right: '1px',
-                                      bottom: '1px',
-                                      background: scanCompleteFlash ? 'cyan' : '#f3f4f6',
-                                      transition: 'background 0.15s ease-out'
-                                  }}
-                              />
-                              {/* Crossfade FolderDown ↔ Radar pendant le scan */}
+                              {!scanCompleteFlash && (
+                                  <div
+                                      className="absolute rounded-full"
+                                      style={{
+                                          top: '1px',
+                                          left: '1px',
+                                          right: '1px',
+                                          bottom: '1px',
+                                          background: '#f3f4f6',
+                                          transition: 'background 0.15s ease-out'
+                                      }}
+                                  />
+                              )}
+                              {/* Crossfade FolderDown ↔ Radar pendant le scan (cycle 4s) */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderDown
                                       className="absolute inset-0"
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? 0 : 1,
-                                          transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 2.5s ease-in-out infinite' : 'none'
+                                          opacity: dropboxScanProgress !== null ? undefined : 1,
+                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-folder-cycle 4s ease-in-out infinite' : 'none'
                                       }}
                                   />
                                   <Radar
@@ -7355,9 +7361,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? 1 : 0,
-                                          transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 2.5s ease-in-out infinite' : 'none'
+                                          opacity: dropboxScanProgress !== null ? undefined : 0,
+                                          transition: dropboxScanProgress === null ? 'opacity 0.5s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-radar-cycle 4s ease-in-out infinite' : 'none'
                                       }}
                                   />
                               </div>
