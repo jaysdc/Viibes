@@ -828,7 +828,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
     // ══════════════════════════════════════════════════════════════════════════
-    TC_PROGRESS_HEIGHT: 0.5,              // Hauteur progress bar (rem)
+    TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
     TC_PROGRESS_THUMB_SIZE: 16,           // Taille du thumb rose (px)
     TC_PROGRESS_TOP_PERCENT: 40,          // Position Y en % (50 = centré verticalement)
     TC_PROGRESS_LEFT_PERCENT: 20,         // Distance depuis la gauche en %
