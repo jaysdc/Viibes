@@ -6207,6 +6207,9 @@ const vibeSearchResults = () => {
     }
   };
   const handleSongEnd = () => {
+    // Ignorer si on est en train de scrubber
+    if (isProgressScrubbingRef.current) return;
+
     if (currentSong) updatePlayCount(currentSong);
     const currentIndex = queue.findIndex(s => s === currentSong);
     if (currentIndex < queue.length - 1) {
