@@ -926,9 +926,9 @@ const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false }) => {
     }
     
     return (
-        <div className="flex-1 h-full relative overflow-visible">
+        <div className="flex-1 h-full relative overflow-visible rounded-r-full">
             {/* Masque cylindre - toujours actif car ce bouton est toujours coloré */}
-            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="" />
+            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" />
             {!hideGlow && (
                 <NeonGlow
                     key={animKey}
@@ -937,18 +937,18 @@ const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false }) => {
                     enabled={true}
                     igniteOnMount={true}
                     flickerEnabled={true}
-                    className="absolute inset-0"
+                    className="absolute inset-0 rounded-r-full"
                     style={{
                         background: bgColor,
                         zIndex: 0
                     }}
                 />
             )}
-            <button 
-                onClick={cycleFilter} 
-                className="relative z-10 w-full h-full flex items-center justify-center text-white"
-            > 
-                <Icon style={{ width: CONFIG.HEADER_FILTER_ICON_SIZE, height: CONFIG.HEADER_FILTER_ICON_SIZE }} /> 
+            <button
+                onClick={cycleFilter}
+                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
+            >
+                <Icon style={{ width: CONFIG.HEADER_FILTER_ICON_SIZE, height: CONFIG.HEADER_FILTER_ICON_SIZE }} />
             </button>
         </div>
     );
