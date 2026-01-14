@@ -831,8 +831,8 @@ const CONFIG = {
     TC_PROGRESS_HEIGHT: 0.5,              // Hauteur progress bar (rem)
     TC_PROGRESS_THUMB_SIZE: 16,           // Taille du thumb rose (px)
     TC_PROGRESS_TOP_PERCENT: 40,          // Position Y en % (50 = centré verticalement)
-    TC_PROGRESS_LEFT_PERCENT: 20,         // Distance depuis la gauche en %
-    TC_PROGRESS_RIGHT_PERCENT: 20,        // Distance depuis la droite en %
+    TC_PROGRESS_LEFT_PERCENT: 14,         // Distance depuis la gauche en %
+    TC_PROGRESS_RIGHT_PERCENT: 14,        // Distance depuis la droite en %
     
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Indicateurs Temps (position relative à la progress bar)
@@ -2744,19 +2744,18 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         onChange={onSeek}
                         onInput={onSeek}
                         onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
-                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
-                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
+                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true, e); }}
+                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true, e); }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                         style={{ touchAction: 'none' }}
                     />
-                    {/* Remplissage rose */}
+                    {/* Remplissage rose avec bordure droite */}
                     <div
-                        className="absolute left-0 top-0 bottom-0 rounded-full"
+                        className="absolute left-0 top-0 bottom-0 rounded-l-full"
                         style={{
                             width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
                             background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                            borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`,
                             transition: 'width 0.1s linear'
                         }}
                     />
@@ -4194,6 +4193,7 @@ export default function App() {
     const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
     const [scrubMorphProgress, setScrubMorphProgress] = useState(0); // 0 = footer, 1 = overlay position
     const scrubMorphAnimRef = useRef(null);
+    const scrubTubeRectRef = useRef(null); // Rectangle du tube au moment du start
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -6960,22 +6960,65 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
 
     // === HANDLER SCRUB OVERLAY MORPH ===
-    const handleScrubChange = (isScrubbing) => {
+    const handleScrubChange = (isScrubbing, event) => {
         if (scrubMorphAnimRef.current) {
             cancelAnimationFrame(scrubMorphAnimRef.current);
             scrubMorphAnimRef.current = null;
         }
 
         if (isScrubbing) {
+            // Stocker la position du tube pour le calcul global
+            if (event?.target) {
+                const tubeContainer = event.target.parentElement;
+                if (tubeContainer) {
+                    scrubTubeRectRef.current = tubeContainer.getBoundingClientRect();
+                }
+            }
+
+            // Handler global pour touch move (permet scrub même hors du tube)
+            const handleGlobalTouchMove = (e) => {
+                if (!scrubTubeRectRef.current || !audioRef.current || !duration) return;
+                const touch = e.touches[0];
+                const rect = scrubTubeRectRef.current;
+                const x = touch.clientX;
+                const relativeX = Math.max(0, Math.min(rect.width, x - rect.left));
+                const newTime = (relativeX / rect.width) * duration;
+                audioRef.current.currentTime = newTime;
+                setProgress(newTime);
+            };
+
+            const handleGlobalMouseMove = (e) => {
+                if (!scrubTubeRectRef.current || !audioRef.current || !duration) return;
+                const rect = scrubTubeRectRef.current;
+                const x = e.clientX;
+                const relativeX = Math.max(0, Math.min(rect.width, x - rect.left));
+                const newTime = (relativeX / rect.width) * duration;
+                audioRef.current.currentTime = newTime;
+                setProgress(newTime);
+            };
+
+            const handleGlobalEnd = () => {
+                document.removeEventListener('touchmove', handleGlobalTouchMove);
+                document.removeEventListener('touchend', handleGlobalEnd);
+                document.removeEventListener('mousemove', handleGlobalMouseMove);
+                document.removeEventListener('mouseup', handleGlobalEnd);
+                handleScrubChange(false);
+            };
+
+            document.addEventListener('touchmove', handleGlobalTouchMove, { passive: true });
+            document.addEventListener('touchend', handleGlobalEnd);
+            document.addEventListener('mousemove', handleGlobalMouseMove);
+            document.addEventListener('mouseup', handleGlobalEnd);
+
             // Montrer immédiatement et animer vers le haut
             setIsProgressScrubbing(true);
             const startTime = performance.now();
             const startProgress = scrubMorphProgress;
-            const duration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
+            const animDuration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
 
             const animateMorphUp = (currentTime) => {
                 const elapsed = currentTime - startTime;
-                const t = Math.min(elapsed / duration, 1);
+                const t = Math.min(elapsed / animDuration, 1);
                 const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
                 const newProgress = startProgress + (1 - startProgress) * easeOut;
                 setScrubMorphProgress(newProgress);
@@ -6986,14 +7029,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             };
             scrubMorphAnimRef.current = requestAnimationFrame(animateMorphUp);
         } else {
+            // Nettoyer la ref
+            scrubTubeRectRef.current = null;
+
             // Animer vers le bas puis cacher
             const startTime = performance.now();
             const startProgress = scrubMorphProgress;
-            const duration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
+            const animDuration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
 
             const animateMorphDown = (currentTime) => {
                 const elapsed = currentTime - startTime;
-                const t = Math.min(elapsed / duration, 1);
+                const t = Math.min(elapsed / animDuration, 1);
                 const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
                 const newProgress = startProgress * (1 - easeOut);
                 setScrubMorphProgress(newProgress);
@@ -7989,12 +8035,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.1 + scrubMorphProgress * 0.1})`
                             }}
                         >
-                            {/* Remplissage rose */}
+                            {/* Remplissage rose avec bordure droite */}
                             <div
-                                className="absolute left-0 top-0 bottom-0 rounded-full"
+                                className="absolute left-0 top-0 bottom-0 rounded-l-full"
                                 style={{
                                     width: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
-                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL
+                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                    borderRight: `2px solid ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
                                 }}
                             />
                             {/* Temps écoulé - dans le tube à gauche */}
