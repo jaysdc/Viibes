@@ -2354,17 +2354,6 @@ const ControlBar = ({
                 gap: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
             }}
         >
-            {/* DEBUG: Overlay vert sur TimeCapsule */}
-            <div
-                className="flex-1 rounded-full absolute z-[200] pointer-events-none"
-                style={{
-                    top: 0,
-                    height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                    left: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
-                    right: `calc(${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6}px + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%)`,
-                    background: 'rgba(0, 255, 0, 0.3)'
-                }}
-            />
             <TimeCapsule
                 currentTime={currentTime}
                 duration={duration}
