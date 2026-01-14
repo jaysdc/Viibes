@@ -821,8 +821,8 @@ const CONFIG = {
     TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
     TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
-    TC_SKIP_EDGE_PADDING: 0.25,           // Distance entre bord de la capsule et bouton skip (rem)
-    TC_SKIP_TUBE_GAP: 0.25,               // Distance entre bouton skip et tube de progression (rem)
+    TC_SKIP_EDGE_PADDING: 0.0,           // Distance entre bord de la capsule et bouton skip (rem)
+    TC_SKIP_TUBE_GAP: 0.0,               // Distance entre bouton skip et tube de progression (rem)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
@@ -2361,6 +2361,7 @@ const ControlBar = ({
             <div
                 className="flex-1 rounded-full absolute z-[200] pointer-events-none"
                 style={{
+                    top: 0,
                     height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     left: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
                     right: `calc(${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT} + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${CONFIG.RECENTER_CAPSULE_WIDTH} + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%)`,
@@ -2639,27 +2640,49 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     const tubeRef = useRef(null);
 
-    // Empêcher la loupe iOS sur double-tap
+    // Empêcher la loupe iOS en bloquant touchend/touchcancel après 100ms
     useEffect(() => {
         const tube = tubeRef.current;
         if (!tube) return;
 
-        let dblTapTimer = 0;
-        let dblTapPressed = false;
+        let blockEvents = false;
+        let timer = null;
 
-        const preventDoubleTap = (e) => {
-            clearTimeout(dblTapTimer);
-            if (dblTapPressed) {
-                e.preventDefault();
-                dblTapPressed = false;
-            } else {
-                dblTapPressed = true;
-                dblTapTimer = setTimeout(() => { dblTapPressed = false; }, 500);
-            }
+        const onTouchStart = () => {
+            blockEvents = false;
+            timer = setTimeout(() => {
+                blockEvents = true;
+            }, 100);
         };
 
-        tube.addEventListener('touchstart', preventDoubleTap, { passive: false });
-        return () => tube.removeEventListener('touchstart', preventDoubleTap);
+        const onTouchEnd = (e) => {
+            if (blockEvents) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            clearTimeout(timer);
+            blockEvents = false;
+        };
+
+        const onTouchCancel = (e) => {
+            if (blockEvents) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            clearTimeout(timer);
+            blockEvents = false;
+        };
+
+        tube.addEventListener('touchstart', onTouchStart, { passive: true });
+        tube.addEventListener('touchend', onTouchEnd, { passive: false });
+        tube.addEventListener('touchcancel', onTouchCancel, { passive: false });
+
+        return () => {
+            tube.removeEventListener('touchstart', onTouchStart);
+            tube.removeEventListener('touchend', onTouchEnd);
+            tube.removeEventListener('touchcancel', onTouchCancel);
+            clearTimeout(timer);
+        };
     }, []);
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
