@@ -2734,12 +2734,14 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         left: `${CONFIG.TC_PROGRESS_LEFT_PERCENT}%`,
                         right: `${CONFIG.TC_PROGRESS_RIGHT_PERCENT}%`,
                         transform: 'translateY(-50%)',
+                        height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
                         // Anti-loupe iOS sur le conteneur parent
                         WebkitUserSelect: 'none',
                         userSelect: 'none',
                         WebkitTouchCallout: 'none',
                     }}
                 >
+                    {/* Input range invisible mais fonctionnel pour le scrub */}
                     <input
                         type="range"
                         min="0"
@@ -2752,38 +2754,61 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
                         onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
                         onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
-                        className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
+                        className="absolute inset-0 w-full h-full cursor-pointer z-20"
                         style={{
                             touchAction: 'none',
-                            height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`,
-                            '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px`,
-                            // Anti-loupe iOS directement sur l'input
+                            opacity: 0,
                             WebkitUserSelect: 'none',
                             userSelect: 'none',
                             WebkitTouchCallout: 'none',
                         }}
                     />
-                    {/* Temps - positionnés en % par rapport à la progress bar */}
-                    <div
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
-                            left: `${CONFIG.TC_TIME_ELAPSED_X_PERCENT}%`,
-                        }}
-                    >
-                        {formatTime(currentTime)}
-                    </div>
-                    <div
-                        className="absolute text-gray-400 font-bold font-mono pointer-events-none leading-none"
-                        style={{
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            top: `${CONFIG.TC_TIME_Y_PERCENT}%`,
-                            right: `${100 - CONFIG.TC_TIME_REMAINING_X_PERCENT}%`,
-                        }}
-                    >
-                        -{formatTime(duration - currentTime)}
-                    </div>
+                    {/* Tube visuel avec remplissage */}
+                    {(() => {
+                        const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+                        return (
+                            <div className="absolute inset-0 rounded-full overflow-hidden bg-gray-200">
+                                {/* Remplissage rose avec bord vertical */}
+                                <div
+                                    className="absolute left-0 top-0 bottom-0"
+                                    style={{
+                                        width: `${progressPercent}%`,
+                                        background: '#ec4899',
+                                        borderRight: progressPercent > 0 && progressPercent < 100 ? '2px solid #db2777' : 'none',
+                                    }}
+                                />
+                                {/* Texte noir (fond gris) - couche de base */}
+                                <div
+                                    className="absolute inset-0 flex items-center justify-between pointer-events-none"
+                                    style={{
+                                        padding: '0 8px',
+                                        fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                                        fontFamily: 'ui-monospace, monospace',
+                                        fontWeight: 'bold',
+                                        color: '#374151',
+                                    }}
+                                >
+                                    <span>{formatTime(currentTime)}</span>
+                                    <span>-{formatTime(duration - currentTime)}</span>
+                                </div>
+                                {/* Texte blanc (fond rose) - clippé selon la progression */}
+                                <div
+                                    className="absolute inset-0 flex items-center justify-between pointer-events-none"
+                                    style={{
+                                        padding: '0 8px',
+                                        fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
+                                        fontFamily: 'ui-monospace, monospace',
+                                        fontWeight: 'bold',
+                                        color: 'white',
+                                        clipPath: `inset(0 ${100 - progressPercent}% 0 0)`,
+                                    }}
+                                >
+                                    <span>{formatTime(currentTime)}</span>
+                                    <span>-{formatTime(duration - currentTime)}</span>
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
                 
                 {/* Bouton +10s */}
