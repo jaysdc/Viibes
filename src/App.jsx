@@ -2370,7 +2370,7 @@ const RecenterCapsule = ({ onClick }) => (
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
-  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange,
+  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange, onScrubEndAtEnd,
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
@@ -2397,6 +2397,7 @@ const ControlBar = ({
                 confirmType={confirmType}
                 vibeSwipePreview={vibeSwipePreview}
                 onScrubChange={onScrubChange}
+                onScrubEndAtEnd={onScrubEndAtEnd}
             />
             {!vibeSwipePreview && (
                 <>
@@ -2652,7 +2653,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, onScrubEndAtEnd }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
 
     // États pour le scrub relatif
@@ -2704,8 +2705,13 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         }
 
         if (isScrubbing && scrubPreviewTime !== null) {
-            // Appliquer la position finale
-            if (onSeek) onSeek({ target: { value: scrubPreviewTime } });
+            // Si on relâche à la fin (ou très proche), passer à la chanson suivante
+            if (duration > 0 && scrubPreviewTime >= duration - 0.5) {
+                if (onScrubEndAtEnd) onScrubEndAtEnd();
+            } else {
+                // Appliquer la position finale
+                if (onSeek) onSeek({ target: { value: scrubPreviewTime } });
+            }
         }
 
         setIsScrubbing(false);
@@ -7975,6 +7981,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmType={null}
                         vibeSwipePreview={null}
                         onScrubChange={setIsProgressScrubbing}
+                        onScrubEndAtEnd={playNext}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
