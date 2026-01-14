@@ -2765,14 +2765,12 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
                             }}
                         >
-                            {/* Remplissage rose avec dégradé et bord vertical */}
+                            {/* Remplissage rose flat */}
                             <div
                                 className="absolute left-0 top-0 bottom-0"
                                 style={{
                                     width: `${progressPercent}%`,
-                                    background: 'linear-gradient(180deg, #f472b6 0%, #ec4899 50%, #db2777 100%)',
-                                    borderRight: progressPercent > 0 && progressPercent < 100 ? '2px solid #be185d' : 'none',
-                                    boxShadow: progressPercent > 0 ? 'inset 0 1px 0 rgba(255,255,255,0.3)' : 'none',
+                                    background: '#ec4899',
                                 }}
                             />
                             {/* Texte gris (fond clair) - couche de base */}
@@ -7918,74 +7916,68 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 </div>
 
                 {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
-                {isProgressScrubbing && (
-                    <div
-                        className="absolute left-4 right-4 flex items-center justify-between z-[100]"
-                        style={{
-                            bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
-                            height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
-                            background: CONFIG.SCRUB_OVERLAY_BG,
-                            borderRadius: CONFIG.SCRUB_OVERLAY_BORDER_RADIUS,
-                            padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-                        }}
-                    >
-                        {/* Temps écoulé */}
-                        <span
-                            className="font-bold font-mono"
-                            style={{
-                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
-                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
-                            }}
-                        >
-                            {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
-                        </span>
-
-                        {/* Barre de progression visuelle */}
+                {isProgressScrubbing && (() => {
+                    const scrubProgressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+                    const formatScrubTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
+                    return (
                         <div
-                            className="flex-1 mx-4 relative"
-                            style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
-                        >
-                            {/* Fond */}
-                            <div
-                                className="absolute inset-0 rounded-full"
-                                style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
-                            />
-                            {/* Remplissage */}
-                            <div
-                                className="absolute left-0 top-0 bottom-0 rounded-full"
-                                style={{
-                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
-                                }}
-                            />
-                            {/* Thumb */}
-                            <div
-                                className="absolute rounded-full"
-                                style={{
-                                    width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
-                                    height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
-                                    background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
-                                    left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
-                                    top: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
-                                }}
-                            />
-                        </div>
-
-                        {/* Temps restant */}
-                        <span
-                            className="font-bold font-mono"
+                            className="absolute left-4 right-4 z-[100]"
                             style={{
-                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
-                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                                bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
+                                height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
+                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
                             }}
                         >
-                            -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
-                        </span>
-                    </div>
-                )}
+                            {/* Tube identique à TimeCapsule */}
+                            <div
+                                className="absolute inset-0 rounded-full overflow-hidden"
+                                style={{
+                                    background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
+                                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+                                }}
+                            >
+                                {/* Remplissage rose flat */}
+                                <div
+                                    className="absolute left-0 top-0 bottom-0"
+                                    style={{
+                                        width: `${scrubProgressPercent}%`,
+                                        background: '#ec4899',
+                                    }}
+                                />
+                                {/* Texte gris (fond clair) - couche de base */}
+                                <div
+                                    className="absolute inset-0 flex items-center justify-between pointer-events-none"
+                                    style={{
+                                        padding: '0 12px',
+                                        fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                        fontFamily: 'ui-monospace, monospace',
+                                        fontWeight: 'bold',
+                                        color: '#6b7280',
+                                    }}
+                                >
+                                    <span>{formatScrubTime(progress)}</span>
+                                    <span>-{formatScrubTime(duration - progress)}</span>
+                                </div>
+                                {/* Texte blanc (fond rose) - clippé selon la progression */}
+                                <div
+                                    className="absolute inset-0 flex items-center justify-between pointer-events-none"
+                                    style={{
+                                        padding: '0 12px',
+                                        fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                        fontFamily: 'ui-monospace, monospace',
+                                        fontWeight: 'bold',
+                                        color: 'white',
+                                        textShadow: '0 1px 1px rgba(0,0,0,0.2)',
+                                        clipPath: `inset(0 ${100 - scrubProgressPercent}% 0 0)`,
+                                    }}
+                                >
+                                    <span>{formatScrubTime(progress)}</span>
+                                    <span>-{formatScrubTime(duration - progress)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
