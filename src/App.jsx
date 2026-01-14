@@ -584,8 +584,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     CONTROL_BAR_Y: 50,                  // Position verticale dans le footer (0=bas, 100=haut)
     CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
-    CONTROL_BAR_SPACING_PERCENT: 15,     // Espacement total (% largeur écran) - DEPRECATED
-    CONTROL_BAR_SPACING_REM: 0.4,        // Espacement entre éléments (rem)
+    CONTROL_BAR_PADDING_REM: 0.5,        // Padding horizontal du ControlBar (rem)
+    CONTROL_BAR_GAP_REM: 0.5,            // Gap entre les éléments du ControlBar (rem)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIROIR (Dashboard Drawer)
@@ -2383,8 +2383,8 @@ const ControlBar = ({
             className="absolute left-0 right-0 flex items-start"
             style={{
                 top: UNIFIED_CONFIG.FOOTER_PADDING_TOP,
-                padding: '0 0.5rem',
-                gap: '0.5rem'
+                padding: `0 ${CONFIG.CONTROL_BAR_PADDING_REM}rem`,
+                gap: `${CONFIG.CONTROL_BAR_GAP_REM}rem`
             }}
         >
             <TimeCapsule
@@ -8030,23 +8030,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                     {/* DOTTED OVERLAY sur TimeCapsule pendant le scrub */}
                     {isProgressScrubbing && (() => {
-                        const spacingRem = CONFIG.CONTROL_BAR_SPACING_REM;
-                        const spacingPx = spacingRem * 16;
+                        const paddingRem = CONFIG.CONTROL_BAR_PADDING_REM;
+                        const gapRem = CONFIG.CONTROL_BAR_GAP_REM;
+                        const borderWidth = CONFIG.TIMECAPSULE_NEON_ENABLED ? CONFIG.TIMECAPSULE_NEON_WIDTH : 1;
                         const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
                         const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
-                        const borderWidth = CONFIG.TIMECAPSULE_NEON_ENABLED ? CONFIG.TIMECAPSULE_NEON_WIDTH : 1;
-                        // TimeCapsule: left = spacingPx (padding), right = après playPause + recenter + gaps
-                        // Inset par la bordure pour être à l'intérieur
-                        const tcLeft = spacingPx + borderWidth;
-                        const tcRight = spacingPx * 3 + playPauseWidth + recenterWidth + borderWidth;
                         const tcTop = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16 + borderWidth;
                         const tcHeight = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT - borderWidth * 2;
+                        // left = padding + bordure, width = écran - 2×padding - 2×gap - 2×bordure - recenter - playpause
+                        const tcLeft = `calc(${paddingRem}rem + ${borderWidth}px)`;
+                        const tcWidth = `calc(100vw - ${paddingRem * 2 + gapRem * 2}rem - ${borderWidth * 2 + playPauseWidth + recenterWidth}px)`;
                         return (
                             <div
                                 className="absolute rounded-full"
                                 style={{
                                     left: tcLeft,
-                                    right: tcRight,
+                                    width: tcWidth,
                                     top: tcTop,
                                     height: tcHeight,
                                     backgroundColor: '#e5e7eb',
@@ -8069,7 +8068,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     // Interpolation des positions avec scrubMorphProgress
                     const t = scrubMorphProgress;
                     const footerPaddingTopPx = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16;
-                    const spacingPx = CONFIG.CONTROL_BAR_SPACING_REM * 16;
+                    const paddingPx = CONFIG.CONTROL_BAR_PADDING_REM * 16;
+                    const gapPx = CONFIG.CONTROL_BAR_GAP_REM * 16;
 
                     // Hauteur : même hauteur du début à la fin (FOOTER_BTN_HEIGHT est déjà en px)
                     const height = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
@@ -8080,14 +8080,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const currentBottomPx = initialBottomPx + (finalBottomPx - initialBottomPx) * t;
 
                     // Left : du bord TimeCapsule vers 1rem
-                    const initialLeftPx = spacingPx;
+                    const initialLeftPx = paddingPx;
                     const finalLeftPx = 16; // 1rem
                     const currentLeftPx = initialLeftPx + (finalLeftPx - initialLeftPx) * t;
 
                     // Right : après PlayPause + Recenter + gaps vers 1rem (FOOTER_BTN_HEIGHT est déjà en px)
                     const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
                     const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
-                    const initialRightPx = spacingPx * 3 + playPauseWidth + recenterWidth;
+                    const initialRightPx = paddingPx + gapPx * 2 + playPauseWidth + recenterWidth;
                     const finalRightPx = 16; // 1rem
                     const currentRightPx = initialRightPx + (finalRightPx - initialRightPx) * t;
 
