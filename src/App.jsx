@@ -2785,7 +2785,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 : '1px solid rgb(229, 231, 235)'
         }}
       >
-            <div className="w-full h-full relative">
+            <div className="w-full h-full relative" style={{ background: 'transparent' }}>
                 {/* Bouton -10s */}
                 <div
                     className="absolute z-20"
