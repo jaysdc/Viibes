@@ -1666,17 +1666,17 @@ const styles = `
   }
 
   /* Animations pour le scan Dropbox sur le bouton Import */
-  /* Chaque icône reste visible 40% du temps, transition rapide 10% */
-  @keyframes icon-crossfade-out {
-    0%, 40% { opacity: 0; }
-    50%, 90% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  @keyframes icon-crossfade-in {
+  /* Cycle: Dossier visible (40%) → fade (10%) → Radar visible (40%) → fade (10%) → repeat */
+  @keyframes icon-folder-cycle {
     0%, 40% { opacity: 1; }
     50%, 90% { opacity: 0; }
     100% { opacity: 1; }
+  }
+
+  @keyframes icon-radar-cycle {
+    0%, 40% { opacity: 0; }
+    50%, 90% { opacity: 1; }
+    100% { opacity: 0; }
   }
 `;
 
@@ -7526,10 +7526,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? 0 : 1,
-                                          transition: 'opacity 0.5s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 2.5s ease-in-out infinite' : 'none',
-                                          animationDelay: dropboxScanProgress !== null ? '0.5s' : '0s'
+                                          opacity: dropboxScanProgress !== null ? undefined : 1,
+                                          transition: dropboxScanProgress === null ? 'opacity 0.3s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-folder-cycle 2.5s ease-in-out infinite' : 'none'
                                       }}
                                   />
                                   <Radar
@@ -7537,10 +7536,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       style={{
                                           width: '100%',
                                           height: '100%',
-                                          opacity: dropboxScanProgress !== null ? 1 : 0,
-                                          transition: 'opacity 0.5s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 2.5s ease-in-out infinite' : 'none',
-                                          animationDelay: dropboxScanProgress !== null ? '0.5s' : '0s'
+                                          opacity: dropboxScanProgress !== null ? undefined : 0,
+                                          transition: dropboxScanProgress === null ? 'opacity 0.3s ease-out' : 'none',
+                                          animation: dropboxScanProgress !== null ? 'icon-radar-cycle 2.5s ease-in-out infinite' : 'none'
                                       }}
                                   />
                               </div>
