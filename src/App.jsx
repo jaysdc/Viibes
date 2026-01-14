@@ -6160,11 +6160,14 @@ const vibeSearchResults = () => {
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
-    
+
     const currentTime = audioRef.current.currentTime;
     const duration = audioRef.current.duration || 0;
-    
-    setProgress(currentTime);
+
+    // Ne pas écraser progress pendant le scrub (on le gère manuellement)
+    if (!isProgressScrubbing) {
+        setProgress(currentTime);
+    }
     setDuration(duration);
     durationRef.current = duration;
     
