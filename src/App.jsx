@@ -843,6 +843,7 @@ const CONFIG = {
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
 
     // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
+    SCRUB_OVERLAY_MORPH_DURATION: 200,    // Durée de l'animation morph (ms)
     SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
     SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
     SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
@@ -2662,7 +2663,9 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     const [scrubStartTime, setScrubStartTime] = useState(null);
     const [scrubPreviewTime, setScrubPreviewTime] = useState(null);
     const [scrubAtEnd, setScrubAtEnd] = useState(false); // True si l'utilisateur a scrub jusqu'à la fin
+    const [scrubMorphProgress, setScrubMorphProgress] = useState(0); // 0 à 1 pour l'animation morph
     const longPressTimerRef = useRef(null);
+    const morphAnimationRef = useRef(null);
 
     // Le temps à afficher : preview pendant scrub, sinon currentTime
     const displayTime = isScrubbing && scrubPreviewTime !== null ? scrubPreviewTime : currentTime;
@@ -2680,7 +2683,23 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
             setScrubStartX(startX);
             setScrubStartTime(startTime);
             setScrubPreviewTime(startTime);
-            if (onScrubChange) onScrubChange(true);
+
+            // Démarrer l'animation morph de 0 à 1
+            setScrubMorphProgress(0);
+            if (onScrubChange) onScrubChange(true, 0);
+
+            const morphStartTime = performance.now();
+            const animateMorph = (currentTime) => {
+                const elapsed = currentTime - morphStartTime;
+                const progress = Math.min(elapsed / CONFIG.SCRUB_OVERLAY_MORPH_DURATION, 1);
+                setScrubMorphProgress(progress);
+                if (onScrubChange) onScrubChange(true, progress);
+
+                if (progress < 1) {
+                    morphAnimationRef.current = requestAnimationFrame(animateMorph);
+                }
+            };
+            morphAnimationRef.current = requestAnimationFrame(animateMorph);
         }, CONFIG.TC_SCRUB_LONG_PRESS_MS);
     };
 
@@ -2722,18 +2741,26 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
             }
         }
 
+        // Annuler l'animation morph si en cours
+        if (morphAnimationRef.current) {
+            cancelAnimationFrame(morphAnimationRef.current);
+            morphAnimationRef.current = null;
+        }
+
         setIsScrubbing(false);
         setScrubStartX(null);
         setScrubStartTime(null);
         setScrubPreviewTime(null);
         setScrubAtEnd(false);
-        if (onScrubChange) onScrubChange(false);
+        setScrubMorphProgress(0);
+        if (onScrubChange) onScrubChange(false, 0);
     };
 
     // Cleanup timer on unmount
     useEffect(() => {
         return () => {
             if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+            if (morphAnimationRef.current) cancelAnimationFrame(morphAnimationRef.current);
         };
     }, []);
     
@@ -4282,6 +4309,7 @@ export default function App() {
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
+    const [scrubMorphProgress, setScrubMorphProgress] = useState(0);
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -7989,7 +8017,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmMode={false}
                         confirmType={null}
                         vibeSwipePreview={null}
-                        onScrubChange={setIsProgressScrubbing}
+                        onScrubChange={(isScrubbing, morphProgress) => {
+                            setIsProgressScrubbing(isScrubbing);
+                            setScrubMorphProgress(morphProgress);
+                        }}
                         onScrubEndAtEnd={playNext}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
@@ -7997,16 +8028,57 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                      />
                 </div>
 
-                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
+                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub avec animation morph */}
                 {isProgressScrubbing && (() => {
                     const scrubProgressPercent = duration > 0 ? (progress / duration) * 100 : 0;
                     const formatScrubTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
+
+                    // Interpolation des positions avec scrubMorphProgress
+                    const t = scrubMorphProgress;
+                    const screenWidth = window.innerWidth;
+                    const footerPaddingTopPx = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16;
+                    const controlBarSpacingPercent = CONFIG.CONTROL_BAR_SPACING_PERCENT / 4;
+
+                    // Hauteur : du tube initial vers overlay
+                    const initialHeight = CONFIG.TC_PROGRESS_HEIGHT * 16; // rem -> px
+                    const finalHeight = CONFIG.SCRUB_OVERLAY_HEIGHT_REM * 16;
+                    const currentHeight = initialHeight + (finalHeight - initialHeight) * t;
+
+                    // Bottom : initial dans le footer, final au-dessus
+                    const initialBottomPx = safeAreaBottom + footerPaddingTopPx + (parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 16 - initialHeight) / 2;
+                    const finalBottomPx = safeAreaBottom + footerPaddingTopPx + parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 16 + CONFIG.SCRUB_OVERLAY_OFFSET_REM * 16;
+                    const currentBottomPx = initialBottomPx + (finalBottomPx - initialBottomPx) * t;
+
+                    // Left : du TimeCapsule vers 1rem
+                    const playPauseWidth = parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 16;
+                    const recenterWidth = parseFloat(UNIFIED_CONFIG.FOOTER_BTN_HEIGHT) * 1.6 * 16;
+                    const gapWidth = screenWidth * controlBarSpacingPercent / 100;
+                    // TimeCapsule left = gapWidth + skip button area
+                    const tcEdgePadding = CONFIG.TC_EDGE_PADDING * 16;
+                    const tcTubeGap = CONFIG.TC_TUBE_GAP * 16;
+                    const skipIconSize = CONFIG.TC_SKIP_ICON_SIZE * 16;
+                    const initialLeftPx = gapWidth + tcEdgePadding + skipIconSize + tcTubeGap;
+                    const finalLeftPx = 16; // 1rem
+                    const currentLeftPx = initialLeftPx + (finalLeftPx - initialLeftPx) * t;
+
+                    // Right : du TimeCapsule vers 1rem
+                    const initialRightPx = gapWidth * 3 + playPauseWidth + recenterWidth + tcEdgePadding + skipIconSize + tcTubeGap;
+                    const finalRightPx = 16; // 1rem
+                    const currentRightPx = initialRightPx + (finalRightPx - initialRightPx) * t;
+
+                    // Font size interpolation
+                    const initialFontSize = CONFIG.TC_TIME_FONT_SIZE;
+                    const finalFontSize = CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE;
+                    const currentFontSize = initialFontSize + (finalFontSize - initialFontSize) * t;
+
                     return (
                         <div
-                            className="absolute left-4 right-4 z-[100] rounded-full overflow-hidden scrub-overlay-glow"
+                            className={`absolute z-[100] rounded-full overflow-hidden ${t >= 1 ? 'scrub-overlay-glow' : ''}`}
                             style={{
-                                bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
-                                height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
+                                left: currentLeftPx,
+                                right: currentRightPx,
+                                bottom: currentBottomPx,
+                                height: currentHeight,
                             }}
                         >
                             {/* Tube identique à TimeCapsule */}
@@ -8030,7 +8102,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 flex items-center justify-between pointer-events-none"
                                     style={{
                                         padding: '0 12px',
-                                        fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                        fontSize: `${currentFontSize}rem`,
                                         fontFamily: 'ui-monospace, monospace',
                                         fontWeight: 'bold',
                                         color: '#6b7280',
@@ -8044,7 +8116,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 flex items-center justify-between pointer-events-none"
                                     style={{
                                         padding: '0 12px',
-                                        fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                        fontSize: `${currentFontSize}rem`,
                                         fontFamily: 'ui-monospace, monospace',
                                         fontWeight: 'bold',
                                         color: 'white',
