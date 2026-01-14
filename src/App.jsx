@@ -2767,17 +2767,24 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     {(() => {
                         const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
                         return (
-                            <div className="absolute inset-0 rounded-full overflow-hidden bg-gray-200">
-                                {/* Remplissage rose avec bord vertical */}
+                            <div
+                                className="absolute inset-0 rounded-full overflow-hidden"
+                                style={{
+                                    background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
+                                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+                                }}
+                            >
+                                {/* Remplissage rose avec dégradé et bord vertical */}
                                 <div
                                     className="absolute left-0 top-0 bottom-0"
                                     style={{
                                         width: `${progressPercent}%`,
-                                        background: '#ec4899',
-                                        borderRight: progressPercent > 0 && progressPercent < 100 ? '2px solid #db2777' : 'none',
+                                        background: 'linear-gradient(180deg, #f472b6 0%, #ec4899 50%, #db2777 100%)',
+                                        borderRight: progressPercent > 0 && progressPercent < 100 ? '2px solid #be185d' : 'none',
+                                        boxShadow: progressPercent > 0 ? 'inset 0 1px 0 rgba(255,255,255,0.3)' : 'none',
                                     }}
                                 />
-                                {/* Texte noir (fond gris) - couche de base */}
+                                {/* Texte gris (fond clair) - couche de base */}
                                 <div
                                     className="absolute inset-0 flex items-center justify-between pointer-events-none"
                                     style={{
@@ -2785,7 +2792,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                         fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
                                         fontFamily: 'ui-monospace, monospace',
                                         fontWeight: 'bold',
-                                        color: '#374151',
+                                        color: '#6b7280',
                                     }}
                                 >
                                     <span>{formatTime(currentTime)}</span>
@@ -2800,6 +2807,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                         fontFamily: 'ui-monospace, monospace',
                                         fontWeight: 'bold',
                                         color: 'white',
+                                        textShadow: '0 1px 1px rgba(0,0,0,0.2)',
                                         clipPath: `inset(0 ${100 - progressPercent}% 0 0)`,
                                     }}
                                 >
