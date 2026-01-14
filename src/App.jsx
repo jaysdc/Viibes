@@ -841,6 +841,20 @@ const CONFIG = {
     TC_TIME_Y_PERCENT: 95,               // Position Y en % par rapport à la progress bar
     TC_TIME_ELAPSED_X_PERCENT: 0,         // Position X temps écoulé (0 = gauche)
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
+
+    // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
+    SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
+    SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
+    SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
+    SCRUB_OVERLAY_BORDER_RADIUS: 9999,    // Border radius (px, 9999 = full)
+    SCRUB_OVERLAY_PADDING_X: 16,          // Padding horizontal (px)
+    SCRUB_OVERLAY_TIME_FONT_SIZE: 0.875,  // Taille police temps (rem)
+    SCRUB_OVERLAY_TIME_COLOR: '#6b7280',  // Couleur du texte temps (gray-500)
+    SCRUB_OVERLAY_PROGRESS_HEIGHT: 6,     // Hauteur de la barre de progression (px)
+    SCRUB_OVERLAY_PROGRESS_BG: '#e5e7eb', // Couleur fond progress (gray-200)
+    SCRUB_OVERLAY_PROGRESS_FILL: '#ec4899', // Couleur remplissage progress (pink-500)
+    SCRUB_OVERLAY_THUMB_SIZE: 16,         // Taille du thumb (px)
+    SCRUB_OVERLAY_THUMB_COLOR: '#ec4899', // Couleur du thumb (pink-500)
 };
 
 
@@ -2334,7 +2348,7 @@ const RecenterCapsule = ({ onClick }) => (
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
 const ControlBar = ({
   // TimeCapsule props
-  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview,
+  currentTime, duration, onSeek, onSkipBack, onSkipForward, confirmMode, confirmType, vibeSwipePreview, onScrubChange,
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
@@ -2349,17 +2363,18 @@ const ControlBar = ({
                 gap: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`
             }}
         >
-            <TimeCapsule 
-                currentTime={currentTime} 
-                duration={duration} 
-                onSeek={onSeek} 
-                onSkipBack={onSkipBack} 
-                onSkipForward={onSkipForward} 
-                isMini={true} 
-                isLive={true} 
+            <TimeCapsule
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={onSeek}
+                onSkipBack={onSkipBack}
+                onSkipForward={onSkipForward}
+                isMini={true}
+                isLive={true}
                 confirmMode={confirmMode}
                 confirmType={confirmType}
                 vibeSwipePreview={vibeSwipePreview}
+                onScrubChange={onScrubChange}
             />
             {!vibeSwipePreview && (
                 <>
@@ -2615,7 +2630,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     
     // MODE SWIPE PREVIEW - affichage progressif NEXT/PREVIOUS COLOR (PLEINE LARGEUR)
@@ -2716,16 +2731,18 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                         transform: 'translateY(-50%)',
                     }}
                 >
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max={duration || 100} 
-                        value={currentTime} 
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
                         onChange={onSeek}
                         onInput={onSeek}
                         onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onMouseUp={() => { if (onScrubChange) onScrubChange(false); }}
+                        onTouchStart={(e) => { e.stopPropagation(); if (onScrubChange) onScrubChange(true); }}
+                        onTouchEnd={() => { if (onScrubChange) onScrubChange(false); }}
                         className="w-full bg-gray-200 rounded-lg appearance-none cursor-pointer slider-rose transition-all"
                         style={{ touchAction: 'none', height: `${CONFIG.TC_PROGRESS_HEIGHT}rem`, '--slider-thumb-size': `${CONFIG.TC_PROGRESS_THUMB_SIZE}px` }}
                     />
@@ -4156,6 +4173,7 @@ export default function App() {
     const [currentSong, setCurrentSong] = useState(null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -7878,11 +7896,82 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmMode={false}
                         confirmType={null}
                         vibeSwipePreview={null}
+                        onScrubChange={setIsProgressScrubbing}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
                 </div>
+
+                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
+                {isProgressScrubbing && (
+                    <div
+                        className="absolute left-4 right-4 flex items-center justify-between z-[100]"
+                        style={{
+                            bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
+                            height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
+                            background: CONFIG.SCRUB_OVERLAY_BG,
+                            borderRadius: CONFIG.SCRUB_OVERLAY_BORDER_RADIUS,
+                            padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+                        }}
+                    >
+                        {/* Temps écoulé */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+
+                        {/* Barre de progression visuelle */}
+                        <div
+                            className="flex-1 mx-4 relative"
+                            style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
+                        >
+                            {/* Fond */}
+                            <div
+                                className="absolute inset-0 rounded-full"
+                                style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
+                            />
+                            {/* Remplissage */}
+                            <div
+                                className="absolute left-0 top-0 bottom-0 rounded-full"
+                                style={{
+                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
+                                }}
+                            />
+                            {/* Thumb */}
+                            <div
+                                className="absolute rounded-full"
+                                style={{
+                                    width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                    background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
+                                    left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
+                                }}
+                            />
+                        </div>
+
+                        {/* Temps restant */}
+                        <span
+                            className="font-bold font-mono"
+                            style={{
+                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                            }}
+                        >
+                            -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                        </span>
+                    </div>
+                )}
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
