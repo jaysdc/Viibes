@@ -7143,10 +7143,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 document.removeEventListener('mousemove', handleGlobalMouseMove);
                 document.removeEventListener('mouseup', handleGlobalEnd);
 
-                // Appliquer le temps final au moment du relâchement
-                if (audioRef.current && progress !== undefined) {
-                    audioRef.current.currentTime = progress;
-                }
+                // Le temps est déjà à jour dans audioRef.current.currentTime
+                // (mis à jour dans handleGlobalTouchMove/MouseMove)
 
                 handleScrubChange(false);
             };
