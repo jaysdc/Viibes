@@ -818,11 +818,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Boutons Skip
     // ══════════════════════════════════════════════════════════════════════════
-    TC_SKIP_BUTTON_SIZE: 2.25,             // Taille boutons skip (rem)
-    TC_SKIP_ICON_SIZE: 1.5,               // Taille icône dans bouton (rem)
+    TC_SKIP_SIZE: 1.5,                    // Taille boutons skip = taille icône (rem)
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
-    TC_SKIP_EDGE_PADDING: 0.0,           // Distance entre bord de la capsule et bouton skip (rem)
-    TC_SKIP_TUBE_GAP: 0.0,               // Distance entre bouton skip et tube de progression (rem)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
@@ -2299,19 +2296,17 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
   const SkipButton = ({ direction, onClick }) => (
     <button
         onClick={onClick}
-        className="flex items-center justify-center text-gray-400 rounded-full"
-        style={{ width: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, height: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
+        className="relative flex items-center justify-center text-gray-400"
+        style={{ width: `${CONFIG.TC_SKIP_SIZE}rem`, height: `${CONFIG.TC_SKIP_SIZE}rem`, WebkitTapHighlightColor: 'transparent' }}
     >
-        <div className="relative" style={{ width: `${CONFIG.TC_SKIP_ICON_SIZE}rem`, height: `${CONFIG.TC_SKIP_ICON_SIZE}rem` }}>
-            {direction === 'back'
-                ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
-                : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
-            }
-            <span
-                className="absolute inset-0 flex items-center justify-center font-bold"
-                style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
-            >10</span>
-        </div>
+        {direction === 'back'
+            ? <RotateCcw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
+            : <RotateCw style={{ width: '100%', height: '100%' }} strokeWidth={1.5} />
+        }
+        <span
+            className="absolute inset-0 flex items-center justify-center font-bold"
+            style={{ fontSize: `${CONFIG.TC_SKIP_LABEL_SIZE}rem` }}
+        >10</span>
     </button>
 );
 
@@ -2779,8 +2774,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     className="absolute z-10 rounded-full overflow-hidden"
                     style={{
                         top: '50%',
-                        left: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`,
-                        right: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`,
+                        left: `${CONFIG.TC_SKIP_SIZE}rem`,
+                        right: `${CONFIG.TC_SKIP_SIZE}rem`,
                         height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
                         background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
