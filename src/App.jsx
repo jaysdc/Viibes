@@ -1021,6 +1021,19 @@ const styles = `
   .scrub-tube-glow {
     animation: scrub-tube-pulse ${CONFIG.BEACON_SCRUB_TUBE_PULSE_SPEED}s ease-in-out infinite;
   }
+
+  @keyframes scrub-overlay-glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), 0 0 30px rgba(236, 72, 153, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(236, 72, 153, 0.8), 0 0 50px rgba(236, 72, 153, 0.5);
+    }
+  }
+
+  .scrub-overlay-glow {
+    animation: scrub-overlay-glow-pulse 1s ease-in-out infinite;
+  }
   
   @keyframes marquee {
     0%, 20% { transform: translateX(0%); }
@@ -7921,11 +7934,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     const formatScrubTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
                     return (
                         <div
-                            className="absolute left-4 right-4 z-[100]"
+                            className="absolute left-4 right-4 z-[100] rounded-full overflow-hidden scrub-overlay-glow"
                             style={{
                                 bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
                                 height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
-                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
                             }}
                         >
                             {/* Tube identique à TimeCapsule */}
