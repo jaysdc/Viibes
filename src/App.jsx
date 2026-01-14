@@ -5076,23 +5076,23 @@ useEffect(() => {
 
             const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
 
-            // Le contour suit le doigt mais est limité par maxSwipeDistance
+            // EXACTEMENT comme VibeBuilder: ne rien faire si on dépasse maxSwipeDistance
             if (Math.abs(diffX) < maxSwipeDistance) {
                 setVibeTheseSwipeOffset(diffX);
-            } else {
-                setVibeTheseSwipeOffset(diffX > 0 ? maxSwipeDistance : -maxSwipeDistance);
-            }
 
-            // Calculer la preview (même direction que VibeBuilder: swipe droite = couleur précédente)
-            if (diffX !== 0) {
-                const direction = diffX > 0 ? -1 : 1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
-                const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
-                const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
-                const previewGradient = getGradientByIndex(normalizedPreviewIdx);
+                if (diffX !== 0) {
+                    const direction = diffX > 0 ? -1 : 1;
+                    const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
+                    const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
+                    const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
+                    const previewGradient = getGradientByIndex(normalizedPreviewIdx);
 
-                setVibeThesePreviewIndex(normalizedPreviewIdx);
-                setVibeSwipePreview({ direction, progress: Math.min(1, Math.abs(diffX) / 50), nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
+                    setVibeThesePreviewIndex(normalizedPreviewIdx);
+                    setVibeSwipePreview({ direction, progress: Math.min(1, Math.abs(diffX) / 50), nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
+                } else {
+                    setVibeThesePreviewIndex(null);
+                    setVibeSwipePreview(null);
+                }
             }
         }
     };
