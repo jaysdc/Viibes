@@ -584,8 +584,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     CONTROL_BAR_Y: 50,                  // Position verticale dans le footer (0=bas, 100=haut)
     CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
-    CONTROL_BAR_PADDING_REM: 0.5,        // Padding horizontal du ControlBar (rem)
-    CONTROL_BAR_GAP_REM: 0.5,            // Gap entre les éléments du ControlBar (rem)
+    CONTROL_BAR_PADDING_REM: 0.75,       // Padding horizontal du ControlBar (rem)
+    CONTROL_BAR_GAP_REM: 0.75,           // Gap entre les éléments du ControlBar (rem)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIROIR (Dashboard Drawer)
