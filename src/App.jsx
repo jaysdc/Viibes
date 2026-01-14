@@ -8102,7 +8102,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 bottom: currentBottomPx,
                                 height: height,
                                 background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
-                                boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.1 + scrubMorphProgress * 0.1})`
+                                boxShadow: `0 0 20px rgba(236, 72, 153, ${0.3 + scrubMorphProgress * 0.4}), 0 0 40px rgba(236, 72, 153, ${0.1 + scrubMorphProgress * 0.2}), 0 4px 20px rgba(0, 0, 0, 0.15)`
                             }}
                         >
                             {/* Remplissage rose avec bordure droite */}
