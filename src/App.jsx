@@ -2364,7 +2364,7 @@ const ControlBar = ({
                     top: 0,
                     height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     left: `${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%`,
-                    right: `calc(${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT} + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${CONFIG.RECENTER_CAPSULE_WIDTH} + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%)`,
+                    right: `calc(${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT}px + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}% + ${UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6}px + ${CONFIG.CONTROL_BAR_SPACING_PERCENT / 4}%)`,
                     background: 'rgba(0, 255, 0, 0.3)'
                 }}
             />
