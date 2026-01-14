@@ -7398,8 +7398,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                           width: '100%',
                                           height: '100%',
                                           opacity: dropboxScanProgress !== null ? 0 : 1,
-                                          transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 2.5s ease-in-out infinite' : 'none'
+                                          transition: 'opacity 0.5s ease-in-out',
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-out 2.5s ease-in-out infinite' : 'none',
+                                          animationDelay: dropboxScanProgress !== null ? '0.5s' : '0s'
                                       }}
                                   />
                                   <Radar
@@ -7408,8 +7409,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                           width: '100%',
                                           height: '100%',
                                           opacity: dropboxScanProgress !== null ? 1 : 0,
-                                          transition: 'opacity 0.4s ease-in-out',
-                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 2.5s ease-in-out infinite' : 'none'
+                                          transition: 'opacity 0.5s ease-in-out',
+                                          animation: dropboxScanProgress !== null ? 'icon-crossfade-in 2.5s ease-in-out infinite' : 'none',
+                                          animationDelay: dropboxScanProgress !== null ? '0.5s' : '0s'
                                       }}
                                   />
                               </div>
