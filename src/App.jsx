@@ -820,8 +820,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_SIZE: 1.5,                    // Taille boutons skip = taille icône (rem)
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
-    TC_EDGE_PADDING: 0.25,                // Padding entre bordure capsule et boutons 10s (rem)
-    TC_TUBE_GAP: 0.5,                     // Gap entre boutons 10s et barre de progression (rem)
+    TC_EDGE_PADDING: 0.4,                 // Padding entre bordure capsule et boutons 10s (rem)
+    TC_TUBE_GAP: 0.25,                    // Gap entre boutons 10s et barre de progression (rem)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
@@ -8055,34 +8055,59 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                      />
                 </div>
 
-                {/* SCRUB OVERLAY - tube qui morph depuis la position originale */}
+                {/* SCRUB OVERLAY - tube qui morph depuis la position de la TimeCapsule */}
                 {isProgressScrubbing && (() => {
-                    // Morph: position initiale (dans le footer) → position finale (au-dessus)
-                    const finalOffsetPx = parseFloat(CONFIG.SCRUB_OVERLAY_FINAL_OFFSET_REM) * 16;
-                    const currentOffset = scrubMorphProgress * finalOffsetPx;
+                    // Position initiale = TimeCapsule (overlay vert)
+                    // Position finale = au-dessus du footer, pleine largeur avec 1rem de marge
 
-                    // Hauteur du tube: initiale (petite) → finale (plus grande)
-                    const initialHeight = CONFIG.TC_PROGRESS_HEIGHT * 2.5 * 16; // rem to px
-                    const finalHeight = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
-                    const currentHeight = initialHeight + (finalHeight - initialHeight) * scrubMorphProgress;
+                    const footerPaddingTopPx = parseFloat(UNIFIED_CONFIG.FOOTER_PADDING_TOP) * 16;
+                    const controlBarSpacing = CONFIG.CONTROL_BAR_SPACING_PERCENT / 4;
 
-                    // Taille de police: initiale → finale (plus grande)
+                    // Hauteur : même hauteur (FOOTER_BTN_HEIGHT) du début à la fin
+                    const height = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
+
+                    // Bottom initial = safeAreaBottom (le footer est positionné là)
+                    // Bottom final = au-dessus du footer + offset
+                    const initialBottomPx = safeAreaBottom + footerPaddingTopPx;
+                    const finalOffsetPx = CONFIG.SCRUB_OVERLAY_FINAL_OFFSET_REM * 16;
+                    const finalBottomPx = safeAreaBottom + footerPaddingTopPx + height + finalOffsetPx;
+                    const currentBottomPx = initialBottomPx + (finalBottomPx - initialBottomPx) * scrubMorphProgress;
+
+                    // Left initial = même que TimeCapsule, final = 1rem
+                    const initialLeftPercent = controlBarSpacing;
+                    const finalLeftRem = 1;
+
+                    // Right initial = calc complexe (après play + recenter + gaps), final = 1rem
+                    // PlayPause width = FOOTER_BTN_HEIGHT, RecenterCapsule width = FOOTER_BTN_HEIGHT * 1.6
+                    const playPauseWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT;
+                    const recenterWidth = UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6;
+
+                    // Taille de police: initiale → finale
                     const initialFontSize = CONFIG.TC_TIME_FONT_SIZE;
                     const finalFontSize = CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE;
                     const currentFontSize = initialFontSize + (finalFontSize - initialFontSize) * scrubMorphProgress;
 
                     const formatTime = (t) => { if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
 
+                    // Interpolation des positions left/right
+                    // Initial: left = X%, right = calc(...)
+                    // Final: left = 1rem, right = 1rem
+                    const initialLeft = `${initialLeftPercent}%`;
+                    const finalLeft = `${finalLeftRem}rem`;
+                    const initialRight = `calc(${controlBarSpacing}% + ${playPauseWidth}px + ${controlBarSpacing}% + ${recenterWidth}px + ${controlBarSpacing}%)`;
+                    const finalRight = `${finalLeftRem}rem`;
+
                     return (
                         <div
                             className="absolute z-[100] rounded-full overflow-hidden"
                             style={{
-                                left: '1rem',
-                                right: '1rem',
-                                bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${currentOffset}px)`,
-                                height: currentHeight,
+                                left: scrubMorphProgress < 1 ? initialLeft : finalLeft,
+                                right: scrubMorphProgress < 1 ? initialRight : finalRight,
+                                bottom: currentBottomPx,
+                                height: height,
                                 background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
-                                boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.1 + scrubMorphProgress * 0.1})`
+                                boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.1 + scrubMorphProgress * 0.1})`,
+                                transition: scrubMorphProgress >= 1 ? 'left 0.2s ease-out, right 0.2s ease-out' : 'none'
                             }}
                         >
                             {/* Remplissage rose avec bordure droite */}
