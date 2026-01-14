@@ -2751,7 +2751,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center px-2 gap-2 shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 rounded-full flex items-center shadow-sm relative transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             ...glowStyle,
@@ -2762,11 +2762,10 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
       >
             <div className="w-full h-full relative">
                 {/* Bouton -10s */}
-                {/* Bouton -10s */}
                 <div
                     className="absolute z-20"
                     style={{
-                        left: `${CONFIG.TC_SKIP_EDGE_PADDING}rem`,
+                        left: 0,
                         top: '50%',
                         transform: 'translateY(-50%)'
                     }}
@@ -2780,8 +2779,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     className="absolute z-10 rounded-full overflow-hidden"
                     style={{
                         top: '50%',
-                        left: `calc(${CONFIG.TC_SKIP_EDGE_PADDING}rem + ${CONFIG.TC_SKIP_BUTTON_SIZE}rem + ${CONFIG.TC_SKIP_TUBE_GAP}rem)`,
-                        right: `calc(${CONFIG.TC_SKIP_EDGE_PADDING}rem + ${CONFIG.TC_SKIP_BUTTON_SIZE}rem + ${CONFIG.TC_SKIP_TUBE_GAP}rem)`,
+                        left: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`,
+                        right: `${CONFIG.TC_SKIP_BUTTON_SIZE}rem`,
                         height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
                         background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
@@ -2844,7 +2843,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 <div
                     className="absolute z-20"
                     style={{
-                        right: `${CONFIG.TC_SKIP_EDGE_PADDING}rem`,
+                        right: 0,
                         top: '50%',
                         transform: 'translateY(-50%)'
                     }}
