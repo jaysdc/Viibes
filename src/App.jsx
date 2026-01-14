@@ -649,7 +649,6 @@ const CONFIG = {
     VIBE_THIS_GLOW_OPACITY: 0.4,
     VIBE_THIS_GLOW_COLOR: '138, 255, 8',
     VIBE_THIS_BG_COLOR: '#8CFF00',       // Couleur de fond bouton VIBE THESE
-    VIBE_THESE_SWIPE_DISTANCE: 100,      // Distance de swipe (px) pour parcourir tous les dégradés (plus petit = plus sensible)
     VIBE_THESE_MAX_VISUAL_OFFSET: 30,    // Limite visuelle du déplacement de la bordure (px)
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -4533,6 +4532,7 @@ const handlePlayerTouchEnd = () => {
     const vibeTheseTouchStartRef = useRef({ x: null, y: null });
     const vibeTheseSwipeDirectionRef = useRef(null); // Direction verrouillée du swipe
     const vibeTheseBtnRef = useRef(null); // Ref du bouton pour le touch handler
+    const vibeTheseBtnWidthRef = useRef(0); // Largeur du bouton pour calcul swipe
     const importMenuTimer = useRef(null);
 
     // ===== TOUS LES useRef ENSUITE =====
@@ -5075,12 +5075,12 @@ useEffect(() => {
         if (vibeTheseSwipeDirectionRef.current === 'horizontal') {
             e.preventDefault();
 
-            // Utilise VIBE_THESE_SWIPE_DISTANCE pour plus de sensibilité
-            if (Math.abs(diffX) < CONFIG.VIBE_THESE_SWIPE_DISTANCE) {
+            const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+            if (Math.abs(diffX) < maxSwipeDistance) {
                 setVibeTheseSwipeOffset(diffX);
 
                 const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.VIBE_THESE_SWIPE_DISTANCE) * 20);
+                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
                 const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
                 const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
                 const previewGradient = getGradientByIndex(normalizedPreviewIdx);
@@ -5090,10 +5090,10 @@ useEffect(() => {
                 setVibeSwipePreview({ direction, progress, nextGradient: previewGradient, colorsTraversed, previewIndex: normalizedPreviewIdx });
             } else {
                 // Au-delà de la limite, garder l'offset max mais continuer à calculer les couleurs
-                setVibeTheseSwipeOffset(diffX > 0 ? CONFIG.VIBE_THESE_SWIPE_DISTANCE : -CONFIG.VIBE_THESE_SWIPE_DISTANCE);
+                setVibeTheseSwipeOffset(diffX > 0 ? maxSwipeDistance : -maxSwipeDistance);
 
                 const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / CONFIG.VIBE_THESE_SWIPE_DISTANCE) * 20);
+                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
                 const previewIdx = vibeTheseGradientIndex + (direction * colorsTraversed);
                 const normalizedPreviewIdx = ((previewIdx % 20) + 20) % 20;
                 const previewGradient = getGradientByIndex(normalizedPreviewIdx);
@@ -7745,10 +7745,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         y: e.touches[0].clientY
                                     };
                                     vibeTheseSwipeDirectionRef.current = null;
+                                    if (e.currentTarget) vibeTheseBtnWidthRef.current = e.currentTarget.offsetWidth;
                                 }}
                                 onTouchEnd={() => {
-                                    // Changer la couleur si swipe horizontal significatif (utilise VIBE_THESE_SWIPE_DISTANCE)
-                                    const colorsTraversed = Math.floor((Math.abs(vibeTheseSwipeOffset) / CONFIG.VIBE_THESE_SWIPE_DISTANCE) * 20);
+                                    // Changer la couleur si swipe horizontal significatif
+                                    const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
+                                    const colorsTraversed = Math.floor((Math.abs(vibeTheseSwipeOffset) / maxSwipeDistance) * 20);
                                     if (vibeTheseSwipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
                                         const direction = vibeTheseSwipeOffset > 0 ? 1 : -1;
                                         const newIndex = vibeTheseGradientIndex + (direction * colorsTraversed);
