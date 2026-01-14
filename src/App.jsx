@@ -820,6 +820,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     TC_SKIP_SIZE: 1.5,                    // Taille boutons skip = taille icône (rem)
     TC_SKIP_LABEL_SIZE: 0.50,             // Taille du "10" (rem)
+    TC_EDGE_PADDING: 0.25,                // Padding entre bordure capsule et boutons 10s (rem)
+    TC_TUBE_GAP: 0.5,                     // Gap entre boutons 10s et barre de progression (rem)
 
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar (position relative à la capsule)
@@ -2760,7 +2762,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 <div
                     className="absolute z-20"
                     style={{
-                        left: 0,
+                        left: `${CONFIG.TC_EDGE_PADDING}rem`,
                         top: '50%',
                         transform: 'translateY(-50%)'
                     }}
@@ -2774,8 +2776,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     className="absolute z-10 rounded-full overflow-hidden"
                     style={{
                         top: '50%',
-                        left: `${CONFIG.TC_SKIP_SIZE}rem`,
-                        right: `${CONFIG.TC_SKIP_SIZE}rem`,
+                        left: `${CONFIG.TC_EDGE_PADDING + CONFIG.TC_SKIP_SIZE + CONFIG.TC_TUBE_GAP}rem`,
+                        right: `${CONFIG.TC_EDGE_PADDING + CONFIG.TC_SKIP_SIZE + CONFIG.TC_TUBE_GAP}rem`,
                         height: `${CONFIG.TC_PROGRESS_HEIGHT * 2.5}rem`,
                         transform: 'translateY(-50%)',
                         background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG,
@@ -2838,7 +2840,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 <div
                     className="absolute z-20"
                     style={{
-                        right: 0,
+                        right: `${CONFIG.TC_EDGE_PADDING}rem`,
                         top: '50%',
                         transform: 'translateY(-50%)'
                     }}
