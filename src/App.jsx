@@ -7089,8 +7089,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
 
     // === HANDLER SCRUB OVERLAY MORPH ===
-    const scrubStartXRef = useRef(0);
-    const scrubStartTimeRef = useRef(0);
+    const scrubTimeRef = useRef(0); // Temps actuel pendant le scrub (pour éviter closure)
 
     const handleScrubChange = (isScrubbing, event) => {
         if (scrubMorphAnimRef.current) {
@@ -7116,7 +7115,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 const rect = scrubTubeRectRef.current;
                 const relativeX = Math.max(0, Math.min(rect.width, touch.clientX - rect.left));
                 const newTime = Math.min((relativeX / rect.width) * dur, dur - 0.01);
-                audioRef.current.currentTime = newTime;
+                scrubTimeRef.current = newTime;
                 setProgress(newTime);
             };
 
@@ -7127,7 +7126,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 const rect = scrubTubeRectRef.current;
                 const relativeX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
                 const newTime = Math.min((relativeX / rect.width) * dur, dur - 0.01);
-                audioRef.current.currentTime = newTime;
+                scrubTimeRef.current = newTime;
                 setProgress(newTime);
             };
 
@@ -7141,8 +7140,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 document.removeEventListener('mousemove', handleGlobalMouseMove);
                 document.removeEventListener('mouseup', handleGlobalEnd);
 
-                // Le temps est déjà à jour dans audioRef.current.currentTime
-                // (mis à jour dans handleGlobalTouchMove/MouseMove)
+                // Appliquer le temps exact de l'overlay à l'audio
+                if (audioRef.current) {
+                    audioRef.current.currentTime = scrubTimeRef.current;
+                }
 
                 handleScrubChange(false);
             };
