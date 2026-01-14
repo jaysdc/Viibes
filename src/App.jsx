@@ -843,10 +843,8 @@ const CONFIG = {
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
 
     // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
-    SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
-    SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
+    SCRUB_OVERLAY_FINAL_OFFSET_REM: 3,    // Distance finale au-dessus du footer (rem)
     SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
-    SCRUB_OVERLAY_BORDER_RADIUS: 9999,    // Border radius (px, 9999 = full)
     SCRUB_OVERLAY_PADDING_X: 16,          // Padding horizontal (px)
     SCRUB_OVERLAY_TIME_FONT_SIZE: 0.875,  // Taille police temps (rem)
     SCRUB_OVERLAY_TIME_COLOR: '#6b7280',  // Couleur du texte temps (gray-500)
@@ -855,6 +853,7 @@ const CONFIG = {
     SCRUB_OVERLAY_PROGRESS_FILL: '#ec4899', // Couleur remplissage progress (pink-500)
     SCRUB_OVERLAY_THUMB_SIZE: 16,         // Taille du thumb (px)
     SCRUB_OVERLAY_THUMB_COLOR: '#ec4899', // Couleur du thumb (pink-500)
+    SCRUB_OVERLAY_MORPH_DURATION: 200,    // Durée de l'animation morph (ms)
 };
 
 
@@ -4174,6 +4173,8 @@ export default function App() {
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
+    const [scrubMorphProgress, setScrubMorphProgress] = useState(0); // 0 = footer, 1 = overlay position
+    const scrubMorphAnimRef = useRef(null);
     const [feedback, setFeedback] = useState(null);
     const triggerFeedbackValidation = () => {
         if (feedback) {
@@ -6938,6 +6939,57 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const playPrev = () => { if (audioRef.current && audioRef.current.currentTime > 3) { audioRef.current.currentTime = 0; return; } const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex > 0) { setCurrentSong(queue[currentIndex - 1]); setScrollTrigger(t => t + 1); } else audioRef.current.currentTime = 0; };
     const skipForward10 = () => { if (audioRef.current) audioRef.current.currentTime += 10; };
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
+
+    // === HANDLER SCRUB OVERLAY MORPH ===
+    const handleScrubChange = (isScrubbing) => {
+        if (scrubMorphAnimRef.current) {
+            cancelAnimationFrame(scrubMorphAnimRef.current);
+            scrubMorphAnimRef.current = null;
+        }
+
+        if (isScrubbing) {
+            // Montrer immédiatement et animer vers le haut
+            setIsProgressScrubbing(true);
+            const startTime = performance.now();
+            const startProgress = scrubMorphProgress;
+            const duration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
+
+            const animateMorphUp = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const t = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
+                const newProgress = startProgress + (1 - startProgress) * easeOut;
+                setScrubMorphProgress(newProgress);
+
+                if (t < 1) {
+                    scrubMorphAnimRef.current = requestAnimationFrame(animateMorphUp);
+                }
+            };
+            scrubMorphAnimRef.current = requestAnimationFrame(animateMorphUp);
+        } else {
+            // Animer vers le bas puis cacher
+            const startTime = performance.now();
+            const startProgress = scrubMorphProgress;
+            const duration = CONFIG.SCRUB_OVERLAY_MORPH_DURATION;
+
+            const animateMorphDown = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const t = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
+                const newProgress = startProgress * (1 - easeOut);
+                setScrubMorphProgress(newProgress);
+
+                if (t < 1) {
+                    scrubMorphAnimRef.current = requestAnimationFrame(animateMorphDown);
+                } else {
+                    setIsProgressScrubbing(false);
+                    setScrubMorphProgress(0);
+                }
+            };
+            scrubMorphAnimRef.current = requestAnimationFrame(animateMorphDown);
+        }
+    };
+
     // === HANDLERS VOLUME SLIDER ===
     const handleVolumeTouchStart = (e) => {
       const touch = e.touches[0];
@@ -7878,82 +7930,94 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         confirmMode={false}
                         confirmType={null}
                         vibeSwipePreview={null}
-                        onScrubChange={setIsProgressScrubbing}
+                        onScrubChange={handleScrubChange}
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                      />
                 </div>
 
-                {/* SCRUB OVERLAY - affiché au-dessus du footer pendant le scrub */}
-                {isProgressScrubbing && (
-                    <div
-                        className="absolute left-4 right-4 flex items-center justify-between z-[100]"
-                        style={{
-                            bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.SCRUB_OVERLAY_OFFSET_REM}rem)`,
-                            height: `${CONFIG.SCRUB_OVERLAY_HEIGHT_REM}rem`,
-                            background: CONFIG.SCRUB_OVERLAY_BG,
-                            borderRadius: CONFIG.SCRUB_OVERLAY_BORDER_RADIUS,
-                            padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-                        }}
-                    >
-                        {/* Temps écoulé */}
-                        <span
-                            className="font-bold font-mono"
-                            style={{
-                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
-                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
-                            }}
-                        >
-                            {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
-                        </span>
+                {/* SCRUB OVERLAY - morph depuis TimeCapsule vers position haute */}
+                {isProgressScrubbing && (() => {
+                    // Position initiale = position de la TimeCapsule (dans le footer)
+                    // Position finale = au-dessus du footer
+                    const finalOffsetPx = parseFloat(CONFIG.SCRUB_OVERLAY_FINAL_OFFSET_REM) * 16; // rem to px
+                    const currentOffset = scrubMorphProgress * finalOffsetPx;
+                    const opacity = 0.3 + scrubMorphProgress * 0.7; // Fade in de 0.3 à 1
 
-                        {/* Barre de progression visuelle */}
+                    return (
                         <div
-                            className="flex-1 mx-4 relative"
-                            style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
-                        >
-                            {/* Fond */}
-                            <div
-                                className="absolute inset-0 rounded-full"
-                                style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
-                            />
-                            {/* Remplissage */}
-                            <div
-                                className="absolute left-0 top-0 bottom-0 rounded-full"
-                                style={{
-                                    background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
-                                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
-                                }}
-                            />
-                            {/* Thumb */}
-                            <div
-                                className="absolute rounded-full"
-                                style={{
-                                    width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
-                                    height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
-                                    background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
-                                    left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
-                                    top: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
-                                }}
-                            />
-                        </div>
-
-                        {/* Temps restant */}
-                        <span
-                            className="font-bold font-mono"
+                            className="absolute left-4 right-4 flex items-center justify-between z-[100]"
                             style={{
-                                fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
-                                color: CONFIG.SCRUB_OVERLAY_TIME_COLOR
+                                bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${currentOffset}px)`,
+                                height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                                background: CONFIG.SCRUB_OVERLAY_BG,
+                                borderRadius: 9999,
+                                padding: `0 ${CONFIG.SCRUB_OVERLAY_PADDING_X}px`,
+                                boxShadow: `0 4px 20px rgba(0, 0, 0, ${0.05 + scrubMorphProgress * 0.1})`,
+                                opacity,
+                                border: '1px solid rgb(229, 231, 235)'
                             }}
                         >
-                            -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
-                        </span>
-                    </div>
-                )}
+                            {/* Temps écoulé */}
+                            <span
+                                className="font-bold font-mono"
+                                style={{
+                                    fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                    color: CONFIG.SCRUB_OVERLAY_TIME_COLOR,
+                                    opacity: scrubMorphProgress
+                                }}
+                            >
+                                {(() => { const t = progress; if (!t || isNaN(t)) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                            </span>
+
+                            {/* Barre de progression visuelle */}
+                            <div
+                                className="flex-1 mx-4 relative"
+                                style={{ height: CONFIG.SCRUB_OVERLAY_PROGRESS_HEIGHT }}
+                            >
+                                {/* Fond */}
+                                <div
+                                    className="absolute inset-0 rounded-full"
+                                    style={{ background: CONFIG.SCRUB_OVERLAY_PROGRESS_BG }}
+                                />
+                                {/* Remplissage */}
+                                <div
+                                    className="absolute left-0 top-0 bottom-0 rounded-full"
+                                    style={{
+                                        background: CONFIG.SCRUB_OVERLAY_PROGRESS_FILL,
+                                        width: `${duration > 0 ? (progress / duration) * 100 : 0}%`
+                                    }}
+                                />
+                                {/* Thumb */}
+                                <div
+                                    className="absolute rounded-full"
+                                    style={{
+                                        width: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                        height: CONFIG.SCRUB_OVERLAY_THUMB_SIZE,
+                                        background: CONFIG.SCRUB_OVERLAY_THUMB_COLOR,
+                                        left: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                                        top: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                        boxShadow: `0 0 8px ${CONFIG.SCRUB_OVERLAY_THUMB_COLOR}`
+                                    }}
+                                />
+                            </div>
+
+                            {/* Temps restant */}
+                            <span
+                                className="font-bold font-mono"
+                                style={{
+                                    fontSize: `${CONFIG.SCRUB_OVERLAY_TIME_FONT_SIZE}rem`,
+                                    color: CONFIG.SCRUB_OVERLAY_TIME_COLOR,
+                                    opacity: scrubMorphProgress
+                                }}
+                            >
+                                -{(() => { const t = duration - progress; if (!t || isNaN(t) || t < 0) return "0:00"; const min = Math.floor(t / 60); const sec = Math.floor(t % 60); return `${min}:${sec.toString().padStart(2, '0')}`; })()}
+                            </span>
+                        </div>
+                    );
+                })()}
 
 {/* BACK TO VIBES OVERLAY - AU DESSUS DE TOUT */}
         {showMainPlayerTrigger && (
