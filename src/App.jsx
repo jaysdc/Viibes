@@ -2625,6 +2625,44 @@ const LibrarySongRow = ({ song, onClick }) => (
 const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, isScrubbing = false }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
     const tubeRef = useRef(null);
+    const canvasRef = useRef(null);
+
+    // Dessiner les temps sur le canvas
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+
+        // Ajuster la taille du canvas pour le DPR
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        // Effacer le canvas
+        ctx.clearRect(0, 0, rect.width, rect.height);
+
+        const fontSize = CONFIG.TC_TIME_FONT_SIZE * 16; // rem to px
+        ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
+        ctx.textBaseline = 'middle';
+
+        // Temps écoulé (gauche, blanc)
+        ctx.fillStyle = 'white';
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+        ctx.textAlign = 'left';
+        ctx.fillText(formatTime(currentTime), 8, rect.height / 2);
+
+        // Temps restant (droite, gris)
+        ctx.fillStyle = '#6b7280';
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.textAlign = 'right';
+        ctx.fillText('-' + formatTime(duration - currentTime), rect.width - 8, rect.height / 2);
+    }, [currentTime, duration]);
 
     // Empêcher la loupe iOS en bloquant touchend/touchcancel après 100ms
     useEffect(() => {
@@ -2798,31 +2836,11 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                             transition: 'width 0.1s linear'
                         }}
                     />
-                    {/* Temps écoulé - dans le tube à gauche */}
-                    <div
-                        className="absolute text-white font-bold font-mono pointer-events-none leading-none z-10 flex items-center"
-                        style={{
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            left: '8px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                        }}
-                    >
-                        {formatTime(currentTime)}
-                    </div>
-                    {/* Temps restant - dans le tube à droite */}
-                    <div
-                        className="absolute text-gray-500 font-bold font-mono pointer-events-none leading-none z-10 flex items-center"
-                        style={{
-                            fontSize: `${CONFIG.TC_TIME_FONT_SIZE}rem`,
-                            right: '8px',
-                            top: '50%',
-                            transform: 'translateY(-50%)'
-                        }}
-                    >
-                        -{formatTime(duration - currentTime)}
-                    </div>
+                    {/* Canvas pour afficher les temps (évite la loupe iOS) */}
+                    <canvas
+                        ref={canvasRef}
+                        className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                    />
                 </div>
 
                 {/* Bouton +10s */}
