@@ -6004,7 +6004,9 @@ const vibeSearchResults = () => {
       }
     });
 
-    // NE PAS enregistrer seekbackward/seekforward - iOS affichera les flèches prev/next
+    // DÉSACTIVER EXPLICITEMENT seekbackward/seekforward pour forcer prev/next
+    navigator.mediaSession.setActionHandler('seekbackward', null);
+    navigator.mediaSession.setActionHandler('seekforward', null);
 
     // seekto pour la barre de progression
     try {
