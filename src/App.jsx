@@ -6004,9 +6004,7 @@ const vibeSearchResults = () => {
       }
     });
 
-    // Désactiver explicitement seekbackward/seekforward pour forcer iOS à afficher prev/next
-    try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
-    try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
+    // NE PAS enregistrer seekbackward/seekforward - iOS affichera les flèches prev/next
 
     // seekto pour la barre de progression
     try {
@@ -6044,11 +6042,7 @@ const vibeSearchResults = () => {
     const handleLoadedMetadata = () => {
       console.log('[MediaSession] loadedmetadata event');
       updatePositionState();
-      
-      // Re-définir les handlers prev/next pour activer les boutons sur iOS
-      try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
-      try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
-      
+
       // Extraire l'artwork maintenant que l'audio est chargé
       const song = currentSongRef.current;
       if (song && !artworkCache.has(song.id)) {
