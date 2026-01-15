@@ -5920,7 +5920,13 @@ const vibeSearchResults = () => {
   // ══════════════════════════════════════════════════════════════════════════════
 
   // Fonction pour mettre à jour la position (pour la barre de progression iOS)
+  // === DÉSACTIVÉ TEMPORAIREMENT POUR TEST ===
+  // setPositionState pourrait signaler à iOS que le contenu est seekable
+  // et donc afficher les boutons skip au lieu de prev/next
   const updatePositionState = useCallback(() => {
+    // DÉSACTIVÉ POUR TEST
+    return;
+    /*
     if (!('mediaSession' in navigator) || !audioRef.current) return;
     if (!audioRef.current.duration || isNaN(audioRef.current.duration)) return;
 
@@ -5933,6 +5939,7 @@ const vibeSearchResults = () => {
     } catch (e) {
       // setPositionState peut échouer si les valeurs sont invalides
     }
+    */
   }, []);
 
   // Enregistrer les handlers ET les listeners audio
