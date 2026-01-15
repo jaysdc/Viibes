@@ -6004,11 +6004,14 @@ const vibeSearchResults = () => {
       }
     });
 
-    // DÉSACTIVER EXPLICITEMENT seekbackward/seekforward pour forcer prev/next
-    navigator.mediaSession.setActionHandler('seekbackward', null);
-    navigator.mediaSession.setActionHandler('seekforward', null);
+    // NOTE: On n'enregistre PAS de handlers pour seekbackward/seekforward
+    // pour qu'iOS affiche les boutons previoustrack/nexttrack (flèches)
+    // au lieu des boutons de skip 10 secondes
 
-    // seekto pour la barre de progression
+    // === COMMENTER TEMPORAIREMENT POUR TEST ===
+    // seekto pourrait signaler à iOS que le contenu est "seekable"
+    // et donc iOS afficherait les boutons seek au lieu de prev/next
+    /*
     try {
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         console.log('[MediaSession] seekto handler called', details);
@@ -6024,6 +6027,7 @@ const vibeSearchResults = () => {
     } catch (e) {
       console.log('[MediaSession] seekto not supported');
     }
+    */
 
     // === LISTENERS SUR L'ÉLÉMENT AUDIO (sync iOS) ===
     // iOS a besoin de ces listeners pour synchroniser l'état du widget
