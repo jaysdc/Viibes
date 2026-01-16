@@ -3517,9 +3517,44 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const rightColumnStyle = {};
 
     // Position de base (grille fixe)
+    // Ratios d'intervalle selon le slot visuel (du haut vers le bas de l'écran)
+    // Slots: 0=haut, 5=centre, 10=bas (11 éléments visibles)
+    const slotRatios = [0.50, 0.75, 0.90, 0.98, 1.0, 1.0, 1.0, 0.98, 0.90, 0.75, 0.50];
+
+    // Position de base (sans variable height)
     const baseTop = centerPadding + index * itemHeight;
+
+    // Calcul du décalage cumulatif pour les intervalles variables
+    let variableOffset = 0;
+    if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED && containerHeight) {
+        // Trouver l'index de l'élément qui serait au centre de l'écran
+        const centerIndex = Math.round(scrollTop / itemHeight);
+        // Distance en nombre d'éléments par rapport au centre
+        const deltaFromCenter = index - centerIndex;
+
+        // Calculer le décalage cumulatif
+        // Pour chaque intervalle entre le centre et cet élément, on applique le ratio
+        if (deltaFromCenter > 0) {
+            // Élément en dessous du centre
+            for (let i = 0; i < deltaFromCenter; i++) {
+                const slotIndex = 5 + i; // 5 = centre, puis on descend
+                const ratio = slotIndex < slotRatios.length ? slotRatios[slotIndex] : slotRatios[slotRatios.length - 1];
+                variableOffset += (ratio - 1) * itemHeight;
+            }
+        } else if (deltaFromCenter < 0) {
+            // Élément au dessus du centre
+            for (let i = 0; i > deltaFromCenter; i--) {
+                const slotIndex = 5 + i - 1; // 5 = centre, puis on monte
+                const ratio = slotIndex >= 0 ? slotRatios[slotIndex] : slotRatios[0];
+                variableOffset -= (ratio - 1) * itemHeight;
+            }
+        }
+    }
+
+    const finalTop = baseTop + variableOffset;
+
     // Centre visuel de cet élément dans le scroll
-    const elementCenter = baseTop + itemHeight / 2;
+    const elementCenter = finalTop + itemHeight / 2;
     // Centre du viewport
     const visibleCenter = scrollTop + containerHeight / 2;
     // Distance au centre (en pixels)
@@ -3527,27 +3562,6 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     // Normalisé entre -1 et +1
     const normalized = Math.max(-1, Math.min(1, distanceFromCenter / (containerHeight / 2)));
     const absNormalized = Math.abs(normalized);
-
-    // Calcul du décalage pour les intervalles variables
-    // Ratios : 50%, 75%, 90%, 98%, 100%, 100%, 100%, 98%, 90%, 75%, 50%
-    // On compresse les éléments vers le centre quand ils sont loin
-    let compressionOffset = 0;
-    if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) {
-        // Fonction de compression : plus on est loin du centre, plus on se rapproche
-        // absNormalized = 0 (centre) → pas de compression
-        // absNormalized = 1 (bord) → compression max
-        const compressionRatios = [1.0, 0.98, 0.90, 0.75, 0.50]; // du centre vers le bord
-        const numSteps = compressionRatios.length;
-        const stepIndex = Math.min(numSteps - 1, Math.floor(absNormalized * numSteps));
-        const nextStepIndex = Math.min(numSteps - 1, stepIndex + 1);
-        const stepProgress = (absNormalized * numSteps) - stepIndex;
-        const ratio = compressionRatios[stepIndex] + (compressionRatios[nextStepIndex] - compressionRatios[stepIndex]) * stepProgress;
-
-        // Calcul du décalage cumulé : on "pousse" les éléments vers le centre
-        // Plus l'élément est loin, plus il est poussé vers le centre
-        const maxCompression = itemHeight * 0.5; // Compression max = 50% de la hauteur
-        compressionOffset = (1 - ratio) * Math.abs(distanceFromCenter) * Math.sign(-distanceFromCenter);
-    }
 
     if (CONFIG.WHEEL_CYLINDER_ENABLED && containerHeight) {
         // scaleY : compression verticale
@@ -3574,7 +3588,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
       <div
       ref={rowRef}
       className="snap-center flex items-center justify-center px-4 cursor-pointer origin-center absolute w-full"
-      style={{ height: itemHeight, top: baseTop + compressionOffset, ...cylinderStyle }}
+      style={{ height: itemHeight, top: finalTop, ...cylinderStyle }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onClick={() => { if(Math.abs(offset) < 5) onClick(); }}
@@ -4230,7 +4244,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             const threshold = CONFIG.WHEEL_CENTER_THRESHOLD;
             const baseIndex = Math.floor(scrollTop / itemHeight);
             const scrollProgress = (scrollTop / itemHeight) - baseIndex;
-            
+
             let nearestIndex;
             if (scrollDirectionRef.current === 'down') {
               nearestIndex = scrollProgress >= threshold ? baseIndex + 1 : baseIndex;
@@ -4238,6 +4252,29 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               nearestIndex = scrollProgress > (1 - threshold) ? baseIndex + 1 : baseIndex;
             }
             nearestIndex = Math.max(0, Math.min(queue.length - 1, nearestIndex));
+
+            // Fonction helper pour calculer le décalage variable
+            const slotRatios = [0.50, 0.75, 0.90, 0.98, 1.0, 1.0, 1.0, 0.98, 0.90, 0.75, 0.50];
+            const calcVariableOffset = (idx) => {
+              if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED || !containerHeight) return 0;
+              const centerIdx = Math.round(scrollTop / itemHeight);
+              const delta = idx - centerIdx;
+              let offset = 0;
+              if (delta > 0) {
+                for (let i = 0; i < delta; i++) {
+                  const slotIdx = 5 + i;
+                  const ratio = slotIdx < slotRatios.length ? slotRatios[slotIdx] : slotRatios[slotRatios.length - 1];
+                  offset += (ratio - 1) * itemHeight;
+                }
+              } else if (delta < 0) {
+                for (let i = 0; i > delta; i--) {
+                  const slotIdx = 5 + i - 1;
+                  const ratio = slotIdx >= 0 ? slotRatios[slotIdx] : slotRatios[0];
+                  offset -= (ratio - 1) * itemHeight;
+                }
+              }
+              return offset;
+            };
             
             // VIRTUALISATION : ne rendre que les éléments visibles + buffer
             const buffer = CONFIG.WHEEL_VIRTUALIZATION_BUFFER;
@@ -4252,11 +4289,12 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               const isCenter = index === nearestIndex;
 
               if (isCurrent) {
+                const capsuleTop = centerPadding + index * itemHeight + calcVariableOffset(index);
                 elements.push(
                   <div
                     key={`${song.id}-${index}`}
                     className="snap-center flex items-center justify-center w-full absolute"
-                    style={{ height: itemHeight, top: centerPadding + index * itemHeight }}
+                    style={{ height: itemHeight, top: capsuleTop }}
                   >
                     <ControlCapsule
                       song={song}
