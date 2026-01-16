@@ -829,7 +829,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
-    TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
+    TC_PROGRESS_HEIGHT: 1.125,            // Hauteur progress bar (rem) - réduit de 25%
     TC_SCRUB_LONG_PRESS_MS: 50,           // Durée tap long pour activer scrub (ms)
     TC_SCRUB_SENSITIVITY: 1.5,            // Secondes par pixel de déplacement
     
@@ -2151,6 +2151,16 @@ return (
                   />
               );
           })()}
+
+          {/* Indicateurs de swipe - chevrons en haut à gauche et à droite */}
+          <div className="absolute top-3 left-3 flex items-center gap-0.5">
+              <ChevronLeft size={14} className="text-white/40" strokeWidth={2} />
+              <ChevronLeft size={14} className="text-white/25 -ml-2.5" strokeWidth={2} />
+          </div>
+          <div className="absolute top-3 right-14 flex items-center gap-0.5">
+              <ChevronRight size={14} className="text-white/25 -mr-2.5" strokeWidth={2} />
+              <ChevronRight size={14} className="text-white/40" strokeWidth={2} />
+          </div>
 
           {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
           <div
