@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer } from 'lucide-react';
+import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Type, EyeOff } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
@@ -336,6 +336,12 @@ const Tweaker = ({
     // Édition du nom de vibe
     const [editingVibeName, setEditingVibeName] = useState(null);
     const [editedName, setEditedName] = useState('');
+
+    // Toggle 2D/3D (2D par défaut)
+    const [is3DMode, setIs3DMode] = useState(false);
+
+    // Toggle affichage des titres (affiché par défaut)
+    const [showTitles, setShowTitles] = useState(true);
     
     // Sauvegarder l'état original complet pour pouvoir annuler
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
@@ -789,6 +795,44 @@ const Tweaker = ({
                 >
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
+                </button>
+
+                {/* Bouton 2D/3D - Toggle entre carré (2D) et cube (3D) */}
+                <button
+                    onClick={() => setIs3DMode(!is3DMode)}
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    style={{
+                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        background: is3DMode ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' : '#F3F4F6',
+                        color: is3DMode ? 'white' : '#9CA3AF',
+                        boxShadow: is3DMode
+                            ? '0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(99, 102, 241, 0.3)'
+                            : 'inset 0 0 0 1px #E5E7EB'
+                    }}
+                >
+                    {is3DMode
+                        ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                        : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                    }
+                </button>
+
+                {/* Bouton Show/Hide Titles - Toggle entre Type (titres visibles) et EyeOff (titres masqués) */}
+                <button
+                    onClick={() => setShowTitles(!showTitles)}
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    style={{
+                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        background: showTitles ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#F3F4F6',
+                        color: showTitles ? 'white' : '#9CA3AF',
+                        boxShadow: showTitles
+                            ? '0 0 20px rgba(16, 185, 129, 0.5), 0 0 40px rgba(5, 150, 105, 0.3)'
+                            : 'inset 0 0 0 1px #E5E7EB'
+                    }}
+                >
+                    {showTitles
+                        ? <Type style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                        : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                    }
                 </button>
                         </div>
                     </div>
