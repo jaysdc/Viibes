@@ -8875,6 +8875,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         getGradientName={getGradientName}
                         usedGradientIndices={usedIndices}
                         totalGradients={ALL_GRADIENTS.length}
+                        showTitles={showTitles}
                     />
                   </ErrorBoundary>
                     </div>

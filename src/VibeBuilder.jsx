@@ -1049,7 +1049,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0 }) => {
+const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -2314,68 +2314,79 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                 )}
                             </div>
                             
-                            {/* Capsule Liquid Glass - IDENTIQUE à App.txt */}
-                            <div
-                                data-capsule
-                                className={`absolute rounded-full border shadow-lg flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
-                                style={{
-                                    paddingLeft: CONFIG.CAPSULE_PADDING_X,
-                                    paddingRight: CONFIG.CAPSULE_PADDING_X,
-                                    paddingTop: CONFIG.CAPSULE_PADDING_Y,
-                                    paddingBottom: CONFIG.CAPSULE_PADDING_Y,
-                                    bottom: CONFIG.CAPSULE_BOTTOM,
-                                    left: CONFIG.CAPSULE_LEFT,
-                                    maxWidth: `calc(100% - ${CONFIG.CAPSULE_LEFT}px - ${CONFIG.CAPSULE_RIGHT_MARGIN})`,
-                                    backdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
-                                    WebkitBackdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
-                                    background: isEditingName ? 'rgba(255,255,255,0.15)' : 'transparent',
-                                    transition: 'background 0.2s, border-color 0.2s',
-                                    transform: `translateZ(${displayGradientIndex * 0.001}px)`
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsEditingName(true);
-                                    setTimeout(() => nameInputRef.current?.focus(), 0);
-                                }}
-                            >
-                                {/* Nom éditable avec scrolling si trop long ET pas en édition */}
-                                <div className="overflow-hidden flex-shrink min-w-0" style={{ maxWidth: `${vibeCardConfig?.capsuleNameMaxWidth || 9}rem` }}>
-                                    <div 
-                                        className={`whitespace-nowrap ${isNameLong && !isEditingName ? 'animate-marquee' : ''}`}
-                                        style={{ '--marquee-speed': `${vibeCardConfig?.marqueeSpeed || 8}s` }}
-                                    >
-                                        <input
-                                            ref={nameInputRef}
-                                            type="text"
-                                            value={vibeName}
-                                            onChange={(e) => { setVibeName(e.target.value); setNameWasEdited(true); }}
-                                            onFocus={() => setIsEditingName(true)}
-                                            onBlur={() => setIsEditingName(false)}
-                                            onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur(); } }}
-                                            className="bg-transparent border-none outline-none font-black leading-tight text-white"
-                                            style={{
-                                                fontSize: `${vibeCardConfig?.capsuleFontSize || 1.125}rem`,
-                                                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                                                width: `${Math.max(vibeName.length * CONFIG.NAME_WIDTH_FACTOR, parseFloat(CONFIG.NAME_MIN_WIDTH))}rem`
-                                            }}
-                                            spellCheck={false}
-                                            autoCorrect="off"
-                                            autoCapitalize="off"
-                                            autoComplete="off"
-                                            enterKeyHint="done"
-                                        />
+                            {/* Capsule Liquid Glass - Masquée si showTitles est false */}
+                            {showTitles ? (
+                                <div
+                                    data-capsule
+                                    className={`absolute rounded-full border shadow-lg flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
+                                    style={{
+                                        paddingLeft: CONFIG.CAPSULE_PADDING_X,
+                                        paddingRight: CONFIG.CAPSULE_PADDING_X,
+                                        paddingTop: CONFIG.CAPSULE_PADDING_Y,
+                                        paddingBottom: CONFIG.CAPSULE_PADDING_Y,
+                                        bottom: CONFIG.CAPSULE_BOTTOM,
+                                        left: CONFIG.CAPSULE_LEFT,
+                                        maxWidth: `calc(100% - ${CONFIG.CAPSULE_LEFT}px - ${CONFIG.CAPSULE_RIGHT_MARGIN})`,
+                                        backdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
+                                        WebkitBackdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
+                                        background: isEditingName ? 'rgba(255,255,255,0.15)' : 'transparent',
+                                        transition: 'background 0.2s, border-color 0.2s',
+                                        transform: `translateZ(${displayGradientIndex * 0.001}px)`
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditingName(true);
+                                        setTimeout(() => nameInputRef.current?.focus(), 0);
+                                    }}
+                                >
+                                    {/* Nom éditable avec scrolling si trop long ET pas en édition */}
+                                    <div className="overflow-hidden flex-shrink min-w-0" style={{ maxWidth: `${vibeCardConfig?.capsuleNameMaxWidth || 9}rem` }}>
+                                        <div
+                                            className={`whitespace-nowrap ${isNameLong && !isEditingName ? 'animate-marquee' : ''}`}
+                                            style={{ '--marquee-speed': `${vibeCardConfig?.marqueeSpeed || 8}s` }}
+                                        >
+                                            <input
+                                                ref={nameInputRef}
+                                                type="text"
+                                                value={vibeName}
+                                                onChange={(e) => { setVibeName(e.target.value); setNameWasEdited(true); }}
+                                                onFocus={() => setIsEditingName(true)}
+                                                onBlur={() => setIsEditingName(false)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur(); } }}
+                                                className="bg-transparent border-none outline-none font-black leading-tight text-white"
+                                                style={{
+                                                    fontSize: `${vibeCardConfig?.capsuleFontSize || 1.125}rem`,
+                                                    textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                                                    width: `${Math.max(vibeName.length * CONFIG.NAME_WIDTH_FACTOR, parseFloat(CONFIG.NAME_MIN_WIDTH))}rem`
+                                                }}
+                                                spellCheck={false}
+                                                autoCorrect="off"
+                                                autoCapitalize="off"
+                                                autoComplete="off"
+                                                enterKeyHint="done"
+                                            />
+                                        </div>
                                     </div>
+
+                                    {/* Compteur dispo/pas dispo */}
+                                    <span
+                                        className="text-xs font-normal text-white/70 flex items-center gap-1.5 flex-shrink-0"
+                                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                                    >
+                                        <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
+                                        {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                                    </span>
                                 </div>
-                                
-                                {/* Compteur dispo/pas dispo */}
+                            ) : (
+                                /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
                                 <span
-                                    className="text-xs font-normal text-white/70 flex items-center gap-1.5 flex-shrink-0"
-                                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                                    className="absolute text-[10px] font-semibold text-white/80 flex items-center gap-1.5"
+                                    style={{ bottom: CONFIG.CAPSULE_BOTTOM, left: CONFIG.CAPSULE_LEFT }}
                                 >
                                     <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
                                     {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                                 </span>
-                            </div>
+                            )}
                         </div>
                         </div>
                         <SafeAreaSpacer />
