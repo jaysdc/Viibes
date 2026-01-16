@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Type, EyeOff } from 'lucide-react';
+import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Tag, EyeOff } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
@@ -698,14 +698,17 @@ const Tweaker = ({
                                             boxShadow: `0 0 25px ${gradientColors[Math.floor(gradientColors.length / 2)]}66, 0 0 50px ${gradientColors[Math.floor(gradientColors.length / 2)]}33`
                                         }}
                                     >
-                                        <div
-                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                                        >
-                                            <ChevronLeft size={16} />
-                                            <span>{gradientName}</span>
-                                            <ChevronRight size={16} />
-                                        </div>
+                                        {/* Afficher le nom du dégradé et chevrons uniquement si showTitles est true */}
+                                        {showTitles && (
+                                            <div
+                                                className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                                            >
+                                                <ChevronLeft size={16} />
+                                                <span>{gradientName}</span>
+                                                <ChevronRight size={16} />
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })()}
@@ -797,12 +800,13 @@ const Tweaker = ({
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
 
-                {/* Bouton 2D/3D - Toggle entre carré (2D) et cube (3D) */}
+                {/* Bouton 2D/3D - Rond */}
                 <button
                     onClick={() => setIs3DMode(!is3DMode)}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: is3DMode ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' : '#F3F4F6',
                         color: is3DMode ? 'white' : '#9CA3AF',
                         boxShadow: is3DMode
@@ -816,12 +820,13 @@ const Tweaker = ({
                     }
                 </button>
 
-                {/* Bouton Show/Hide Titles - Toggle entre Type (titres visibles) et EyeOff (titres masqués) */}
+                {/* Bouton Show/Hide Titles - Rond */}
                 <button
                     onClick={() => setShowTitles(!showTitles)}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: showTitles ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#F3F4F6',
                         color: showTitles ? 'white' : '#9CA3AF',
                         boxShadow: showTitles
@@ -830,7 +835,7 @@ const Tweaker = ({
                     }}
                 >
                     {showTitles
-                        ? <Type style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                        ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     }
                 </button>
@@ -1014,6 +1019,7 @@ const Tweaker = ({
                                     editedName={editedName}
                                     onEditedNameChange={setEditedName}
                                     onConfirmNameChange={() => confirmNameChange(vibe.vibeId)}
+                                    showTitles={showTitles}
                                 />
                             </div>
                         );

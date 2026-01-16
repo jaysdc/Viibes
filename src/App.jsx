@@ -1967,7 +1967,7 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true }) => {
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -2167,79 +2167,87 @@ return (
               </div>
           </div>
 
-          {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition */}
-          {(vibeName || isEditingName) ? (
-            <div
-                className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
-                style={{
-                  padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
-                  maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
-                  background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
-                    transition: 'background 0.2s, border-color 0.2s'
-                }}
-                onClick={(e) => {
-                    if (onNameEdit && !isEditingName) {
-                        e.stopPropagation();
-                        onNameEdit();
-                    }
-                }}
-            >
-                <div key={isEditingName ? 'editing' : 'display'} className="overflow-hidden" style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem`, height: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE * 1.25}rem` }}>
-                {isEditingName ? (
-                        <input
-                        type="text"
-                        value={editedName}
-                        onChange={(e) => onEditedNameChange(e.target.value)}
-                        onBlur={onConfirmNameChange}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') onConfirmNameChange();
-                            if (e.key === 'Escape') onConfirmNameChange();
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        autoFocus
-                        className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
-                        style={{
-                            fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                            lineHeight: 1.25,
-                            width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
-                            paddingLeft: '0.25rem',
-                            paddingRight: '0.25rem',
-                            marginLeft: '-0.25rem',
-                            marginRight: '-0.25rem'
-                        }}
-                    />
-                  ) : (
-                    <MarqueeText
-                        text={vibeName || ''}
-                        className="font-black leading-tight text-white"
-                        style={{
-                            fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
-                        }}
-                    />
-                  )}
-                </div>
-                <span
-                    className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
-                >
-                    <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                    {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-                </span>
-            </div>
+          {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition, ou si showTitles est false */}
+          {showTitles ? (
+            (vibeName || isEditingName) ? (
+              <div
+                  className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
+                  style={{
+                    padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
+                    maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
+                    background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
+                      transition: 'background 0.2s, border-color 0.2s'
+                  }}
+                  onClick={(e) => {
+                      if (onNameEdit && !isEditingName) {
+                          e.stopPropagation();
+                          onNameEdit();
+                      }
+                  }}
+              >
+                  <div key={isEditingName ? 'editing' : 'display'} className="overflow-hidden" style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem`, height: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE * 1.25}rem` }}>
+                  {isEditingName ? (
+                          <input
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => onEditedNameChange(e.target.value)}
+                          onBlur={onConfirmNameChange}
+                          onKeyDown={(e) => {
+                              if (e.key === 'Enter') onConfirmNameChange();
+                              if (e.key === 'Escape') onConfirmNameChange();
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          autoFocus
+                          className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
+                          style={{
+                              fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                              lineHeight: 1.25,
+                              width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
+                              paddingLeft: '0.25rem',
+                              paddingRight: '0.25rem',
+                              marginLeft: '-0.25rem',
+                              marginRight: '-0.25rem'
+                          }}
+                      />
+                    ) : (
+                      <MarqueeText
+                          text={vibeName || ''}
+                          className="font-black leading-tight text-white"
+                          style={{
+                              fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
+                          }}
+                      />
+                    )}
+                  </div>
+                  <span
+                      className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
+                  >
+                      <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                      {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                  </span>
+              </div>
+            ) : (
+              /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
+              <div
+                  className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
+                  style={{ background: 'rgba(255,255,255,0.15)' }}
+                  onClick={(e) => {
+                      if (onNameEdit) {
+                          e.stopPropagation();
+                          onNameEdit();
+                      }
+                  }}
+              >
+                  <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                  {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+              </div>
+            )
           ) : (
-            /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
-            <div
-                className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
-                style={{ background: 'rgba(255,255,255,0.15)' }}
-                onClick={(e) => {
-                    if (onNameEdit) {
-                        e.stopPropagation();
-                        onNameEdit();
-                    }
-                }}
-            >
-                <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-            </div>
+            /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
+            <span className="text-[10px] font-semibold text-white/80 flex items-center gap-1.5 relative z-10">
+                <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+            </span>
           )}
         </div>
     </FeedbackCardOverlay>
