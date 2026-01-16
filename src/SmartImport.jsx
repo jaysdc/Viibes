@@ -1318,9 +1318,9 @@ const SmartImport = ({
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'fusion' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-coral"
+                                            className="absolute inset-0 rounded-full smartimport-ignite-solar"
                                             style={{
-                                                background: 'linear-gradient(135deg, #fffC00 0%, #ff07a3 100%)',
+                                                background: 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
                                                 zIndex: 0
                                             }}
                                         />
@@ -1328,11 +1328,10 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('fusion')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
+                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1 text-white"
                                         style={{
-                                            background: btnIgniting === 'fusion' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                            color: btnIgniting === 'fusion' ? 'white' : '#9ca3af',
-                                            border: btnIgniting === 'fusion' ? '1px solid #ff07a3' : 'none'
+                                            background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
+                                            border: '1px solid #991b1b'
                                         }}
                                     >
                                         <Layers size={14} />
@@ -1342,9 +1341,9 @@ const SmartImport = ({
                                 <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-lagoon"
+                                            className="absolute inset-0 rounded-full smartimport-ignite-roseMagenta"
                                             style={{
-                                                background: 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)',
+                                                background: 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
                                                 zIndex: 0
                                             }}
                                         />
@@ -1352,11 +1351,10 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('vibes')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1"
+                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{
-                                            background: btnIgniting === 'vibes' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                            color: btnIgniting === 'vibes' ? 'white' : '#9ca3af',
-                                            border: btnIgniting === 'vibes' ? '1px solid #a855f7' : 'none'
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
+                                            border: '1px solid #9f1239'
                                         }}
                                     >
                                         <FlameWhiteVector size={14} />
