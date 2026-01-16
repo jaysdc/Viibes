@@ -4844,7 +4844,14 @@ useEffect(() => {
   const PAUSE_FADE_DURATION_SEC = 0.15;
 
   const fadeOutAndPause = () => {
-    if (!audioRef.current || audioRef.current.paused) return;
+    if (!audioRef.current) return;
+
+    // Si l'audio est déjà en pause (ex: pause depuis lock screen iOS),
+    // synchroniser le state React et sortir
+    if (audioRef.current.paused) {
+      setIsPlaying(false);
+      return;
+    }
 
     // Annuler tout fade précédent
     if (fadeInterval.current) {
