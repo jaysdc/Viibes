@@ -3347,7 +3347,10 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
     );
 };
 
-const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
+const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, baseItemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
+    // baseItemHeight = hauteur de base pour le positionnement (toujours 100%)
+    // itemHeight = hauteur visuelle de cet élément (peut être réduite)
+    const positionHeight = baseItemHeight || itemHeight; // Fallback si baseItemHeight non fourni
     const rowRef = useRef(null);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
@@ -3517,28 +3520,28 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const rightColumnStyle = {};
     
     if (CONFIG.WHEEL_CYLINDER_ENABLED && containerHeight) {
-        const elementCenter = centerPadding + index * itemHeight + itemHeight / 2;
+        const elementCenter = centerPadding + index * positionHeight + positionHeight / 2;
         const visibleCenter = scrollTop + containerHeight / 2;
         const distanceFromCenter = elementCenter - visibleCenter;
         const normalized = Math.max(-1, Math.min(1, distanceFromCenter / (containerHeight / 2)));
         const absNormalized = Math.abs(normalized);
-        
+
         // scaleY : compression verticale
         const curvedY = Math.pow(absNormalized, 1 + CONFIG.WHEEL_CYLINDER_CURVE_Y);
         const scaleY = 1 - (1 - CONFIG.WHEEL_CYLINDER_MIN_SCALE_Y) * curvedY;
-        
+
         // rotateX : inclinaison avec perspective
         const signX = normalized >= 0 ? -1 : 1;
         const curvedX = Math.pow(absNormalized, 1 + CONFIG.WHEEL_CYLINDER_CURVE_X);
         const rotateX = signX * CONFIG.WHEEL_CYLINDER_MAX_ROTATE_X * curvedX;
-        
+
         cylinderStyle.transform = `perspective(${CONFIG.WHEEL_CYLINDER_PERSPECTIVE}px) rotateX(${rotateX}deg) scaleY(${scaleY})`;
         cylinderStyle.transformStyle = 'preserve-3d';
-        
+
         // Colonnes latérales : déplacement + rotation vers le centre
         const sideInset = CONFIG.WHEEL_CYLINDER_SIDE_INSET * curvedX;
         const sideRotateY = CONFIG.WHEEL_CYLINDER_SIDE_ROTATE_Y * curvedX;
-        
+
         leftColumnStyle.transform = `translateX(${sideInset}px) rotateY(${sideRotateY}deg)`;
         rightColumnStyle.transform = `translateX(${-sideInset}px) rotateY(${-sideRotateY}deg)`;
     }
@@ -3547,7 +3550,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
       <div
       ref={rowRef}
       className="snap-center flex items-center justify-center px-4 cursor-pointer origin-center absolute w-full"
-      style={{ height: itemHeight, top: centerPadding + index * itemHeight, ...cylinderStyle }}
+      style={{ height: itemHeight, top: centerPadding + index * positionHeight + (positionHeight - itemHeight) / 2, ...cylinderStyle }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onClick={() => { if(Math.abs(offset) < 5) onClick(); }}
@@ -3587,7 +3590,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
 const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
-    
+
     const WIDTH = CONFIG.VOLUME_WIDTH;
     const HEIGHT = CONFIG.VOLUME_HEIGHT;
     const TRACK_HEIGHT = CONFIG.VOLUME_TRACK_HEIGHT;
@@ -3596,11 +3599,20 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     const ITEM_HEIGHT_MAIN_VH = CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH;
     const ITEM_HEIGHT_MINI_VH = CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH;
     const LINE_WIDTH_PERCENT = CONFIG.WHEEL_SELECTION_SEPARATOR;
-    
+
     const itemHeightVh = isMini ? ITEM_HEIGHT_MINI_VH : ITEM_HEIGHT_MAIN_VH;
-    const itemHeight = window.innerHeight * itemHeightVh / 100;
+    const itemHeight = window.innerHeight * itemHeightVh / 100; // Hauteur de base (100%)
     const containerHeight = realHeight || (itemHeight * visibleItems);
     const centerPadding = (containerHeight - itemHeight) / 2;
+
+    // Fonction pour calculer le ratio de hauteur selon la distance du centre visuel
+    const getHeightRatio = (distanceFromCenter) => {
+        if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) return 1;
+        const halfFullSize = Math.floor(CONFIG.WHEEL_CENTER_FULL_SIZE_COUNT / 2); // 3 pour 7 éléments
+        if (distanceFromCenter <= halfFullSize) return 1; // 100% pour les 7 centraux
+        if (distanceFromCenter === halfFullSize + 1) return CONFIG.WHEEL_HEIGHT_RATIO_STEP_1; // 90%
+        return CONFIG.WHEEL_HEIGHT_RATIO_STEP_2; // 60%
+    };
     
     // Génération du masque de fondu
     const wheelMaskStyle = {};
@@ -4223,27 +4235,32 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               const song = queue[index];
               const isCurrent = currentSong === song;
               const isCenter = index === nearestIndex;
-              
-              if (isCurrent) { 
+
+              // Calcul de la distance depuis le centre et du ratio de hauteur
+              const distanceFromCenter = Math.abs(index - nearestIndex);
+              const heightRatio = getHeightRatio(distanceFromCenter);
+              const thisItemHeight = itemHeight * heightRatio;
+
+              if (isCurrent) {
                 elements.push(
-                  <div 
-                    key={`${song.id}-${index}`} 
+                  <div
+                    key={`${song.id}-${index}`}
                     className="snap-center flex items-center justify-center w-full absolute"
                     style={{ height: itemHeight, top: centerPadding + index * itemHeight }}
                   >
-                    <ControlCapsule 
-                      song={song} 
-                      isPlaying={isPlaying} 
-                      togglePlay={togglePlay} 
-                      playPrev={playPrev} 
-                      playNext={playNext} 
-                      queueIndex={index} 
-                      queueLength={queue.length} 
+                    <ControlCapsule
+                      song={song}
+                      isPlaying={isPlaying}
+                      togglePlay={togglePlay}
+                      playPrev={playPrev}
+                      playNext={playNext}
+                      queueIndex={index}
+                      queueLength={queue.length}
                       variant={isMini ? 'dashboard' : 'main'}
                       audioLevel={audioLevel}
                     />
                   </div>
-                ); 
+                );
               } else {
                 elements.push(
                   <SwipeableSongRow
@@ -4252,7 +4269,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     index={index}
                     isVisualCenter={isCenter}
                     queueLength={queue.length}
-                    itemHeight={itemHeight}
+                    itemHeight={thisItemHeight}
+                    baseItemHeight={itemHeight}
                     isMini={isMini}
                     scrollTop={scrollTop}
                     containerHeight={containerHeight}

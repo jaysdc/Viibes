@@ -160,6 +160,12 @@ export const UNIFIED_CONFIG = {
     WHEEL_ITEM_HEIGHT_MAIN_VH: 7.0,     // Taille élément roue lecteur principal
     WHEEL_ITEM_HEIGHT_MINI_VH: 7.0,     // Taille élément roue lecteur dashboard
 
+    // Roue - hauteur variable selon distance du centre
+    WHEEL_VARIABLE_HEIGHT_ENABLED: true, // Activer la hauteur variable
+    WHEEL_CENTER_FULL_SIZE_COUNT: 7,     // Nombre d'éléments centraux à 100% (7 = centre + 3 dessus + 3 dessous)
+    WHEEL_HEIGHT_RATIO_STEP_1: 0.90,     // Ratio hauteur palier 1 (distance 4)
+    WHEEL_HEIGHT_RATIO_STEP_2: 0.60,     // Ratio hauteur palier 2 (distance 5+)
+
     // Capsules beacon et contrôle (hauteur en % de l'écran)
     PLAYER_CAPSULE_HEIGHT_VH: 7.0,      // Hauteur capsule beacon + capsule de lecture (unifié)
 
