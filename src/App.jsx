@@ -3347,10 +3347,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
     );
 };
 
-const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, baseItemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
-    // baseItemHeight = hauteur de base pour le positionnement (toujours 100%)
-    // itemHeight = hauteur visuelle de cet élément (peut être réduite)
-    const positionHeight = baseItemHeight || itemHeight; // Fallback si baseItemHeight non fourni
+const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
     const rowRef = useRef(null);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
@@ -3514,18 +3511,45 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         );
     }
 
-    // Calcul de l'effet cylindre (style iOS)
+    // Calcul de l'effet cylindre (style iOS) + intervalles variables
     const cylinderStyle = {};
     const leftColumnStyle = {};
     const rightColumnStyle = {};
-    
-    if (CONFIG.WHEEL_CYLINDER_ENABLED && containerHeight) {
-        const elementCenter = centerPadding + index * positionHeight + positionHeight / 2;
-        const visibleCenter = scrollTop + containerHeight / 2;
-        const distanceFromCenter = elementCenter - visibleCenter;
-        const normalized = Math.max(-1, Math.min(1, distanceFromCenter / (containerHeight / 2)));
-        const absNormalized = Math.abs(normalized);
 
+    // Position de base (grille fixe)
+    const baseTop = centerPadding + index * itemHeight;
+    // Centre visuel de cet élément dans le scroll
+    const elementCenter = baseTop + itemHeight / 2;
+    // Centre du viewport
+    const visibleCenter = scrollTop + containerHeight / 2;
+    // Distance au centre (en pixels)
+    const distanceFromCenter = elementCenter - visibleCenter;
+    // Normalisé entre -1 et +1
+    const normalized = Math.max(-1, Math.min(1, distanceFromCenter / (containerHeight / 2)));
+    const absNormalized = Math.abs(normalized);
+
+    // Calcul du décalage pour les intervalles variables
+    // Ratios : 50%, 75%, 90%, 98%, 100%, 100%, 100%, 98%, 90%, 75%, 50%
+    // On compresse les éléments vers le centre quand ils sont loin
+    let compressionOffset = 0;
+    if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) {
+        // Fonction de compression : plus on est loin du centre, plus on se rapproche
+        // absNormalized = 0 (centre) → pas de compression
+        // absNormalized = 1 (bord) → compression max
+        const compressionRatios = [1.0, 0.98, 0.90, 0.75, 0.50]; // du centre vers le bord
+        const numSteps = compressionRatios.length;
+        const stepIndex = Math.min(numSteps - 1, Math.floor(absNormalized * numSteps));
+        const nextStepIndex = Math.min(numSteps - 1, stepIndex + 1);
+        const stepProgress = (absNormalized * numSteps) - stepIndex;
+        const ratio = compressionRatios[stepIndex] + (compressionRatios[nextStepIndex] - compressionRatios[stepIndex]) * stepProgress;
+
+        // Calcul du décalage cumulé : on "pousse" les éléments vers le centre
+        // Plus l'élément est loin, plus il est poussé vers le centre
+        const maxCompression = itemHeight * 0.5; // Compression max = 50% de la hauteur
+        compressionOffset = (1 - ratio) * Math.abs(distanceFromCenter) * Math.sign(-distanceFromCenter);
+    }
+
+    if (CONFIG.WHEEL_CYLINDER_ENABLED && containerHeight) {
         // scaleY : compression verticale
         const curvedY = Math.pow(absNormalized, 1 + CONFIG.WHEEL_CYLINDER_CURVE_Y);
         const scaleY = 1 - (1 - CONFIG.WHEEL_CYLINDER_MIN_SCALE_Y) * curvedY;
@@ -3550,7 +3574,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
       <div
       ref={rowRef}
       className="snap-center flex items-center justify-center px-4 cursor-pointer origin-center absolute w-full"
-      style={{ height: itemHeight, top: centerPadding + index * positionHeight + (positionHeight - itemHeight) / 2, ...cylinderStyle }}
+      style={{ height: itemHeight, top: baseTop + compressionOffset, ...cylinderStyle }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onClick={() => { if(Math.abs(offset) < 5) onClick(); }}
@@ -3601,19 +3625,10 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     const LINE_WIDTH_PERCENT = CONFIG.WHEEL_SELECTION_SEPARATOR;
 
     const itemHeightVh = isMini ? ITEM_HEIGHT_MINI_VH : ITEM_HEIGHT_MAIN_VH;
-    const itemHeight = window.innerHeight * itemHeightVh / 100; // Hauteur de base (100%)
+    const itemHeight = window.innerHeight * itemHeightVh / 100;
     const containerHeight = realHeight || (itemHeight * visibleItems);
     const centerPadding = (containerHeight - itemHeight) / 2;
 
-    // Fonction pour calculer le ratio de hauteur selon la distance du centre visuel
-    const getHeightRatio = (distanceFromCenter) => {
-        if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) return 1;
-        const halfFullSize = Math.floor(CONFIG.WHEEL_CENTER_FULL_SIZE_COUNT / 2); // 3 pour 7 éléments
-        if (distanceFromCenter <= halfFullSize) return 1; // 100% pour les 7 centraux
-        if (distanceFromCenter === halfFullSize + 1) return CONFIG.WHEEL_HEIGHT_RATIO_STEP_1; // 90%
-        return CONFIG.WHEEL_HEIGHT_RATIO_STEP_2; // 60%
-    };
-    
     // Génération du masque de fondu
     const wheelMaskStyle = {};
     if (CONFIG.WHEEL_MASK_ENABLED) {
@@ -4236,11 +4251,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               const isCurrent = currentSong === song;
               const isCenter = index === nearestIndex;
 
-              // Calcul de la distance depuis le centre et du ratio de hauteur
-              const distanceFromCenter = Math.abs(index - nearestIndex);
-              const heightRatio = getHeightRatio(distanceFromCenter);
-              const thisItemHeight = itemHeight * heightRatio;
-
               if (isCurrent) {
                 elements.push(
                   <div
@@ -4269,8 +4279,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     index={index}
                     isVisualCenter={isCenter}
                     queueLength={queue.length}
-                    itemHeight={thisItemHeight}
-                    baseItemHeight={itemHeight}
+                    itemHeight={itemHeight}
                     isMini={isMini}
                     scrollTop={scrollTop}
                     containerHeight={containerHeight}
