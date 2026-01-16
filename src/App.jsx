@@ -4529,6 +4529,7 @@ const handlePlayerTouchEnd = () => {
       }
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
+    const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
@@ -7926,6 +7927,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     setEditingVibeId(vibeId);
                                     setShowBuilder(true);
                                 }}
+                                showTitles={showTitles}
                             />
                         );
                     })}
@@ -7972,6 +7974,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             hasSong={!!currentSong}
             capsuleHeightVh={CONFIG.CAPSULE_HEIGHT_MINI_VH}
             onSwipeProgress={setVibeSwipePreview}
+            showTitles={showTitles}
+            setShowTitles={setShowTitles}
         />
         )}
 

@@ -261,7 +261,9 @@ const Tweaker = ({
     hasSong = false,
     capsuleHeightVh = 5.8,
     onSwipeProgress = () => {},
-    cardAnimConfig = {}
+    cardAnimConfig = {},
+    showTitles = true,
+    setShowTitles = () => {}
 }) => {
     // Animation d'ouverture
     const [isVisible, setIsVisible] = useState(false);
@@ -340,9 +342,6 @@ const Tweaker = ({
     // Toggle 2D/3D (2D par défaut)
     const [is3DMode, setIs3DMode] = useState(false);
 
-    // Toggle affichage des titres (affiché par défaut)
-    const [showTitles, setShowTitles] = useState(true);
-    
     // Sauvegarder l'état original complet pour pouvoir annuler
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
     const [originalVibes] = useState(() =>
