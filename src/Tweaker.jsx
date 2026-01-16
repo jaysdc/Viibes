@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd } from 'lucide-react';
+import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
 import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
@@ -934,6 +934,14 @@ const Tweaker = ({
                                 ref={(el) => { if (el) cardRefsMap.current.set(vibe.vibeId, el); }}
                                 className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
+                                {/* Indicateur de swipe - doigt au centre en haut, entouré de chevrons */}
+                                <div
+                                    className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
+                                >
+                                    <ChevronLeft size={10} />
+                                    <Pointer size={12} />
+                                    <ChevronRight size={10} />
+                                </div>
 
                                 <VibeCardComponent
                                     vibeId={vibe.vibeId}

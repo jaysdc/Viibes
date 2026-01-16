@@ -2152,16 +2152,6 @@ return (
               );
           })()}
 
-          {/* Indicateurs de swipe - chevrons en haut à gauche et à droite */}
-          <div className="absolute top-3 left-3 flex items-center gap-0.5">
-              <ChevronLeft size={14} className="text-white/40" strokeWidth={2} />
-              <ChevronLeft size={14} className="text-white/25 -ml-2.5" strokeWidth={2} />
-          </div>
-          <div className="absolute top-3 right-14 flex items-center gap-0.5">
-              <ChevronRight size={14} className="text-white/25 -mr-2.5" strokeWidth={2} />
-              <ChevronRight size={14} className="text-white/40" strokeWidth={2} />
-          </div>
-
           {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
           <div
               className="absolute top-3 right-3"
