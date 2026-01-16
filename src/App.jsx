@@ -3517,51 +3517,37 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const rightColumnStyle = {};
 
     // Position de base (grille fixe)
-    // Ratios d'intervalle selon le slot visuel (du haut vers le bas de l'écran)
-    // Slots: 0=haut, 5=centre, 10=bas (11 éléments visibles)
-    const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
-
-    // Position de base (sans variable height)
     const baseTop = centerPadding + index * itemHeight;
 
-    // Calcul du décalage cumulatif pour les intervalles variables
+    // Position visuelle de cet élément dans le viewport (où il apparaît à l'écran)
+    const visualPositionInViewport = baseTop - scrollTop;
+
+    // Centre du viewport
+    const viewportCenter = containerHeight / 2;
+
+    // Distance au centre du viewport (en pixels)
+    const distanceFromViewportCenter = visualPositionInViewport + itemHeight / 2 - viewportCenter;
+
+    // Normalisé entre -1 et +1
+    const normalized = Math.max(-1, Math.min(1, distanceFromViewportCenter / viewportCenter));
+    const absNormalized = Math.abs(normalized);
+
+    // Calcul du décalage pour les intervalles variables
+    // Basé sur la position VISUELLE dans le viewport, pas sur l'index
     let variableOffset = 0;
     if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED && containerHeight) {
-        // Trouver l'index de l'élément qui serait au centre de l'écran
-        const centerIndex = Math.round(scrollTop / itemHeight);
-        // Distance en nombre d'éléments par rapport au centre
-        const deltaFromCenter = index - centerIndex;
+        // Ratios selon la position normalisée (0 = centre, 1 = bord)
+        // On compresse vers le centre quand on est loin
+        // À absNormalized = 0 : pas de compression
+        // À absNormalized = 1 : compression max (20% de l'intervalle)
+        const compressionFactor = 1 - 0.8 * Math.pow(absNormalized, 1.5);
 
-        // Calculer le décalage cumulatif
-        // Pour chaque intervalle entre le centre et cet élément, on applique le ratio
-        if (deltaFromCenter > 0) {
-            // Élément en dessous du centre
-            for (let i = 0; i < deltaFromCenter; i++) {
-                const slotIndex = 5 + i; // 5 = centre, puis on descend
-                const ratio = slotIndex < slotRatios.length ? slotRatios[slotIndex] : slotRatios[slotRatios.length - 1];
-                variableOffset += (ratio - 1) * itemHeight;
-            }
-        } else if (deltaFromCenter < 0) {
-            // Élément au dessus du centre
-            for (let i = 0; i > deltaFromCenter; i--) {
-                const slotIndex = 5 + i - 1; // 5 = centre, puis on monte
-                const ratio = slotIndex >= 0 ? slotRatios[slotIndex] : slotRatios[0];
-                variableOffset -= (ratio - 1) * itemHeight;
-            }
-        }
+        // Le décalage pousse les éléments vers le centre
+        // Plus on est loin, plus on est poussé
+        variableOffset = -distanceFromViewportCenter * (1 - compressionFactor);
     }
 
     const finalTop = baseTop + variableOffset;
-
-    // Centre visuel de cet élément dans le scroll
-    const elementCenter = finalTop + itemHeight / 2;
-    // Centre du viewport
-    const visibleCenter = scrollTop + containerHeight / 2;
-    // Distance au centre (en pixels)
-    const distanceFromCenter = elementCenter - visibleCenter;
-    // Normalisé entre -1 et +1
-    const normalized = Math.max(-1, Math.min(1, distanceFromCenter / (containerHeight / 2)));
-    const absNormalized = Math.abs(normalized);
 
     if (CONFIG.WHEEL_CYLINDER_ENABLED && containerHeight) {
         // scaleY : compression verticale
@@ -4254,26 +4240,16 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             nearestIndex = Math.max(0, Math.min(queue.length - 1, nearestIndex));
 
             // Fonction helper pour calculer le décalage variable
-            const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
             const calcVariableOffset = (idx) => {
               if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED || !containerHeight) return 0;
-              const centerIdx = Math.round(scrollTop / itemHeight);
-              const delta = idx - centerIdx;
-              let offset = 0;
-              if (delta > 0) {
-                for (let i = 0; i < delta; i++) {
-                  const slotIdx = 5 + i;
-                  const ratio = slotIdx < slotRatios.length ? slotRatios[slotIdx] : slotRatios[slotRatios.length - 1];
-                  offset += (ratio - 1) * itemHeight;
-                }
-              } else if (delta < 0) {
-                for (let i = 0; i > delta; i--) {
-                  const slotIdx = 5 + i - 1;
-                  const ratio = slotIdx >= 0 ? slotRatios[slotIdx] : slotRatios[0];
-                  offset -= (ratio - 1) * itemHeight;
-                }
-              }
-              return offset;
+              const baseTop = centerPadding + idx * itemHeight;
+              const visualPos = baseTop - scrollTop;
+              const viewportCenter = containerHeight / 2;
+              const distFromCenter = visualPos + itemHeight / 2 - viewportCenter;
+              const norm = Math.max(-1, Math.min(1, distFromCenter / viewportCenter));
+              const absNorm = Math.abs(norm);
+              const compressionFactor = 1 - 0.8 * Math.pow(absNorm, 1.5);
+              return -distFromCenter * (1 - compressionFactor);
             };
             
             // VIRTUALISATION : ne rendre que les éléments visibles + buffer
