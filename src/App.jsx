@@ -3519,7 +3519,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     // Position de base (grille fixe)
     // Ratios d'intervalle selon le slot visuel (du haut vers le bas de l'écran)
     // Slots: 0=haut, 5=centre, 10=bas (11 éléments visibles)
-    const slotRatios = [0.50, 0.75, 0.90, 0.98, 1.0, 1.0, 1.0, 0.98, 0.90, 0.75, 0.50];
+    const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
 
     // Position de base (sans variable height)
     const baseTop = centerPadding + index * itemHeight;
@@ -4254,7 +4254,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             nearestIndex = Math.max(0, Math.min(queue.length - 1, nearestIndex));
 
             // Fonction helper pour calculer le décalage variable
-            const slotRatios = [0.50, 0.75, 0.90, 0.98, 1.0, 1.0, 1.0, 0.98, 0.90, 0.75, 0.50];
+            const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
             const calcVariableOffset = (idx) => {
               if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED || !containerHeight) return 0;
               const centerIdx = Math.round(scrollTop / itemHeight);
