@@ -935,10 +935,10 @@ const Tweaker = ({
                                 className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
                                 {/* Indicateur de swipe - doigt au centre en haut, entouré de chevrons */}
-                                {/* Décalé de 1rem vers la droite pour compenser l'icône dossier/playlist à droite */}
+                                {/* Centré dans l'espace disponible (100% - icône droite 2rem - padding 0.75rem) */}
                                 <div
                                     className="absolute top-2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
-                                    style={{ left: 'calc(50% + 1rem)', transform: 'translateX(-50%)' }}
+                                    style={{ left: 'calc((100% - 2.75rem) / 2)', transform: 'translateX(-50%)' }}
                                 >
                                     <ChevronLeft size={10} />
                                     <Pointer size={12} />
