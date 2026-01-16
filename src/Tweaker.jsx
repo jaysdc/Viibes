@@ -764,7 +764,6 @@ const Tweaker = ({
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
-                        border: activeMode === 'reorder' ? '1px solid #FF00FF' : 'none',
                         boxShadow: activeMode === 'reorder'
                             ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
@@ -773,7 +772,7 @@ const Tweaker = ({
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
-                
+
                 {/* Bouton DELETE - Rouge/Rose */}
                 <button
                     ref={deleteButtonRef}
@@ -783,7 +782,6 @@ const Tweaker = ({
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'delete' ? 'white' : '#9CA3AF',
-                        border: activeMode === 'delete' ? '1px solid #FF00FF' : 'none',
                         boxShadow: activeMode === 'delete'
                             ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
