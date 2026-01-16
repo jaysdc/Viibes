@@ -162,9 +162,9 @@ export const UNIFIED_CONFIG = {
 
     // Roue - hauteur variable selon distance du centre
     WHEEL_VARIABLE_HEIGHT_ENABLED: true, // Activer la hauteur variable
-    WHEEL_CENTER_FULL_SIZE_COUNT: 7,     // Nombre d'éléments centraux à 100% (7 = centre + 3 dessus + 3 dessous)
-    WHEEL_HEIGHT_RATIO_STEP_1: 0.90,     // Ratio hauteur palier 1 (distance 4)
-    WHEEL_HEIGHT_RATIO_STEP_2: 0.60,     // Ratio hauteur palier 2 (distance 5+)
+    WHEEL_CENTER_FULL_SIZE_COUNT: 3,     // Nombre d'éléments centraux à 100% (3 = centre + 1 dessus + 1 dessous)
+    WHEEL_HEIGHT_RATIO_STEP_1: 0.50,     // Ratio hauteur palier 1 (distance 2) - 50%
+    WHEEL_HEIGHT_RATIO_STEP_2: 0.20,     // Ratio hauteur palier 2 (distance 3+) - 20%
 
     // Capsules beacon et contrôle (hauteur en % de l'écran)
     PLAYER_CAPSULE_HEIGHT_VH: 7.0,      // Hauteur capsule beacon + capsule de lecture (unifié)
