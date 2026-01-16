@@ -584,7 +584,10 @@ const Tweaker = ({
         setVibes(originalVibes);
         setOrderedVibes([]);
         setDeletedVibes([]);
-        
+        // Restaurer les toggles à leur valeur d'origine
+        setShowTitles(originalShowTitles);
+        setIs3DMode(originalIs3DMode);
+
         // Lancer l'animation de fermeture vers la gauche
         setClosingDirection('left');
         onCloseStart(); // Reset les cartes pendant l'animation
