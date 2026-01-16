@@ -1330,8 +1330,7 @@ const SmartImport = ({
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1 text-white"
                                         style={{
-                                            background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
-                                            border: '1px solid #991b1b'
+                                            background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)'
                                         }}
                                     >
                                         <Layers size={14} />
@@ -1353,8 +1352,7 @@ const SmartImport = ({
                                         disabled={btnIgniting !== null}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{
-                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
-                                            border: '1px solid #9f1239'
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)'
                                         }}
                                     >
                                         <FlameWhiteVector size={14} />
