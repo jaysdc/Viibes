@@ -343,6 +343,8 @@ const Tweaker = ({
     const [is3DMode, setIs3DMode] = useState(false);
 
     // Sauvegarder l'état original complet pour pouvoir annuler
+    const [originalShowTitles] = useState(showTitles);
+    const [originalIs3DMode] = useState(false); // is3DMode démarre toujours à false
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
     const [originalVibes] = useState(() =>
         Object.keys(playlists).map(vibeId => ({
@@ -373,7 +375,7 @@ const Tweaker = ({
     const handleUndo = () => {
         // Lancer l'animation ET le undo simultanément
         setUndoFeedback(true);
-        
+
         // Restaurer tout l'état original immédiatement
         setVibes(originalVibes);
         setVibeColorIndices(originalColorIndices);
@@ -382,6 +384,9 @@ const Tweaker = ({
         setDeletedVibes([]);
         setMarkedForDeletion([]);
         setActiveMode(null);
+        // Restaurer les toggles à leur valeur d'origine
+        setShowTitles(originalShowTitles);
+        setIs3DMode(originalIs3DMode);
     };
     
     const handleUndoAnimationComplete = () => {
@@ -799,17 +804,17 @@ const Tweaker = ({
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
 
-                {/* Bouton 2D/3D - Rond */}
+                {/* Bouton 2D/3D - Rond - Electric Lagoon quand ON */}
                 <button
                     onClick={() => setIs3DMode(!is3DMode)}
                     className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: is3DMode ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' : '#F3F4F6',
+                        background: is3DMode ? 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)' : '#F3F4F6',
                         color: is3DMode ? 'white' : '#9CA3AF',
                         boxShadow: is3DMode
-                            ? '0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(99, 102, 241, 0.3)'
+                            ? '0 0 20px rgba(1, 255, 229, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
@@ -819,17 +824,17 @@ const Tweaker = ({
                     }
                 </button>
 
-                {/* Bouton Show/Hide Titles - Rond */}
+                {/* Bouton Show/Hide Titles - Rond - Electric Lagoon quand ON */}
                 <button
                     onClick={() => setShowTitles(!showTitles)}
                     className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: showTitles ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#F3F4F6',
+                        background: showTitles ? 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)' : '#F3F4F6',
                         color: showTitles ? 'white' : '#9CA3AF',
                         boxShadow: showTitles
-                            ? '0 0 20px rgba(16, 185, 129, 0.5), 0 0 40px rgba(5, 150, 105, 0.3)'
+                            ? '0 0 20px rgba(1, 255, 229, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
@@ -980,11 +985,10 @@ const Tweaker = ({
                                 ref={(el) => { if (el) cardRefsMap.current.set(vibe.vibeId, el); }}
                                 className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
-                                {/* Indicateur de swipe - doigt au centre en haut, entouré de chevrons */}
-                                {/* Centré dans l'espace disponible (100% - icône droite 2rem - padding 0.75rem) */}
+                                {/* Indicateur de swipe - centré horizontalement en haut de la carte */}
                                 <div
-                                    className="absolute top-2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
-                                    style={{ left: 'calc((100% - 2.75rem) / 2)', transform: 'translateX(-50%)' }}
+                                    className="absolute top-2 left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
+                                    style={{ transform: 'translateX(-50%)' }}
                                 >
                                     <ChevronLeft size={10} />
                                     <Pointer size={12} />
