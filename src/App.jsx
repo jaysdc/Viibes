@@ -3516,9 +3516,11 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const leftColumnStyle = {};
     const rightColumnStyle = {};
 
-    // Position visuelle de cet élément dans le viewport (où il apparaît à l'écran)
-    // elementTop est la position absolue calculée par SongWheel avec la grille variable
-    const visualPositionInViewport = elementTop - scrollTop;
+    // Position de base dans la grille (fixe, basée sur index)
+    const baseTop = centerPadding + index * itemHeight;
+
+    // Position visuelle de cet élément dans le viewport
+    const visualPositionInViewport = baseTop - scrollTop;
 
     // Centre du viewport
     const viewportCenter = containerHeight / 2;
@@ -3530,8 +3532,20 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     const normalized = Math.max(-1, Math.min(1, distanceFromViewportCenter / viewportCenter));
     const absNormalized = Math.abs(normalized);
 
-    // La position finale est directement elementTop (grille variable déjà calculée)
-    const finalTop = elementTop;
+    // Calcul du décalage pour les intervalles variables
+    // Basé sur la position VISUELLE dans le viewport
+    let variableOffset = 0;
+    if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED && containerHeight) {
+        // Les éléments aux bords (absNormalized proche de 1) sont poussés vers le centre
+        // Les éléments au centre (absNormalized proche de 0) ne bougent pas
+        // Compression max de 80% aux bords
+        const compressionAmount = 0.8 * Math.pow(absNormalized, 1.5);
+
+        // L'offset pousse vers le centre (signe opposé à la distance)
+        variableOffset = -distanceFromViewportCenter * compressionAmount;
+    }
+
+    const finalTop = baseTop + variableOffset;
 
     if (CONFIG.WHEEL_CYLINDER_ENABLED && containerHeight) {
         // scaleY : compression verticale
@@ -3613,48 +3627,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     const containerHeight = realHeight || (itemHeight * visibleItems);
     const centerPadding = (containerHeight - itemHeight) / 2;
 
-    // Grille à intervalles variables : ratios pour les 11 positions visibles
-    // Les éléments aux bords sont plus rapprochés, ceux au centre ont l'espacement normal
-    const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
-    const slotHeights = slotRatios.map(r => r * itemHeight);
-    const slotCycleLength = slotHeights.reduce((a, b) => a + b, 0);
-
-    // Positions cumulatives pour un cycle de 11 slots
-    const slotPositions = [0];
-    for (let i = 0; i < slotHeights.length; i++) {
-        slotPositions.push(slotPositions[i] + slotHeights[i]);
-    }
-
-    // Obtenir la position scroll pour un index donné
-    const getScrollFromIndex = (idx) => {
-        if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) return idx * itemHeight;
-        const cycleCount = Math.floor(idx / slotRatios.length);
-        const posInCycle = idx % slotRatios.length;
-        return cycleCount * slotCycleLength + slotPositions[posInCycle];
-    };
-
-    // Obtenir l'index depuis une position scroll (recherche binaire)
-    const getIndexFromScroll = (scroll) => {
-        if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) return scroll / itemHeight;
-        const cycleCount = Math.floor(scroll / slotCycleLength);
-        const scrollInCycle = scroll - cycleCount * slotCycleLength;
-        // Trouver la position dans le cycle
-        let posInCycle = 0;
-        for (let i = 0; i < slotPositions.length - 1; i++) {
-            if (scrollInCycle >= slotPositions[i] && scrollInCycle < slotPositions[i + 1]) {
-                posInCycle = i + (scrollInCycle - slotPositions[i]) / slotHeights[i];
-                break;
-            }
-        }
-        return cycleCount * slotRatios.length + posInCycle;
-    };
-
-    // Hauteur totale du conteneur (pour tous les éléments)
-    const getTotalHeight = () => {
-        if (!CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) return queue.length * itemHeight;
-        return getScrollFromIndex(queue.length);
-    };
-
     // Génération du masque de fondu
     const wheelMaskStyle = {};
     if (CONFIG.WHEEL_MASK_ENABLED) {
@@ -3690,18 +3662,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     
     const [scrollTop, setScrollTop] = useState(() => {
       if (initialIndex !== null) {
-        // Calcul inline pour l'initialisation (avant que getScrollFromIndex soit disponible)
-        if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED) {
-          const itemHeightCalc = window.innerHeight * (isMini ? CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH : CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH) / 100;
-          const ratios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
-          const heights = ratios.map(r => r * itemHeightCalc);
-          const cycleLen = heights.reduce((a, b) => a + b, 0);
-          const positions = [0];
-          for (let i = 0; i < heights.length; i++) positions.push(positions[i] + heights[i]);
-          const cycleCount = Math.floor(initialIndex / ratios.length);
-          const posInCycle = initialIndex % ratios.length;
-          return cycleCount * cycleLen + positions[posInCycle];
-        }
         const itemHeightCalc = window.innerHeight * (isMini ? CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH : CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH) / 100;
         return initialIndex * itemHeightCalc;
       }
@@ -3731,8 +3691,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     
     useEffect(() => {
       if (containerRef.current && initialIndex !== null && !hasInitialized.current) {
-        const targetTop = getScrollFromIndex(initialIndex);
-        containerRef.current.scrollTop = targetTop; // Direct, pas de scrollTo
+        const targetTop = initialIndex * itemHeight;
+        containerRef.current.scrollTop = targetTop;
         setScrollTop(targetTop);
         hasInitialized.current = true;
       }
@@ -3745,7 +3705,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       if (containerRef.current && currentSong) {
         const index = queue.findIndex(s => s === currentSong);
         if (index !== -1) {
-          const targetTop = getScrollFromIndex(index);
+          const targetTop = index * itemHeight;
           containerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
           setScrollTop(targetTop);
         }
@@ -3755,7 +3715,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     // Notifier le parent de l'index centré
     useEffect(() => {
       if (onCenteredIndexChange) {
-        const centeredIndex = Math.round(getIndexFromScroll(scrollTop));
+        const centeredIndex = Math.round(scrollTop / itemHeight);
         onCenteredIndexChange(centeredIndex);
       }
     }, [scrollTop, itemHeight, onCenteredIndexChange]);
@@ -3782,8 +3742,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       if (Math.abs(scrollTop - startScroll) > itemHeight / 2) {
         setScrollTop(startScroll);
       }
-      const nearestIndex = Math.round(getIndexFromScroll(startScroll));
-      const targetScroll = getScrollFromIndex(nearestIndex);
+      const nearestIndex = Math.round(startScroll / itemHeight);
+      const targetScroll = nearestIndex * itemHeight;
       const distance = Math.abs(startScroll - targetScroll);
       
       if (distance > 1) {
@@ -3866,7 +3826,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       if (!canScrub) return;
       const touch = e.touches[0];
       scrubStartYRef.current = touch.clientY;
-      const selectedIdx = Math.round(getIndexFromScroll(scrollTop));
+      const selectedIdx = Math.round(scrollTop / itemHeight);
       setScrubIndex(selectedIdx);
       
       longPressTimerRef.current = setTimeout(() => {
@@ -3943,7 +3903,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       if (isScrubbing) {
         // Scroll animé vers la chanson sélectionnée
         if (containerRef.current) {
-          const targetScroll = getScrollFromIndex(scrubIndex);
+          const targetScroll = scrubIndex * itemHeight;
           containerRef.current.scrollTo({ top: targetScroll, behavior: 'smooth' });
           setScrollTop(targetScroll);
         }
@@ -3973,7 +3933,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           const horizontalMarginPercent = (100 - CONFIG.CAPSULE_WIDTH_PERCENT) / 2;
           
           // Position de la sélection
-          const selectedIndex = Math.round(getIndexFromScroll(scrollTop));
+          const selectedIndex = Math.round(scrollTop / itemHeight);
           const totalSongs = queue.length;
           
           // Notifier le parent de l'index centré
@@ -4264,12 +4224,11 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           style={{ ...wheelMaskStyle }}
         >
           {/* Conteneur avec hauteur totale pour le scroll */}
-          <div style={{ height: centerPadding + getTotalHeight() + centerPadding, position: 'relative' }}>
+          <div style={{ height: centerPadding + queue.length * itemHeight + centerPadding, position: 'relative' }}>
           {(() => {
             const threshold = CONFIG.WHEEL_CENTER_THRESHOLD;
-            const floatIndex = getIndexFromScroll(scrollTop);
-            const baseIndex = Math.floor(floatIndex);
-            const scrollProgress = floatIndex - baseIndex;
+            const baseIndex = Math.floor(scrollTop / itemHeight);
+            const scrollProgress = (scrollTop / itemHeight) - baseIndex;
 
             let nearestIndex;
             if (scrollDirectionRef.current === 'down') {
@@ -4291,8 +4250,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               const isCurrent = currentSong === song;
               const isCenter = index === nearestIndex;
 
-              // Position de cet élément dans la grille variable
-              const elementTop = centerPadding + getScrollFromIndex(index);
+              // Position de base (grille fixe)
+              const elementTop = centerPadding + index * itemHeight;
 
               if (isCurrent) {
                 elements.push(
