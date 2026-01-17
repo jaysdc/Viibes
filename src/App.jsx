@@ -3535,44 +3535,43 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     // Calcul du décalage pour les intervalles variables basé sur les SLOTS VISUELS
     let variableOffset = 0;
     if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED && containerHeight) {
-        // Ratios pour 11 slots (du haut vers le bas du viewport)
+        // Ratios pour 11 slots : slots 0-3 et 7-10 sont compressés, slots 4-5-6 sont normaux
+        // slot 0 = 20%, slot 1 = 40%, slot 2 = 60%, slot 3 = 80%
+        // slot 4,5,6 = 100%
+        // slot 7 = 80%, slot 8 = 60%, slot 9 = 40%, slot 10 = 20%
         const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
-        const numSlots = slotRatios.length;
 
-        // Hauteurs compressées de chaque slot
-        const slotHeights = slotRatios.map(r => r * itemHeight);
-        const totalCompressedHeight = slotHeights.reduce((a, b) => a + b, 0);
+        // Calculer la distance au centre en nombre de slots
+        const elementCenterY = visualPosInViewport + itemHeight / 2;
+        const distanceFromCenter = elementCenterY - viewportCenter;
+        const slotsFromCenter = distanceFromCenter / itemHeight;
 
-        // Padding pour centrer les slots dans le viewport
-        const compressedPadding = (containerHeight - totalCompressedHeight) / 2;
+        // Mapper à un index (0-10, avec 5 = centre)
+        const ratioIndex = Math.max(0, Math.min(10, Math.round(5 + slotsFromCenter)));
 
-        // Positions cumulatives des slots (où commence chaque slot dans le viewport compressé)
-        const slotStarts = [compressedPadding];
-        for (let i = 0; i < numSlots; i++) {
-            slotStarts.push(slotStarts[i] + slotHeights[i]);
+        // Calculer l'offset cumulatif
+        // Pour les éléments AU-DESSUS du centre (slotsFromCenter < 0):
+        // Ils doivent DESCENDRE car les slots au-dessus d'eux sont compressés
+        // L'offset = somme des compressions des slots entre eux et le centre
+
+        let cumulativeOffset = 0;
+        if (slotsFromCenter < -0.5) {
+            // Éléments au-dessus du centre (slots 0-4)
+            // Sommer les compressions des slots de ratioIndex à 3 (slots compressés au-dessus)
+            for (let i = ratioIndex; i <= 3; i++) {
+                const compression = (1 - slotRatios[i]) * itemHeight;
+                cumulativeOffset += compression;
+            }
+            variableOffset = cumulativeOffset; // Descendre
+        } else if (slotsFromCenter > 0.5) {
+            // Éléments en-dessous du centre (slots 6-10)
+            // Sommer les compressions des slots de 7 à ratioIndex (slots compressés en-dessous)
+            for (let i = 7; i <= ratioIndex; i++) {
+                const compression = (1 - slotRatios[i]) * itemHeight;
+                cumulativeOffset += compression;
+            }
+            variableOffset = -cumulativeOffset; // Monter
         }
-
-        // Déterminer dans quel slot théorique (grille fixe) cet élément se trouve
-        // Le centre du viewport = slot 5 (index 5), donc on calcule le décalage par rapport au centre
-        const centerSlot = 5;
-        const slotOffset = visualPosInViewport / itemHeight; // Position en "nombre de slots" depuis le haut
-        const floatSlot = centerSlot + slotOffset - (containerHeight / 2 / itemHeight);
-
-        // Limiter aux slots 0-10
-        const clampedSlot = Math.max(0, Math.min(numSlots - 1, floatSlot));
-        const slotIndex = Math.floor(clampedSlot);
-        const slotFraction = clampedSlot - slotIndex;
-
-        // Interpoler la position compressée
-        let compressedPos;
-        if (slotIndex >= numSlots - 1) {
-            compressedPos = slotStarts[numSlots - 1] + slotHeights[numSlots - 1] * slotFraction;
-        } else {
-            compressedPos = slotStarts[slotIndex] + slotHeights[slotIndex] * slotFraction;
-        }
-
-        // L'offset est la différence entre position compressée et position normale
-        variableOffset = compressedPos - visualPosInViewport;
     }
 
     const finalTop = baseTop + variableOffset;
