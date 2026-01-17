@@ -3519,30 +3519,60 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     // Position de base dans la grille (fixe, basée sur index)
     const baseTop = centerPadding + index * itemHeight;
 
-    // Position visuelle de cet élément dans le viewport
-    const visualPositionInViewport = baseTop - scrollTop;
+    // Position visuelle de cet élément dans le viewport (où il apparaît sans compression)
+    const visualPosInViewport = baseTop - scrollTop;
 
     // Centre du viewport
     const viewportCenter = containerHeight / 2;
 
     // Distance au centre du viewport (en pixels)
-    const distanceFromViewportCenter = visualPositionInViewport + itemHeight / 2 - viewportCenter;
+    const distanceFromViewportCenter = visualPosInViewport + itemHeight / 2 - viewportCenter;
 
     // Normalisé entre -1 et +1
     const normalized = Math.max(-1, Math.min(1, distanceFromViewportCenter / viewportCenter));
     const absNormalized = Math.abs(normalized);
 
-    // Calcul du décalage pour les intervalles variables
-    // Basé sur la position VISUELLE dans le viewport
+    // Calcul du décalage pour les intervalles variables basé sur les SLOTS VISUELS
     let variableOffset = 0;
     if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED && containerHeight) {
-        // Les éléments aux bords (absNormalized proche de 1) sont poussés vers le centre
-        // Les éléments au centre (absNormalized proche de 0) ne bougent pas
-        // Compression max de 80% aux bords
-        const compressionAmount = 0.8 * Math.pow(absNormalized, 1.5);
+        // Ratios pour 11 slots (du haut vers le bas du viewport)
+        const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
+        const numSlots = slotRatios.length;
 
-        // L'offset pousse vers le centre (signe opposé à la distance)
-        variableOffset = -distanceFromViewportCenter * compressionAmount;
+        // Hauteurs compressées de chaque slot
+        const slotHeights = slotRatios.map(r => r * itemHeight);
+        const totalCompressedHeight = slotHeights.reduce((a, b) => a + b, 0);
+
+        // Padding pour centrer les slots dans le viewport
+        const compressedPadding = (containerHeight - totalCompressedHeight) / 2;
+
+        // Positions cumulatives des slots (où commence chaque slot dans le viewport compressé)
+        const slotStarts = [compressedPadding];
+        for (let i = 0; i < numSlots; i++) {
+            slotStarts.push(slotStarts[i] + slotHeights[i]);
+        }
+
+        // Déterminer dans quel slot théorique (grille fixe) cet élément se trouve
+        // Le centre du viewport = slot 5 (index 5), donc on calcule le décalage par rapport au centre
+        const centerSlot = 5;
+        const slotOffset = visualPosInViewport / itemHeight; // Position en "nombre de slots" depuis le haut
+        const floatSlot = centerSlot + slotOffset - (containerHeight / 2 / itemHeight);
+
+        // Limiter aux slots 0-10
+        const clampedSlot = Math.max(0, Math.min(numSlots - 1, floatSlot));
+        const slotIndex = Math.floor(clampedSlot);
+        const slotFraction = clampedSlot - slotIndex;
+
+        // Interpoler la position compressée
+        let compressedPos;
+        if (slotIndex >= numSlots - 1) {
+            compressedPos = slotStarts[numSlots - 1] + slotHeights[numSlots - 1] * slotFraction;
+        } else {
+            compressedPos = slotStarts[slotIndex] + slotHeights[slotIndex] * slotFraction;
+        }
+
+        // L'offset est la différence entre position compressée et position normale
+        variableOffset = compressedPos - visualPosInViewport;
     }
 
     const finalTop = baseTop + variableOffset;
