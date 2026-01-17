@@ -3535,42 +3535,51 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     // Calcul du décalage pour les intervalles variables basé sur les SLOTS VISUELS
     let variableOffset = 0;
     if (CONFIG.WHEEL_VARIABLE_HEIGHT_ENABLED && containerHeight) {
-        // Ratios pour 11 slots : slots 0-3 et 7-10 sont compressés, slots 4-5-6 sont normaux
-        // slot 0 = 20%, slot 1 = 40%, slot 2 = 60%, slot 3 = 80%
-        // slot 4,5,6 = 100%
-        // slot 7 = 80%, slot 8 = 60%, slot 9 = 40%, slot 10 = 20%
+        // Ratios pour 11 slots
         const slotRatios = [0.20, 0.40, 0.60, 0.80, 1.0, 1.0, 1.0, 0.80, 0.60, 0.40, 0.20];
 
-        // Calculer la distance au centre en nombre de slots
+        // Hauteurs compressées pour chaque slot
+        const slotHeights = slotRatios.map(r => r * itemHeight);
+
+        // Positions cumulées des slots (où commence chaque slot dans la grille compressée)
+        // Centrée autour du viewport
+        const totalCompressedHeight = slotHeights.reduce((a, b) => a + b, 0);
+        const topPadding = (containerHeight - totalCompressedHeight) / 2;
+
+        const slotStarts = [];
+        let cumulative = topPadding;
+        for (let i = 0; i < 11; i++) {
+            slotStarts.push(cumulative);
+            cumulative += slotHeights[i];
+        }
+
+        // Déterminer quel slot cet élément occupe (basé sur la position non-compressée)
+        // slotsFromCenter = combien de slots au-dessus/en-dessous du centre (négatif = au-dessus)
         const elementCenterY = visualPosInViewport + itemHeight / 2;
-        const distanceFromCenter = elementCenterY - viewportCenter;
-        const slotsFromCenter = distanceFromCenter / itemHeight;
+        const slotsFromCenter = (elementCenterY - viewportCenter) / itemHeight;
 
-        // Mapper à un index (0-10, avec 5 = centre)
-        const ratioIndex = Math.max(0, Math.min(10, Math.round(5 + slotsFromCenter)));
+        // Index de slot (0-10, avec 5 = centre)
+        const floatSlot = 5 + slotsFromCenter;
 
-        // Calculer l'offset cumulatif
-        // Pour les éléments AU-DESSUS du centre (slotsFromCenter < 0):
-        // Ils doivent DESCENDRE car les slots au-dessus d'eux sont compressés
-        // L'offset = somme des compressions des slots entre eux et le centre
+        // Si hors limites, pas de compression
+        if (floatSlot >= 0 && floatSlot <= 10) {
+            // Interpoler la position dans la grille compressée
+            const slotIndex = Math.floor(floatSlot);
+            const slotFraction = floatSlot - slotIndex;
 
-        let cumulativeOffset = 0;
-        if (slotsFromCenter < -0.5) {
-            // Éléments au-dessus du centre (slots 0-4)
-            // Sommer les compressions des slots de ratioIndex à 3 (slots compressés au-dessus)
-            for (let i = ratioIndex; i <= 3; i++) {
-                const compression = (1 - slotRatios[i]) * itemHeight;
-                cumulativeOffset += compression;
+            // Position compressée (où cet élément devrait être)
+            let compressedPos;
+            if (slotIndex >= 10) {
+                compressedPos = slotStarts[10];
+            } else {
+                compressedPos = slotStarts[slotIndex] + slotFraction * slotHeights[slotIndex];
             }
-            variableOffset = cumulativeOffset; // Descendre
-        } else if (slotsFromCenter > 0.5) {
-            // Éléments en-dessous du centre (slots 6-10)
-            // Sommer les compressions des slots de 7 à ratioIndex (slots compressés en-dessous)
-            for (let i = 7; i <= ratioIndex; i++) {
-                const compression = (1 - slotRatios[i]) * itemHeight;
-                cumulativeOffset += compression;
-            }
-            variableOffset = -cumulativeOffset; // Monter
+
+            // Position non-compressée (où il est actuellement dans le viewport)
+            const uncompressedPos = visualPosInViewport;
+
+            // Offset = différence entre position compressée et non-compressée
+            variableOffset = compressedPos - uncompressedPos;
         }
     }
 
