@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Tag, EyeOff } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask } from './Config.jsx';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -757,7 +757,7 @@ const Tweaker = ({
                 {/* Bouton UNDO - Jaune/Orange */}
                 <button
                     onClick={handleUndo}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : '#F3F4F6',
@@ -767,6 +767,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     <Undo2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Undo</span>}
                 </button>
@@ -774,7 +775,7 @@ const Tweaker = ({
                 {/* Bouton REORDER - Cyan/Magenta */}
                 <button
                     onClick={() => toggleMode('reorder')}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : '#F3F4F6',
@@ -784,6 +785,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
@@ -792,7 +794,7 @@ const Tweaker = ({
                 <button
                     ref={deleteButtonRef}
                     onClick={() => toggleMode('delete')}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : '#F3F4F6',
@@ -802,6 +804,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
@@ -809,7 +812,7 @@ const Tweaker = ({
                 {/* Bouton 2D/3D - Rond - Electric Lagoon quand ON */}
                 <button
                     onClick={() => setIs3DMode(!is3DMode)}
-                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0"
+                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
@@ -820,6 +823,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     {is3DMode
                         ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
@@ -829,7 +833,7 @@ const Tweaker = ({
                 {/* Bouton Show/Hide Titles - Rond - Electric Lagoon quand ON */}
                 <button
                     onClick={() => setShowTitles(!showTitles)}
-                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0"
+                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
@@ -840,6 +844,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     {showTitles
                         ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
@@ -898,6 +903,7 @@ const Tweaker = ({
                             colorIndex={vibeColorIndices[vibe.vibeId] !== undefined ? vibeColorIndices[vibe.vibeId] : getInitialGradientIndex(vibe.vibeId)}
                             onColorChange={() => {}}
                             onSwipeProgress={() => {}}
+                            is3DMode={is3DMode}
                         />
                     </div>,
                     document.body
@@ -1025,6 +1031,7 @@ const Tweaker = ({
                                     onEditedNameChange={setEditedName}
                                     onConfirmNameChange={() => confirmNameChange(vibe.vibeId)}
                                     showTitles={showTitles}
+                                    is3DMode={is3DMode}
                                 />
                             </div>
                         );

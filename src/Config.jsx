@@ -159,6 +159,34 @@ export const CAPSULE_CYLINDER_SLICES = [
     -0.10, -0.12, -0.14, -0.16, -0.18, -0.20, -0.22, -0.24, -0.30, -0.35
 ];
 
+// Composant masque cylindre 3D réutilisable
+// intensity: 0-1 (force de l'effet)
+// className: classes CSS additionnelles (ex: 'rounded-full' pour les capsules)
+// is3DMode: contrôle l'affichage du masque
+export const CylinderMask = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-30 overflow-hidden flex flex-col ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+                <div
+                    key={i}
+                    className="flex-1"
+                    style={{
+                        backgroundColor: opacity > 0
+                            ? `rgba(255, 255, 255, ${opacity * intensity})`
+                            : opacity < 0
+                                ? `rgba(0, 0, 0, ${Math.abs(opacity) * intensity})`
+                                : 'transparent'
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)       ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝

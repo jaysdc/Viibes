@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines, Pencil } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, CAPSULE_CYLINDER_SLICES } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, CylinderMask } from './Config.jsx';
 import { VibesWave } from './Assets.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -638,28 +638,6 @@ const NeonGlow = ({
         </div>
     );
   };
-
-// Composant masque cylindre réutilisable
-const CylinderMask = ({ intensity = 1, className = '', is3DMode = false }) => {
-    if (!is3DMode || intensity === 0) return null;
-    return (
-        <div className={`absolute inset-0 pointer-events-none z-30 overflow-hidden flex flex-col ${className}`} style={{ transform: 'translateZ(0)' }}>
-            {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
-                <div
-                    key={i}
-                    className="flex-1"
-                    style={{
-                        backgroundColor: opacity > 0 
-                            ? `rgba(255, 255, 255, ${opacity * intensity})` 
-                            : opacity < 0 
-                                ? `rgba(0, 0, 0, ${Math.abs(opacity) * intensity})`
-                                : 'transparent'
-                    }}
-                />
-            ))}
-        </div>
-    );
-};
 
 // Convertit un paramètre simple (-5 à 5) en courbe cubic-bezier
 const getAccelEasing = (accel) => {
@@ -1983,9 +1961,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                             setSearchOverlayAnim('none');
                                         }, CONFIG.SEARCH_FADE_IN_DURATION);
                                     }}
-                                    className="h-full aspect-square rounded-full border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                    className="h-full aspect-square rounded-full border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600 relative overflow-hidden"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
                                     <Search style={{ width: CONFIG.SEARCH_BTN_ICON_SIZE, height: CONFIG.SEARCH_BTN_ICON_SIZE }} />
                                 </button>
                                 
@@ -2205,7 +2184,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 onMouseDown={handleCardSwipeStart}
                                 onMouseMove={handleCardSwipeMove}
                                 onMouseUp={handleCardSwipeEnd}
-                                className={`w-full rounded-xl cursor-pointer relative ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
+                                className={`w-full rounded-xl cursor-pointer relative overflow-hidden ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
                                 style={{
                                     height: vibeCardConfig?.height || '9vh',
                                     background: futureGradient,
@@ -2215,6 +2194,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         : '0 10px 40px rgba(0,0,0,0.15)'
                                 }}
                             >
+                            {/* Masque cylindre 3D */}
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-xl" />
                             {/* Indication swipe - EN HAUT AU CENTRE */}
                             <div 
                                 className="absolute flex items-center gap-0.5 text-white/50 z-10"
@@ -2244,7 +2225,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite - icône transparent découpé */}
                             <div
                                 data-create-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center relative ${showNoSongsHint ? 'animate-shake' : ''}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2262,6 +2243,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     handleSave();
                                 }}
                             >
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
                                 {editMode ? (
                                     <Pencil
                                         size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}

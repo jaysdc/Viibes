@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CAPSULE_CYLINDER_SLICES } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -1848,7 +1848,7 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true }) => {
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false }) => {
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -1987,12 +1987,12 @@ return (
           onTouchEnd={handleTouchEnd}
 
           className="w-full rounded-xl px-4 py-3 flex items-end justify-between shadow-lg cursor-pointer relative overflow-hidden"
-          style={{ 
+          style={{
             height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
             background: baseGradient,
             isolation: 'isolate',
-              transform: hasAnimated 
-                  ? `translateX(${swipeOffset * 0.8}px)` 
+              transform: hasAnimated
+                  ? `translateX(${swipeOffset * 0.8}px)`
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
               transition: hasAnimated
@@ -2000,6 +2000,8 @@ return (
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
+          {/* Masque cylindre 3D */}
+          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
           {unavailableCount > 0 && (() => {
               const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -2268,7 +2270,9 @@ const ControlBar = ({
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
-  isPlaying, onTogglePlay
+  isPlaying, onTogglePlay,
+  // 3D mode
+  is3DMode = false
 }) => {
     return (
         <div
@@ -2292,13 +2296,14 @@ const ControlBar = ({
                 vibeSwipePreview={vibeSwipePreview}
                 onScrubChange={onScrubChange}
                 onScrubEndAtEnd={onScrubEndAtEnd}
+                is3DMode={is3DMode}
             />
             {!vibeSwipePreview && (
                 <>
                     <RecenterCapsule onClick={onRecenter} />
                     <button
                         onClick={onTogglePlay}
-                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
@@ -2310,6 +2315,7 @@ const ControlBar = ({
                           transition: 'background 0.3s, border 0.3s'
                       }}
                     >
+                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                         {isPlaying ? (
                             <Disc3 size={20} className="text-white animate-spin-slow" />
                         ) : (
@@ -2547,7 +2553,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, onScrubEndAtEnd }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, onScrubEndAtEnd, is3DMode = false }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
 
     // États pour le scrub relatif
@@ -2764,6 +2770,8 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
                             }}
                         >
+                            {/* Masque cylindre 3D */}
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                             {/* Remplissage rose flat */}
                             <div
                                 className="absolute left-0 top-0 bottom-0"
@@ -3191,25 +3199,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                 style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
             >
                 {/* Masque cylindre 3D */}
-                {is3DMode && (
-                    <div 
-                        className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full"
-                    >
-                        {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
-                            <div
-                                key={i}
-                                className="flex-1"
-                                style={{
-                                    backgroundColor: opacity > 0 
-                                        ? `rgba(255, 255, 255, ${opacity * CONFIG.CAPSULE_CYLINDER_INTENSITY})` 
-                                        : opacity < 0 
-                                            ? `rgba(0, 0, 0, ${Math.abs(opacity) * CONFIG.CAPSULE_CYLINDER_INTENSITY})`
-                                            : 'transparent'
-                                }}
-                            />
-                        ))}
-                    </div>
-                )}
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
                 <button onClick={(e) => { e.stopPropagation(); playPrev(); }} className="w-12 h-full flex items-center justify-center text-gray-400 border-r border-gray-200" style={{ WebkitTapHighlightColor: 'transparent' }}><SkipBack size={20} fill="currentColor" /></button>
                 
                 {/* Zone centrale - titre centré par rapport à TOUTE la capsule via absolute */}
@@ -3823,25 +3813,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 }}
               >
                 {/* Masque cylindre 3D */}
-                {is3DMode && (
-                  <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full">
-                    {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
-                      <div
-                        key={i}
-                        className="flex-1"
-                        style={{
-                          backgroundColor: opacity > 0
-                            ? `rgba(255, 255, 255, ${opacity * CONFIG.CAPSULE_CYLINDER_INTENSITY})`
-                            : opacity < 0
-                              ? `rgba(0, 0, 0, ${Math.abs(opacity) * CONFIG.CAPSULE_CYLINDER_INTENSITY})`
-                              : 'transparent'
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
               </div>
-              
+
               {/* PULSE - Point indicateur (EN-DESSOUS de la capsule) */}
               {totalSongs > 0 && (
                 <div 
@@ -7061,6 +7035,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
                             }}
                         >
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
                             <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                             <input
                                 autoFocus
@@ -7103,8 +7078,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setSearchOverlayAnim('none');
                                     }, CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION);
                                 }}
-                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
+                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full overflow-hidden"
                             >
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-r-full" />
                                 <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
                             </button>
                         </div>
@@ -7148,7 +7124,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         }}
                     >
                       {/* Bouton Recherche */}
-                      <button 
+                      <button
                           onClick={() => {
                             if (searchOverlayAnim !== 'none' || showImportMenu) return;
                             setSearchCloseBtnAnimKey(0);
@@ -7158,9 +7134,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
                         }}
-                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
+                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden"
                           style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent' }}
                       >
+                          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                           <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </button>
                   
@@ -7184,7 +7161,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
+                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 overflow-hidden ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
                                   // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
@@ -7193,6 +7170,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       : (scanCompleteFlash ? undefined : '#f3f4f6')
                               }}
                           >
+                              {/* Masque cylindre 3D */}
+                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
                               {!scanCompleteFlash && (
                                   <div
@@ -7249,8 +7228,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
                               }}
-                              className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
+                              className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
                           >
+                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
                           </button>
                       </div>
@@ -7275,7 +7255,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 rounded-full"
                                     style={{ zIndex: 0 }}
                                 />
-                                <button 
+                                <button
                                     onClick={() => {
                                         setImportBtnIgniting('nuke');
                                         setImportMenuVisible(false);
@@ -7288,8 +7268,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             handleNukeAll();
                                         }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
+                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
                                 >
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                                     <Radiation style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`
@@ -7306,15 +7287,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 rounded-full"
                                     style={{ zIndex: 0 }}
                                 />
-                                <button 
+                                <button
                                     ref={dropboxButtonRef}
                                     onClick={() => {
                                         setImportBtnIgniting('dropbox');
                                         handleDropboxAuth();
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
+                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
                                 >
-                                    <DropboxLogoVector 
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                                    <DropboxLogoVector
                                         size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.IMPORT_ICON_SIZE_PERCENT / 100 * 16}
                                         fill="#ffffff"
                                     />
@@ -7330,7 +7312,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 rounded-full"
                                     style={{ zIndex: 0 }}
                                 />
-                                <button 
+                                <button
                                     ref={folderButtonCallbackRef}
                                     onClick={() => {
                                         if (folderButtonRef.current) {
@@ -7340,8 +7322,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setImportBtnIgniting('folder');
                                         folderInputRef.current?.click();
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
+                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
                                 >
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                                     <FolderDown style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
@@ -7615,6 +7598,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     setShowBuilder(true);
                                 }}
                                 showTitles={showTitles}
+                                is3DMode={is3DMode}
                             />
                         );
                     })}
@@ -7763,6 +7747,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
+                        is3DMode={is3DMode}
                      />
 
                     {/* DOTTED OVERLAY sur TimeCapsule pendant le scrub */}
@@ -8284,7 +8269,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         glowOpacity={(isPlayerSearching || playerSearchOverlayAnim === 'opening') ? 0 : (playerSearchOverlayAnim === 'closing' ? 1 : 1)}
                         transitionDuration={playerSearchOverlayAnim === 'opening' ? CONFIG.SEARCH_PLAYER_FADE_IN_DURATION : (playerSearchOverlayAnim === 'closing' ? CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION : 0)}
                     />
-                    <button 
+                    <button
                         onClick={() => {
                             if (playerSearchOverlayAnim !== 'none') return;
                             setPlayerSearchCloseBtnAnimKey(0);
@@ -8293,10 +8278,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setIsPlayerSearching(true);
                                 setPlayerSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
-                        }} 
-                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100"
+                        }}
+                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden"
                         style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}
                     >
+                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                         <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                     </button>
                     
@@ -8322,13 +8308,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 }}
                             >
                                 {/* Champ de recherche */}
-                                <div 
+                                <div
                                     className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
                                     style={{
                                         paddingLeft: CONFIG.SEARCH_LIBRARY_PADDING_X,
                                         paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
                                     }}
                                 >
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
                                     <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                                     <input
                                         autoFocus
@@ -8361,7 +8348,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             zIndex: 0
                                         }}
                                     />
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             if (playerSearchOverlayAnim !== 'none') return;
                                             setPlayerSearchCloseBtnAnimKey(k => k + 1);
@@ -8372,8 +8359,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                                 setPlayerSearchOverlayAnim('none');
                                             }, CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION);
                                         }}
-                                        className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
+                                        className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full overflow-hidden"
                                     >
+                                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-r-full" />
                                         <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
                                     </button>
                                 </div>
