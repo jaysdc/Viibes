@@ -187,6 +187,34 @@ export const CylinderMask = ({ intensity = 0.6, className = '', is3DMode = false
     );
 };
 
+// Composant masque cylindre 3D INVERSÉ (concave) - miroir vertical
+// Crée un effet de creux au lieu d'une bosse
+export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    // Inverser les slices pour l'effet concave
+    const invertedSlices = [...CAPSULE_CYLINDER_SLICES].reverse();
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden flex flex-col ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {invertedSlices.map((opacity, i) => (
+                <div
+                    key={i}
+                    className="flex-1"
+                    style={{
+                        backgroundColor: opacity > 0
+                            ? `rgba(255, 255, 255, ${opacity * intensity})`
+                            : opacity < 0
+                                ? `rgba(0, 0, 0, ${Math.abs(opacity) * intensity})`
+                                : 'transparent'
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
 // Composant masque sphère 3D - Technique 2 (radial-gradient multiples)
 // Utilise plusieurs gradients radiaux pour simuler un effet de sphère
 export const SphereMaskT2 = ({ intensity = 0.6, className = '', is3DMode = false }) => {

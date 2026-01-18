@@ -1912,14 +1912,15 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         </div>
                     )}
                     {dragState ? (
-                            <div 
-                                className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
+                            <div
+                                className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow overflow-hidden"
                                 style={{
                                     '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE,
                                     backgroundColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                     borderColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                 }}
                             >
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
                                 <div className={`flex items-center gap-2 font-black tracking-widest text-lg drop-shadow-sm text-white`}> {/* TEXTE BLANC */}
                                 {dragState.isAddingMode ? (
                                         <>
