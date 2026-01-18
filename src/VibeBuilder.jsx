@@ -185,36 +185,36 @@ const CONFIG = {
     SEARCH_FADE_OUT_DURATION: 275,        // Durée fade out recherche (ms)
     //negatif = noir, positif = blanc, valeur = %, par exemple 0.5 = 50% transparent
     CAPSULE_CYLINDER_SLICES: [
-        -0.05,
-        0.00,
-        -0.1,
-        0.07,
-        0.3,
-        0.12,
-        -0.02,
-        -0.01,
-        0.0,
+        -0.10,
+        -0.07,
+        -0.03,
+        0,
+        0, 
+        0.05,
         0.10,
-        0.08,
-        0.06,
-        0.04,
-        0.02,
-        -0.01,
+        0.15,
+        0.20,
+        0.25,
+        0.20,
+        0.15,
+        0.10,
+        0.05,
+        0,
+        0,
         -0.02,
         -0.04,
         -0.06,
         -0.08,
         -0.10,
         -0.12,
-        -0.12,
         -0.14,
-        -0.14,
-        -0.17,
-        -0.21,
-        -0.25,
+        -0.16,
         -0.18,
-        -0.08,
-        -0.15,
+        -0.20,
+        -0.22,
+        -0.24,
+        -0.30,
+        -0.35
     ],
 
     HEADER_DRAGMODE_ICON_SIZE: '1.25rem', // Taille icônes Let's Vibe/Ghosting (20px)
@@ -1050,7 +1050,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true, is3DMode = false }) => {
+const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true, is3DMode = false }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -1312,8 +1312,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
     const startVibing = (song) => {
         console.log("startVibing called with:", song.title, "file:", song.file);
         
-        // Baisser le volume principal (ducking) au lieu de couper
-        if (fadeMainAudio) fadeMainAudio('duck', 0.25); 
         setVibingSong(song);
         
         if (isSongAvailable(song)) {
@@ -1395,9 +1393,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
             audio.pause();
             audio.currentTime = 0;
         }
-        
-        // Restaurer le volume principal
-        if (fadeMainAudio) fadeMainAudio('in'); 
         
         if (action === 'add' && songToProcess) {
             if (!selectedSongs.find(s => s.id === songToProcess.id)) {

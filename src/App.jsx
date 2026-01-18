@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -283,13 +283,37 @@ const CONFIG = {
     CAPSULE_CYLINDER_ENABLED: false,     // Activer le masque d'opacité 3D
     CAPSULE_CYLINDER_INTENSITY: 0.6,    // Intensité du masque (0-1)
     CAPSULE_CYLINDER_SLICES: [
-        -0.15, -0.10, -0.05, 0, 0, 
-        0.05, 0.10, 0.15, 0.20, 0.25,
-        0.20, 0.15, 0.10, 0.05, 0,
-        0, -0.02, -0.04, -0.06, -0.08,
-        -0.10, -0.12, -0.10, -0.08, -0.05,
-        -0.03, 0, 0, -0.05, -0.10
-    ],
+        -0.10,
+        -0.07,
+        -0.03,
+        0,
+        0, 
+        0.05,
+        0.10,
+        0.15,
+        0.20,
+        0.25,
+        0.20,
+        0.15,
+        0.10,
+        0.05,
+        0,
+        0,
+        -0.02,
+        -0.04,
+        -0.06,
+        -0.08,
+        -0.10,
+        -0.12,
+        -0.14,
+        -0.16,
+        -0.18,
+        -0.20,
+        -0.22,
+        -0.24,
+        -0.30,
+        -0.35
+        ],
     
     // ══════════════════════════════════════════════════════════════════════════
     // ROUE DE SÉLECTION (Liste des chansons)
@@ -403,26 +427,6 @@ const CONFIG = {
     TIMECAPSULE_GLOW_INTENSITY: 0.5,      // Intensité max du glow (0-1)
     TIMECAPSULE_GLOW_SPEED: 2,            // Vitesse du pulse (secondes)
 
-    // VOLUME BEACON - Bordure et glow jaune
-    VOLUME_NEON_ENABLED: true,            // Activer la bordure jaune
-    VOLUME_NEON_WIDTH: 1,                 // Épaisseur de la bordure (px)
-    VOLUME_NEON_COLOR: 'rgba(255, 191, 0, 0.8)', // Couleur bordure (RGBA)
-    VOLUME_GLOW_ENABLED: true,            // Activer le glow pulsant
-    VOLUME_GLOW_COLOR: '255, 191, 0',     // Couleur glow (RGB pour opacité variable)
-    VOLUME_GLOW_SIZE: 6,                  // Taille du glow (px)
-    VOLUME_GLOW_INTENSITY: 0.5,           // Intensité max du glow (0-1)
-    VOLUME_GLOW_SPEED: 2,                 // Vitesse du pulse (secondes)
-    
-    // VOLUME TUBE - Bordure et glow du tube qui apparaît
-    VOLUME_TUBE_BORDER_ENABLED: true,             // Activer la bordure du tube
-    VOLUME_TUBE_BORDER_WIDTH: 1,                  // Épaisseur de la bordure (px)
-    VOLUME_TUBE_BORDER_COLOR: 'rgba(255, 208, 0, 1)', // Couleur de la bordure (RGBA)
-    VOLUME_TUBE_IGNITE_ENABLED: true,                 // Activer l'animation ignite sur la bordure jaune
-    VOLUME_FILL_IGNITE_ENABLED: true,                 // Activer l'animation ignite sur le tube cyan
-    VOLUME_TUBE_GLOW_ENABLED: true,               // Activer le glow du tube
-    VOLUME_TUBE_GLOW_SIZE: 15,                     // Taille du glow (px)
-    VOLUME_TUBE_GLOW_COLOR: 'rgba(255, 208, 0, 0.5)',   // Couleur du glow (RGBA)
-    
     // ══════════════════════════════════════════════════════════════════════════
     // NEON GLOW (Effet néon réutilisable)
     // ══════════════════════════════════════════════════════════════════════════
@@ -492,84 +496,6 @@ const CONFIG = {
     WHEEL_GLOW_OPACITY: 0.45,
     WHEEL_GLOW_COLOR: '236, 72, 153',   // RGB rose (pink-500)
     
-    // ══════════════════════════════════════════════════════════════════════════
-    // SLIDER VOLUME
-    // ══════════════════════════════════════════════════════════════════════════
-    VOLUME_LONG_PRESS_DELAY: 125,       // Durée appui long pour activer (ms)
-    VOLUME_OVERLAY_OPACITY: 0.85,       // Opacité du fond sombre
-    VOLUME_BAR_X: 50,                   // Position X du centre (% écran)
-    VOLUME_BAR_Y: 60,                   // Position Y du centre (% écran)
-    
-    // Dimensions du tube (% de l'écran)
-    VOLUME_BAR_HEIGHT_PERCENT: 50,      // Hauteur du tube (% de la hauteur écran)
-    VOLUME_BAR_WIDTH_PERCENT: 25,        // Largeur du tube (% de la largeur écran)
-    VOLUME_BAR_BORDER_RADIUS: 9999,       // Arrondi du tube (px)
-    
-    // Tube - fond (vide)
-    VOLUME_TUBE_BG_COLOR: 'rgba(110, 110, 110, 0.2)',  // Couleur du fond du tube
-    
-    // Tube - remplissage (niveau de volume)
-    VOLUME_FILL_COLOR: 'rgba(85, 226, 226, 1)',        // Couleur du remplissage
-    VOLUME_FILL_GLOW_COLOR: 'rgba(85, 226, 226, 0.5)', // Couleur du glow du remplissage
-    VOLUME_FILL_GLOW_SIZE: 50,           // Taille du glow du remplissage (px)
-    
-    // Curseur (thumb)
-    VOLUME_THUMB_ENABLED: false,         // Afficher le curseur (true/false)
-    VOLUME_THUMB_SIZE: 28,              // Taille du curseur (px)
-    VOLUME_THUMB_COLOR: 'rgba(236, 72, 153, 1)',       // Couleur du curseur
-    VOLUME_THUMB_GLOW_COLOR: 'rgba(236, 72, 153, 0.8)', // Couleur du glow du curseur
-    VOLUME_THUMB_GLOW_SIZE: 12,         // Taille du glow du curseur (px)
-    
-    // Texte
-    VOLUME_TEXT_SIZE: 48,               // Taille du pourcentage (px)
-    
-    // Fade mute/unmute
-    VOLUME_FADE_DURATION: 150,          // Durée du fade mute/unmute (ms)
-    VOLUME_FADE_STEPS: 10,              // Nombre d'étapes du fade
-    
-    // Animation morph (beacon → tube)
-    VOLUME_MORPH_DURATION: 400,         // Durée de l'animation morph (ms)
-
-    // Masque cylindre 3D sur le tube volume
-    VOLUME_CYLINDER_ENABLED: false,      // Activer/désactiver l'effet cylindre
-    VOLUME_CYLINDER_INTENSITY: 0.7,       // Puissance du masque (0 = invisible, 1 = normal, 2 = intense)
-    VOLUME_CYLINDER_FADE_DURATION: 300, // Durée du fade-in du masque (ms)
-    VOLUME_CYLINDER_SLICES: [
-        0.05,
-        0.10,
-        0.05,
-        0.00,
-        0.05,
-        0.10,
-        0.30,
-        0.20,
-        0.10,
-        0.00,
-        0.02,
-        0.04,
-        0.06,
-        0.08,
-        0.06,
-        0.04,
-        0.02,
-        0.00,
-        0.00,
-        0.00,
-        0.00,
-        0.02,
-        0.05,
-        0.07,
-        0.10,
-        0.13,
-        0.14,
-        0.17,
-        0.20,
-        0.10
-    ],
-
-    VOLUME_MORPH_EASING: 'cubic-bezier(0.4, 0, 0.2, 1)', // Courbe d'animation du tube
-    VOLUME_OVERLAY_EASING: 'cubic-bezier(0.7, 0, 1, 1)', // Courbe du fond (lent début, rapide fin)
-    
     // Animation morph scrubbing (beacon → arc)
     BEACON_SCRUB_MORPH_DURATION: 400,   // Durée de l'animation morph (ms)
     BEACON_SCRUB_MORPH_EASING: 'cubic-bezier(0.4, 0, 0.2, 1)', // Courbe d'animation
@@ -580,7 +506,7 @@ const CONFIG = {
     FOOTER_SLIDE_DURATION: 400,          // Durée de l'animation slide du footer (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
-    // BARRE DE CONTRÔLE (TimeCapsule + Recenter + Volume)
+    // BARRE DE CONTRÔLE (TimeCapsule + Recenter)
     // ══════════════════════════════════════════════════════════════════════════
     CONTROL_BAR_Y: 50,                  // Position verticale dans le footer (0=bas, 100=haut)
     CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
@@ -995,20 +921,7 @@ const styles = `
   .timecapsule-glow {
     animation: timecapsule-glow-pulse ${CONFIG.TIMECAPSULE_GLOW_SPEED}s ease-in-out infinite;
   }
-  
-  @keyframes volume-glow-pulse {
-    0%, 100% { 
-      box-shadow: 0 0 ${CONFIG.VOLUME_GLOW_SIZE * 0.5}px rgba(${CONFIG.VOLUME_GLOW_COLOR}, ${CONFIG.VOLUME_GLOW_INTENSITY * 0.3});
-    }
-    50% { 
-      box-shadow: 0 0 ${CONFIG.VOLUME_GLOW_SIZE}px rgba(${CONFIG.VOLUME_GLOW_COLOR}, ${CONFIG.VOLUME_GLOW_INTENSITY});
-    }
-  }
-  
-  .volume-glow {
-    animation: volume-glow-pulse ${CONFIG.VOLUME_GLOW_SPEED}s ease-in-out infinite;
-  }
-  
+
   @keyframes scrub-tube-pulse {
     0%, 100% { 
       opacity: 0.3;
@@ -3587,12 +3500,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
 const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null, is3DMode = false }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
-    
-    const WIDTH = CONFIG.VOLUME_WIDTH;
-    const HEIGHT = CONFIG.VOLUME_HEIGHT;
-    const TRACK_HEIGHT = CONFIG.VOLUME_TRACK_HEIGHT;
-    const THUMB_SIZE = CONFIG.VOLUME_THUMB_SIZE;
-    const BORDER_RADIUS = CONFIG.VOLUME_BAR_BORDER_RADIUS;
+
     const ITEM_HEIGHT_MAIN_VH = CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH;
     const ITEM_HEIGHT_MINI_VH = CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH;
     const LINE_WIDTH_PERCENT = CONFIG.WHEEL_SELECTION_SEPARATOR;
@@ -4349,16 +4257,6 @@ export default function App() {
             setFeedback(prev => prev ? { ...prev, triggerValidation: Date.now() } : null);
         }
     };
-    const [volume, setVolume] = useState(70);
-    const [isVolumeActive, setIsVolumeActive] = useState(false);
-    const [volumePreview, setVolumePreview] = useState(70);
-    const [volumeMorphProgress, setVolumeMorphProgress] = useState(0); // 0 = beacon, 1 = tube
-    const volumeLongPressRef = useRef(null);
-    const volumeStartYRef = useRef(null);
-    const volumeBeforeMuteRef = useRef(70);
-    const volumeFadeIntervalRef = useRef(null);
-    const volumeMorphTimeoutRef = useRef(null);
-    const [volumeBeaconRect, setVolumeBeaconRect] = useState(null); // Coordonnées du beacon capturées au touchStart
     const [showFullPlayer, setShowFullPlayer] = useState(false);
     const [playerVisible, setPlayerVisible] = useState(false);           // Animation d'entrée
     const [playerOpenAnimating, setPlayerOpenAnimating] = useState(false); // En cours d'ouverture
@@ -4500,7 +4398,6 @@ const handlePlayerTouchEnd = () => {
     };
 
     const dropboxButtonRef = useRef(null);
-    const [showVolumeOverlay, setShowVolumeOverlay] = useState(false);
     const [dashboardHeight, setDashboardHeight] = useState(0);
     const [showMainPlayerTrigger, setShowMainPlayerTrigger] = useState(false);
     const [mainPlayerTriggerOpacity, setMainPlayerTriggerOpacity] = useState(0);
@@ -4639,15 +4536,13 @@ const handlePlayerTouchEnd = () => {
           mediaSourceRef.current.connect(gainNodeRef.current);
           gainNodeRef.current.connect(audioContextRef.current.destination);
 
-          // Appliquer le volume actuel
-          gainNodeRef.current.gain.value = volume / 100;
+          // Appliquer le volume à 100%
+          gainNodeRef.current.gain.value = 1.0;
           console.log('[AudioContext] Web Audio API initialized (non-iOS)');
       } catch (e) {
           console.warn('Web Audio API not supported:', e);
       }
-  }, [volume]);
-    const savedVolume = useRef(50);
-    const wasPlayingBeforeDuck = useRef(true); // Pour la pré-écoute: mémoriser si le lecteur jouait avant le duck
+  }, []);
     const dragStartY = useRef(null);
     const startHeight = useRef(0);
     const drawerRafRef = useRef(null);
@@ -4791,11 +4686,10 @@ useEffect(() => {
         fadeInterval.current = null;
     }
 
-    // Sauvegarder le volume actuel pour le restaurer après
+    // Le volume est fixe à 100%
     const volumeBeforeFade = gainNodeRef.current
         ? gainNodeRef.current.gain.value
         : audioRef.current.volume;
-    savedVolume.current = volumeBeforeFade;
 
     // Flag pour éviter double appel de onComplete
     let completed = false;
@@ -4901,11 +4795,7 @@ useEffect(() => {
     if (audioContextRef.current && gainNodeRef.current) {
         const gain = gainNodeRef.current.gain;
 
-        // Sauvegarder le volume actuel AVANT de changer quoi que ce soit
         const currentGain = gain.value;
-        if (currentGain > 0.01) {
-            savedVolume.current = currentGain;
-        }
 
         // Annuler tout scheduling précédent
         gain.cancelScheduledValues(audioContextRef.current.currentTime);
@@ -4949,9 +4839,6 @@ useEffect(() => {
 
         // Fallback sans Web Audio API - pour autres plateformes
         const startVol = audioRef.current.volume;
-        if (startVol > 0.01) {
-            savedVolume.current = startVol;
-        }
         const intervalTime = 20;
         const totalSteps = (PAUSE_FADE_DURATION_SEC * 1000) / intervalTime;
         const step = startVol / totalSteps;
@@ -4980,65 +4867,6 @@ useEffect(() => {
     } else {
         // Play direct (le useEffect restaurera le volume si nécessaire)
         setIsPlaying(true);
-    }
-  };
-
-  // Ducking pour la pré-écoute
-  // Sur iOS: utilise muted (seule option qui fonctionne)
-  // Sur autres: utilise GainNode pour un vrai ducking progressif
-  const fadeMainAudio = (direction, targetVolume = 0) => {
-    if (!audioRef.current) return;
-
-    if (fadeInterval.current) clearInterval(fadeInterval.current);
-
-    const step = 0.05;
-    const intervalTime = 20;
-
-    if (direction === 'duck') {
-        // Mémoriser si le lecteur jouait avant le duck
-        wasPlayingBeforeDuck.current = !audioRef.current.paused;
-
-        // Sur iOS (pas de GainNode), utiliser muted
-        if (isIOSDevice.current || !gainNodeRef.current) {
-            audioRef.current.muted = true;
-            console.log('[fadeMainAudio] iOS duck: muted = true');
-        } else {
-            // Sur desktop/Android: vrai ducking progressif via GainNode
-            savedVolume.current = gainNodeRef.current.gain.value;
-            const duckTarget = targetVolume || 0.15;
-
-            fadeInterval.current = setInterval(() => {
-                const currentVol = gainNodeRef.current.gain.value;
-                if (currentVol > duckTarget + step) {
-                    gainNodeRef.current.gain.value = currentVol - step;
-                } else {
-                    gainNodeRef.current.gain.value = duckTarget;
-                    clearInterval(fadeInterval.current);
-                }
-            }, intervalTime);
-        }
-    } else if (direction === 'in') {
-        // Sur iOS, unmute
-        if (isIOSDevice.current || !gainNodeRef.current) {
-            audioRef.current.muted = false;
-            console.log('[fadeMainAudio] iOS unduck: muted = false');
-        } else {
-            // Sur desktop/Android: restaurer le volume progressivement
-            fadeInterval.current = setInterval(() => {
-                const currentVol = gainNodeRef.current.gain.value;
-                if (currentVol < savedVolume.current - step) {
-                    gainNodeRef.current.gain.value = currentVol + step;
-                } else {
-                    gainNodeRef.current.gain.value = savedVolume.current;
-                    clearInterval(fadeInterval.current);
-                }
-            }, intervalTime);
-        }
-
-        // Reprendre la lecture si elle était en cours avant le duck
-        if (wasPlayingBeforeDuck.current && audioRef.current.paused) {
-            audioRef.current.play().catch(() => {});
-        }
     }
   };
 
@@ -5675,14 +5503,6 @@ const vibeSearchResults = () => {
 }, []);
 
   useEffect(() => { const updateTime = () => { const now = new Date(); setCurrentTime(`${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`); }; updateTime(); const interval = setInterval(updateTime, 1000); return () => clearInterval(interval); }, []);
-  // UseEffect pour le volume uniquement (Web Audio API pour iOS)
-  useEffect(() => {
-    if (gainNodeRef.current) {
-        gainNodeRef.current.gain.value = volume / 100;
-    } else if (audioRef.current) {
-        audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
 
   // UseEffect pour le changement de chanson et play/pause
   useEffect(() => {
@@ -5802,9 +5622,8 @@ const vibeSearchResults = () => {
                   const gain = gainNodeRef.current.gain;
                   // Annuler tout scheduling (ramp en cours)
                   gain.cancelScheduledValues(ctx.currentTime);
-                  // Utiliser le volume sauvegardé ou le volume par défaut
-                  const targetGain = savedVolume.current > 0.01 ? savedVolume.current : volume / 100;
-                  gain.setValueAtTime(targetGain, ctx.currentTime);
+                  // Restaurer le volume à 100%
+                  gain.setValueAtTime(1.0, ctx.currentTime);
               }
 
               // Jouer l'audio
@@ -7142,131 +6961,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const playPrev = () => { if (audioRef.current && audioRef.current.currentTime > 3) { audioRef.current.currentTime = 0; return; } const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex > 0) { setCurrentSong(queue[currentIndex - 1]); setScrollTrigger(t => t + 1); } else audioRef.current.currentTime = 0; };
     const skipForward10 = () => { if (audioRef.current) audioRef.current.currentTime += 10; };
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
-    // === HANDLERS VOLUME SLIDER ===
-    const handleVolumeTouchStart = (e) => {
-      const touch = e.touches[0];
-      volumeStartYRef.current = touch.clientY;
-      setVolumePreview(volume);
-      
-      // Capturer les coordonnées du beacon MAINTENANT (avant que l'UI change)
-      const beaconEl = showFullPlayer ? beaconNeonRef.current : drawerBeaconRef.current;
-      const containerEl = mainContainerRef.current;
-      if (beaconEl && containerEl) {
-          const beaconRect = beaconEl.getBoundingClientRect();
-          const containerRect = containerEl.getBoundingClientRect();
-          const containerBorderWidth = 8;
-          const beaconBorderWidth = CONFIG.BEACON_NEON_WIDTH;
-          setVolumeBeaconRect({
-              width: beaconRect.width - beaconBorderWidth * 2,
-              height: beaconRect.height - beaconBorderWidth * 2,
-              top: beaconRect.top - containerRect.top - containerBorderWidth + beaconBorderWidth,
-              left: beaconRect.left - containerRect.left - containerBorderWidth + beaconBorderWidth
-          });
-      }
-      
-      volumeLongPressRef.current = setTimeout(() => {
-          setIsVolumeActive(true);
-          setVolumeMorphProgress(0);
-          // Déclencher l'animation vers le tube après un court délai (pour que React render d'abord)
-          setTimeout(() => {
-              setVolumeMorphProgress(1);
-          }, 20);
-      }, CONFIG.VOLUME_LONG_PRESS_DELAY);
-    };
 
-  const handleVolumeTouchMove = (e) => {
-      if (!isVolumeActive) {
-          if (volumeLongPressRef.current) {
-              clearTimeout(volumeLongPressRef.current);
-              volumeLongPressRef.current = null;
-          }
-          return;
-      }
-      
-      const touch = e.touches[0];
-
-      // Dimensions du tube : centré sur l'écran
-      const tubeHeight = window.innerHeight * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
-      const tubeTop = (window.innerHeight - tubeHeight) / 2;
-      const tubeBottom = tubeTop + tubeHeight;
-
-      // Calculer le volume basé sur la position Y dans le tube (inversé : haut = 100%)
-      const clampedY = Math.max(tubeTop, Math.min(tubeBottom, touch.clientY));
-      const progress = 1 - (clampedY - tubeTop) / tubeHeight;
-      const newVolume = Math.round(progress * 100);
-
-      setVolumePreview(newVolume);
-      // Appliquer le volume directement via Web Audio API (fonctionne sur iOS)
-      if (gainNodeRef.current) {
-        gainNodeRef.current.gain.value = newVolume / 100;
-    } else if (audioRef.current) {
-        audioRef.current.volume = newVolume / 100;
-      }
-  };
-
-  const handleVolumeTouchEnd = () => {
-    const wasLongPressActive = volumeLongPressRef.current !== null;
-    
-    if (volumeLongPressRef.current) {
-        clearTimeout(volumeLongPressRef.current);
-        volumeLongPressRef.current = null;
-    }
-    
-    if (isVolumeActive) {
-      // C'était un drag, appliquer le volume final
-      setVolume(volumePreview);
-      if (volumePreview > 0) {
-          volumeBeforeMuteRef.current = volumePreview;
-      }
-      // Animation inverse : tube → beacon, puis fermer
-      setVolumeMorphProgress(0);
-      setTimeout(() => {
-          setIsVolumeActive(false);
-      }, CONFIG.VOLUME_MORPH_DURATION);
-  } else if (wasLongPressActive) {
-        // C'était un tap court → toggle mute/unmute avec fade
-        if (volumeFadeIntervalRef.current) {
-            clearInterval(volumeFadeIntervalRef.current);
-        }
-        
-        const currentVol = volume;
-        const targetVol = currentVol > 0 ? 0 : volumeBeforeMuteRef.current;
-        const steps = CONFIG.VOLUME_FADE_STEPS;
-        const stepDuration = CONFIG.VOLUME_FADE_DURATION / steps;
-        const stepSize = (targetVol - currentVol) / steps;
-        let currentStep = 0;
-        
-        if (currentVol > 0) {
-            volumeBeforeMuteRef.current = currentVol;
-        }
-        
-        volumeFadeIntervalRef.current = setInterval(() => {
-            currentStep++;
-            const newVol = Math.round(currentVol + stepSize * currentStep);
-            setVolume(newVol);
-            if (audioRef.current) {
-              if (gainNodeRef.current) {
-                gainNodeRef.current.gain.value = newVol / 100;
-            } else {
-                audioRef.current.volume = newVol / 100;
-            }
-            }
-            
-            if (currentStep >= steps) {
-                clearInterval(volumeFadeIntervalRef.current);
-                volumeFadeIntervalRef.current = null;
-                setVolume(targetVol);
-                if (audioRef.current) {
-                  if (gainNodeRef.current) {
-                    gainNodeRef.current.gain.value = targetVol / 100;
-                } else {
-                    audioRef.current.volume = targetVol / 100;
-                }
-                }
-            }
-        }, stepDuration);
-    }
-};
   const triggerRecenter = () => {
     // Si on est sur le dashboard (pas en full player) et le drawer est à sa hauteur minimale, l'ouvrir à 70%
     if (!showFullPlayer && mainContainerRef.current) {
@@ -8881,7 +8576,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 });
                             }
                       }}
-                        fadeMainAudio={fadeMainAudio}
                         onPlayNext={addToPlayNext}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
