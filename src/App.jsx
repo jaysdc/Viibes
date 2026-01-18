@@ -2060,10 +2060,10 @@ return (
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
               {/* En mode no-tag: compteurs en bas de la capsule */}
               {!showTitles ? (
-                  // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu
+                  // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets
                   <>
                       <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
-                      <span className="absolute bottom-1 left-3 text-[10px] font-semibold text-white/90 flex items-center gap-1.5 z-10">
+                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/60 flex items-center gap-1.5 z-10">
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
                           {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                       </span>
@@ -2121,6 +2121,7 @@ return (
               )}
 
               {/* Icône - alignée à droite, centrée verticalement */}
+              {/* En mode no-tag: icône seule sans cercle, discrète */}
               <div
                   className="flex-shrink-0 ml-2"
                   onClick={(e) => {
@@ -2130,9 +2131,17 @@ return (
                       }
                   }}
               >
-                  <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
-                      <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                  </div>
+                  {!showTitles ? (
+                      // Mode 3D + no tag: icône seule sans cercle, discrète
+                      <div className={`flex items-center justify-center text-white/60 ${onEditVibe ? 'cursor-pointer active:text-white/80' : ''}`}>
+                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                      </div>
+                  ) : (
+                      // Mode 3D + avec tags: icône dans cercle
+                      <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
+                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                      </div>
+                  )}
               </div>
             </>
           ) : (
