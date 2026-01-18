@@ -234,11 +234,6 @@ const getFooterHeight = () => {
 const CONFIG = {
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ORIENTATION LOCK (overlay mode paysage)
-    // ══════════════════════════════════════════════════════════════════════════
-    ORIENTATION_LOCK_ENABLED: true,     // Afficher l'overlay en mode paysage (true = bloqué, false = autorisé)
-
-    // ══════════════════════════════════════════════════════════════════════════
     // PARAMÈTRES UNIFIÉS (importés depuis config.js)
     // ══════════════════════════════════════════════════════════════════════════
     UNIFIED_CAPSULE_HEIGHT: UNIFIED_CONFIG.CAPSULE_HEIGHT,
@@ -7326,7 +7321,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
       {/* Orientation lock overlay */}
-      {CONFIG.ORIENTATION_LOCK_ENABLED && (
+      {UNIFIED_CONFIG.ORIENTATION_LOCK_ENABLED && (
         <div className="orientation-lock-overlay">
           <div className="orientation-lock-icon">📱</div>
         </div>

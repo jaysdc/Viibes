@@ -152,6 +152,9 @@ const cssToPixels = (cssValue) => {
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export const UNIFIED_CONFIG = {
+    // Orientation Lock (overlay mode paysage)
+    ORIENTATION_LOCK_ENABLED: false,     // Afficher l'overlay en mode paysage (true = bloqué, false = autorisé)
+
     // Capsules
     CAPSULE_HEIGHT: '2.0rem',           // Hauteur unifiée de toutes les capsules
     ICON_SIZE_PERCENT: 50,              // Taille des icônes = 50% de la hauteur capsule
