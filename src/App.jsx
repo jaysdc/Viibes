@@ -7915,7 +7915,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const tcWidth = `calc(100vw - ${paddingRem * 2 + gapRem * 2}rem - ${borderWidth * 2 + playPauseWidth + recenterWidth}px)`;
                         return (
                             <div
-                                className="absolute rounded-full"
+                                className="absolute rounded-full overflow-hidden"
                                 style={{
                                     left: tcLeft,
                                     width: tcWidth,
@@ -7928,7 +7928,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     transition: 'opacity 0.1s ease-out',
                                     pointerEvents: 'none',
                                 }}
-                            />
+                            >
+                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                            </div>
                         );
                     })()}
                 </div>
