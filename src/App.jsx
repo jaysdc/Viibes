@@ -8184,8 +8184,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
                                         }}
                                     >
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                                         <div
-                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase z-10"
                                             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                                         >
                                             {pendingVibe ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
@@ -8194,14 +8195,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     </div>
                                 );
                             })()}
-                            {/* FeedbackOverlay avec animation ignite quand on confirme */}
+                            {/* FeedbackOverlay avec animation ignite quand on confirme - VERT comme VibeBuilder */}
                             {confirmFeedback && (
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_FUCHSIA : CONFIG.NEON_COLOR_RED}
-                                    bgClass={confirmFeedback.type === 'kill' ? 'bg-pink-500' : 'bg-red-500'}
-                                    borderClass={confirmFeedback.type === 'kill' ? 'border-pink-600' : 'border-red-600'}
+                                    neonColor={CONFIG.NEON_COLOR_GREEN}
+                                    bgClass="bg-green-500"
+                                    borderClass="border-green-600"
                                     is3DMode={is3DMode}
                                 >
                                     {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
@@ -8291,9 +8292,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                         {/* Curseur central draggable */}
                         <div
-                            className={`absolute flex items-center justify-center ${
+                            className={`absolute flex items-center justify-center overflow-hidden ${
                                 confirmFeedback
-                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
+                                    ? 'animate-ignite-pill-green'  // Toujours vert quand on confirme
                                     : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
                             }`}
                             style={{
@@ -8312,13 +8313,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
+                            <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
                             {/* Icône X quand au seuil gauche */}
                             {isAtLeftThreshold && (
-                                <X size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                                <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
                             )}
                             {/* Icône Check quand au seuil droite */}
                             {isAtRightThreshold && (
-                                <Check size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                                <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
                             )}
                         </div>
 
