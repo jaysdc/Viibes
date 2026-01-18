@@ -8330,7 +8330,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         fadeOutAndStop();
                                     }
                                 } else {
-                                    setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
+                                    setConfirmFeedback({ text: 'NUKING!!', type: 'nuke', triggerValidation: Date.now() });
                                 }
                             } else if (isAtLeftThreshold) {
                                 // Swipe left = cancel
