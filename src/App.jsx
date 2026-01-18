@@ -4571,6 +4571,8 @@ const handlePlayerTouchEnd = () => {
     const gainNodeRef = useRef(null);
     const mediaSourceRef = useRef(null);
     const fadeInterval = useRef(null);
+    const savedVolume = useRef(50);
+    const wasPlayingBeforeDuck = useRef(true); // Pour la pré-écoute: mémoriser si le lecteur jouait avant le duck
 
     // Détecter iOS pour désactiver Web Audio API (problème avec background playback)
     const isIOSDevice = useRef(/iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -4872,48 +4874,56 @@ useEffect(() => {
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
 
-    if (fadeInterval.current) {
-        if (fadeInterval.current.cancel) fadeInterval.current.cancel();
-        else clearInterval(fadeInterval.current);
-        fadeInterval.current = null;
-    }
+    if (fadeInterval.current) clearInterval(fadeInterval.current);
 
     const step = 0.05;
+    const intervalTime = 20;
 
     if (direction === 'duck') {
-        // Duck : baisser le volume SANS couper l'audio
-        savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-        const duckTarget = targetVolume || 0.15;
+        // Mémoriser si le lecteur jouait avant le duck
+        wasPlayingBeforeDuck.current = !audioRef.current.paused;
 
-        fadeInterval.current = setInterval(() => {
-          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol > duckTarget + step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
-              else audioRef.current.volume = currentVol - step;
-          } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = duckTarget;
-              else audioRef.current.volume = duckTarget;
-              clearInterval(fadeInterval.current);
-              fadeInterval.current = null;
-          }
-        }, 20);
+        // Sur iOS (pas de GainNode), utiliser muted
+        if (isIOSDevice.current || !gainNodeRef.current) {
+            audioRef.current.muted = true;
+            console.log('[fadeMainAudio] iOS duck: muted = true');
+        } else {
+            // Sur desktop/Android: vrai ducking progressif via GainNode
+            savedVolume.current = gainNodeRef.current.gain.value;
+            const duckTarget = targetVolume || 0.15;
+
+            fadeInterval.current = setInterval(() => {
+                const currentVol = gainNodeRef.current.gain.value;
+                if (currentVol > duckTarget + step) {
+                    gainNodeRef.current.gain.value = currentVol - step;
+                } else {
+                    gainNodeRef.current.gain.value = duckTarget;
+                    clearInterval(fadeInterval.current);
+                }
+            }, intervalTime);
+        }
     } else if (direction === 'in') {
-        // Fade In - restaurer le volume
-        if (audioRef.current.paused) {
+        // Sur iOS, unmute
+        if (isIOSDevice.current || !gainNodeRef.current) {
+            audioRef.current.muted = false;
+            console.log('[fadeMainAudio] iOS unduck: muted = false');
+        } else {
+            // Sur desktop/Android: restaurer le volume progressivement
+            fadeInterval.current = setInterval(() => {
+                const currentVol = gainNodeRef.current.gain.value;
+                if (currentVol < savedVolume.current - step) {
+                    gainNodeRef.current.gain.value = currentVol + step;
+                } else {
+                    gainNodeRef.current.gain.value = savedVolume.current;
+                    clearInterval(fadeInterval.current);
+                }
+            }, intervalTime);
+        }
+
+        // Reprendre la lecture si elle était en cours avant le duck
+        if (wasPlayingBeforeDuck.current && audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
-        fadeInterval.current = setInterval(() => {
-          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
-          if (currentVol < savedVolume.current - step) {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol + step;
-              else audioRef.current.volume = currentVol + step;
-          } else {
-              if (gainNodeRef.current) gainNodeRef.current.gain.value = savedVolume.current;
-              else audioRef.current.volume = savedVolume.current;
-              clearInterval(fadeInterval.current);
-              fadeInterval.current = null;
-          }
-        }, 50);
     }
   };
 
