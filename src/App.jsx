@@ -8026,7 +8026,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <span>-{formatScrubTime(duration - progress)}</span>
                                 </div>
                             </div>
-                            <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                            <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                         </div>
                     );
                 })()}
