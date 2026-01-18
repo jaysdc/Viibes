@@ -681,7 +681,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TEXTES CONFIRMATION KILL / NUKE
     // ══════════════════════════════════════════════════════════════════════════
-    KILL_TEXT: 'KILL VIBE?',                     // Texte unique Kill
+    KILL_TEXT: 'KILL VIBE?!',                    // Texte unique Kill
     NUKE_TEXT: 'NUKE ALL?!',                      // Texte unique Nuke
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -8269,6 +8269,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '236, 72, 153';
                                 };
                                 return (
+                                <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
@@ -8278,9 +8279,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     borderClass="border-transparent"
                                     is3DMode={is3DMode}
                                 >
-                                    {confirmFeedback.type === 'cancel' ? <X size={20} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
-                                    <span>{confirmFeedback.text}</span>
+                                    {confirmFeedback.type === 'cancel' ? <X size={16} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
+                                    <span className="text-lg">{confirmFeedback.text}</span>
                                 </FeedbackOverlay>
+                                </div>
                                 );
                             })()}
                         </div>
@@ -8324,7 +8326,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 // Swipe right = validate
                                 // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation ignite
                                 if (pendingVibe) {
-                                    setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
+                                    setConfirmFeedback({ text: 'KILLING!!', type: 'kill', triggerValidation: Date.now() });
                                     // Fade out audio pendant l'animation ignite
                                     if (audioRef.current && !audioRef.current.paused) {
                                         fadeOutAndStop();
