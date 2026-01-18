@@ -3930,10 +3930,10 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           return (
             <>
               {/* NEON - Bordure jaune néon (AU-DESSUS de la capsule) */}
-              <div 
+              <div
                 ref={beaconNeonRef}
-                className="absolute pointer-events-none transition-opacity duration-150"
-                style={{ 
+                className="absolute pointer-events-none transition-opacity duration-150 overflow-hidden"
+                style={{
                   left: `${horizontalMarginPercent}%`,
                   right: `${horizontalMarginPercent}%`,
                   top: '50%',
@@ -3943,8 +3943,28 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   border: `${CONFIG.BEACON_NEON_WIDTH}px solid rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_OPACITY})`,
                   boxShadow: `0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY}), 0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE * 2}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY / 2})`,
                   zIndex: CONFIG.BEACON_NEON_Z,
+                  backgroundColor: is3DMode ? `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` : 'transparent',
                 }}
-              />
+              >
+                {/* Masque cylindre 3D */}
+                {is3DMode && (
+                  <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full">
+                    {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+                      <div
+                        key={i}
+                        className="flex-1"
+                        style={{
+                          backgroundColor: opacity > 0
+                            ? `rgba(255, 255, 255, ${opacity * CONFIG.CAPSULE_CYLINDER_INTENSITY})`
+                            : opacity < 0
+                              ? `rgba(0, 0, 0, ${Math.abs(opacity) * CONFIG.CAPSULE_CYLINDER_INTENSITY})`
+                              : 'transparent'
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {/* PULSE - Point indicateur (EN-DESSOUS de la capsule) */}
               {totalSongs > 0 && (

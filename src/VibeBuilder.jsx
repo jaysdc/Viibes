@@ -676,7 +676,7 @@ const NeonGlow = ({
 const CylinderMask = ({ intensity = 1, className = '', is3DMode = false }) => {
     if (!is3DMode || intensity === 0) return null;
     return (
-        <div className={`absolute inset-0 pointer-events-none z-30 overflow-hidden flex flex-col ${className}`}>
+        <div className={`absolute inset-0 pointer-events-none z-30 overflow-hidden flex flex-col ${className}`} style={{ transform: 'translateZ(0)' }}>
             {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
                 <div
                     key={i}
@@ -844,7 +844,7 @@ const ToggleSortBtn = ({
     const roundedClass = isFirst ? 'rounded-l-full' : '';
     
     return (
-        <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`}>
+        <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`} style={{ transform: 'translateZ(0)' }}>
             {/* Masque cylindre individuel */}
             <CylinderMask intensity={isActive ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} is3DMode={is3DMode} />
             {isActive && !hideGlow && (
@@ -927,7 +927,7 @@ const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false, is3DMode =
     }
     
     return (
-        <div className="flex-1 h-full relative overflow-visible rounded-r-full">
+        <div className="flex-1 h-full relative overflow-visible rounded-r-full" style={{ transform: 'translateZ(0)' }}>
             {/* Masque cylindre - toujours actif car ce bouton est toujours coloré */}
             <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
             {!hideGlow && (
