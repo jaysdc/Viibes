@@ -8195,17 +8195,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     </div>
                                 );
                             })()}
-                            {/* FeedbackOverlay avec animation ignite quand on confirme - VERT comme VibeBuilder */}
+                            {/* FeedbackOverlay avec animation ignite - VERT pour validation, ROUGE pour annulation */}
                             {confirmFeedback && (
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={CONFIG.NEON_COLOR_GREEN}
-                                    bgClass="bg-green-500"
-                                    borderClass="border-green-600"
+                                    neonColor={confirmFeedback.type === 'cancel' ? CONFIG.NEON_COLOR_RED : CONFIG.NEON_COLOR_GREEN}
+                                    bgClass={confirmFeedback.type === 'cancel' ? "bg-red-500" : "bg-green-500"}
+                                    borderClass={confirmFeedback.type === 'cancel' ? "border-red-600" : "border-green-600"}
                                     is3DMode={is3DMode}
                                 >
-                                    {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                    {confirmFeedback.type === 'cancel' ? <X size={20} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
                                     <span>{confirmFeedback.text}</span>
                                 </FeedbackOverlay>
                             )}
@@ -8294,7 +8294,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         <div
                             className={`absolute flex items-center justify-center overflow-hidden ${
                                 confirmFeedback
-                                    ? 'animate-ignite-pill-green'  // Toujours vert quand on confirme
+                                    ? (confirmFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : 'animate-ignite-pill-green')
                                     : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
                             }`}
                             style={{
