@@ -2239,10 +2239,10 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
     </button>
 );
 
-const RecenterCapsule = ({ onClick }) => (
+const RecenterCapsule = ({ onClick, is3DMode = false }) => (
   <button
       onClick={onClick}
-      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden relative ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
       style={{
         height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
         width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
@@ -2252,6 +2252,7 @@ const RecenterCapsule = ({ onClick }) => (
         WebkitTapHighlightColor: 'transparent'
     }}
   >
+      <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
       <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipBack size={10} fill="currentColor" /></div>
       <div className="w-px h-full bg-gray-200"></div>
       <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
@@ -2300,7 +2301,7 @@ const ControlBar = ({
             />
             {!vibeSwipePreview && (
                 <>
-                    <RecenterCapsule onClick={onRecenter} />
+                    <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} />
                     <button
                         onClick={onTogglePlay}
                         className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
@@ -2638,21 +2639,45 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 // Appliquer la position finale
                 if (onSeek) onSeek({ target: { value: scrubPreviewTime } });
             }
-        }
 
-        // Annuler l'animation morph si en cours
-        if (morphAnimationRef.current) {
-            cancelAnimationFrame(morphAnimationRef.current);
-            morphAnimationRef.current = null;
-        }
+            // Annuler l'animation morph d'ouverture si en cours
+            if (morphAnimationRef.current) {
+                cancelAnimationFrame(morphAnimationRef.current);
+                morphAnimationRef.current = null;
+            }
 
-        setIsScrubbing(false);
-        setScrubStartX(null);
-        setScrubStartTime(null);
-        setScrubPreviewTime(null);
-        setScrubAtEnd(false);
-        setScrubMorphProgress(0);
-        if (onScrubChange) onScrubChange(false, 0);
+            // Jouer l'animation inverse (morph de 1 vers 0)
+            const morphStartTime = performance.now();
+            const startProgress = scrubMorphProgress;
+            const animateMorphReverse = (currentTime) => {
+                const elapsed = currentTime - morphStartTime;
+                const progress = Math.max(0, startProgress - (elapsed / CONFIG.SCRUB_OVERLAY_MORPH_DURATION) * startProgress);
+                setScrubMorphProgress(progress);
+                if (onScrubChange) onScrubChange(true, progress);
+
+                if (progress > 0) {
+                    morphAnimationRef.current = requestAnimationFrame(animateMorphReverse);
+                } else {
+                    // Animation terminée, reset complet
+                    setIsScrubbing(false);
+                    setScrubStartX(null);
+                    setScrubStartTime(null);
+                    setScrubPreviewTime(null);
+                    setScrubAtEnd(false);
+                    setScrubMorphProgress(0);
+                    if (onScrubChange) onScrubChange(false, 0);
+                }
+            };
+            morphAnimationRef.current = requestAnimationFrame(animateMorphReverse);
+        } else {
+            // Pas de scrubbing actif, reset simple
+            setScrubStartX(null);
+            setScrubStartTime(null);
+            setScrubPreviewTime(null);
+            setScrubAtEnd(false);
+            setScrubMorphProgress(0);
+            if (onScrubChange) onScrubChange(false, 0);
+        }
     };
 
     // Cleanup timer on unmount
@@ -7875,6 +7900,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <span>-{formatScrubTime(duration - progress)}</span>
                                 </div>
                             </div>
+                            <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                         </div>
                     );
                 })()}
