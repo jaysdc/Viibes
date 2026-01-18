@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, SphereMaskT2, SphereMaskT3 } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -1977,160 +1977,252 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         onClick();
     };
     
+// État pour l'effet de press
+    const [isPressed, setIsPressed] = useState(false);
+
 // ========== LAYOUT BANDE HORIZONTALE ==========
+// En mode 3D: tube (capsule rounded-full) avec contenu centré verticalement
+// En mode normal: carte rectangulaire avec contenu en bas
 return (
   <FeedbackCardOverlay isActive={isBlinking} onAnimationComplete={onBlinkComplete}>
       <div
           ref={cardRef}
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+          onTouchStart={(e) => {
+              handleTouchStart(e);
+              if (is3DMode) setIsPressed(true);
+          }}
+          onTouchEnd={() => {
+              handleTouchEnd();
+              if (is3DMode) setIsPressed(false);
+          }}
+          onTouchCancel={() => {
+              if (is3DMode) setIsPressed(false);
+          }}
 
-          className="w-full rounded-xl px-4 py-3 flex items-end justify-between shadow-lg cursor-pointer relative overflow-hidden"
+          className={`w-full px-4 flex shadow-lg cursor-pointer relative overflow-hidden ${is3DMode ? 'rounded-full items-center' : 'rounded-xl py-3 items-end'}`}
           style={{
             height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
             background: baseGradient,
             isolation: 'isolate',
               transform: hasAnimated
-                  ? `translateX(${swipeOffset * 0.8}px)`
+                  ? `translateX(${swipeOffset * 0.8}px)${is3DMode && isPressed ? ' scale(0.98)' : ''}`
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
+              boxShadow: is3DMode && isPressed
+                  ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
+                  : undefined,
               transition: hasAnimated
-                  ? (swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none'))
+                  ? (swipeOffset === 0
+                      ? `transform 0.2s ease-out, opacity 0.2s ease-out${is3DMode ? ', box-shadow 0.15s ease-out' : ''}`
+                      : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : (is3DMode ? 'transform 0.15s ease-out, box-shadow 0.15s ease-out' : 'none')))
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
           {/* Masque cylindre 3D */}
-          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
+          <CylinderMask is3DMode={is3DMode} intensity={is3DMode && isPressed ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? 'rounded-full' : 'rounded-xl'} />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
           {unavailableCount > 0 && (() => {
               const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
               const fadeWidth = CONFIG.VIBECARD_OPACITY_GRADIENT_WIDTH;
               const maxOpacity = 1 - CONFIG.VIBECARD_MIN_OPACITY;
-              
+
               // Si aucun morceau dispo, opacité uniforme sur toute la carte
               if (availableCount === 0) {
                   return (
-                      <div 
-                          className="absolute inset-0 pointer-events-none rounded-xl"
+                      <div
+                          className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-xl'}`}
                           style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
                       />
                   );
               }
-              
+
               return (
-                  <div 
-                      className="absolute inset-0 pointer-events-none rounded-xl"
+                  <div
+                      className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-xl'}`}
                       style={{
-                          background: `linear-gradient(to right, 
-                              rgba(255,255,255,0) 0%, 
-                              rgba(255,255,255,0) ${ratio}%, 
-                              rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%, 
-                              rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%, 
+                          background: `linear-gradient(to right,
+                              rgba(255,255,255,0) 0%,
+                              rgba(255,255,255,0) ${ratio}%,
+                              rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%,
+                              rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%,
                               rgba(255,255,255,${maxOpacity * 0.95}) ${ratio + fadeWidth * 0.8}%,
-                              rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%, 
+                              rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%,
                               rgba(255,255,255,${maxOpacity}) 100%)`
                       }}
                   />
               );
           })()}
 
-          {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
-          <div
-              className="absolute top-3 right-3"
-              onClick={(e) => {
-                  e.stopPropagation();
-                  if (onEditVibe) {
-                      onEditVibe();
-                  }
-              }}
-          >
-              <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
-              <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-              </div>
-          </div>
-
-          {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition, ou si showTitles est false */}
-          {showTitles ? (
-            (vibeName || isEditingName) ? (
-              <div
-                  className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
-                  style={{
-                    padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
-                    maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
-                    background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
-                      transition: 'background 0.2s, border-color 0.2s'
-                  }}
-                  onClick={(e) => {
-                      if (onNameEdit && !isEditingName) {
-                          e.stopPropagation();
-                          onNameEdit();
-                      }
-                  }}
-              >
-                  <div key={isEditingName ? 'editing' : 'display'} className="overflow-hidden" style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem`, height: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE * 1.25}rem` }}>
-                  {isEditingName ? (
-                          <input
-                          type="text"
-                          value={editedName}
-                          onChange={(e) => onEditedNameChange(e.target.value)}
-                          onBlur={onConfirmNameChange}
-                          onKeyDown={(e) => {
-                              if (e.key === 'Enter') onConfirmNameChange();
-                              if (e.key === 'Escape') onConfirmNameChange();
+          {/* Mode 3D: Layout tube avec titre à gauche et icône à droite, centrés verticalement */}
+          {is3DMode ? (
+            <>
+              {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
+              <div className="flex-1 flex items-center gap-2 relative z-10 min-w-0">
+                  {showTitles && (vibeName || isEditingName) && (
+                      <div
+                          className="overflow-hidden flex-shrink min-w-0"
+                          style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem` }}
+                          onClick={(e) => {
+                              if (onNameEdit && !isEditingName) {
+                                  e.stopPropagation();
+                                  onNameEdit();
+                              }
                           }}
-                          onClick={(e) => e.stopPropagation()}
-                          autoFocus
-                          className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
-                          style={{
-                              fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                              lineHeight: 1.25,
-                              width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
-                              paddingLeft: '0.25rem',
-                              paddingRight: '0.25rem',
-                              marginLeft: '-0.25rem',
-                              marginRight: '-0.25rem'
-                          }}
-                      />
-                    ) : (
-                      <MarqueeText
-                          text={vibeName || ''}
-                          className="font-black leading-tight text-white"
-                          style={{
-                              fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
-                          }}
-                      />
-                    )}
-                  </div>
-                  <span
-                      className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
-                  >
+                      >
+                          {isEditingName ? (
+                              <input
+                                  type="text"
+                                  value={editedName}
+                                  onChange={(e) => onEditedNameChange(e.target.value)}
+                                  onBlur={onConfirmNameChange}
+                                  onKeyDown={(e) => {
+                                      if (e.key === 'Enter') onConfirmNameChange();
+                                      if (e.key === 'Escape') onConfirmNameChange();
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  autoFocus
+                                  className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
+                                  style={{
+                                      fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                                      lineHeight: 1.25,
+                                      width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`
+                                  }}
+                              />
+                          ) : (
+                              <MarqueeText
+                                  text={vibeName || ''}
+                                  className="font-black leading-tight text-white"
+                                  style={{
+                                      fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
+                                  }}
+                              />
+                          )}
+                      </div>
+                  )}
+                  {/* Compteurs */}
+                  <span className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0">
                       <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
                       {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                   </span>
               </div>
-            ) : (
-              /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
+
+              {/* Icône - alignée à droite, centrée verticalement */}
               <div
-                  className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,0.15)' }}
+                  className="flex-shrink-0 ml-2"
                   onClick={(e) => {
-                      if (onNameEdit) {
-                          e.stopPropagation();
-                          onNameEdit();
+                      e.stopPropagation();
+                      if (onEditVibe) {
+                          onEditVibe();
                       }
                   }}
               >
-                  <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                  {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                  <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
+                      <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                  </div>
               </div>
-            )
+            </>
           ) : (
-            /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
-            <span className="text-[10px] font-semibold text-white/80 flex items-center gap-1.5 relative z-10">
-                <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-            </span>
+            <>
+              {/* Mode normal: Layout original avec icône en haut à droite et contenu en bas */}
+              {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
+              <div
+                  className="absolute top-3 right-3"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      if (onEditVibe) {
+                          onEditVibe();
+                      }
+                  }}
+              >
+                  <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
+                  <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                  </div>
+              </div>
+
+              {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition, ou si showTitles est false */}
+              {showTitles ? (
+                (vibeName || isEditingName) ? (
+                  <div
+                      className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
+                      style={{
+                        padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
+                        maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
+                        background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
+                          transition: 'background 0.2s, border-color 0.2s'
+                      }}
+                      onClick={(e) => {
+                          if (onNameEdit && !isEditingName) {
+                              e.stopPropagation();
+                              onNameEdit();
+                          }
+                      }}
+                  >
+                      <div key={isEditingName ? 'editing' : 'display'} className="overflow-hidden" style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem`, height: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE * 1.25}rem` }}>
+                      {isEditingName ? (
+                              <input
+                              type="text"
+                              value={editedName}
+                              onChange={(e) => onEditedNameChange(e.target.value)}
+                              onBlur={onConfirmNameChange}
+                              onKeyDown={(e) => {
+                                  if (e.key === 'Enter') onConfirmNameChange();
+                                  if (e.key === 'Escape') onConfirmNameChange();
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
+                              style={{
+                                  fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                                  lineHeight: 1.25,
+                                  width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
+                                  paddingLeft: '0.25rem',
+                                  paddingRight: '0.25rem',
+                                  marginLeft: '-0.25rem',
+                                  marginRight: '-0.25rem'
+                              }}
+                          />
+                        ) : (
+                          <MarqueeText
+                              text={vibeName || ''}
+                              className="font-black leading-tight text-white"
+                              style={{
+                                  fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
+                              }}
+                          />
+                        )}
+                      </div>
+                      <span
+                          className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
+                      >
+                          <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                          {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                      </span>
+                  </div>
+                ) : (
+                  /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
+                  <div
+                      className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
+                      style={{ background: 'rgba(255,255,255,0.15)' }}
+                      onClick={(e) => {
+                          if (onNameEdit) {
+                              e.stopPropagation();
+                              onNameEdit();
+                          }
+                      }}
+                  >
+                      <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                      {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                  </div>
+                )
+              ) : (
+                /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
+                <span className="text-[10px] font-semibold text-white/80 flex items-center gap-1.5 relative z-10">
+                    <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                    {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                </span>
+              )}
+            </>
           )}
         </div>
     </FeedbackCardOverlay>
@@ -2316,7 +2408,7 @@ const ControlBar = ({
                           transition: 'background 0.3s, border 0.3s'
                       }}
                     >
-                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                        <SphereMaskT2 is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
                         {isPlaying ? (
                             <Disc3 size={20} className="text-white animate-spin-slow" />
                         ) : (
@@ -2754,7 +2846,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center shadow-sm transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 rounded-full flex items-center shadow-sm transition-colors duration-300 overflow-hidden relative ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             paddingLeft: `${CONFIG.TC_EDGE_PADDING}rem`,
@@ -2765,6 +2857,9 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 : '1px solid rgb(229, 231, 235)'
         }}
       >
+            {/* Masque cylindre 3D sur toute la capsule */}
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+
             {/* Bouton -10s */}
             <SkipButton direction="back" onClick={onSkipBack} />
 
@@ -2795,8 +2890,6 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
                             }}
                         >
-                            {/* Masque cylindre 3D */}
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                             {/* Remplissage rose flat */}
                             <div
                                 className="absolute left-0 top-0 bottom-0"
@@ -3125,7 +3218,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bo
   };
   
   // LIVING CAPSULE
-  const LiveHeaderCapsule = ({ activeFilter, setActiveFilter, sortDirection, onToggleSort, isSearching, setIsSearching, searchQuery, setSearchQuery, hideGlow = false, glowOpacity = 1, transitionDuration = 0 }) => {
+  const LiveHeaderCapsule = ({ activeFilter, setActiveFilter, sortDirection, onToggleSort, isSearching, setIsSearching, searchQuery, setSearchQuery, hideGlow = false, glowOpacity = 1, transitionDuration = 0, is3DMode = false }) => {
     
     const GLOW_VERTICAL_SPREAD = CONFIG.WHEEL_GLOW_VERTICAL;
     const GLOW_HORIZONTAL_SPREAD = CONFIG.WHEEL_GLOW_HORIZONTAL;
@@ -3163,7 +3256,8 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bo
 
     // DEFAULT - Sort buttons
     return (
-      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
+      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-hidden shadow-sm animate-in fade-in zoom-in duration-200 relative" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
+          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
           <SortButton mode="initialShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={RotateCcw} isFirst={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} />
           <div className="w-px h-full bg-gray-200"></div>
           <ToggleSortButton type="title" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} />
@@ -8282,18 +8376,19 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="px-3 relative z-10 w-full"
                 >
                 <div className="relative flex items-center gap-3">
-                <LiveHeaderCapsule 
-                        activeFilter={activeFilter} 
+                <LiveHeaderCapsule
+                        activeFilter={activeFilter}
                         setActiveFilter={applySort}
                         sortDirection={sortDirection}
                         onToggleSort={handleToggleSort}
-                        isSearching={false} 
-                        setIsSearching={setIsPlayerSearching} 
-                        searchQuery={playerSearchQuery} 
+                        isSearching={false}
+                        setIsSearching={setIsPlayerSearching}
+                        searchQuery={playerSearchQuery}
                         setSearchQuery={setPlayerSearchQuery}
                         hideGlow={(feedback && (feedback.type === 'next' || feedback.type === 'archive'))}
                         glowOpacity={(isPlayerSearching || playerSearchOverlayAnim === 'opening') ? 0 : (playerSearchOverlayAnim === 'closing' ? 1 : 1)}
                         transitionDuration={playerSearchOverlayAnim === 'opening' ? CONFIG.SEARCH_PLAYER_FADE_IN_DURATION : (playerSearchOverlayAnim === 'closing' ? CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION : 0)}
+                        is3DMode={is3DMode}
                     />
                     <button
                         onClick={() => {
@@ -8308,7 +8403,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden"
                         style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}
                     >
-                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                        <SphereMaskT3 is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
                         <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                     </button>
                     

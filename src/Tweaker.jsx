@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Tag, EyeOff } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask, SphereMaskT4 } from './Config.jsx';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -785,7 +785,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode || activeMode === 'reorder'} intensity={0.6} className="rounded-full" />
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
@@ -804,7 +804,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode || activeMode === 'delete'} intensity={0.6} className="rounded-full" />
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
@@ -823,7 +823,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
                     {is3DMode
                         ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
@@ -844,7 +844,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
                     {showTitles
                         ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
