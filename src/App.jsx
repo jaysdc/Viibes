@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CAPSULE_CYLINDER_SLICES } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -282,39 +282,7 @@ const CONFIG = {
     CAPSULE_BG_OPACITY: 0,            // Opacité du fond (0-1)
     CAPSULE_CYLINDER_ENABLED: false,     // Activer le masque d'opacité 3D
     CAPSULE_CYLINDER_INTENSITY: 0.6,    // Intensité du masque (0-1)
-    CAPSULE_CYLINDER_SLICES: [
-        -0.10,
-        -0.07,
-        -0.03,
-        0,
-        0, 
-        0.05,
-        0.10,
-        0.15,
-        0.20,
-        0.25,
-        0.20,
-        0.15,
-        0.10,
-        0.05,
-        0,
-        0,
-        -0.02,
-        -0.04,
-        -0.06,
-        -0.08,
-        -0.10,
-        -0.12,
-        -0.14,
-        -0.16,
-        -0.18,
-        -0.20,
-        -0.22,
-        -0.24,
-        -0.30,
-        -0.35
-        ],
-    
+
     // ══════════════════════════════════════════════════════════════════════════
     // ROUE DE SÉLECTION (Liste des chansons)
     // ══════════════════════════════════════════════════════════════════════════
@@ -3227,7 +3195,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                     <div 
                         className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full"
                     >
-                        {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+                        {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
                             <div
                                 key={i}
                                 className="flex-1"
@@ -3857,7 +3825,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 {/* Masque cylindre 3D */}
                 {is3DMode && (
                   <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full">
-                    {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+                    {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
                       <div
                         key={i}
                         className="flex-1"

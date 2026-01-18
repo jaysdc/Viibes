@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines, Pencil } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, CAPSULE_CYLINDER_SLICES } from './Config.jsx';
 import { VibesWave } from './Assets.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -183,39 +183,6 @@ const CONFIG = {
     // Animation rotation 3D de la capsule (entrée/sortie recherche)
     SEARCH_FADE_IN_DURATION: 275,         // Durée fade in recherche (ms)
     SEARCH_FADE_OUT_DURATION: 275,        // Durée fade out recherche (ms)
-    //negatif = noir, positif = blanc, valeur = %, par exemple 0.5 = 50% transparent
-    CAPSULE_CYLINDER_SLICES: [
-        -0.10,
-        -0.07,
-        -0.03,
-        0,
-        0, 
-        0.05,
-        0.10,
-        0.15,
-        0.20,
-        0.25,
-        0.20,
-        0.15,
-        0.10,
-        0.05,
-        0,
-        0,
-        -0.02,
-        -0.04,
-        -0.06,
-        -0.08,
-        -0.10,
-        -0.12,
-        -0.14,
-        -0.16,
-        -0.18,
-        -0.20,
-        -0.22,
-        -0.24,
-        -0.30,
-        -0.35
-    ],
 
     HEADER_DRAGMODE_ICON_SIZE: '1.25rem', // Taille icônes Let's Vibe/Ghosting (20px)
 
@@ -677,7 +644,7 @@ const CylinderMask = ({ intensity = 1, className = '', is3DMode = false }) => {
     if (!is3DMode || intensity === 0) return null;
     return (
         <div className={`absolute inset-0 pointer-events-none z-30 overflow-hidden flex flex-col ${className}`} style={{ transform: 'translateZ(0)' }}>
-            {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+            {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
                 <div
                     key={i}
                     className="flex-1"
