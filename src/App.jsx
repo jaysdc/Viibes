@@ -2973,7 +2973,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     );
 };
 
-const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, borderClass, children, roundedClass = 'rounded-full', is3DMode = false }) => {
+const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bgStyle, borderClass, children, roundedClass = 'rounded-full', is3DMode = false }) => {
     const [phase, setPhase] = useState('fadein'); // fadein, flash, idle, validating, fadeout
     const [textOpacity, setTextOpacity] = useState(0);
     const [glowIntensity, setGlowIntensity] = useState(0);
@@ -3167,6 +3167,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bo
     
     const containerStyle = {
         ...glowStyle,
+        ...bgStyle,
         opacity: bgOpacity / 100,
         transition: `opacity ${phase === 'fadeout' ? fadeOutDuration : fadeInDuration}ms ease-out, ${glowStyle.transition}`
     };
@@ -8255,19 +8256,33 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 );
                             })()}
                             {/* FeedbackOverlay avec animation ignite - Garde la couleur du bandeau initial */}
-                            {confirmFeedback && (
+                            {confirmFeedback && (() => {
+                                // Kill = Fuchsia Overdose, Nuke/Cancel = basé sur pendingVibe
+                                const isKillAction = pendingVibe !== null;
+                                const gradientColors = isKillAction
+                                    ? ['#ec4899', '#ff07a3']  // Fuchsia Overdose
+                                    : ['#f43f5e', '#b91c1c']; // Lava Flow
+                                const glowColor = gradientColors[0];
+                                // Convertir hex en RGB pour neonColor
+                                const hexToRgb = (hex) => {
+                                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '236, 72, 153';
+                                };
+                                return (
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_GREEN : CONFIG.NEON_COLOR_RED}
-                                    bgClass={confirmFeedback.type === 'kill' ? "bg-green-500" : "bg-red-500"}
-                                    borderClass={confirmFeedback.type === 'kill' ? "border-green-600" : "border-red-600"}
+                                    neonColor={hexToRgb(glowColor)}
+                                    bgClass=""
+                                    bgStyle={{ background: `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)` }}
+                                    borderClass="border-transparent"
                                     is3DMode={is3DMode}
                                 >
                                     {confirmFeedback.type === 'cancel' ? <X size={20} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
                                     <span>{confirmFeedback.text}</span>
                                 </FeedbackOverlay>
-                            )}
+                                );
+                            })()}
                         </div>
                     );
                 })()}
