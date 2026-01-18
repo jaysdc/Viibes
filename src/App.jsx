@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMaskT2, SphereMaskT3 } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMaskT2, SphereMaskT3, SphereMaskT4 } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
