@@ -4868,6 +4868,55 @@ useEffect(() => {
     }
   };
 
+  // Fonction pour duck/restore le volume principal (pour pré-écoute)
+  const fadeMainAudio = (direction, targetVolume = 0) => {
+    if (!audioRef.current) return;
+
+    if (fadeInterval.current) {
+        if (fadeInterval.current.cancel) fadeInterval.current.cancel();
+        else clearInterval(fadeInterval.current);
+        fadeInterval.current = null;
+    }
+
+    const step = 0.05;
+
+    if (direction === 'duck') {
+        // Duck : baisser le volume SANS couper l'audio
+        savedVolume.current = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+        const duckTarget = targetVolume || 0.15;
+
+        fadeInterval.current = setInterval(() => {
+          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+          if (currentVol > duckTarget + step) {
+              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol - step;
+              else audioRef.current.volume = currentVol - step;
+          } else {
+              if (gainNodeRef.current) gainNodeRef.current.gain.value = duckTarget;
+              else audioRef.current.volume = duckTarget;
+              clearInterval(fadeInterval.current);
+              fadeInterval.current = null;
+          }
+        }, 20);
+    } else if (direction === 'in') {
+        // Fade In - restaurer le volume
+        if (audioRef.current.paused) {
+            audioRef.current.play().catch(() => {});
+        }
+        fadeInterval.current = setInterval(() => {
+          const currentVol = gainNodeRef.current ? gainNodeRef.current.gain.value : audioRef.current.volume;
+          if (currentVol < savedVolume.current - step) {
+              if (gainNodeRef.current) gainNodeRef.current.gain.value = currentVol + step;
+              else audioRef.current.volume = currentVol + step;
+          } else {
+              if (gainNodeRef.current) gainNodeRef.current.gain.value = savedVolume.current;
+              else audioRef.current.volume = savedVolume.current;
+              clearInterval(fadeInterval.current);
+              fadeInterval.current = null;
+          }
+        }, 50);
+    }
+  };
+
   // Fade out rapide pour pause (garde le volume sauvegardé pour la reprise)
   const PAUSE_FADE_DURATION_SEC = 0.15;
 
@@ -8682,6 +8731,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }
                       }}
                         onPlayNext={addToPlayNext}
+                        fadeMainAudio={fadeMainAudio}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
                             height: `${CONFIG.VIBECARD_BUILDER_HEIGHT_VH}vh`,

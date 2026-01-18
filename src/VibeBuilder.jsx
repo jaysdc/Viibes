@@ -995,7 +995,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true, is3DMode = false }) => {
+const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, onPlayNext, fadeMainAudio, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true, is3DMode = false }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -1256,7 +1256,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     // PRÉ-ÉCOUTE LOGIC
     const startVibing = (song) => {
         console.log("startVibing called with:", song.title, "file:", song.file);
-        
+
+        // Baisser le volume principal (ducking) au lieu de couper
+        if (fadeMainAudio) fadeMainAudio('duck', 0.25);
         setVibingSong(song);
         
         if (isSongAvailable(song)) {
@@ -1338,7 +1340,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
             audio.pause();
             audio.currentTime = 0;
         }
-        
+
+        // Restaurer le volume principal
+        if (fadeMainAudio) fadeMainAudio('in');
+
         if (action === 'add' && songToProcess) {
             if (!selectedSongs.find(s => s.id === songToProcess.id)) {
                 setSelectedSongs(prev => [...prev, songToProcess]);
