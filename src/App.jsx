@@ -232,7 +232,12 @@ const getFooterHeight = () => {
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 const CONFIG = {
-    
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // ORIENTATION LOCK (overlay mode paysage)
+    // ══════════════════════════════════════════════════════════════════════════
+    ORIENTATION_LOCK_ENABLED: true,     // Afficher l'overlay en mode paysage (true = bloqué, false = autorisé)
+
     // ══════════════════════════════════════════════════════════════════════════
     // PARAMÈTRES UNIFIÉS (importés depuis config.js)
     // ══════════════════════════════════════════════════════════════════════════
@@ -7321,9 +7326,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
       {/* Orientation lock overlay */}
-      <div className="orientation-lock-overlay">
-        <div className="orientation-lock-icon">📱</div>
-      </div>
+      {CONFIG.ORIENTATION_LOCK_ENABLED && (
+        <div className="orientation-lock-overlay">
+          <div className="orientation-lock-icon">📱</div>
+        </div>
+      )}
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 
 
