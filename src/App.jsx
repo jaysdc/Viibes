@@ -8254,14 +8254,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     </div>
                                 );
                             })()}
-                            {/* FeedbackOverlay avec animation ignite - VERT pour validation, ROUGE pour annulation */}
+                            {/* FeedbackOverlay avec animation ignite - Garde la couleur du bandeau initial */}
                             {confirmFeedback && (
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={confirmFeedback.type === 'cancel' ? CONFIG.NEON_COLOR_RED : CONFIG.NEON_COLOR_GREEN}
-                                    bgClass={confirmFeedback.type === 'cancel' ? "bg-red-500" : "bg-green-500"}
-                                    borderClass={confirmFeedback.type === 'cancel' ? "border-red-600" : "border-green-600"}
+                                    neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_GREEN : CONFIG.NEON_COLOR_RED}
+                                    bgClass={confirmFeedback.type === 'kill' ? "bg-green-500" : "bg-red-500"}
+                                    borderClass={confirmFeedback.type === 'kill' ? "border-green-600" : "border-red-600"}
                                     is3DMode={is3DMode}
                                 >
                                     {confirmFeedback.type === 'cancel' ? <X size={20} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
