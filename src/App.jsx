@@ -8385,7 +8385,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
                                         : 'rgba(229, 231, 235, 0.85)',  // Fond gris clair comme scrub overlay
                                 backgroundImage: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : 'radial-gradient(circle, rgba(156, 163, 175, 0.6) 1px, transparent 1px)',
-                                backgroundSize: '6px 6px',
+                                backgroundSize: '10px 10px',
+                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(156, 163, 175, 0.5)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
