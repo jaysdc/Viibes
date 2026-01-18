@@ -3267,7 +3267,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bo
   );
 };
 
-const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queueIndex, queueLength, variant = 'default', audioLevel = 0 }) => {
+const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queueIndex, queueLength, variant = 'default', audioLevel = 0, is3DMode = false }) => {
     const isMain = variant === 'main'; 
     
     const capsuleHeightVh = isMain ? CONFIG.CAPSULE_HEIGHT_VH : CONFIG.CAPSULE_HEIGHT_MINI_VH;
@@ -3310,7 +3310,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                 style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
             >
                 {/* Masque cylindre 3D */}
-                {CONFIG.CAPSULE_CYLINDER_ENABLED && (
+                {is3DMode && (
                     <div 
                         className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full"
                     >
@@ -3584,7 +3584,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     );
 };
 
-const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null }) => {
+const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null, is3DMode = false }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
     
@@ -4231,16 +4231,17 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     className="snap-center flex items-center justify-center w-full absolute"
                     style={{ height: itemHeight, top: centerPadding + index * itemHeight }}
                   >
-                    <ControlCapsule 
-                      song={song} 
-                      isPlaying={isPlaying} 
-                      togglePlay={togglePlay} 
-                      playPrev={playPrev} 
-                      playNext={playNext} 
-                      queueIndex={index} 
-                      queueLength={queue.length} 
+                    <ControlCapsule
+                      song={song}
+                      isPlaying={isPlaying}
+                      togglePlay={togglePlay}
+                      playPrev={playPrev}
+                      playNext={playNext}
+                      queueIndex={index}
+                      queueLength={queue.length}
                       variant={isMini ? 'dashboard' : 'main'}
                       audioLevel={audioLevel}
+                      is3DMode={is3DMode}
                     />
                   </div>
                 ); 
@@ -4530,6 +4531,7 @@ const handlePlayerTouchEnd = () => {
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
     const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
+    const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
@@ -7976,6 +7978,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             onSwipeProgress={setVibeSwipePreview}
             showTitles={showTitles}
             setShowTitles={setShowTitles}
+            is3DMode={is3DMode}
+            setIs3DMode={setIs3DMode}
         />
         )}
 
@@ -8036,6 +8040,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 onCenteredIndexChange={setDrawerCenteredIndex}
                                 initialIndex={playerCenteredIndex}
                                 globalSwipeLockRef={globalSwipeLockRef}
+                                is3DMode={is3DMode}
                                 />
                                 </div>
                                 )}
@@ -8725,7 +8730,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} is3DMode={is3DMode} />}</div>
                   </div>
                 )}
         
@@ -8876,6 +8881,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         usedGradientIndices={usedIndices}
                         totalGradients={ALL_GRADIENTS.length}
                         showTitles={showTitles}
+                        is3DMode={is3DMode}
                     />
                   </ErrorBoundary>
                     </div>

@@ -263,7 +263,9 @@ const Tweaker = ({
     onSwipeProgress = () => {},
     cardAnimConfig = {},
     showTitles = true,
-    setShowTitles = () => {}
+    setShowTitles = () => {},
+    is3DMode = false,
+    setIs3DMode = () => {}
 }) => {
     // Animation d'ouverture
     const [isVisible, setIsVisible] = useState(false);
@@ -339,12 +341,9 @@ const Tweaker = ({
     const [editingVibeName, setEditingVibeName] = useState(null);
     const [editedName, setEditedName] = useState('');
 
-    // Toggle 2D/3D (2D par défaut)
-    const [is3DMode, setIs3DMode] = useState(false);
-
     // Sauvegarder l'état original complet pour pouvoir annuler
     const [originalShowTitles] = useState(showTitles);
-    const [originalIs3DMode] = useState(false); // is3DMode démarre toujours à false
+    const [originalIs3DMode] = useState(is3DMode);
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
     const [originalVibes] = useState(() =>
         Object.keys(playlists).map(vibeId => ({

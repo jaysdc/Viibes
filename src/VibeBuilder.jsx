@@ -673,8 +673,8 @@ const NeonGlow = ({
   };
 
 // Composant masque cylindre réutilisable
-const CylinderMask = ({ intensity = 1, className = '' }) => {
-    if (!CONFIG.CAPSULE_CYLINDER_ENABLED || intensity === 0) return null;
+const CylinderMask = ({ intensity = 1, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
     return (
         <div className={`absolute inset-0 pointer-events-none z-30 overflow-hidden flex flex-col ${className}`}>
             {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
@@ -753,14 +753,15 @@ const VibingTitle = ({ size = CONFIG.VIBING_TITLE_SIZE }) => (
 );
 
 // Bouton de tri avec toggle de direction (A→Z / Z→A ou moins/plus)
-const ToggleSortBtn = ({ 
+const ToggleSortBtn = ({
     type,           // 'title' | 'artist' | 'playCount'
-    sortMode, 
-    setSortMode, 
+    sortMode,
+    setSortMode,
     sortDirection,  // 'asc' | 'desc'
     setSortDirection,
     isFirst,
-    hideGlow = false
+    hideGlow = false,
+    is3DMode = false
 }) => {
     const [justActivated, setJustActivated] = useState(false);
     const [animKey, setAnimKey] = useState(0);
@@ -845,7 +846,7 @@ const ToggleSortBtn = ({
     return (
         <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`}>
             {/* Masque cylindre individuel */}
-            <CylinderMask intensity={isActive ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} />
+            <CylinderMask intensity={isActive ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} is3DMode={is3DMode} />
             {isActive && !hideGlow && (
                 <NeonGlow
                     key={animKey}
@@ -883,7 +884,7 @@ const ToggleSortBtn = ({
 };
 
 // Bouton filtre fichiers (cycle: available -> all -> unavailable -> available)
-const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false }) => {
+const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false, is3DMode = false }) => {
     const [justActivated, setJustActivated] = useState(false);
     const [animKey, setAnimKey] = useState(0);
     const prevFilterRef = useRef(fileFilter);
@@ -928,7 +929,7 @@ const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false }) => {
     return (
         <div className="flex-1 h-full relative overflow-visible rounded-r-full">
             {/* Masque cylindre - toujours actif car ce bouton est toujours coloré */}
-            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" />
+            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
             {!hideGlow && (
                 <NeonGlow
                     key={animKey}
@@ -1049,7 +1050,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
 
 // --- 4. VIBE BUILDER COMPONENT ---
 
-const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true }) => {
+const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, fadeMainAudio, onPlayNext, hasActiveQueue, vibeCardConfig, initialGradientIndex, getGradientByIndex, getGradientName, usedGradientIndices = [], totalGradients = 20, cardAnimConfig = { openDuration: 400, openDecel: 0.85, closeDuration: 300, closeRotation: 15, radius: '2rem', borderColor: '#e5e7eb', borderWidth: 2 }, editMode = false, editVibeId = null, editVibeName = '', editVibeSongs = [], editVibeGradientIndex = 0, showTitles = true, is3DMode = false }) => {
     // Animation d'ouverture/fermeture (comme Tweaker)
     const [isVisible, setIsVisible] = useState(false);
     const [isOpenAnimating, setIsOpenAnimating] = useState(true);
@@ -2003,10 +2004,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                     className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible relative"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
-                                    <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
-                                    <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
-                                    <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
-                                    <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none'} />
+                                    <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
+                                    <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
                                 </div>
 
                                 {/* BOUTON LOUPE ROND (séparé) */}
@@ -2048,7 +2049,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                                 paddingRight: CONFIG.SEARCH_PADDING_X
                                             }}
                                         >
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-l-full" />
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-l-full" is3DMode={is3DMode} />
                                             <Search style={{ width: CONFIG.HEADER_SEARCH_ICON_SIZE, height: CONFIG.HEADER_SEARCH_ICON_SIZE }} className="text-gray-400 mr-3" />
                                             <input
                                                 autoFocus
@@ -2067,7 +2068,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, f
                                             />
                                         </div>
                                         <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.CLOSE_BTN_FLEX }}>
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" />
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
                                             <NeonGlow
                                                 key={closeBtnAnimKey}
                                                 colorName="pink"
