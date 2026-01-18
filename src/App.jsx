@@ -2063,7 +2063,7 @@ return (
                   // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets
                   <>
                       <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
-                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/60 flex items-center gap-1.5 z-10">
+                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/40 flex items-center gap-1.5 z-10">
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
                           {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                       </span>
@@ -2133,7 +2133,7 @@ return (
               >
                   {!showTitles ? (
                       // Mode 3D + no tag: icône seule sans cercle, discrète
-                      <div className={`flex items-center justify-center text-white/60 ${onEditVibe ? 'cursor-pointer active:text-white/80' : ''}`}>
+                      <div className={`flex items-center justify-center text-white/40 ${onEditVibe ? 'cursor-pointer active:text-white/60' : ''}`}>
                           <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </div>
                   ) : (
@@ -8169,25 +8169,31 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                         >
                             {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
-                            {!confirmFeedback && (
-                                <div
-                                    className="absolute inset-0 rounded-full flex items-center justify-center border"
-                                    style={{
-                                        background: pendingVibe
-                                            ? 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)'
-                                            : 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)',
-                                        borderColor: pendingVibe ? '#d946ef' : '#CC0530',
-                                        boxShadow: pendingVibe
-                                            ? '0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.4)'
-                                            : '0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.4)'
-                                    }}
-                                >
-                                    <div className="flex items-center gap-2 text-white font-black tracking-widest text-xs">
-                                        {pendingVibe ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
-                                        <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
+                            {!confirmFeedback && (() => {
+                                // Couleurs pour Kill (Fuchsia Overdose) et Nuke (Lava Flow)
+                                const gradientColors = pendingVibe
+                                    ? ['#ec4899', '#ff07a3']
+                                    : ['#f43f5e', '#b91c1c'];
+                                const gradientBg = `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`;
+                                const glowColor = gradientColors[0];
+                                return (
+                                    <div
+                                        className="absolute inset-0 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
+                                        style={{
+                                            background: gradientBg,
+                                            boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
+                                        }}
+                                    >
+                                        <div
+                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                                        >
+                                            {pendingVibe ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
+                                            <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                );
+                            })()}
                             {/* FeedbackOverlay avec animation ignite quand on confirme */}
                             {confirmFeedback && (
                                 <FeedbackOverlay
@@ -8284,62 +8290,76 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         </div>
 
                         {/* Curseur central draggable */}
-                        <div
-                            className={`absolute flex items-center justify-center ${
-                                confirmFeedback
-                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
-                            }`}
-                            style={{
-                                '--pulse-scale-min': 1,
-                                '--pulse-scale-max': pulseScaleMax,
-                                width: cursorSize,
-                                height: cursorSize,
-                                borderRadius: '50%',
-                                backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel'
-                                    ? 'rgba(244, 63, 94, 0.9)'  // Lava Flow (rose #f43f5e)
-                                    : isAtRightThreshold || confirmFeedback?.type === 'kill'
-                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon sexy (#00ff88)
-                                        : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
-                                left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
-                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
-                            }}
-                        >
-                            {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
-                            <div
-                                className="flex items-center"
-                                style={{
-                                    opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.6,
-                                    transition: 'opacity 150ms ease-out',
-                                }}
-                            >
-                                <ChevronLeft
-                                    size={iconSize * 0.5}
-                                    className="text-gray-500 -mr-2"
-                                    strokeWidth={2}
-                                />
-                                <ChevronRight
-                                    size={iconSize * 0.5}
-                                    className="text-gray-500"
-                                    strokeWidth={2}
-                                />
-                            </div>
-                            {/* Icône X ou Check quand au seuil (contenue dans la bulle) */}
-                            {isAtLeftThreshold && (
-                                <X
-                                    size={iconSize * 0.7}
-                                    className="text-white absolute"
-                                    strokeWidth={2.5}
-                                />
-                            )}
-                            {isAtRightThreshold && (
-                                <Check
-                                    size={iconSize * 0.7}
-                                    className="text-white absolute"
-                                    strokeWidth={2.5}
-                                />
-                            )}
-                        </div>
+                        {(() => {
+                            // Détermine le gradient et glow selon l'état
+                            const isLeft = isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel';
+                            const isRight = isAtRightThreshold || confirmFeedback?.type === 'kill';
+                            const cursorGradient = isLeft
+                                ? 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)'  // Rouge/Lava
+                                : isRight
+                                    ? 'linear-gradient(135deg, #00ff88 0%, #10b981 100%)'  // Vert néon
+                                    : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';  // Gris neutre
+                            const cursorGlow = isLeft
+                                ? '0 0 20px #f43f5e99, 0 0 40px #f43f5e55'
+                                : isRight
+                                    ? '0 0 20px #00ff8899, 0 0 40px #00ff8855'
+                                    : '0 0 15px rgba(0,0,0,0.3)';
+                            return (
+                                <div
+                                    className={`absolute flex items-center justify-center ${
+                                        confirmFeedback
+                                            ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
+                                            : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
+                                    }`}
+                                    style={{
+                                        '--pulse-scale-min': 1,
+                                        '--pulse-scale-max': pulseScaleMax,
+                                        width: cursorSize,
+                                        height: cursorSize,
+                                        borderRadius: '50%',
+                                        background: cursorGradient,
+                                        boxShadow: cursorGlow,
+                                        left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                                        transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background 150ms ease-out, box-shadow 150ms ease-out',
+                                    }}
+                                >
+                                    {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
+                                    <div
+                                        className="flex items-center"
+                                        style={{
+                                            opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.8,
+                                            transition: 'opacity 150ms ease-out',
+                                        }}
+                                    >
+                                        <ChevronLeft
+                                            size={iconSize * 0.5}
+                                            className="text-white -mr-2"
+                                            strokeWidth={2.5}
+                                        />
+                                        <ChevronRight
+                                            size={iconSize * 0.5}
+                                            className="text-white"
+                                            strokeWidth={2.5}
+                                        />
+                                    </div>
+                                    {/* Icône X ou Check quand au seuil (contenue dans la bulle) */}
+                                    {isAtLeftThreshold && (
+                                        <X
+                                            size={iconSize * 0.7}
+                                            className="text-white absolute"
+                                            strokeWidth={2.5}
+                                        />
+                                    )}
+                                    {isAtRightThreshold && (
+                                        <Check
+                                            size={iconSize * 0.7}
+                                            className="text-white absolute"
+                                            strokeWidth={2.5}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                         {/* Check icon à droite - cachée quand la bulle la recouvre */}
                         <div
