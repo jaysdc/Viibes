@@ -2060,8 +2060,8 @@ return (
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
               {/* En mode no-tag: compteurs en bas de la capsule */}
               {!showTitles ? (
-                  // Mode 3D + no tag: compteurs centrés en bas
-                  <div className="flex-1 flex flex-col justify-end items-center relative z-10 pb-1">
+                  // Mode 3D + no tag: compteurs en bas à gauche
+                  <div className="flex-1 flex items-end relative z-10">
                       <span className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5">
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
                           {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
