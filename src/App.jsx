@@ -2914,12 +2914,14 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                             <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                             {/* Remplissage rose flat */}
                             <div
-                                className="absolute left-0 top-0 bottom-0"
+                                className="absolute left-0 top-0 bottom-0 overflow-hidden"
                                 style={{
                                     width: `${progressPercent}%`,
                                     background: '#ec4899',
                                 }}
-                            />
+                            >
+                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
+                            </div>
                             {/* Texte gris (fond clair) - couche de base */}
                             <div
                                 className="absolute inset-0 flex items-center justify-between pointer-events-none"
