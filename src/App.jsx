@@ -7321,8 +7321,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       : (scanCompleteFlash ? undefined : '#f3f4f6')
                               }}
                           >
-                              {/* Masque cylindre 3D */}
-                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
                               {!scanCompleteFlash && (
                                   <div
@@ -7337,6 +7335,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       }}
                                   />
                               )}
+                              {/* Masque cylindre 3D - APRES le fond pour être visible */}
+                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
                               {/* Crossfade FolderDown ↔ Radar pendant le scan (cycle 4s) */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderDown
