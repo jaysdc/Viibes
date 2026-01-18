@@ -8290,76 +8290,37 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         </div>
 
                         {/* Curseur central draggable */}
-                        {(() => {
-                            // Détermine le gradient et glow selon l'état
-                            const isLeft = isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel';
-                            const isRight = isAtRightThreshold || confirmFeedback?.type === 'kill';
-                            const cursorGradient = isLeft
-                                ? 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)'  // Rouge/Lava
-                                : isRight
-                                    ? 'linear-gradient(135deg, #00ff88 0%, #10b981 100%)'  // Vert néon
-                                    : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';  // Gris neutre
-                            const cursorGlow = isLeft
-                                ? '0 0 20px #f43f5e99, 0 0 40px #f43f5e55'
-                                : isRight
-                                    ? '0 0 20px #00ff8899, 0 0 40px #00ff8855'
-                                    : '0 0 15px rgba(0,0,0,0.3)';
-                            return (
-                                <div
-                                    className={`absolute flex items-center justify-center ${
-                                        confirmFeedback
-                                            ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
-                                            : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
-                                    }`}
-                                    style={{
-                                        '--pulse-scale-min': 1,
-                                        '--pulse-scale-max': pulseScaleMax,
-                                        width: cursorSize,
-                                        height: cursorSize,
-                                        borderRadius: '50%',
-                                        background: cursorGradient,
-                                        boxShadow: cursorGlow,
-                                        left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
-                                        transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background 150ms ease-out, box-shadow 150ms ease-out',
-                                    }}
-                                >
-                                    {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
-                                    <div
-                                        className="flex items-center"
-                                        style={{
-                                            opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.8,
-                                            transition: 'opacity 150ms ease-out',
-                                        }}
-                                    >
-                                        <ChevronLeft
-                                            size={iconSize * 0.5}
-                                            className="text-white -mr-2"
-                                            strokeWidth={2.5}
-                                        />
-                                        <ChevronRight
-                                            size={iconSize * 0.5}
-                                            className="text-white"
-                                            strokeWidth={2.5}
-                                        />
-                                    </div>
-                                    {/* Icône X ou Check quand au seuil (contenue dans la bulle) */}
-                                    {isAtLeftThreshold && (
-                                        <X
-                                            size={iconSize * 0.7}
-                                            className="text-white absolute"
-                                            strokeWidth={2.5}
-                                        />
-                                    )}
-                                    {isAtRightThreshold && (
-                                        <Check
-                                            size={iconSize * 0.7}
-                                            className="text-white absolute"
-                                            strokeWidth={2.5}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })()}
+                        <div
+                            className={`absolute flex items-center justify-center ${
+                                confirmFeedback
+                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
+                            }`}
+                            style={{
+                                '--pulse-scale-min': 1,
+                                '--pulse-scale-max': pulseScaleMax,
+                                width: cursorSize,
+                                height: cursorSize,
+                                borderRadius: '50%',
+                                backgroundColor: isAtLeftThreshold
+                                    ? 'rgba(244, 63, 94, 0.9)'  // Rouge/Lava
+                                    : isAtRightThreshold
+                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
+                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
+                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
+                            }}
+                        >
+                            {/* Icône X quand au seuil gauche */}
+                            {isAtLeftThreshold && (
+                                <X size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                            )}
+                            {/* Icône Check quand au seuil droite */}
+                            {isAtRightThreshold && (
+                                <Check size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                            )}
+                        </div>
 
                         {/* Check icon à droite - cachée quand la bulle la recouvre */}
                         <div
