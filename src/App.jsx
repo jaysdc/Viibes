@@ -2157,9 +2157,17 @@ return (
                       }
                   }}
               >
-                  <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
-                  <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                  </div>
+                  {showTitles ? (
+                      // Mode avec tags: icône dans cercle
+                      <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
+                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                      </div>
+                  ) : (
+                      // Mode no-tag: icône seule sans cercle, discrète (50% opacité)
+                      <div className={`flex items-center justify-center text-white/50 ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
+                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                      </div>
+                  )}
               </div>
 
               {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition, ou si showTitles est false */}
@@ -2238,10 +2246,10 @@ return (
                   </div>
                 )
               ) : (
-                /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
-                <span className="text-[10px] font-semibold text-white/80 flex items-center gap-1.5 relative z-10">
+                /* Mode sans titres: compteurs directement sur la carte en bas à gauche, discrets (50% opacité) */
+                <span className="text-[10px] font-semibold text-white/50 flex items-center gap-1.5 relative z-10">
                     <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                    {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                    {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
                 </span>
               )}
             </>
