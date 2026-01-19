@@ -6027,35 +6027,29 @@ const vibeSearchResults = () => {
     return; // DÉSACTIVÉ pour forcer iOS à afficher prev/next
   }, []);
 
-  // Enregistrer les handlers ET les listeners audio
+  // Enregistrer les handlers Media Session (AirPods, lock screen, etc.)
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
-    const audio = audioRef.current;
-    if (!audio) return;
 
     // === ACTION HANDLERS (contrôles du widget) ===
+    // Note: on utilise audioRef.current dans les callbacks, pas au montage
+    // Comme ça les handlers sont enregistrés immédiatement et fonctionnent avec AirPods
 
-    // Play: appeler directement .play() sur l'audio
+    // Play
     navigator.mediaSession.setActionHandler('play', async () => {
       console.log('[MediaSession] play handler called');
+      const audio = audioRef.current;
+      if (!audio) return;
       try {
-        // Sur iOS, l'AudioContext peut être suspendu quand l'app est en background
-        // On essaie de le résumer, mais si ça échoue, l'audio jouera quand même
-        // (juste sans le contrôle de volume via Web Audio API)
         if (audioContextRef.current?.state === 'suspended') {
           console.log('[MediaSession] AudioContext suspended, trying to resume...');
           try {
             await audioContextRef.current.resume();
             console.log('[MediaSession] AudioContext resumed successfully');
           } catch (resumeError) {
-            // Sur iOS en background, resume() peut échouer sans interaction utilisateur
-            // L'audio jouera quand même via l'élément audio directement
             console.log('[MediaSession] AudioContext resume failed (expected on iOS background):', resumeError);
           }
         }
-
-        // Lancer la lecture - ceci fonctionne même si AudioContext est suspendu
-        // car l'élément audio peut jouer indépendamment
         await audio.play();
         console.log('[MediaSession] audio.play() succeeded');
       } catch (e) {
@@ -6063,15 +6057,19 @@ const vibeSearchResults = () => {
       }
     });
 
-    // Pause: appeler directement .pause() sur l'audio
+    // Pause
     navigator.mediaSession.setActionHandler('pause', () => {
       console.log('[MediaSession] pause handler called');
+      const audio = audioRef.current;
+      if (!audio) return;
       audio.pause();
     });
 
     // Previous track
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       console.log('[MediaSession] previoustrack handler called');
+      const audio = audioRef.current;
+      if (!audio) return;
       if (audio.currentTime > 3) {
         audio.currentTime = 0;
       } else {
@@ -6087,6 +6085,8 @@ const vibeSearchResults = () => {
     // Next track
     navigator.mediaSession.setActionHandler('nexttrack', () => {
       console.log('[MediaSession] nexttrack handler called');
+      const audio = audioRef.current;
+      if (!audio) return;
       const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
       if (currentIndex < queueRef.current.length - 1) {
         setCurrentSong(queueRef.current[currentIndex + 1]);
@@ -6099,22 +6099,37 @@ const vibeSearchResults = () => {
     // NOTE: On n'enregistre PAS seekbackward/seekforward/seekto
     // pour qu'iOS affiche les boutons prev/next au lieu de +10/-10
 
-    // NOTE: Les handlers onPlay/onPause sont maintenant sur l'élément <audio> dans le JSX
-    // Le handler visibilitychange est dans un useEffect séparé
+    // Cleanup
+    return () => {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        try { navigator.mediaSession.setActionHandler('seekto', null); } catch (e) {}
+      }
+    };
+  }, []); // Dépendances vides = une seule fois
+
+  // Listener loadedmetadata pour extraire l'artwork
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
     const handleLoadedMetadata = () => {
       console.log('[MediaSession] loadedmetadata event');
-      updatePositionState();
 
       // Re-définir les handlers prev/next pour activer les boutons sur iOS
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
-      });
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
-      });
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+          if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
+        });
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+          if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
+        });
+      }
 
       // Extraire l'artwork maintenant que l'audio est chargé
       const song = currentSongRef.current;
@@ -6135,21 +6150,8 @@ const vibeSearchResults = () => {
       }
     };
 
-    // NOTE: handleEnded est maintenant sur l'élément <audio> dans le JSX via onEnded
-
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-
-    // Cleanup
-    return () => {
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', null);
-        navigator.mediaSession.setActionHandler('pause', null);
-        navigator.mediaSession.setActionHandler('previoustrack', null);
-        navigator.mediaSession.setActionHandler('nexttrack', null);
-        try { navigator.mediaSession.setActionHandler('seekto', null); } catch (e) {}
-      }
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-    };
+    return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
   }, []); // Dépendances vides = une seule fois
 
   // Mettre à jour les métadonnées quand la chanson change
