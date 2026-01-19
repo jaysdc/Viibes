@@ -5786,6 +5786,13 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
+              // Si on est en train de sync depuis visibilitychange, ne pas toucher à l'audio
+              // (on veut juste mettre à jour l'état React, pas relancer la lecture)
+              if (isSyncingFromVisibilityRef.current) {
+                  console.log('[useEffect] Skipping play - syncing from visibility change');
+                  return;
+              }
+
               // Annuler tout fade en cours (si on appuie play pendant un fade out)
               if (fadeInterval.current) {
                   clearTimeout(fadeInterval.current);
@@ -5841,6 +5848,7 @@ const vibeSearchResults = () => {
   const currentSongRef = useRef(currentSong);
   const queueRef = useRef(queue);
   const wakeLockRef = useRef(null);
+  const isSyncingFromVisibilityRef = useRef(false); // Pour bloquer le useEffect pendant la sync
 
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
@@ -6117,11 +6125,20 @@ const vibeSearchResults = () => {
       if (document.visibilityState === 'visible' && audio) {
         console.log('[MediaSession] visibility changed to visible, syncing state');
         const shouldBePlaying = !audio.paused;
+
+        // Marquer qu'on est en train de sync pour bloquer le useEffect
+        isSyncingFromVisibilityRef.current = true;
         setIsPlaying(shouldBePlaying);
+
         if ('mediaSession' in navigator) {
           navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
         }
         updatePositionState();
+
+        // Débloquer après que React ait traité le state update
+        setTimeout(() => {
+          isSyncingFromVisibilityRef.current = false;
+        }, 100);
       }
     };
 
