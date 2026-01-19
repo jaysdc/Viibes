@@ -2437,7 +2437,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: 'black', mixBlendMode: 'screen' }}
+                                    style={{ color: futureGradientColors[0] }}
                                 />
                             </div>
 
@@ -2465,7 +2465,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 <Plus
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: showNoSongsHint ? 'white' : 'black', mixBlendMode: showNoSongsHint ? 'normal' : 'screen' }}
+                                    style={{ color: showNoSongsHint ? 'white' : futureGradientColors[futureGradientColors.length - 1] }}
                                 />
                             </div>
                             
