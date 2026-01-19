@@ -5693,8 +5693,16 @@ const vibeSearchResults = () => {
 
             // Si on doit utiliser Dropbox
             if (useDropbox && (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id)) {
-                // Vérifier si on a un fichier préchargé pour ce morceau
-                if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
+                // Priorité 1: Vérifier le cache de liens pré-générés (queueLinksRef)
+                const cachedLink = queueLinksRef.current.get(currentSong.id);
+                const threeHours = 3 * 60 * 60 * 1000;
+
+                if (cachedLink && (Date.now() - cachedLink.timestamp) < threeHours) {
+                    console.log('Utilisation du lien pré-généré pour:', currentSong.title);
+                    newSrc = cachedLink.link;
+                }
+                // Priorité 2: Vérifier si on a un fichier préchargé (preloadedRef - ancien système)
+                else if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
                     console.log('Utilisation du fichier préchargé pour:', currentSong.title);
                     newSrc = preloadedRef.current.link;
                     // Nettoyer le préchargement
@@ -5703,10 +5711,15 @@ const vibeSearchResults = () => {
                         preloadedRef.current.audio = null;
                     }
                     preloadedRef.current = { songId: null, link: null, audio: null };
-                } else {
+                }
+                // Priorité 3: Fallback - récupérer le lien en temps réel
+                else {
+                    console.log('Récupération du lien Dropbox en temps réel pour:', currentSong.title);
                     const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
                     if (link) {
                         newSrc = link;
+                        // Stocker dans le cache pour éviter de refaire la requête
+                        queueLinksRef.current.set(currentSong.id, { link, timestamp: Date.now() });
                     } else {
                         console.error('Impossible d\'obtenir le lien Dropbox');
                         return;
@@ -6194,6 +6207,56 @@ const vibeSearchResults = () => {
   // Refs pour le préchargement du fichier Dropbox du morceau suivant
   const preloadedRef = useRef({ songId: null, link: null, audio: null });
   const isPreloadingRef = useRef(false);
+
+  // Cache de liens Dropbox pour toute la queue (pré-générés en background)
+  // Format: { songId: { link: string, timestamp: number } }
+  const queueLinksRef = useRef(new Map());
+  const isPreloadingQueueRef = useRef(false);
+
+  // Pré-générer les liens Dropbox pour toute la queue (non-bloquant)
+  const preloadQueueLinks = useCallback(async (songsToPreload) => {
+    if (isPreloadingQueueRef.current) return;
+    isPreloadingQueueRef.current = true;
+
+    const dropboxSongs = songsToPreload.filter(s => s.type === 'dropbox' && s.dropboxPath);
+    console.log(`[PreloadQueue] Démarrage pour ${dropboxSongs.length} chansons Dropbox`);
+
+    for (const song of dropboxSongs) {
+      // Vérifier si le lien existe déjà et n'est pas expiré (< 3h)
+      const cached = queueLinksRef.current.get(song.id);
+      const threeHours = 3 * 60 * 60 * 1000;
+      if (cached && (Date.now() - cached.timestamp) < threeHours) {
+        continue; // Lien encore valide
+      }
+
+      try {
+        const link = await getDropboxTemporaryLink(song.dropboxPath);
+        if (link) {
+          queueLinksRef.current.set(song.id, { link, timestamp: Date.now() });
+          console.log(`[PreloadQueue] Lien prêt pour: ${song.title}`);
+        }
+      } catch (e) {
+        console.error(`[PreloadQueue] Erreur pour ${song.title}:`, e);
+      }
+
+      // Petit délai pour ne pas surcharger l'API
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    console.log(`[PreloadQueue] Terminé, ${queueLinksRef.current.size} liens en cache`);
+    isPreloadingQueueRef.current = false;
+  }, []);
+
+  // Lancer le préchargement quand la queue change
+  useEffect(() => {
+    if (queue.length > 0) {
+      // Délai de 1s pour ne pas bloquer le rendu initial
+      const timer = setTimeout(() => {
+        preloadQueueLinks(queue);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [queue, preloadQueueLinks]);
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
