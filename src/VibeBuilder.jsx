@@ -2412,10 +2412,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             )}
                             
-                            {/* Bouton CLOSE (X) - Centré verticalement à gauche - MASQUE D'OPACITÉ */}
+                            {/* Bouton CLOSE (X) - Centré verticalement à gauche - MIX-BLEND-MODE SCREEN */}
                             <div
                                 data-close-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full ${isClosingWithX ? 'animate-ignite' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${isClosingWithX ? 'animate-ignite' : ''}`}
                                 style={{
                                     left: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2425,8 +2425,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
                                     transition: 'background 0.15s, box-shadow 0.15s',
-                                    maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cdefs%3E%3Cmask id='x'%3E%3Crect width='44' height='44' fill='white'/%3E%3Cg stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cline x1='14' y1='14' x2='30' y2='30'/%3E%3Cline x1='30' y1='14' x2='14' y2='30'/%3E%3C/g%3E%3C/mask%3E%3C/defs%3E%3Crect width='44' height='44' mask='url(%23x)'/%3E%3C/svg%3E")`,
-                                    WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cdefs%3E%3Cmask id='x'%3E%3Crect width='44' height='44' fill='white'/%3E%3Cg stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cline x1='14' y1='14' x2='30' y2='30'/%3E%3Cline x1='30' y1='14' x2='14' y2='30'/%3E%3C/g%3E%3C/mask%3E%3C/defs%3E%3Crect width='44' height='44' mask='url(%23x)'/%3E%3C/svg%3E")`,
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2435,9 +2433,15 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         handleClose('left');
                                     }, 300);
                                 }}
-                            />
+                            >
+                                <X
+                                    size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                    strokeWidth={3}
+                                    style={{ color: 'black', mixBlendMode: 'screen' }}
+                                />
+                            </div>
 
-                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - MASQUE D'OPACITÉ */}
+                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - MIX-BLEND-MODE SCREEN */}
                             <div
                                 data-create-btn
                                 className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
@@ -2452,22 +2456,17 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         : `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: showNoSongsHint ? '#ef4444' : 'white',
                                     transition: 'background 0.15s, box-shadow 0.15s',
-                                    maskImage: showNoSongsHint ? 'none' : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cdefs%3E%3Cmask id='p'%3E%3Crect width='44' height='44' fill='white'/%3E%3Cg stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cline x1='22' y1='11' x2='22' y2='33'/%3E%3Cline x1='11' y1='22' x2='33' y2='22'/%3E%3C/g%3E%3C/mask%3E%3C/defs%3E%3Crect width='44' height='44' mask='url(%23p)'/%3E%3C/svg%3E")`,
-                                    WebkitMaskImage: showNoSongsHint ? 'none' : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cdefs%3E%3Cmask id='p'%3E%3Crect width='44' height='44' fill='white'/%3E%3Cg stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cline x1='22' y1='11' x2='22' y2='33'/%3E%3Cline x1='11' y1='22' x2='33' y2='22'/%3E%3C/g%3E%3C/mask%3E%3C/defs%3E%3Crect width='44' height='44' mask='url(%23p)'/%3E%3C/svg%3E")`,
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleSave();
                                 }}
                             >
-                                {/* En mode erreur (showNoSongsHint), afficher le + blanc par-dessus */}
-                                {showNoSongsHint && (
-                                    <Plus
-                                        size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
-                                        strokeWidth={3}
-                                        style={{ color: 'white' }}
-                                    />
-                                )}
+                                <Plus
+                                    size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                    strokeWidth={3}
+                                    style={{ color: showNoSongsHint ? 'white' : 'black', mixBlendMode: showNoSongsHint ? 'normal' : 'screen' }}
+                                />
                             </div>
                             
                             {/* Capsule Liquid Glass - CENTRÉE - Masquée si showTitles est false */}
