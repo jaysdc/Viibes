@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Tag, EyeOff } from 'lucide-react';
+import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask, SphereMaskT4 } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS } from './Config.jsx';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -261,11 +261,7 @@ const Tweaker = ({
     hasSong = false,
     capsuleHeightVh = 5.8,
     onSwipeProgress = () => {},
-    cardAnimConfig = {},
-    showTitles = true,
-    setShowTitles = () => {},
-    is3DMode = false,
-    setIs3DMode = () => {}
+    cardAnimConfig = {}
 }) => {
     // Animation d'ouverture
     const [isVisible, setIsVisible] = useState(false);
@@ -340,10 +336,8 @@ const Tweaker = ({
     // Édition du nom de vibe
     const [editingVibeName, setEditingVibeName] = useState(null);
     const [editedName, setEditedName] = useState('');
-
+    
     // Sauvegarder l'état original complet pour pouvoir annuler
-    const [originalShowTitles] = useState(showTitles);
-    const [originalIs3DMode] = useState(is3DMode);
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
     const [originalVibes] = useState(() =>
         Object.keys(playlists).map(vibeId => ({
@@ -374,7 +368,7 @@ const Tweaker = ({
     const handleUndo = () => {
         // Lancer l'animation ET le undo simultanément
         setUndoFeedback(true);
-
+        
         // Restaurer tout l'état original immédiatement
         setVibes(originalVibes);
         setVibeColorIndices(originalColorIndices);
@@ -383,9 +377,6 @@ const Tweaker = ({
         setDeletedVibes([]);
         setMarkedForDeletion([]);
         setActiveMode(null);
-        // Restaurer les toggles à leur valeur d'origine
-        setShowTitles(originalShowTitles);
-        setIs3DMode(originalIs3DMode);
     };
     
     const handleUndoAnimationComplete = () => {
@@ -583,10 +574,7 @@ const Tweaker = ({
         setVibes(originalVibes);
         setOrderedVibes([]);
         setDeletedVibes([]);
-        // Restaurer les toggles à leur valeur d'origine
-        setShowTitles(originalShowTitles);
-        setIs3DMode(originalIs3DMode);
-
+        
         // Lancer l'animation de fermeture vers la gauche
         setClosingDirection('left');
         onCloseStart(); // Reset les cartes pendant l'animation
@@ -704,17 +692,14 @@ const Tweaker = ({
                                             boxShadow: `0 0 25px ${gradientColors[Math.floor(gradientColors.length / 2)]}66, 0 0 50px ${gradientColors[Math.floor(gradientColors.length / 2)]}33`
                                         }}
                                     >
-                                        {/* Afficher le nom du dégradé et chevrons uniquement si showTitles est true */}
-                                        {showTitles && (
-                                            <div
-                                                className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                                                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                                            >
-                                                <ChevronLeft size={16} />
-                                                <span>{gradientName}</span>
-                                                <ChevronRight size={16} />
-                                            </div>
-                                        )}
+                                        <div
+                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                                        >
+                                            <ChevronLeft size={16} />
+                                            <span>{gradientName}</span>
+                                            <ChevronRight size={16} />
+                                        </div>
                                     </div>
                                 );
                             })()}
@@ -757,7 +742,7 @@ const Tweaker = ({
                 {/* Bouton UNDO - Jaune/Orange */}
                 <button
                     onClick={handleUndo}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : '#F3F4F6',
@@ -767,7 +752,6 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     <Undo2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Undo</span>}
                 </button>
@@ -775,80 +759,36 @@ const Tweaker = ({
                 {/* Bouton REORDER - Cyan/Magenta */}
                 <button
                     onClick={() => toggleMode('reorder')}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
-                        boxShadow: activeMode === 'reorder'
-                            ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
+                        boxShadow: activeMode === 'reorder' 
+                            ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)' 
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode || activeMode === 'reorder'} intensity={0.6} className="rounded-full" />
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
-
+                
                 {/* Bouton DELETE - Rouge/Rose */}
                 <button
                     ref={deleteButtonRef}
                     onClick={() => toggleMode('delete')}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
+                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'delete' ? 'white' : '#9CA3AF',
-                        boxShadow: activeMode === 'delete'
-                            ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
+                        boxShadow: activeMode === 'delete' 
+                            ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)' 
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode || activeMode === 'delete'} intensity={0.6} className="rounded-full" />
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
-                </button>
-
-                {/* Bouton 2D/3D - Rond - Electric Lagoon quand ON */}
-                <button
-                    onClick={() => setIs3DMode(!is3DMode)}
-                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
-                    style={{
-                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: is3DMode ? 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)' : '#F3F4F6',
-                        color: is3DMode ? 'white' : '#9CA3AF',
-                        boxShadow: is3DMode
-                            ? '0 0 20px rgba(1, 255, 229, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
-                            : 'inset 0 0 0 1px #E5E7EB'
-                    }}
-                >
-                    <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
-                    {is3DMode
-                        ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
-                        : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
-                    }
-                </button>
-
-                {/* Bouton Show/Hide Titles - Rond - Electric Lagoon quand ON */}
-                <button
-                    onClick={() => setShowTitles(!showTitles)}
-                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
-                    style={{
-                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: showTitles ? 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)' : '#F3F4F6',
-                        color: showTitles ? 'white' : '#9CA3AF',
-                        boxShadow: showTitles
-                            ? '0 0 20px rgba(1, 255, 229, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
-                            : 'inset 0 0 0 1px #E5E7EB'
-                    }}
-                >
-                    <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
-                    {showTitles
-                        ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
-                        : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
-                    }
                 </button>
                         </div>
                     </div>
@@ -903,7 +843,6 @@ const Tweaker = ({
                             colorIndex={vibeColorIndices[vibe.vibeId] !== undefined ? vibeColorIndices[vibe.vibeId] : getInitialGradientIndex(vibe.vibeId)}
                             onColorChange={() => {}}
                             onSwipeProgress={() => {}}
-                            is3DMode={is3DMode}
                         />
                     </div>,
                     document.body
@@ -993,15 +932,6 @@ const Tweaker = ({
                                 ref={(el) => { if (el) cardRefsMap.current.set(vibe.vibeId, el); }}
                                 className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
-                                {/* Indicateur de swipe - centré horizontalement en haut de la carte */}
-                                <div
-                                    className="absolute top-2 left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
-                                    style={{ transform: 'translateX(-50%)' }}
-                                >
-                                    <ChevronLeft size={10} />
-                                    <Pointer size={12} />
-                                    <ChevronRight size={10} />
-                                </div>
 
                                 <VibeCardComponent
                                     vibeId={vibe.vibeId}
@@ -1030,8 +960,6 @@ const Tweaker = ({
                                     editedName={editedName}
                                     onEditedNameChange={setEditedName}
                                     onConfirmNameChange={() => confirmNameChange(vibe.vibeId)}
-                                    showTitles={showTitles}
-                                    is3DMode={is3DMode}
                                 />
                             </div>
                         );

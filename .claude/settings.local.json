@@ -11,9 +11,7 @@
       "Bash(grep:*)",
       "Bash(tail:*)",
       "Bash(head:*)",
-      "Bash(timeout:*)",
-      "Bash(ipconfig:*)",
-      "Bash(findstr:*)"
+      "Bash(timeout:*)"
     ]
   }
 }
