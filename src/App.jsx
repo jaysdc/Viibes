@@ -6053,9 +6053,35 @@ const vibeSearchResults = () => {
       }
     });
 
-    // Désactiver explicitement seekbackward/seekforward pour forcer iOS à afficher prev/next
-    try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
-    try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
+    // Lier seekbackward/seekforward aux mêmes actions que prev/next
+    // Workaround iOS: peu importe quelle icône iOS affiche (+10/-10 ou flèches), le comportement sera prev/next
+    try {
+      navigator.mediaSession.setActionHandler('seekbackward', () => {
+        console.log('[MediaSession] seekbackward -> previoustrack');
+        if (audio.currentTime > 3) {
+          audio.currentTime = 0;
+        } else {
+          const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+          if (currentIndex > 0) {
+            setCurrentSong(queueRef.current[currentIndex - 1]);
+          } else {
+            audio.currentTime = 0;
+          }
+        }
+      });
+    } catch (e) {}
+    try {
+      navigator.mediaSession.setActionHandler('seekforward', () => {
+        console.log('[MediaSession] seekforward -> nexttrack');
+        const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+        if (currentIndex < queueRef.current.length - 1) {
+          setCurrentSong(queueRef.current[currentIndex + 1]);
+        } else {
+          audio.pause();
+          setIsPlaying(false);
+        }
+      });
+    } catch (e) {}
 
     // seekto pour la barre de progression
     try {
