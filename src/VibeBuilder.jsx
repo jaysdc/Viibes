@@ -2348,7 +2348,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             )}
                             
-                            {/* Bouton CLOSE (X) - Centré verticalement à gauche */}
+                            {/* Bouton CLOSE (X) - Centré verticalement à gauche - ÉVIDÉ */}
                             <div
                                 data-close-btn
                                 className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${isClosingWithX ? 'animate-ignite' : ''}`}
@@ -2360,7 +2360,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     height: CONFIG.CREATE_BTN_SIZE,
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
-                                    transition: 'background 0.15s, box-shadow 0.15s'
+                                    transition: 'background 0.15s, box-shadow 0.15s',
+                                    isolation: 'isolate'
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2374,11 +2375,11 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
+                                    style={{ color: 'black', mixBlendMode: 'multiply' }}
                                 />
                             </div>
 
-                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - icône transparent découpé */}
+                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - ÉVIDÉ */}
                             <div
                                 data-create-btn
                                 className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
@@ -2392,7 +2393,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         ? `0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4)`
                                         : `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: showNoSongsHint ? '#ef4444' : 'white',
-                                    transition: 'background 0.15s, box-shadow 0.15s'
+                                    transition: 'background 0.15s, box-shadow 0.15s',
+                                    isolation: 'isolate'
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2404,13 +2406,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     <Pencil
                                         size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                         strokeWidth={2.5}
-                                        style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
+                                        style={{ color: 'black', mixBlendMode: 'multiply' }}
                                     />
                                 ) : (
                                     <Plus
                                         size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                         strokeWidth={3}
-                                        style={{ color: showNoSongsHint ? 'white' : futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
+                                        style={{ color: showNoSongsHint ? 'white' : 'black', mixBlendMode: showNoSongsHint ? 'normal' : 'multiply' }}
                                     />
                                 )}
                             </div>
