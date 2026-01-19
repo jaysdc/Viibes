@@ -259,19 +259,19 @@ const styles = `
      ═══════════════════════════════════════════════════════════════════════════ */
   @keyframes neon-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgb(var(--neon-color) / 0.8), 0 0 40px rgb(var(--neon-color) / 0.4);
+      box-shadow: 0 0 15px rgba(var(--neon-color), 0.7), 0 0 30px rgba(var(--neon-color), 0.4);
     }
     50% {
-      box-shadow: 0 0 35px rgb(var(--neon-color) / 1), 0 0 70px rgb(var(--neon-color) / 0.6);
+      box-shadow: 0 0 30px rgba(var(--neon-color), 1), 0 0 60px rgba(var(--neon-color), 0.7);
     }
   }
 
   .animate-neon-glow {
-    animation: neon-glow 0.3s ease-in-out infinite;
+    animation: neon-glow 0.5s ease-in-out infinite;
   }
 
   .animate-neon-glow-once {
-    animation: neon-glow 0.3s ease-in-out;
+    animation: neon-glow 0.5s ease-in-out;
   }
 
   @keyframes pulse-purple {
@@ -1365,7 +1365,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
 
         const SCROLL_ZONE = rowHeightRef.current * 1.5;
         const SCROLL_SPEED = 15;
-        const SCROLL_INTERVAL = 50; // ms entre chaque scroll
+        const SCROLL_INTERVAL = 33; // ms entre chaque scroll (50% plus rapide)
 
         // Fonction pour mettre à jour la sélection basée sur la position actuelle
         const updateSelection = (currentDragState) => {
