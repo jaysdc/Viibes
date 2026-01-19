@@ -6088,9 +6088,35 @@ const vibeSearchResults = () => {
       }
     };
 
+    // Passage automatique à la chanson suivante (natif, fonctionne en background)
+    const handleEnded = () => {
+      console.log('[MediaSession] audio ended event');
+      const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+      if (currentIndex < queueRef.current.length - 1) {
+        setCurrentSong(queueRef.current[currentIndex + 1]);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    // Resynchroniser l'état quand l'app revient au premier plan
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && audio) {
+        console.log('[MediaSession] visibility changed to visible, syncing state');
+        const shouldBePlaying = !audio.paused;
+        setIsPlaying(shouldBePlaying);
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
+        }
+        updatePositionState();
+      }
+    };
+
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Cleanup
     return () => {
@@ -6104,6 +6130,8 @@ const vibeSearchResults = () => {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []); // Dépendances vides = une seule fois
 
