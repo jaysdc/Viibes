@@ -580,7 +580,7 @@ const CONFIG = {
     BACK_TO_VIBES_START_PERCENT: 25,      // % depuis le HAUT de l'écran où on COMMENCE à afficher (opacité 0)
     BACK_TO_VIBES_FULL_PERCENT: 8,        // % depuis le HAUT de l'écran où opacité = 100%
     BACK_TO_VIBES_TRIGGER_PERCENT: 17,    // % depuis le HAUT de l'écran où on switch au lecteur principal
-    DRAWER_INERTIA_MULTIPLIER: 20,        // Multiplicateur de vélocité pour l'inertie du tiroir
+    DRAWER_INERTIA_MULTIPLIER: 30,        // Multiplicateur de vélocité pour l'inertie du tiroir
 
     // CARD ANIMATION - Animation éventail (Player, Tweaker, etc.)
     CARD_ANIM_OPEN_DURATION: 800,            // Durée de l'animation d'ouverture (ms)

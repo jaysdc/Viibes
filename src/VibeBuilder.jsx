@@ -2017,8 +2017,12 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                     )}
                     {dragState ? (
                             <div
-                                className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
+                                className="absolute rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
                                 style={{
+                                    top: -8,
+                                    left: -8,
+                                    right: -8,
+                                    bottom: -8,
                                     '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE,
                                     backgroundColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                     borderColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
