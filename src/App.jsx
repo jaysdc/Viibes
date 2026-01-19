@@ -6123,22 +6123,28 @@ const vibeSearchResults = () => {
     // Resynchroniser l'état quand l'app revient au premier plan
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && audio) {
-        console.log('[MediaSession] visibility changed to visible, syncing state');
-        const shouldBePlaying = !audio.paused;
+        console.log('[MediaSession] visibility changed to visible');
 
-        // Marquer qu'on est en train de sync pour bloquer le useEffect
-        isSyncingFromVisibilityRef.current = true;
-        setIsPlaying(shouldBePlaying);
-
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
-        }
-        updatePositionState();
-
-        // Débloquer après que React ait traité le state update
+        // Petit délai pour laisser les événements audio pendants (play/pause) se traiter d'abord
+        // Car quand l'app était en background, ces événements sont mis en file d'attente
         setTimeout(() => {
-          isSyncingFromVisibilityRef.current = false;
-        }, 100);
+          const shouldBePlaying = !audio.paused;
+          console.log('[MediaSession] syncing state, audio.paused =', audio.paused, ', shouldBePlaying =', shouldBePlaying);
+
+          // Marquer qu'on est en train de sync pour bloquer le useEffect
+          isSyncingFromVisibilityRef.current = true;
+          setIsPlaying(shouldBePlaying);
+
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
+          }
+          updatePositionState();
+
+          // Débloquer après que React ait traité le state update
+          setTimeout(() => {
+            isSyncingFromVisibilityRef.current = false;
+          }, 100);
+        }, 50); // 50ms pour laisser les événements pendants se traiter
       }
     };
 
