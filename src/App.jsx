@@ -8055,7 +8055,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <div
                                 className="absolute inset-0 rounded-full overflow-hidden"
                                 style={{
-                                    background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
+                                    background: '#e5e7eb',
                                     boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
                                 }}
                             >
