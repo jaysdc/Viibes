@@ -5969,19 +5969,10 @@ const vibeSearchResults = () => {
   // ══════════════════════════════════════════════════════════════════════════════
 
   // Fonction pour mettre à jour la position (pour la barre de progression iOS)
+  // DÉSACTIVÉ: setPositionState signale à iOS que le contenu est seekable
+  // et donc iOS affiche les boutons +10/-10 au lieu de prev/next
   const updatePositionState = useCallback(() => {
-    if (!('mediaSession' in navigator) || !audioRef.current) return;
-    if (!audioRef.current.duration || isNaN(audioRef.current.duration)) return;
-
-    try {
-      navigator.mediaSession.setPositionState({
-        duration: audioRef.current.duration,
-        playbackRate: audioRef.current.playbackRate || 1,
-        position: audioRef.current.currentTime
-      });
-    } catch (e) {
-      // setPositionState peut échouer si les valeurs sont invalides
-    }
+    return; // DÉSACTIVÉ pour forcer iOS à afficher prev/next
   }, []);
 
   // Enregistrer les handlers ET les listeners audio
@@ -6053,26 +6044,8 @@ const vibeSearchResults = () => {
       }
     });
 
-    // Désactiver explicitement seekbackward/seekforward pour forcer iOS à afficher prev/next
-    try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
-    try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
-
-    // seekto pour la barre de progression
-    try {
-      navigator.mediaSession.setActionHandler('seekto', (details) => {
-        console.log('[MediaSession] seekto handler called', details);
-        if (details.seekTime !== undefined) {
-          if (details.fastSeek && 'fastSeek' in audio) {
-            audio.fastSeek(details.seekTime);
-          } else {
-            audio.currentTime = details.seekTime;
-          }
-          updatePositionState();
-        }
-      });
-    } catch (e) {
-      console.log('[MediaSession] seekto not supported');
-    }
+    // NOTE: On n'enregistre PAS seekbackward/seekforward/seekto
+    // pour qu'iOS affiche les boutons prev/next au lieu de +10/-10
 
     // === LISTENERS SUR L'ÉLÉMENT AUDIO (sync iOS) ===
     // iOS a besoin de ces listeners pour synchroniser l'état du widget
