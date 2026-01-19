@@ -4559,7 +4559,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
     const [smoothedScanProgress, setSmoothedScanProgress] = useState(null); // Progression lissée pour l'UI
-    const [preloadProgress, setPreloadProgress] = useState(null); // null = pas de preload, 0-100 = progression
+    const [preloadProgress, setPreloadProgress] = useState(50); // TEST: 50 pour vérifier le visuel
     const [smoothedPreloadProgress, setSmoothedPreloadProgress] = useState(null); // Progression lissée pour l'UI
     const [scanCompleteFlash, setScanCompleteFlash] = useState(false); // Flash cyan quand scan terminé
     const [scanDebugInfo, setScanDebugInfo] = useState({ hasRefreshToken: false, triggered: false, started: false, pathsCount: 0 });
