@@ -1765,31 +1765,33 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             />
                         </div>
 
-                        {/* X rouge au centre de la pill (fixe, toujours visible) */}
+                        {/* X rouge au centre de la pill (fixe, disparaît quand bulle arrive) */}
                         <div
-                            className={`absolute flex items-center justify-center cursor-pointer ${
-                                previewFeedback?.type === 'cancel' ? 'animate-ignite-pill-red' : ''
-                            }`}
+                            className="absolute flex items-center justify-center cursor-pointer"
                             style={{
-                                '--pulse-scale-min': 1,
-                                '--pulse-scale-max': pulseScaleMax,
                                 left: '50%',
                                 top: '50%',
                                 transform: 'translate(-50%, -50%)',
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
+                                opacity: (isAtCenter && previewHasDragged) || previewFeedback?.type === 'cancel' ? 0 : 1,
+                                transition: 'opacity 150ms ease-out',
                             }}
                             onClick={() => {
-                                // Ramener le curseur au centre et déclencher l'annulation
+                                // Activer hasDragged pour que le curseur devienne rouge, puis déclencher l'annulation
                                 setPreviewSwipeX(0);
-                                setPreviewFeedback({ type: 'cancel' });
+                                setPreviewHasDragged(true);
+                                // Petit délai pour que le curseur devienne rouge avant l'animation ignite
                                 setTimeout(() => {
-                                    stopVibing(false);
-                                    setPreviewSwipeX(0);
-                                    setPreviewFeedback(null);
-                                    setPreviewHasDragged(false);
-                                }, 400);
+                                    setPreviewFeedback({ type: 'cancel' });
+                                    setTimeout(() => {
+                                        stopVibing(false);
+                                        setPreviewSwipeX(0);
+                                        setPreviewFeedback(null);
+                                        setPreviewHasDragged(false);
+                                    }, 400);
+                                }, 50);
                             }}
                         >
                             <X
