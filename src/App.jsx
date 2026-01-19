@@ -2495,7 +2495,7 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
             isRetriggering ? (
               <div
                   key={animKey}
-                  className={`absolute inset-0 ${roundedClass} animate-neon-cyan-to-pink overflow-hidden`}
+                  className={`absolute inset-0 ${roundedClass} animate-neon-cyan-to-pink`}
                   style={{ zIndex: 0 }}
               >
                   <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
@@ -2510,7 +2510,7 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
             flickerEnabled={!hideGlow && glowOpacity > 0}
             glowOpacity={hideGlow ? 0 : glowOpacity}
             transitionDuration={transitionDuration}
-            className={`absolute inset-0 ${roundedClass} overflow-hidden`}
+            className={`absolute inset-0 ${roundedClass}`}
             style={{
                 background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
                 zIndex: 0
@@ -2596,7 +2596,7 @@ const ToggleSortButton = ({
                     flickerEnabled={!hideGlow && glowOpacity > 0}
                     glowOpacity={hideGlow ? 0 : glowOpacity}
                     transitionDuration={transitionDuration}
-                    className={`absolute inset-0 ${roundedClass} overflow-hidden`}
+                    className={`absolute inset-0 ${roundedClass}`}
                     style={{
                         background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
                         zIndex: 0
@@ -3292,7 +3292,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
 
     // DEFAULT - Sort buttons
     return (
-      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-hidden shadow-sm animate-in fade-in zoom-in duration-200 relative" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
+      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200 relative" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
           <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
           <SortButton mode="initialShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={RotateCcw} isFirst={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
           <div className="w-px h-full bg-gray-200"></div>
@@ -8351,12 +8351,25 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     >
                         {/* X icon à gauche - cachée quand la bulle la recouvre */}
                         <div
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center cursor-pointer"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
                                 opacity: isAtLeftThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
+                            }}
+                            onClick={() => {
+                                if (isAtLeftThreshold) return;
+                                // Animer le curseur vers la gauche
+                                setConfirmSwipeX(-maxSlide);
+                                // Après l'animation, exécuter l'action cancel
+                                setTimeout(() => {
+                                    if (pendingVibe) {
+                                        cancelKillVibe();
+                                    } else {
+                                        cancelNuke();
+                                    }
+                                }, 200);
                             }}
                         >
                             <X
@@ -8401,12 +8414,28 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                         {/* Check icon à droite - cachée quand la bulle la recouvre */}
                         <div
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center cursor-pointer"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
                                 opacity: isAtRightThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
+                            }}
+                            onClick={() => {
+                                if (isAtRightThreshold) return;
+                                // Animer le curseur vers la droite
+                                setConfirmSwipeX(maxSlide);
+                                // Après l'animation, exécuter l'action validate
+                                setTimeout(() => {
+                                    if (pendingVibe) {
+                                        setConfirmFeedback({ text: 'KILLING!!', type: 'kill', triggerValidation: Date.now() });
+                                        if (audioRef.current && !audioRef.current.paused) {
+                                            fadeOutAndStop();
+                                        }
+                                    } else {
+                                        setConfirmFeedback({ text: 'NUKING!!', type: 'nuke', triggerValidation: Date.now() });
+                                    }
+                                }, 200);
                             }}
                         >
                             <Check

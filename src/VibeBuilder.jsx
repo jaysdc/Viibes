@@ -1729,12 +1729,26 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                     >
                         {/* Icône gauche - Queue Next (cyan) */}
                         <div
-                            className="flex items-center justify-center"
+                            className={`flex items-center justify-center ${hasActiveQueue ? 'cursor-pointer' : ''}`}
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
                                 opacity: isAtLeftThreshold ? 0 : (hasActiveQueue ? 0.5 : 0.2),
                                 transition: 'opacity 150ms ease-out',
+                            }}
+                            onClick={() => {
+                                if (!hasActiveQueue || isAtLeftThreshold) return;
+                                // Animer le curseur vers la gauche
+                                setPreviewSwipeX(-maxSlide);
+                                // Après l'animation, exécuter l'action queue
+                                setTimeout(() => {
+                                    setPreviewFeedback({ type: 'queue' });
+                                    setTimeout(() => {
+                                        stopVibing('playNext');
+                                        setPreviewSwipeX(0);
+                                        setPreviewFeedback(null);
+                                    }, 400);
+                                }, 200);
                             }}
                         >
                             <ListPlus
@@ -1746,7 +1760,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
 
                         {/* X rouge au centre de la pill (fixe, toujours visible) */}
                         <div
-                            className={`absolute flex items-center justify-center pointer-events-none ${
+                            className={`absolute flex items-center justify-center cursor-pointer ${
                                 previewFeedback?.type === 'cancel' ? 'animate-ignite-pill-red' : ''
                             }`}
                             style={{
@@ -1758,6 +1772,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
+                            }}
+                            onClick={() => {
+                                // Ramener le curseur au centre et déclencher l'annulation
+                                setPreviewSwipeX(0);
+                                setPreviewFeedback({ type: 'cancel' });
+                                setTimeout(() => {
+                                    stopVibing(false);
+                                    setPreviewSwipeX(0);
+                                    setPreviewFeedback(null);
+                                }, 400);
                             }}
                         >
                             <X
@@ -1802,12 +1826,26 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
 
                         {/* Icône droite - Check (vert) */}
                         <div
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center cursor-pointer"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
                                 opacity: isAtRightThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
+                            }}
+                            onClick={() => {
+                                if (isAtRightThreshold) return;
+                                // Animer le curseur vers la droite
+                                setPreviewSwipeX(maxSlide);
+                                // Après l'animation, exécuter l'action add
+                                setTimeout(() => {
+                                    setPreviewFeedback({ type: 'add' });
+                                    setTimeout(() => {
+                                        stopVibing('add');
+                                        setPreviewSwipeX(0);
+                                        setPreviewFeedback(null);
+                                    }, 400);
+                                }, 200);
                             }}
                         >
                             <Check
