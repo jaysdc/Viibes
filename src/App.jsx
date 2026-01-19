@@ -3616,7 +3616,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     );
 };
 
-const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null, is3DMode = false }) => {
+const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null, is3DMode = false, preloadProgress = null }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
 
@@ -3979,9 +3979,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
 
               {/* PULSE - Point indicateur (EN-DESSOUS de la capsule) */}
               {totalSongs > 0 && (
-                <div 
+                <div
                   className="absolute pointer-events-none beacon-dot rounded-full"
-                  style={{ 
+                  style={{
                     right: `calc(${horizontalMarginPercent}% + ${borderRadius - dotX - CONFIG.BEACON_PULSE_SIZE / 2}px)`,
                     top: `calc(50% + ${dotY}px - ${CONFIG.BEACON_PULSE_SIZE / 2}px)`,
                     width: CONFIG.BEACON_PULSE_SIZE,
@@ -3990,6 +3990,36 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     zIndex: CONFIG.BEACON_PULSE_Z
                   }}
                 />
+              )}
+
+              {/* ARC DE PRÉCHARGEMENT - Côté gauche du beacon */}
+              {preloadProgress !== null && (
+                <svg
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${horizontalMarginPercent}%`,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: borderRadius * 2,
+                    height: beaconHeightPx,
+                    zIndex: CONFIG.BEACON_NEON_Z + 1,
+                  }}
+                >
+                  {/* Arc cyan qui se remplit de bas en haut (côté gauche = demi-cercle gauche) */}
+                  <path
+                    d={`M ${borderRadius} ${beaconHeightPx / 2 + borderRadius} A ${borderRadius} ${borderRadius} 0 0 1 ${borderRadius} ${beaconHeightPx / 2 - borderRadius}`}
+                    fill="none"
+                    stroke="cyan"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray={`${Math.PI * borderRadius}`}
+                    strokeDashoffset={`${Math.PI * borderRadius * (1 - preloadProgress / 100)}`}
+                    style={{
+                      filter: 'drop-shadow(0 0 4px cyan)',
+                      transition: 'stroke-dashoffset 0.1s ease-out'
+                    }}
+                  />
+                </svg>
               )}
               
               {/* Zone de touch pour déclencher le scrubbing (demi-cercle droit) */}
@@ -4529,6 +4559,8 @@ const handlePlayerTouchEnd = () => {
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
     const [smoothedScanProgress, setSmoothedScanProgress] = useState(null); // Progression lissée pour l'UI
+    const [preloadProgress, setPreloadProgress] = useState(null); // null = pas de preload, 0-100 = progression
+    const [smoothedPreloadProgress, setSmoothedPreloadProgress] = useState(null); // Progression lissée pour l'UI
     const [scanCompleteFlash, setScanCompleteFlash] = useState(false); // Flash cyan quand scan terminé
     const [scanDebugInfo, setScanDebugInfo] = useState({ hasRefreshToken: false, triggered: false, started: false, pathsCount: 0 });
     const [pendingDropboxData, setPendingDropboxData] = useState(null);
@@ -5158,6 +5190,35 @@ useEffect(() => {
 
     return () => clearInterval(interval);
 }, [dropboxScanProgress]);
+
+// Interpolation fluide de la progression du préchargement Dropbox (liens + artworks)
+useEffect(() => {
+    if (preloadProgress === null) {
+        setSmoothedPreloadProgress(null);
+        return;
+    }
+
+    // Initialiser si on démarre
+    if (smoothedPreloadProgress === null) {
+        setSmoothedPreloadProgress(0);
+    }
+
+    // Interpoler vers la valeur cible à vitesse constante
+    const interval = setInterval(() => {
+        setSmoothedPreloadProgress(current => {
+            if (current === null) return preloadProgress;
+            const diff = preloadProgress - current;
+            // Si très proche, snap à la cible
+            if (Math.abs(diff) < 0.5) return preloadProgress;
+            // Vitesse constante: 0.8% par frame (~60fps)
+            const step = 0.8;
+            const next = diff > 0 ? current + step : current - step;
+            return next;
+        });
+    }, 16); // ~60fps
+
+    return () => clearInterval(interval);
+}, [preloadProgress]);
 
 // Gérer les actions import en attente
 useEffect(() => {
@@ -6242,13 +6303,24 @@ const vibeSearchResults = () => {
     isPreloadingQueueRef.current = true;
 
     const dropboxSongs = songsToPreload.filter(s => s.type === 'dropbox' && s.dropboxPath);
-    console.log(`[PreloadQueue] Démarrage pour ${dropboxSongs.length} chansons Dropbox`);
 
+    // Ne rien faire s'il n'y a pas de chansons Dropbox
+    if (dropboxSongs.length === 0) {
+      isPreloadingQueueRef.current = false;
+      return;
+    }
+
+    console.log(`[PreloadQueue] Démarrage pour ${dropboxSongs.length} chansons Dropbox`);
+    setPreloadProgress(0);
+
+    let processed = 0;
     for (const song of dropboxSongs) {
       // Vérifier si le lien existe déjà et n'est pas expiré (< 3h)
       const cached = queueLinksRef.current.get(song.id);
       const threeHours = 3 * 60 * 60 * 1000;
       if (cached && (Date.now() - cached.timestamp) < threeHours) {
+        processed++;
+        setPreloadProgress(Math.round((processed / dropboxSongs.length) * 100));
         continue; // Lien encore valide
       }
 
@@ -6262,11 +6334,20 @@ const vibeSearchResults = () => {
         console.error(`[PreloadQueue] Erreur pour ${song.title}:`, e);
       }
 
+      processed++;
+      setPreloadProgress(Math.round((processed / dropboxSongs.length) * 100));
+
       // Petit délai pour ne pas surcharger l'API
       await new Promise(r => setTimeout(r, 100));
     }
 
     console.log(`[PreloadQueue] Terminé, ${queueLinksRef.current.size} liens en cache`);
+
+    // Laisser l'animation se terminer avant de masquer
+    setTimeout(() => {
+      setPreloadProgress(null);
+    }, 500);
+
     isPreloadingQueueRef.current = false;
   }, []);
 
@@ -8017,6 +8098,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 initialIndex={playerCenteredIndex}
                                 globalSwipeLockRef={globalSwipeLockRef}
                                 is3DMode={is3DMode}
+                                preloadProgress={smoothedPreloadProgress}
                                 />
                                 </div>
                                 )}
@@ -8743,7 +8825,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} is3DMode={is3DMode} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} is3DMode={is3DMode} preloadProgress={smoothedPreloadProgress} />}</div>
                   </div>
                 )}
         
