@@ -992,12 +992,12 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
                 <div className="flex flex-col w-full">
                         {isArtistSort ? (
                             <>
-                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : isSelected ? 'text-cyan-600' : 'text-gray-900'}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT }}>{song.title}</span>
+                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : !isSelected ? 'text-gray-900' : ''}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT, color: isSelected && isSongAvailable(song) ? '#1f76a4' : undefined }}>{song.title}</span>
                                 <span className={`truncate font-medium ${!isSongAvailable(song) ? 'text-gray-300' : 'text-gray-500'}`} style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT }}>{song.artist}</span>
                             </>
                         ) : (
                             <>
-                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : isSelected ? 'text-cyan-600' : 'text-gray-900'}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT }}>{song.title}</span>
+                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : !isSelected ? 'text-gray-900' : ''}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT, color: isSelected && isSongAvailable(song) ? '#1f76a4' : undefined }}>{song.title}</span>
                                 <span className={`truncate font-medium ${!isSongAvailable(song) ? 'text-gray-300' : 'text-gray-500'}`} style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT }}>{song.artist}</span>
                             </>
                         )}
