@@ -89,7 +89,7 @@ const CONFIG = {
     CREATE_BTN_GLOW_OPACITY: 0.6,         // Opacité du glow blanc (0-1)
     
     // Couleurs néon (format RGB)
-    NEON_COLOR_CYAN: '0, 213, 255',       // Cyan (mode ajout)
+    NEON_COLOR_PINK: '236, 72, 153',      // Rose (mode ajout)
     NEON_COLOR_ORANGE: '255, 103, 0',     // Orange (mode retrait)
     CREATE_BTN_RIGHT: 16,                 // Position depuis la droite (px)
 
@@ -982,7 +982,7 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
                 {/* Checkbox */}
                 <div
                     className={`rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-200 ${isSelected ? 'text-white scale-110' : 'bg-gray-100 text-gray-300'}`}
-                    style={{ width: CONFIG.ROW_CHECKBOX_SIZE, height: CONFIG.ROW_CHECKBOX_SIZE, backgroundColor: isSelected ? '#00D5FF' : undefined }}
+                    style={{ width: CONFIG.ROW_CHECKBOX_SIZE, height: CONFIG.ROW_CHECKBOX_SIZE, backgroundColor: isSelected ? '#ec4899' : undefined }}
                 >
                     {isSelected ? <Check style={{ width: CONFIG.ROW_CHECKBOX_ICON_SIZE, height: CONFIG.ROW_CHECKBOX_ICON_SIZE }} strokeWidth={3} /> : <Plus style={{ width: CONFIG.ROW_CHECKBOX_ICON_SIZE, height: CONFIG.ROW_CHECKBOX_ICON_SIZE }} />}
                 </div>
@@ -992,12 +992,12 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
                 <div className="flex flex-col w-full">
                         {isArtistSort ? (
                             <>
-                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : !isSelected ? 'text-gray-900' : ''}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT, color: isSelected && isSongAvailable(song) ? '#32c2f9' : undefined }}>{song.title}</span>
+                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : !isSelected ? 'text-gray-900' : ''}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT, color: isSelected && isSongAvailable(song) ? '#ec4899' : undefined }}>{song.title}</span>
                                 <span className={`truncate font-medium ${!isSongAvailable(song) ? 'text-gray-300' : 'text-gray-500'}`} style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT }}>{song.artist}</span>
                             </>
                         ) : (
                             <>
-                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : !isSelected ? 'text-gray-900' : ''}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT, color: isSelected && isSongAvailable(song) ? '#32c2f9' : undefined }}>{song.title}</span>
+                                <span className={`font-bold truncate ${!isSongAvailable(song) ? 'text-gray-400' : !isSelected ? 'text-gray-900' : ''}`} style={{ fontSize: CONFIG.ROW_TITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT, color: isSelected && isSongAvailable(song) ? '#ec4899' : undefined }}>{song.title}</span>
                                 <span className={`truncate font-medium ${!isSongAvailable(song) ? 'text-gray-300' : 'text-gray-500'}`} style={{ fontSize: CONFIG.ROW_SUBTITLE_SIZE, lineHeight: CONFIG.ROW_LINE_HEIGHT }}>{song.artist}</span>
                             </>
                         )}
@@ -2064,9 +2064,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         <div
                             className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
                             style={{
-                                '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE,
-                                backgroundColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
-                                borderColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
+                                '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_PINK : CONFIG.NEON_COLOR_ORANGE,
+                                backgroundColor: dragState.isAddingMode ? '#ec4899' : '#FF6700',
+                                borderColor: dragState.isAddingMode ? '#ec4899' : '#FF6700',
                             }}
                         >
                             <div className="absolute inset-0 rounded-full overflow-hidden">
@@ -2248,7 +2248,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             width: CONFIG.SIDEBAR_WIDTH,
                             top: Math.min(dragState.startYAbsolute, dragState.currentYAbsolute) - listRef.current.scrollTop,
                             height: Math.abs(dragState.currentYAbsolute - dragState.startYAbsolute),
-                            backgroundColor: dragState.isAddingMode ? 'rgba(0, 213, 255, 0.3)' : 'rgba(255, 103, 0, 0.3)'
+                            backgroundColor: dragState.isAddingMode ? 'rgba(236, 72, 153, 0.3)' : 'rgba(255, 103, 0, 0.3)'
                         }}
                     ></div>
                 )}
