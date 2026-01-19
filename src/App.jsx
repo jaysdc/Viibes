@@ -2060,12 +2060,12 @@ return (
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
               {/* En mode no-tag: compteurs en bas de la capsule */}
               {!showTitles ? (
-                  // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets
+                  // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets (50% opacité)
                   <>
                       <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
-                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/40 flex items-center gap-1.5 z-10">
+                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/50 flex items-center gap-1.5 z-10">
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                          {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                          {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
                       </span>
                   </>
               ) : (
@@ -2132,8 +2132,8 @@ return (
                   }}
               >
                   {!showTitles ? (
-                      // Mode 3D + no tag: icône seule sans cercle, discrète
-                      <div className={`flex items-center justify-center text-white/40 ${onEditVibe ? 'cursor-pointer active:text-white/60' : ''}`}>
+                      // Mode 3D + no tag: icône seule sans cercle, discrète (50% opacité)
+                      <div className={`flex items-center justify-center text-white/50 ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
                           <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </div>
                   ) : (
@@ -8383,10 +8383,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     ? 'rgba(244, 63, 94, 0.9)'  // Rouge/Lava
                                     : isAtRightThreshold
                                         ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                        : 'rgba(229, 231, 235, 0.85)',  // Fond gris clair comme scrub overlay
-                                backgroundImage: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : 'radial-gradient(circle, rgba(156, 163, 175, 0.6) 1px, transparent 1px)',
-                                backgroundSize: '10px 10px',
-                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(156, 163, 175, 0.5)',
+                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
+                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
