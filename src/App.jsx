@@ -7369,6 +7369,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         <style>{styles}</style>
 
+        {/* BARRE DE PRÉCHARGEMENT DROPBOX - sur la bordure du header */}
+        {smoothedPreloadProgress !== null && (
+          <div
+            className="absolute left-0 h-[2px] bg-cyan-400"
+            style={{
+              top: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP} + ${CONFIG.HEADER_PADDING_BOTTOM}rem + ${CONFIG.HEADER_BUTTONS_HEIGHT})`,
+              width: `${smoothedPreloadProgress}%`,
+              zIndex: 9999,
+              boxShadow: '0 0 8px cyan',
+              transition: 'width 0.1s ease-out'
+            }}
+          />
+        )}
+
         {/* HEADER - Indépendant */}
         <div
             className="bg-white border-b border-gray-200 safe-area-top relative"
