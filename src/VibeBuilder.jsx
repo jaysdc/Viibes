@@ -2061,14 +2061,24 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         </div>
                     )}
                     {dragState ? (
+                        <>
+                            {/* GLOW PULSANT - dans les marges (-8px) */}
                             <div
-                                className="absolute rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
+                                className="absolute rounded-full animate-neon-glow"
                                 style={{
                                     top: -8,
                                     left: -8,
                                     right: -8,
                                     bottom: -8,
                                     '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE,
+                                    backgroundColor: 'transparent',
+                                    boxShadow: `0 0 15px 5px rgba(${dragState.isAddingMode ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE}, 0.6)`,
+                                }}
+                            />
+                            {/* CAPSULE COLORÉE - taille exacte du parent */}
+                            <div
+                                className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2"
+                                style={{
                                     backgroundColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                     borderColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                 }}
@@ -2076,7 +2086,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 <div className="absolute inset-0 rounded-full overflow-hidden">
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
                                 </div>
-                                <div className={`flex items-center gap-2 font-black tracking-widest text-lg drop-shadow-sm text-white`}> {/* TEXTE BLANC */}
+                                <div className={`flex items-center gap-2 font-black tracking-widest text-lg drop-shadow-sm text-white`}>
                                 {dragState.isAddingMode ? (
                                         <>
                                             <Sparkles style={{ width: CONFIG.HEADER_DRAGMODE_ICON_SIZE, height: CONFIG.HEADER_DRAGMODE_ICON_SIZE }} className="animate-pulse" fill="white" />
@@ -2085,7 +2095,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         </>
                                     ) : (
                                         <>
-                                            {/* GHOST blanc + transparent pour voir les yeux */}
                                             <Ghost style={{ width: CONFIG.HEADER_DRAGMODE_ICON_SIZE, height: CONFIG.HEADER_DRAGMODE_ICON_SIZE }} className="animate-pulse" fill="none" stroke="white" strokeWidth={2} />
                                             <span className="uppercase">GHOSTING...</span>
                                             <Ghost style={{ width: CONFIG.HEADER_DRAGMODE_ICON_SIZE, height: CONFIG.HEADER_DRAGMODE_ICON_SIZE }} className="animate-pulse" fill="none" stroke="white" strokeWidth={2} />
@@ -2093,6 +2102,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     )}
                                 </div>
                             </div>
+                        </>
                         ) : (
                             <div className="w-full h-full flex items-center gap-2 overflow-visible relative">
                                 {/* CAPSULE TRI (4 boutons égaux) */}
