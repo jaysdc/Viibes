@@ -2412,10 +2412,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             )}
                             
-                            {/* Bouton CLOSE (X) - Centré verticalement à gauche - ÉVIDÉ */}
+                            {/* Bouton CLOSE (X) - Centré verticalement à gauche - MASQUE D'OPACITÉ */}
                             <div
                                 data-close-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${isClosingWithX ? 'animate-ignite' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full ${isClosingWithX ? 'animate-ignite' : ''}`}
                                 style={{
                                     left: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2425,7 +2425,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
                                     transition: 'background 0.15s, box-shadow 0.15s',
-                                    isolation: 'isolate'
+                                    maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CONFIG.CREATE_BTN_SIZE}' height='${CONFIG.CREATE_BTN_SIZE}' viewBox='0 0 ${CONFIG.CREATE_BTN_SIZE} ${CONFIG.CREATE_BTN_SIZE}'%3E%3Crect width='100%25' height='100%25' fill='white'/%3E%3Cg transform='translate(${CONFIG.CREATE_BTN_SIZE/2}, ${CONFIG.CREATE_BTN_SIZE/2})'%3E%3Cline x1='-${CONFIG.CREATE_BTN_SIZE * 0.2}' y1='-${CONFIG.CREATE_BTN_SIZE * 0.2}' x2='${CONFIG.CREATE_BTN_SIZE * 0.2}' y2='${CONFIG.CREATE_BTN_SIZE * 0.2}' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='${CONFIG.CREATE_BTN_SIZE * 0.2}' y1='-${CONFIG.CREATE_BTN_SIZE * 0.2}' x2='-${CONFIG.CREATE_BTN_SIZE * 0.2}' y2='${CONFIG.CREATE_BTN_SIZE * 0.2}' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E")`,
+                                    WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CONFIG.CREATE_BTN_SIZE}' height='${CONFIG.CREATE_BTN_SIZE}' viewBox='0 0 ${CONFIG.CREATE_BTN_SIZE} ${CONFIG.CREATE_BTN_SIZE}'%3E%3Crect width='100%25' height='100%25' fill='white'/%3E%3Cg transform='translate(${CONFIG.CREATE_BTN_SIZE/2}, ${CONFIG.CREATE_BTN_SIZE/2})'%3E%3Cline x1='-${CONFIG.CREATE_BTN_SIZE * 0.2}' y1='-${CONFIG.CREATE_BTN_SIZE * 0.2}' x2='${CONFIG.CREATE_BTN_SIZE * 0.2}' y2='${CONFIG.CREATE_BTN_SIZE * 0.2}' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='${CONFIG.CREATE_BTN_SIZE * 0.2}' y1='-${CONFIG.CREATE_BTN_SIZE * 0.2}' x2='-${CONFIG.CREATE_BTN_SIZE * 0.2}' y2='${CONFIG.CREATE_BTN_SIZE * 0.2}' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E")`,
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2434,19 +2435,12 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         handleClose('left');
                                     }, 300);
                                 }}
-                            >
-                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
-                                <X
-                                    size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
-                                    strokeWidth={3}
-                                    style={{ color: 'black', mixBlendMode: 'multiply' }}
-                                />
-                            </div>
+                            />
 
-                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - ÉVIDÉ */}
+                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - MASQUE D'OPACITÉ */}
                             <div
                                 data-create-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full ${showNoSongsHint ? 'animate-shake' : ''}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2458,25 +2452,24 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         : `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: showNoSongsHint ? '#ef4444' : 'white',
                                     transition: 'background 0.15s, box-shadow 0.15s',
-                                    isolation: 'isolate'
+                                    maskImage: showNoSongsHint ? 'none' : (editMode
+                                        ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CONFIG.CREATE_BTN_SIZE}' height='${CONFIG.CREATE_BTN_SIZE}' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='100%25' height='100%25' fill='white' stroke='none'/%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E")`
+                                        : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CONFIG.CREATE_BTN_SIZE}' height='${CONFIG.CREATE_BTN_SIZE}' viewBox='0 0 ${CONFIG.CREATE_BTN_SIZE} ${CONFIG.CREATE_BTN_SIZE}'%3E%3Crect width='100%25' height='100%25' fill='white'/%3E%3Cg transform='translate(${CONFIG.CREATE_BTN_SIZE/2}, ${CONFIG.CREATE_BTN_SIZE/2})'%3E%3Cline x1='0' y1='-${CONFIG.CREATE_BTN_SIZE * 0.25}' x2='0' y2='${CONFIG.CREATE_BTN_SIZE * 0.25}' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='-${CONFIG.CREATE_BTN_SIZE * 0.25}' y1='0' x2='${CONFIG.CREATE_BTN_SIZE * 0.25}' y2='0' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E")`),
+                                    WebkitMaskImage: showNoSongsHint ? 'none' : (editMode
+                                        ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CONFIG.CREATE_BTN_SIZE}' height='${CONFIG.CREATE_BTN_SIZE}' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='100%25' height='100%25' fill='white' stroke='none'/%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E")`
+                                        : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CONFIG.CREATE_BTN_SIZE}' height='${CONFIG.CREATE_BTN_SIZE}' viewBox='0 0 ${CONFIG.CREATE_BTN_SIZE} ${CONFIG.CREATE_BTN_SIZE}'%3E%3Crect width='100%25' height='100%25' fill='white'/%3E%3Cg transform='translate(${CONFIG.CREATE_BTN_SIZE/2}, ${CONFIG.CREATE_BTN_SIZE/2})'%3E%3Cline x1='0' y1='-${CONFIG.CREATE_BTN_SIZE * 0.25}' x2='0' y2='${CONFIG.CREATE_BTN_SIZE * 0.25}' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='-${CONFIG.CREATE_BTN_SIZE * 0.25}' y1='0' x2='${CONFIG.CREATE_BTN_SIZE * 0.25}' y2='0' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E")`),
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleSave();
                                 }}
                             >
-                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
-                                {editMode ? (
-                                    <Pencil
-                                        size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
-                                        strokeWidth={2.5}
-                                        style={{ color: 'black', mixBlendMode: 'multiply' }}
-                                    />
-                                ) : (
+                                {/* En mode erreur (showNoSongsHint), afficher le + blanc par-dessus */}
+                                {showNoSongsHint && (
                                     <Plus
                                         size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                         strokeWidth={3}
-                                        style={{ color: showNoSongsHint ? 'white' : 'black', mixBlendMode: showNoSongsHint ? 'normal' : 'multiply' }}
+                                        style={{ color: 'white' }}
                                     />
                                 )}
                             </div>
