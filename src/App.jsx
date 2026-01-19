@@ -6067,6 +6067,16 @@ const vibeSearchResults = () => {
       console.log('[MediaSession] loadedmetadata event');
       updatePositionState();
 
+      // Re-définir les handlers prev/next pour activer les boutons sur iOS
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
+      });
+
       // Extraire l'artwork maintenant que l'audio est chargé
       const song = currentSongRef.current;
       if (song && !artworkCache.has(song.id)) {
@@ -6188,6 +6198,17 @@ const vibeSearchResults = () => {
           });
         }
       }
+
+      // TOUJOURS redéfinir les handlers prev/next à chaque changement de chanson
+      // pour que iOS affiche ces boutons (sinon iOS affiche +10s/-10s par défaut)
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
+      });
 
     }
   }, [currentSong]);
