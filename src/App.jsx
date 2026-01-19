@@ -5940,13 +5940,7 @@ const vibeSearchResults = () => {
   // ══════════════════════════════════════════════════════════════════════════════
 
   // Fonction pour mettre à jour la position (pour la barre de progression iOS)
-  // === DÉSACTIVÉ TEMPORAIREMENT POUR TEST ===
-  // setPositionState pourrait signaler à iOS que le contenu est seekable
-  // et donc afficher les boutons skip au lieu de prev/next
   const updatePositionState = useCallback(() => {
-    // DÉSACTIVÉ POUR TEST
-    return;
-    /*
     if (!('mediaSession' in navigator) || !audioRef.current) return;
     if (!audioRef.current.duration || isNaN(audioRef.current.duration)) return;
 
@@ -5959,7 +5953,6 @@ const vibeSearchResults = () => {
     } catch (e) {
       // setPositionState peut échouer si les valeurs sont invalides
     }
-    */
   }, []);
 
   // Enregistrer les handlers ET les listeners audio
@@ -6031,14 +6024,11 @@ const vibeSearchResults = () => {
       }
     });
 
-    // NOTE: On n'enregistre PAS de handlers pour seekbackward/seekforward
-    // pour qu'iOS affiche les boutons previoustrack/nexttrack (flèches)
-    // au lieu des boutons de skip 10 secondes
+    // Désactiver explicitement seekbackward/seekforward pour forcer iOS à afficher prev/next
+    try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
+    try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
 
-    // === COMMENTER TEMPORAIREMENT POUR TEST ===
-    // seekto pourrait signaler à iOS que le contenu est "seekable"
-    // et donc iOS afficherait les boutons seek au lieu de prev/next
-    /*
+    // seekto pour la barre de progression
     try {
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         console.log('[MediaSession] seekto handler called', details);
@@ -6054,7 +6044,6 @@ const vibeSearchResults = () => {
     } catch (e) {
       console.log('[MediaSession] seekto not supported');
     }
-    */
 
     // === LISTENERS SUR L'ÉLÉMENT AUDIO (sync iOS) ===
     // iOS a besoin de ces listeners pour synchroniser l'état du widget
@@ -6077,14 +6066,8 @@ const vibeSearchResults = () => {
       updatePositionState();
 
       // Re-définir les handlers prev/next pour activer les boutons sur iOS
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
-      });
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
-      });
+      try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler('seekforward', null); } catch (e) {}
 
       // Extraire l'artwork maintenant que l'audio est chargé
       const song = currentSongRef.current;
@@ -6164,17 +6147,6 @@ const vibeSearchResults = () => {
           });
         }
       }
-
-      // TOUJOURS redéfinir les handlers prev/next à chaque changement de chanson
-      // pour que iOS affiche ces boutons (sinon iOS affiche +10s/-10s par défaut)
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
-      });
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
-      });
 
     }
   }, [currentSong]);
