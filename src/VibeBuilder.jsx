@@ -299,18 +299,18 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
-  /* Animation ignite pour bouton X (fermer) - Rouge/Rose */
+  /* Animation ignite pour bouton X (fermer) - Rouge */
   @keyframes ignite {
-    0% { box-shadow: 0 0 10px rgba(244, 63, 94, 0.4), 0 0 20px rgba(185, 28, 28, 0.2); }
-    15% { box-shadow: 0 0 25px rgba(244, 63, 94, 1), 0 0 50px rgba(185, 28, 28, 0.8); }
-    25% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), 0 0 30px rgba(185, 28, 28, 0.4); }
-    40% { box-shadow: 0 0 35px rgba(244, 63, 94, 1), 0 0 70px rgba(185, 28, 28, 0.9); }
-    55% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.6), 0 0 40px rgba(185, 28, 28, 0.5); }
-    70% { box-shadow: 0 0 30px rgba(244, 63, 94, 0.9), 0 0 60px rgba(185, 28, 28, 0.7); }
-    100% { box-shadow: 0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.5); }
+    0% { background: #ef4444; opacity: 0.3; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), 0 0 16px rgba(239, 68, 68, 0.2); }
+    15% { background: #ef4444; opacity: 1; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.6), 0 0 60px rgba(239, 68, 68, 0.4); }
+    25% { background: #ef4444; opacity: 0.4; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.2); }
+    40% { background: #ef4444; opacity: 1; box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), 0 0 50px rgba(239, 68, 68, 0.7), 0 0 75px rgba(239, 68, 68, 0.5); }
+    55% { background: #ef4444; opacity: 0.7; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 30px rgba(239, 68, 68, 0.3); }
+    70% { background: #ef4444; opacity: 1; box-shadow: 0 0 20px rgba(239, 68, 68, 0.7), 0 0 40px rgba(239, 68, 68, 0.5), 0 0 60px rgba(239, 68, 68, 0.3); }
+    100% { background: #ef4444; opacity: 1; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.4); }
   }
   .animate-ignite {
-    animation: ignite 0.3s ease-out forwards;
+    animation: ignite 0.4s ease-out forwards;
   }
 
   @keyframes jiggle {
@@ -2440,13 +2440,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     setIsClosingWithX(true);
                                     setTimeout(() => {
                                         handleClose('left');
-                                    }, 300);
+                                    }, 400);
                                 }}
                             >
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: futureGradientColors[0] }}
+                                    style={{ color: isClosingWithX ? 'white' : futureGradientColors[0] }}
                                 />
                             </div>
 
