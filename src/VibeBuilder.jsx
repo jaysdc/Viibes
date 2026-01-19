@@ -1043,6 +1043,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     const [previewSwipeX, setPreviewSwipeX] = useState(0);
     const [previewSwipeStart, setPreviewSwipeStart] = useState(null);
     const [previewFeedback, setPreviewFeedback] = useState(null); // { type: 'add' | 'queue' | 'cancel' }
+    const [previewHasDragged, setPreviewHasDragged] = useState(false); // True dès qu'on commence à drag
 
     // État pour le gradient de la future Vibe (fixe au montage, modifiable par swipe)
     const [chosenGradientIndex, setChosenGradientIndex] = useState(editMode ? editVibeGradientIndex : (initialGradientIndex || 0));
@@ -1692,6 +1693,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         }}
                         onTouchMove={(e) => {
                             if (previewSwipeStart === null) return;
+                            if (!previewHasDragged) setPreviewHasDragged(true);
                             const newX = e.touches[0].clientX - previewSwipeStart;
                             setPreviewSwipeX(newX);
                         }}
@@ -1703,6 +1705,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     stopVibing('add');
                                     setPreviewSwipeX(0);
                                     setPreviewFeedback(null);
+                                    setPreviewHasDragged(false);
                                 }, 400);
                             } else if (isAtLeftThreshold) {
                                 // Gauche = Queue Next (si disponible)
@@ -1711,18 +1714,21 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     stopVibing('playNext');
                                     setPreviewSwipeX(0);
                                     setPreviewFeedback(null);
+                                    setPreviewHasDragged(false);
                                 }, 400);
-                            } else if (isAtCenter && previewSwipeStart !== null) {
-                                // Centre = Annuler avec animation ignite rouge
+                            } else if (isAtCenter && previewHasDragged) {
+                                // Centre = Annuler avec animation ignite rouge (seulement si on a dragué)
                                 setPreviewFeedback({ type: 'cancel' });
                                 setTimeout(() => {
                                     stopVibing(false);
                                     setPreviewSwipeX(0);
                                     setPreviewFeedback(null);
+                                    setPreviewHasDragged(false);
                                 }, 400);
                             } else {
                                 // Retour au centre
                                 setPreviewSwipeX(0);
+                                setPreviewHasDragged(false);
                             }
                             setPreviewSwipeStart(null);
                         }}
@@ -1747,6 +1753,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         stopVibing('playNext');
                                         setPreviewSwipeX(0);
                                         setPreviewFeedback(null);
+                                        setPreviewHasDragged(false);
                                     }, 400);
                                 }, 200);
                             }}
@@ -1781,6 +1788,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     stopVibing(false);
                                     setPreviewSwipeX(0);
                                     setPreviewFeedback(null);
+                                    setPreviewHasDragged(false);
                                 }, 400);
                             }}
                         >
@@ -1796,7 +1804,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             className={`absolute flex items-center justify-center ${
                                 previewFeedback
                                     ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : previewFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : '')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : isAtCenter ? 'animate-pulse-pill-red' : '')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : (isAtCenter && previewHasDragged) ? 'animate-pulse-pill-red' : '')
                             }`}
                             style={{
                                 '--pulse-scale-min': 1,
@@ -1804,20 +1812,20 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
-                                backgroundColor: previewFeedback?.type === 'cancel' || isAtCenter
+                                backgroundColor: previewFeedback?.type === 'cancel' || (isAtCenter && previewHasDragged)
                                     ? 'rgba(244, 63, 94, 0.9)'  // Rouge
                                     : isAtLeftThreshold
                                         ? 'rgba(6, 182, 212, 0.9)'  // Cyan
                                         : isAtRightThreshold
                                             ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
                                             : 'rgba(255, 255, 255, 0.15)',  // Transparent
-                                border: (isAtLeftThreshold || isAtRightThreshold || isAtCenter) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                border: (isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
-                            {/* Icône X quand au centre */}
-                            {isAtCenter && (
+                            {/* Icône X quand au centre ET qu'on a dragué */}
+                            {isAtCenter && previewHasDragged && (
                                 <X size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
                             )}
                             {/* Icône ListPlus quand au seuil gauche */}
@@ -1850,6 +1858,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         stopVibing('add');
                                         setPreviewSwipeX(0);
                                         setPreviewFeedback(null);
+                                        setPreviewHasDragged(false);
                                     }, 400);
                                 }, 200);
                             }}
