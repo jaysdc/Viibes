@@ -980,9 +980,9 @@ const BuilderRow = ({ song, isSelected, onToggle, onLongPress, sortMode }) => {
                 onMouseDown={(e) => { if (e.button === 2) e.preventDefault(); }}
             >
                 {/* Checkbox */}
-                <div 
-                    className={`rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-pink-500 text-white scale-110' : 'bg-gray-100 text-gray-300'}`}
-                    style={{ width: CONFIG.ROW_CHECKBOX_SIZE, height: CONFIG.ROW_CHECKBOX_SIZE }}
+                <div
+                    className={`rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-200 ${isSelected ? 'text-white scale-110' : 'bg-gray-100 text-gray-300'}`}
+                    style={{ width: CONFIG.ROW_CHECKBOX_SIZE, height: CONFIG.ROW_CHECKBOX_SIZE, backgroundColor: isSelected ? '#00D5FF' : undefined }}
                 >
                     {isSelected ? <Check style={{ width: CONFIG.ROW_CHECKBOX_ICON_SIZE, height: CONFIG.ROW_CHECKBOX_ICON_SIZE }} strokeWidth={3} /> : <Plus style={{ width: CONFIG.ROW_CHECKBOX_ICON_SIZE, height: CONFIG.ROW_CHECKBOX_ICON_SIZE }} />}
                 </div>
@@ -2245,14 +2245,15 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                     <ChevronsDown style={{ width: CONFIG.SIDEBAR_ICON_SIZE, height: CONFIG.SIDEBAR_ICON_SIZE }} strokeWidth={2.5} />
                 </div>
 
-                {/* MARÉE ROSE (Ancrage Visuel Corrigé) */}
+                {/* MARÉE (Cyan=ajout, Orange=retrait) */}
                 {dragState && listRef.current && (
-                    <div 
-                        className="absolute left-0 bg-pink-500/30 z-20 pointer-events-none border-r border-pink-500/50 transition-none"
+                    <div
+                        className="absolute left-0 z-20 pointer-events-none transition-none"
                         style={{
                             width: CONFIG.SIDEBAR_WIDTH,
                             top: Math.min(dragState.startYAbsolute, dragState.currentYAbsolute) - listRef.current.scrollTop,
-                            height: Math.abs(dragState.currentYAbsolute - dragState.startYAbsolute)
+                            height: Math.abs(dragState.currentYAbsolute - dragState.startYAbsolute),
+                            backgroundColor: dragState.isAddingMode ? 'rgba(0, 213, 255, 0.3)' : 'rgba(255, 103, 0, 0.3)'
                         }}
                     ></div>
                 )}
