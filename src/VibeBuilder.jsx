@@ -2055,10 +2055,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible relative"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
-                                    <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
-                                    <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
-                                    <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
-                                    <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
+                                    <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
                                 </div>
 
                                 {/* BOUTON LOUPE ROND (séparé) */}
