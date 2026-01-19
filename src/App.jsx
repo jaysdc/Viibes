@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Check, FolderPlus, FolderOpen, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMaskT2, SphereMaskT3 } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -232,7 +232,7 @@ const getFooterHeight = () => {
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 const CONFIG = {
-
+    
     // ══════════════════════════════════════════════════════════════════════════
     // PARAMÈTRES UNIFIÉS (importés depuis config.js)
     // ══════════════════════════════════════════════════════════════════════════
@@ -282,7 +282,15 @@ const CONFIG = {
     CAPSULE_BG_OPACITY: 0,            // Opacité du fond (0-1)
     CAPSULE_CYLINDER_ENABLED: false,     // Activer le masque d'opacité 3D
     CAPSULE_CYLINDER_INTENSITY: 0.6,    // Intensité du masque (0-1)
-
+    CAPSULE_CYLINDER_SLICES: [
+        -0.15, -0.10, -0.05, 0, 0, 
+        0.05, 0.10, 0.15, 0.20, 0.25,
+        0.20, 0.15, 0.10, 0.05, 0,
+        0, -0.02, -0.04, -0.06, -0.08,
+        -0.10, -0.12, -0.10, -0.08, -0.05,
+        -0.03, 0, 0, -0.05, -0.10
+    ],
+    
     // ══════════════════════════════════════════════════════════════════════════
     // ROUE DE SÉLECTION (Liste des chansons)
     // ══════════════════════════════════════════════════════════════════════════
@@ -395,6 +403,26 @@ const CONFIG = {
     TIMECAPSULE_GLOW_INTENSITY: 0.5,      // Intensité max du glow (0-1)
     TIMECAPSULE_GLOW_SPEED: 2,            // Vitesse du pulse (secondes)
 
+    // VOLUME BEACON - Bordure et glow jaune
+    VOLUME_NEON_ENABLED: true,            // Activer la bordure jaune
+    VOLUME_NEON_WIDTH: 1,                 // Épaisseur de la bordure (px)
+    VOLUME_NEON_COLOR: 'rgba(255, 191, 0, 0.8)', // Couleur bordure (RGBA)
+    VOLUME_GLOW_ENABLED: true,            // Activer le glow pulsant
+    VOLUME_GLOW_COLOR: '255, 191, 0',     // Couleur glow (RGB pour opacité variable)
+    VOLUME_GLOW_SIZE: 6,                  // Taille du glow (px)
+    VOLUME_GLOW_INTENSITY: 0.5,           // Intensité max du glow (0-1)
+    VOLUME_GLOW_SPEED: 2,                 // Vitesse du pulse (secondes)
+    
+    // VOLUME TUBE - Bordure et glow du tube qui apparaît
+    VOLUME_TUBE_BORDER_ENABLED: true,             // Activer la bordure du tube
+    VOLUME_TUBE_BORDER_WIDTH: 1,                  // Épaisseur de la bordure (px)
+    VOLUME_TUBE_BORDER_COLOR: 'rgba(255, 208, 0, 1)', // Couleur de la bordure (RGBA)
+    VOLUME_TUBE_IGNITE_ENABLED: true,                 // Activer l'animation ignite sur la bordure jaune
+    VOLUME_FILL_IGNITE_ENABLED: true,                 // Activer l'animation ignite sur le tube cyan
+    VOLUME_TUBE_GLOW_ENABLED: true,               // Activer le glow du tube
+    VOLUME_TUBE_GLOW_SIZE: 15,                     // Taille du glow (px)
+    VOLUME_TUBE_GLOW_COLOR: 'rgba(255, 208, 0, 0.5)',   // Couleur du glow (RGBA)
+    
     // ══════════════════════════════════════════════════════════════════════════
     // NEON GLOW (Effet néon réutilisable)
     // ══════════════════════════════════════════════════════════════════════════
@@ -464,6 +492,84 @@ const CONFIG = {
     WHEEL_GLOW_OPACITY: 0.45,
     WHEEL_GLOW_COLOR: '236, 72, 153',   // RGB rose (pink-500)
     
+    // ══════════════════════════════════════════════════════════════════════════
+    // SLIDER VOLUME
+    // ══════════════════════════════════════════════════════════════════════════
+    VOLUME_LONG_PRESS_DELAY: 125,       // Durée appui long pour activer (ms)
+    VOLUME_OVERLAY_OPACITY: 0.85,       // Opacité du fond sombre
+    VOLUME_BAR_X: 50,                   // Position X du centre (% écran)
+    VOLUME_BAR_Y: 60,                   // Position Y du centre (% écran)
+    
+    // Dimensions du tube (% de l'écran)
+    VOLUME_BAR_HEIGHT_PERCENT: 50,      // Hauteur du tube (% de la hauteur écran)
+    VOLUME_BAR_WIDTH_PERCENT: 25,        // Largeur du tube (% de la largeur écran)
+    VOLUME_BAR_BORDER_RADIUS: 9999,       // Arrondi du tube (px)
+    
+    // Tube - fond (vide)
+    VOLUME_TUBE_BG_COLOR: 'rgba(110, 110, 110, 0.2)',  // Couleur du fond du tube
+    
+    // Tube - remplissage (niveau de volume)
+    VOLUME_FILL_COLOR: 'rgba(85, 226, 226, 1)',        // Couleur du remplissage
+    VOLUME_FILL_GLOW_COLOR: 'rgba(85, 226, 226, 0.5)', // Couleur du glow du remplissage
+    VOLUME_FILL_GLOW_SIZE: 50,           // Taille du glow du remplissage (px)
+    
+    // Curseur (thumb)
+    VOLUME_THUMB_ENABLED: false,         // Afficher le curseur (true/false)
+    VOLUME_THUMB_SIZE: 28,              // Taille du curseur (px)
+    VOLUME_THUMB_COLOR: 'rgba(236, 72, 153, 1)',       // Couleur du curseur
+    VOLUME_THUMB_GLOW_COLOR: 'rgba(236, 72, 153, 0.8)', // Couleur du glow du curseur
+    VOLUME_THUMB_GLOW_SIZE: 12,         // Taille du glow du curseur (px)
+    
+    // Texte
+    VOLUME_TEXT_SIZE: 48,               // Taille du pourcentage (px)
+    
+    // Fade mute/unmute
+    VOLUME_FADE_DURATION: 150,          // Durée du fade mute/unmute (ms)
+    VOLUME_FADE_STEPS: 10,              // Nombre d'étapes du fade
+    
+    // Animation morph (beacon → tube)
+    VOLUME_MORPH_DURATION: 400,         // Durée de l'animation morph (ms)
+
+    // Masque cylindre 3D sur le tube volume
+    VOLUME_CYLINDER_ENABLED: false,      // Activer/désactiver l'effet cylindre
+    VOLUME_CYLINDER_INTENSITY: 0.7,       // Puissance du masque (0 = invisible, 1 = normal, 2 = intense)
+    VOLUME_CYLINDER_FADE_DURATION: 300, // Durée du fade-in du masque (ms)
+    VOLUME_CYLINDER_SLICES: [
+        0.05,
+        0.10,
+        0.05,
+        0.00,
+        0.05,
+        0.10,
+        0.30,
+        0.20,
+        0.10,
+        0.00,
+        0.02,
+        0.04,
+        0.06,
+        0.08,
+        0.06,
+        0.04,
+        0.02,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.02,
+        0.05,
+        0.07,
+        0.10,
+        0.13,
+        0.14,
+        0.17,
+        0.20,
+        0.10
+    ],
+
+    VOLUME_MORPH_EASING: 'cubic-bezier(0.4, 0, 0.2, 1)', // Courbe d'animation du tube
+    VOLUME_OVERLAY_EASING: 'cubic-bezier(0.7, 0, 1, 1)', // Courbe du fond (lent début, rapide fin)
+    
     // Animation morph scrubbing (beacon → arc)
     BEACON_SCRUB_MORPH_DURATION: 400,   // Durée de l'animation morph (ms)
     BEACON_SCRUB_MORPH_EASING: 'cubic-bezier(0.4, 0, 0.2, 1)', // Courbe d'animation
@@ -474,7 +580,7 @@ const CONFIG = {
     FOOTER_SLIDE_DURATION: 400,          // Durée de l'animation slide du footer (ms)
 
     // ══════════════════════════════════════════════════════════════════════════
-    // BARRE DE CONTRÔLE (TimeCapsule + Recenter)
+    // BARRE DE CONTRÔLE (TimeCapsule + Recenter + Volume)
     // ══════════════════════════════════════════════════════════════════════════
     CONTROL_BAR_Y: 50,                  // Position verticale dans le footer (0=bas, 100=haut)
     CONTROL_BAR_HEIGHT_PERCENT: 10,     // Hauteur des éléments (% du footer)
@@ -681,7 +787,7 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TEXTES CONFIRMATION KILL / NUKE
     // ══════════════════════════════════════════════════════════════════════════
-    KILL_TEXT: 'KILL VIBE?!',                    // Texte unique Kill
+    KILL_TEXT: 'KILL VIBE?',                     // Texte unique Kill
     NUKE_TEXT: 'NUKE ALL?!',                      // Texte unique Nuke
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -723,8 +829,8 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
-    TC_PROGRESS_HEIGHT: 1.125,            // Hauteur progress bar (rem) - réduit de 25%
-    TC_SCRUB_LONG_PRESS_MS: 10,           // Durée tap long pour activer scrub (ms)
+    TC_PROGRESS_HEIGHT: 1.5,              // Hauteur progress bar (rem)
+    TC_SCRUB_LONG_PRESS_MS: 50,           // Durée tap long pour activer scrub (ms)
     TC_SCRUB_SENSITIVITY: 1.5,            // Secondes par pixel de déplacement
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -736,7 +842,7 @@ const CONFIG = {
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
 
     // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
-    SCRUB_OVERLAY_MORPH_DURATION: 75,    // Durée de l'animation morph (ms)
+    SCRUB_OVERLAY_MORPH_DURATION: 125,    // Durée de l'animation morph (ms)
     SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
     SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
     SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
@@ -889,7 +995,20 @@ const styles = `
   .timecapsule-glow {
     animation: timecapsule-glow-pulse ${CONFIG.TIMECAPSULE_GLOW_SPEED}s ease-in-out infinite;
   }
-
+  
+  @keyframes volume-glow-pulse {
+    0%, 100% { 
+      box-shadow: 0 0 ${CONFIG.VOLUME_GLOW_SIZE * 0.5}px rgba(${CONFIG.VOLUME_GLOW_COLOR}, ${CONFIG.VOLUME_GLOW_INTENSITY * 0.3});
+    }
+    50% { 
+      box-shadow: 0 0 ${CONFIG.VOLUME_GLOW_SIZE}px rgba(${CONFIG.VOLUME_GLOW_COLOR}, ${CONFIG.VOLUME_GLOW_INTENSITY});
+    }
+  }
+  
+  .volume-glow {
+    animation: volume-glow-pulse ${CONFIG.VOLUME_GLOW_SPEED}s ease-in-out infinite;
+  }
+  
   @keyframes scrub-tube-pulse {
     0%, 100% { 
       opacity: 0.3;
@@ -1848,7 +1967,7 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false }) => {
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0 }) => {
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -1977,282 +2096,150 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         onClick();
     };
     
-// État pour l'effet de press
-    const [isPressed, setIsPressed] = useState(false);
-
 // ========== LAYOUT BANDE HORIZONTALE ==========
-// En mode 3D: tube (capsule rounded-full) avec contenu centré verticalement
-// En mode normal: carte rectangulaire avec contenu en bas
 return (
   <FeedbackCardOverlay isActive={isBlinking} onAnimationComplete={onBlinkComplete}>
       <div
           ref={cardRef}
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
-          onTouchStart={(e) => {
-              handleTouchStart(e);
-              if (is3DMode) setIsPressed(true);
-          }}
-          onTouchEnd={() => {
-              handleTouchEnd();
-              if (is3DMode) setIsPressed(false);
-          }}
-          onTouchCancel={() => {
-              if (is3DMode) setIsPressed(false);
-          }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
 
-          className={`w-full px-4 flex shadow-lg cursor-pointer relative overflow-hidden ${is3DMode ? 'rounded-full items-center' : 'rounded-xl py-3 items-end'}`}
-          style={{
-            height: is3DMode ? `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh` : `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
+          className="w-full rounded-xl px-4 py-3 flex items-end justify-between shadow-lg cursor-pointer relative overflow-hidden"
+          style={{ 
+            height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
             background: baseGradient,
             isolation: 'isolate',
-              transform: hasAnimated
-                  ? `translateX(${swipeOffset * 0.8}px)${is3DMode && isPressed ? ' scale(0.98)' : ''}`
+              transform: hasAnimated 
+                  ? `translateX(${swipeOffset * 0.8}px)` 
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
-              boxShadow: is3DMode && isPressed
-                  ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
-                  : undefined,
               transition: hasAnimated
-                  ? (swipeOffset === 0
-                      ? `transform 0.2s ease-out, opacity 0.2s ease-out${is3DMode ? ', box-shadow 0.15s ease-out' : ''}`
-                      : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : (is3DMode ? 'transform 0.15s ease-out, box-shadow 0.15s ease-out' : 'none')))
+                  ? (swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none'))
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
-          {/* Masque cylindre 3D */}
-          <CylinderMask is3DMode={is3DMode} intensity={is3DMode && isPressed ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? 'rounded-full' : 'rounded-xl'} />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
           {unavailableCount > 0 && (() => {
               const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
               const fadeWidth = CONFIG.VIBECARD_OPACITY_GRADIENT_WIDTH;
               const maxOpacity = 1 - CONFIG.VIBECARD_MIN_OPACITY;
-
+              
               // Si aucun morceau dispo, opacité uniforme sur toute la carte
               if (availableCount === 0) {
                   return (
-                      <div
-                          className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-xl'}`}
+                      <div 
+                          className="absolute inset-0 pointer-events-none rounded-xl"
                           style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
                       />
                   );
               }
-
+              
               return (
-                  <div
-                      className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-xl'}`}
+                  <div 
+                      className="absolute inset-0 pointer-events-none rounded-xl"
                       style={{
-                          background: `linear-gradient(to right,
-                              rgba(255,255,255,0) 0%,
-                              rgba(255,255,255,0) ${ratio}%,
-                              rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%,
-                              rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%,
+                          background: `linear-gradient(to right, 
+                              rgba(255,255,255,0) 0%, 
+                              rgba(255,255,255,0) ${ratio}%, 
+                              rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%, 
+                              rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%, 
                               rgba(255,255,255,${maxOpacity * 0.95}) ${ratio + fadeWidth * 0.8}%,
-                              rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%,
+                              rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%, 
                               rgba(255,255,255,${maxOpacity}) 100%)`
                       }}
                   />
               );
           })()}
 
-          {/* Mode 3D: Layout tube avec titre à gauche et icône à droite, centrés verticalement */}
-          {is3DMode ? (
-            <>
-              {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
-              {/* En mode no-tag: compteurs en bas de la capsule */}
-              {!showTitles ? (
-                  // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets (50% opacité)
-                  <>
-                      <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
-                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/50 flex items-center gap-1.5 z-10">
-                          <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                          {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
-                      </span>
-                  </>
-              ) : (
-                  // Mode 3D + avec tags: layout normal horizontal
-                  <div className="flex-1 flex items-center gap-2 relative z-10 min-w-0">
-                      {(vibeName || isEditingName) && (
-                          <div
-                              className="overflow-hidden flex-shrink min-w-0"
-                              style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem` }}
-                              onClick={(e) => {
-                                  if (onNameEdit && !isEditingName) {
-                                      e.stopPropagation();
-                                      onNameEdit();
-                                  }
-                              }}
-                          >
-                              {isEditingName ? (
-                                  <input
-                                      type="text"
-                                      value={editedName}
-                                      onChange={(e) => onEditedNameChange(e.target.value)}
-                                      onBlur={onConfirmNameChange}
-                                      onKeyDown={(e) => {
-                                          if (e.key === 'Enter') onConfirmNameChange();
-                                          if (e.key === 'Escape') onConfirmNameChange();
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      autoFocus
-                                      className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
-                                      style={{
-                                          fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                                          lineHeight: 1.25,
-                                          width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`
-                                      }}
-                                  />
-                              ) : (
-                                  <MarqueeText
-                                      text={vibeName || ''}
-                                      className="font-black leading-tight text-white"
-                                      style={{
-                                          fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
-                                      }}
-                                  />
-                              )}
-                          </div>
-                      )}
-                      {/* Compteurs */}
-                      <span className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0">
-                          <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                          {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-                      </span>
-                  </div>
-              )}
-
-              {/* Icône - alignée à droite, centrée verticalement */}
-              {/* En mode no-tag: icône seule sans cercle, discrète */}
-              <div
-                  className="flex-shrink-0 ml-2"
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      if (onEditVibe) {
-                          onEditVibe();
-                      }
-                  }}
-              >
-                  {!showTitles ? (
-                      // Mode 3D + no tag: icône seule sans cercle, discrète (50% opacité)
-                      <div className={`flex items-center justify-center text-white/50 ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
-                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </div>
-                  ) : (
-                      // Mode 3D + avec tags: icône dans cercle
-                      <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
-                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </div>
-                  )}
+          {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
+          <div
+              className="absolute top-3 right-3"
+              onClick={(e) => {
+                  e.stopPropagation();
+                  if (onEditVibe) {
+                      onEditVibe();
+                  }
+              }}
+          >
+              <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
+              <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
               </div>
-            </>
-          ) : (
-            <>
-              {/* Mode normal: Layout original avec icône en haut à droite et contenu en bas */}
-              {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
-              <div
-                  className="absolute top-3 right-3"
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      if (onEditVibe) {
-                          onEditVibe();
-                      }
-                  }}
-              >
-                  {showTitles ? (
-                      // Mode avec tags: icône dans cercle
-                      <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
-                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </div>
-                  ) : (
-                      // Mode no-tag: icône seule sans cercle, discrète (50% opacité)
-                      <div className={`flex items-center justify-center text-white/50 ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
-                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </div>
-                  )}
-              </div>
+          </div>
 
-              {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition, ou si showTitles est false */}
-              {showTitles ? (
-                (vibeName || isEditingName) ? (
-                  <div
-                      className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
-                      style={{
-                        padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
-                        maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
-                        background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
-                          transition: 'background 0.2s, border-color 0.2s'
-                      }}
-                      onClick={(e) => {
-                          if (onNameEdit && !isEditingName) {
-                              e.stopPropagation();
-                              onNameEdit();
-                          }
-                      }}
-                  >
-                      <div key={isEditingName ? 'editing' : 'display'} className="overflow-hidden" style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem`, height: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE * 1.25}rem` }}>
-                      {isEditingName ? (
-                              <input
-                              type="text"
-                              value={editedName}
-                              onChange={(e) => onEditedNameChange(e.target.value)}
-                              onBlur={onConfirmNameChange}
-                              onKeyDown={(e) => {
-                                  if (e.key === 'Enter') onConfirmNameChange();
-                                  if (e.key === 'Escape') onConfirmNameChange();
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              autoFocus
-                              className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
-                              style={{
-                                  fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                                  lineHeight: 1.25,
-                                  width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
-                                  paddingLeft: '0.25rem',
-                                  paddingRight: '0.25rem',
-                                  marginLeft: '-0.25rem',
-                                  marginRight: '-0.25rem'
-                              }}
-                          />
-                        ) : (
-                          <MarqueeText
-                              text={vibeName || ''}
-                              className="font-black leading-tight text-white"
-                              style={{
-                                  fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
-                              }}
-                          />
-                        )}
-                      </div>
-                      <span
-                          className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
-                      >
-                          <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                          {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-                      </span>
-                  </div>
-                ) : (
-                  /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
-                  <div
-                      className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
-                      style={{ background: 'rgba(255,255,255,0.15)' }}
-                      onClick={(e) => {
-                          if (onNameEdit) {
-                              e.stopPropagation();
-                              onNameEdit();
-                          }
-                      }}
-                  >
-                      <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                      {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-                  </div>
-                )
-              ) : (
-                /* Mode sans titres: compteurs directement sur la carte en bas à gauche, discrets (50% opacité) */
-                <span className="text-[10px] font-semibold text-white/50 flex items-center gap-1.5 relative z-10">
+          {/* Capsule Liquid Glass en bas à gauche - masquée si pas de nom et pas en édition */}
+          {(vibeName || isEditingName) ? (
+            <div
+                className={`relative z-10 rounded-full border flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
+                style={{
+                  padding: `${CONFIG.VIBECARD_CAPSULE_PY}rem ${CONFIG.VIBECARD_CAPSULE_PX}rem`,
+                  maxWidth: `calc(100% - ${CONFIG.VIBECARD_CAPSULE_RIGHT_MARGIN}rem - 2.75rem)`,
+                  background: isEditingName ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)',
+                    transition: 'background 0.2s, border-color 0.2s'
+                }}
+                onClick={(e) => {
+                    if (onNameEdit && !isEditingName) {
+                        e.stopPropagation();
+                        onNameEdit();
+                    }
+                }}
+            >
+                <div key={isEditingName ? 'editing' : 'display'} className="overflow-hidden" style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem`, height: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE * 1.25}rem` }}>
+                {isEditingName ? (
+                        <input
+                        type="text"
+                        value={editedName}
+                        onChange={(e) => onEditedNameChange(e.target.value)}
+                        onBlur={onConfirmNameChange}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') onConfirmNameChange();
+                            if (e.key === 'Escape') onConfirmNameChange();
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                        className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
+                        style={{
+                            fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                            lineHeight: 1.25,
+                            width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`,
+                            paddingLeft: '0.25rem',
+                            paddingRight: '0.25rem',
+                            marginLeft: '-0.25rem',
+                            marginRight: '-0.25rem'
+                        }}
+                    />
+                  ) : (
+                    <MarqueeText
+                        text={vibeName || ''}
+                        className="font-black leading-tight text-white"
+                        style={{
+                            fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
+                        }}
+                    />
+                  )}
+                </div>
+                <span
+                    className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
+                >
                     <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                    {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
+                    {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                 </span>
-              )}
-            </>
+            </div>
+          ) : (
+            /* Compteurs en bas à gauche quand pas de nom - cliquable pour éditer */
+            <div
+                className="relative z-10 rounded-full border border-white/20 flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
+                style={{ background: 'rgba(255,255,255,0.15)' }}
+                onClick={(e) => {
+                    if (onNameEdit) {
+                        e.stopPropagation();
+                        onNameEdit();
+                    }
+                }}
+            >
+                <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                {unavailableCount > 0 && <span className="text-[10px] font-semibold text-white/90 flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+            </div>
           )}
         </div>
     </FeedbackCardOverlay>
@@ -2361,10 +2348,10 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
     </button>
 );
 
-const RecenterCapsule = ({ onClick, is3DMode = false }) => (
+const RecenterCapsule = ({ onClick }) => (
   <button
       onClick={onClick}
-      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden relative ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
       style={{
         height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
         width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
@@ -2374,7 +2361,6 @@ const RecenterCapsule = ({ onClick, is3DMode = false }) => (
         WebkitTapHighlightColor: 'transparent'
     }}
   >
-      <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
       <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipBack size={10} fill="currentColor" /></div>
       <div className="w-px h-full bg-gray-200"></div>
       <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
@@ -2393,9 +2379,7 @@ const ControlBar = ({
   // RecenterCapsule props
   onRecenter,
   // PlayPause props
-  isPlaying, onTogglePlay,
-  // 3D mode
-  is3DMode = false
+  isPlaying, onTogglePlay
 }) => {
     return (
         <div
@@ -2419,14 +2403,13 @@ const ControlBar = ({
                 vibeSwipePreview={vibeSwipePreview}
                 onScrubChange={onScrubChange}
                 onScrubEndAtEnd={onScrubEndAtEnd}
-                is3DMode={is3DMode}
             />
             {!vibeSwipePreview && (
                 <>
-                    <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} />
+                    <RecenterCapsule onClick={onRecenter} />
                     <button
                         onClick={onTogglePlay}
-                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
@@ -2438,7 +2421,6 @@ const ControlBar = ({
                           transition: 'background 0.3s, border 0.3s'
                       }}
                     >
-                        <SphereMaskT2 is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
                         {isPlaying ? (
                             <Disc3 size={20} className="text-white animate-spin-slow" />
                         ) : (
@@ -2451,7 +2433,7 @@ const ControlBar = ({
     );
 };
 
-const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, isWide, hideGlow = false, glowOpacity = 1, transitionDuration = 0, retrigger = false, is3DMode = false }) => {
+const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, isWide, hideGlow = false, glowOpacity = 1, transitionDuration = 0, retrigger = false }) => {
   const isActive = currentMode === mode;
   const [justActivated, setJustActivated] = useState(false);
   const [isRetriggering, setIsRetriggering] = useState(false);
@@ -2501,13 +2483,11 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
     <div className={`${widthClass} h-full relative overflow-visible ${roundedClass}`}>
         {isActive && (
             isRetriggering ? (
-              <div
+              <div 
                   key={animKey}
                   className={`absolute inset-0 ${roundedClass} animate-neon-cyan-to-pink`}
                   style={{ zIndex: 0 }}
-              >
-                  <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
-              </div>
+              />
           ) : (
             <NeonGlow
             key={`glow-${isActive}-${skipNextIgnite}`}
@@ -2524,12 +2504,10 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
                 zIndex: 0
             }}
             onAnimationEnd={() => setSkipNextIgnite(false)}
-            >
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
-            </NeonGlow>
+      />
           )
         )}
-        <button
+        <button 
             onClick={handleClick}
             className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-200 ${roundedClass} ${isActive ? 'text-white' : 'bg-transparent text-gray-400 hover:text-gray-600'}`}
         >
@@ -2540,16 +2518,15 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
 };
 
 // Bouton Tri Toggle (pour titre, artiste, playCount)
-const ToggleSortButton = ({
-    type,
-    currentMode,
-    sortDirection,
-    onToggle,
-    isFirst = false,
-    hideGlow = false,
-    glowOpacity = 1,
-    transitionDuration = 0,
-    is3DMode = false
+const ToggleSortButton = ({ 
+    type, 
+    currentMode, 
+    sortDirection, 
+    onToggle, 
+    isFirst = false, 
+    hideGlow = false, 
+    glowOpacity = 1, 
+    transitionDuration = 0 
 }) => {
     const [justActivated, setJustActivated] = useState(false);
     const [animKey, setAnimKey] = useState(0);
@@ -2609,11 +2586,9 @@ const ToggleSortButton = ({
                         background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
                         zIndex: 0
                     }}
-                >
-                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
-                </NeonGlow>
+                />
             )}
-            <button
+            <button 
                 onClick={handleClick}
                 className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-200 ${roundedClass} ${isActive ? 'text-white' : 'bg-transparent text-gray-400 hover:text-gray-600'}`}
             >
@@ -2683,7 +2658,7 @@ const LibrarySongRow = ({ song, onClick }) => (
 
 // --- 3. COMPLEX COMPONENTS ---
 
-const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, onScrubEndAtEnd, is3DMode = false }) => {
+const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward, isLive, isMini, confirmMode, confirmType, vibeSwipePreview, onScrubChange, onScrubEndAtEnd }) => {
     const formatTime = (time) => { if (!time || isNaN(time)) return "0:00"; const min = Math.floor(time / 60); const sec = Math.floor(time % 60); return `${min}:${sec.toString().padStart(2, '0')}`; };
 
     // États pour le scrub relatif
@@ -2768,45 +2743,21 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 // Appliquer la position finale
                 if (onSeek) onSeek({ target: { value: scrubPreviewTime } });
             }
-
-            // Annuler l'animation morph d'ouverture si en cours
-            if (morphAnimationRef.current) {
-                cancelAnimationFrame(morphAnimationRef.current);
-                morphAnimationRef.current = null;
-            }
-
-            // Jouer l'animation inverse (morph de 1 vers 0)
-            const morphStartTime = performance.now();
-            const startProgress = scrubMorphProgress;
-            const animateMorphReverse = (currentTime) => {
-                const elapsed = currentTime - morphStartTime;
-                const progress = Math.max(0, startProgress - (elapsed / CONFIG.SCRUB_OVERLAY_MORPH_DURATION) * startProgress);
-                setScrubMorphProgress(progress);
-                if (onScrubChange) onScrubChange(true, progress);
-
-                if (progress > 0) {
-                    morphAnimationRef.current = requestAnimationFrame(animateMorphReverse);
-                } else {
-                    // Animation terminée, reset complet
-                    setIsScrubbing(false);
-                    setScrubStartX(null);
-                    setScrubStartTime(null);
-                    setScrubPreviewTime(null);
-                    setScrubAtEnd(false);
-                    setScrubMorphProgress(0);
-                    if (onScrubChange) onScrubChange(false, 0);
-                }
-            };
-            morphAnimationRef.current = requestAnimationFrame(animateMorphReverse);
-        } else {
-            // Pas de scrubbing actif, reset simple
-            setScrubStartX(null);
-            setScrubStartTime(null);
-            setScrubPreviewTime(null);
-            setScrubAtEnd(false);
-            setScrubMorphProgress(0);
-            if (onScrubChange) onScrubChange(false, 0);
         }
+
+        // Annuler l'animation morph si en cours
+        if (morphAnimationRef.current) {
+            cancelAnimationFrame(morphAnimationRef.current);
+            morphAnimationRef.current = null;
+        }
+
+        setIsScrubbing(false);
+        setScrubStartX(null);
+        setScrubStartTime(null);
+        setScrubPreviewTime(null);
+        setScrubAtEnd(false);
+        setScrubMorphProgress(0);
+        if (onScrubChange) onScrubChange(false, 0);
     };
 
     // Cleanup timer on unmount
@@ -2861,7 +2812,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         
         return (
             <div
-            className={`flex-1 rounded-full flex items-center justify-center border animate-appear overflow-hidden relative ${animClass}`}
+            className={`flex-1 rounded-full flex items-center justify-center border animate-appear overflow-hidden ${animClass}`}
                 style={{
                     height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                     '--neon-color': neonColor,
@@ -2870,7 +2821,6 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     boxShadow: `0 0 25px ${glowColor}, 0 0 50px ${glowColor2}`
                 }}
             >
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                 <div className={`flex items-center gap-2 text-white font-black tracking-widest text-xs ${isAnimating ? 'animate-blink' : ''}`}>
                     {isAnimating && <Icon size={20} strokeWidth={3} />}
                     <span>{isAnimating ? (isKill ? 'KILL!' : 'NUKE!') : text}</span>
@@ -2884,7 +2834,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center shadow-sm transition-colors duration-300 overflow-hidden relative ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 rounded-full flex items-center shadow-sm transition-colors duration-300 overflow-hidden ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             paddingLeft: `${CONFIG.TC_EDGE_PADDING}rem`,
@@ -2895,9 +2845,6 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                 : '1px solid rgb(229, 231, 235)'
         }}
       >
-            {/* Masque cylindre 3D sur toute la capsule */}
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
-
             {/* Bouton -10s */}
             <SkipButton direction="back" onClick={onSkipBack} />
 
@@ -2928,18 +2875,14 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
                             }}
                         >
-                            {/* Masque cylindre inversé pour effet concave */}
-                            <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                             {/* Remplissage rose flat */}
                             <div
-                                className="absolute left-0 top-0 bottom-0 overflow-hidden"
+                                className="absolute left-0 top-0 bottom-0"
                                 style={{
                                     width: `${progressPercent}%`,
                                     background: '#ec4899',
                                 }}
-                            >
-                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
-                            </div>
+                            />
                             {/* Texte gris (fond clair) - couche de base */}
                             <div
                                 className="absolute inset-0 flex items-center justify-between pointer-events-none"
@@ -2981,7 +2924,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     );
 };
 
-const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bgStyle, borderClass, children, roundedClass = 'rounded-full', is3DMode = false }) => {
+const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, borderClass, children, roundedClass = 'rounded-full' }) => {
     const [phase, setPhase] = useState('fadein'); // fadein, flash, idle, validating, fadeout
     const [textOpacity, setTextOpacity] = useState(0);
     const [glowIntensity, setGlowIntensity] = useState(0);
@@ -3175,20 +3118,18 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
     
     const containerStyle = {
         ...glowStyle,
-        ...bgStyle,
         opacity: bgOpacity / 100,
         transition: `opacity ${phase === 'fadeout' ? fadeOutDuration : fadeInDuration}ms ease-out, ${glowStyle.transition}`
     };
     
     return (
-        <div
-        className={`absolute inset-0 z-10 ${roundedClass} flex items-center justify-center border ${bgClass} ${borderClass} overflow-hidden`}
+        <div 
+        className={`absolute inset-0 z-10 ${roundedClass} flex items-center justify-center border ${bgClass} ${borderClass}`}
             style={containerStyle}
         >
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
-            <div
+            <div 
                 className="flex items-center gap-2 text-white font-black tracking-widest"
-                style={{
+                style={{ 
                     opacity: textOpacity / 100,
                     transition: `opacity ${phase === 'validating' ? `${blinkTransition}ms` : getTransitionDuration()} ease-out`
                 }}
@@ -3262,7 +3203,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
   };
   
   // LIVING CAPSULE
-  const LiveHeaderCapsule = ({ activeFilter, setActiveFilter, sortDirection, onToggleSort, isSearching, setIsSearching, searchQuery, setSearchQuery, hideGlow = false, glowOpacity = 1, transitionDuration = 0, is3DMode = false }) => {
+  const LiveHeaderCapsule = ({ activeFilter, setActiveFilter, sortDirection, onToggleSort, isSearching, setIsSearching, searchQuery, setSearchQuery, hideGlow = false, glowOpacity = 1, transitionDuration = 0 }) => {
     
     const GLOW_VERTICAL_SPREAD = CONFIG.WHEEL_GLOW_VERTICAL;
     const GLOW_HORIZONTAL_SPREAD = CONFIG.WHEEL_GLOW_HORIZONTAL;
@@ -3300,26 +3241,25 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
 
     // DEFAULT - Sort buttons
     return (
-      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200 relative" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
-          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
-          <SortButton mode="initialShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={RotateCcw} isFirst={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
+      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
+          <SortButton mode="initialShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={RotateCcw} isFirst={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} />
           <div className="w-px h-full bg-gray-200"></div>
-          <ToggleSortButton type="title" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
+          <ToggleSortButton type="title" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} />
           <div className="w-px h-full bg-gray-200"></div>
-          <ToggleSortButton type="artist" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
+          <ToggleSortButton type="artist" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} />
           <div className="w-px h-full bg-gray-200"></div>
-          <ToggleSortButton type="playCount" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
-
+          <ToggleSortButton type="playCount" currentMode={activeFilter} sortDirection={sortDirection} onToggle={onToggleSort} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} />
+          
           {/* Séparateur plus court (50% de la hauteur) */}
           <div className="w-px h-1/2 bg-gray-300"></div>
-
+          
           {/* Bouton Dés plus large */}
-          <SortButton mode="newShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={Dices} isLast={true} isWide={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} retrigger={true} is3DMode={is3DMode} />
+          <SortButton mode="newShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={Dices} isLast={true} isWide={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} retrigger={true} />
       </div>
   );
 };
 
-const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queueIndex, queueLength, variant = 'default', audioLevel = 0, is3DMode = false }) => {
+const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queueIndex, queueLength, variant = 'default', audioLevel = 0 }) => {
     const isMain = variant === 'main'; 
     
     const capsuleHeightVh = isMain ? CONFIG.CAPSULE_HEIGHT_VH : CONFIG.CAPSULE_HEIGHT_MINI_VH;
@@ -3362,7 +3302,25 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                 style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
             >
                 {/* Masque cylindre 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
+                {CONFIG.CAPSULE_CYLINDER_ENABLED && (
+                    <div 
+                        className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex flex-col rounded-full"
+                    >
+                        {CONFIG.CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+                            <div
+                                key={i}
+                                className="flex-1"
+                                style={{
+                                    backgroundColor: opacity > 0 
+                                        ? `rgba(255, 255, 255, ${opacity * CONFIG.CAPSULE_CYLINDER_INTENSITY})` 
+                                        : opacity < 0 
+                                            ? `rgba(0, 0, 0, ${Math.abs(opacity) * CONFIG.CAPSULE_CYLINDER_INTENSITY})`
+                                            : 'transparent'
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
                 <button onClick={(e) => { e.stopPropagation(); playPrev(); }} className="w-12 h-full flex items-center justify-center text-gray-400 border-r border-gray-200" style={{ WebkitTapHighlightColor: 'transparent' }}><SkipBack size={20} fill="currentColor" /></button>
                 
                 {/* Zone centrale - titre centré par rapport à TOUTE la capsule via absolute */}
@@ -3381,7 +3339,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
     );
 };
 
-const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null, is3DMode = false }) => {
+const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, onSwipeRight, onSwipeLeft, itemHeight, isMini, scrollTop, containerHeight, centerPadding, globalSwipeLockRef = null }) => {
     const rowRef = useRef(null);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
@@ -3521,33 +3479,27 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     } : {};
 
     if (offset > 0 || exitAnimation === 'right') {
-        overlayClass = "bg-cyan-500 rounded-full shadow-inner overflow-hidden";
+        overlayClass = "bg-cyan-500 rounded-full shadow-inner";
         OverlayContent = (
-        <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
-            <div
-                className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
-            >
-                <ListPlus size={24} strokeWidth={3} />
-                <div className="flex flex-col leading-none">
-                <span>VIBE</span>
-                <span>NEXT!</span>
-                </div>
+        <div
+            className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
+        >
+            <ListPlus size={24} strokeWidth={3} />
+            <div className="flex flex-col leading-none">
+            <span>VIBE</span>
+            <span>NEXT!</span>
             </div>
-        </>
+        </div>
         );
     } else if (offset < 0 || exitAnimation === 'left') {
-        overlayClass = "bg-orange-500 rounded-full shadow-inner overflow-hidden";
+        overlayClass = "bg-orange-500 rounded-full shadow-inner";
         OverlayContent = (
-        <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
-            <div
-                className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
-            >
-                <span>GHOST...</span>
-                <Ghost size={24} strokeWidth={3} />
-            </div>
-        </>
+        <div
+            className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
+        >
+            <span>GHOST...</span>
+            <Ghost size={24} strokeWidth={3} />
+        </div>
         );
     }
 
@@ -3624,10 +3576,15 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
     );
 };
 
-const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null, is3DMode = false }) => {
+const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, playPrev, playNext, onReorder, visibleItems = 9, scrollTrigger, isMini = false, realHeight = null, audioLevel = 0, portalTarget = null, beaconNeonRef = null, onCenteredIndexChange = null, initialIndex = null, globalSwipeLockRef = null }) => {
   const containerRef = useRef(null);
   const effectivePortalRef = portalTarget || containerRef;
-
+    
+    const WIDTH = CONFIG.VOLUME_WIDTH;
+    const HEIGHT = CONFIG.VOLUME_HEIGHT;
+    const TRACK_HEIGHT = CONFIG.VOLUME_TRACK_HEIGHT;
+    const THUMB_SIZE = CONFIG.VOLUME_THUMB_SIZE;
+    const BORDER_RADIUS = CONFIG.VOLUME_BAR_BORDER_RADIUS;
     const ITEM_HEIGHT_MAIN_VH = CONFIG.WHEEL_ITEM_HEIGHT_MAIN_VH;
     const ITEM_HEIGHT_MINI_VH = CONFIG.WHEEL_ITEM_HEIGHT_MINI_VH;
     const LINE_WIDTH_PERCENT = CONFIG.WHEEL_SELECTION_SEPARATOR;
@@ -3965,10 +3922,10 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
           return (
             <>
               {/* NEON - Bordure jaune néon (AU-DESSUS de la capsule) */}
-              <div
+              <div 
                 ref={beaconNeonRef}
-                className="absolute pointer-events-none transition-opacity duration-150 overflow-hidden"
-                style={{
+                className="absolute pointer-events-none transition-opacity duration-150"
+                style={{ 
                   left: `${horizontalMarginPercent}%`,
                   right: `${horizontalMarginPercent}%`,
                   top: '50%',
@@ -3978,18 +3935,14 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   border: `${CONFIG.BEACON_NEON_WIDTH}px solid rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_OPACITY})`,
                   boxShadow: `0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY}), 0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE * 2}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY / 2})`,
                   zIndex: CONFIG.BEACON_NEON_Z,
-                  backgroundColor: is3DMode ? `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` : 'transparent',
                 }}
-              >
-                {/* Masque cylindre 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
-              </div>
-
+              />
+              
               {/* PULSE - Point indicateur (EN-DESSOUS de la capsule) */}
               {totalSongs > 0 && (
-                <div
+                <div 
                   className="absolute pointer-events-none beacon-dot rounded-full"
-                  style={{
+                  style={{ 
                     right: `calc(${horizontalMarginPercent}% + ${borderRadius - dotX - CONFIG.BEACON_PULSE_SIZE / 2}px)`,
                     top: `calc(50% + ${dotY}px - ${CONFIG.BEACON_PULSE_SIZE / 2}px)`,
                     width: CONFIG.BEACON_PULSE_SIZE,
@@ -3999,7 +3952,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   }}
                 />
               )}
-
+              
               {/* Zone de touch pour déclencher le scrubbing (demi-cercle droit) */}
               {canScrub && (
                 <div 
@@ -4270,17 +4223,16 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     className="snap-center flex items-center justify-center w-full absolute"
                     style={{ height: itemHeight, top: centerPadding + index * itemHeight }}
                   >
-                    <ControlCapsule
-                      song={song}
-                      isPlaying={isPlaying}
-                      togglePlay={togglePlay}
-                      playPrev={playPrev}
-                      playNext={playNext}
-                      queueIndex={index}
-                      queueLength={queue.length}
+                    <ControlCapsule 
+                      song={song} 
+                      isPlaying={isPlaying} 
+                      togglePlay={togglePlay} 
+                      playPrev={playPrev} 
+                      playNext={playNext} 
+                      queueIndex={index} 
+                      queueLength={queue.length} 
                       variant={isMini ? 'dashboard' : 'main'}
                       audioLevel={audioLevel}
-                      is3DMode={is3DMode}
                     />
                   </div>
                 ); 
@@ -4301,7 +4253,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     onSwipeRight={(s) => onReorder(s, 'next')}
                     onSwipeLeft={(s) => onReorder(s, 'archive')}
                     globalSwipeLockRef={globalSwipeLockRef}
-                    is3DMode={is3DMode}
                   />
                 );
               }
@@ -4369,6 +4320,16 @@ export default function App() {
             setFeedback(prev => prev ? { ...prev, triggerValidation: Date.now() } : null);
         }
     };
+    const [volume, setVolume] = useState(70);
+    const [isVolumeActive, setIsVolumeActive] = useState(false);
+    const [volumePreview, setVolumePreview] = useState(70);
+    const [volumeMorphProgress, setVolumeMorphProgress] = useState(0); // 0 = beacon, 1 = tube
+    const volumeLongPressRef = useRef(null);
+    const volumeStartYRef = useRef(null);
+    const volumeBeforeMuteRef = useRef(70);
+    const volumeFadeIntervalRef = useRef(null);
+    const volumeMorphTimeoutRef = useRef(null);
+    const [volumeBeaconRect, setVolumeBeaconRect] = useState(null); // Coordonnées du beacon capturées au touchStart
     const [showFullPlayer, setShowFullPlayer] = useState(false);
     const [playerVisible, setPlayerVisible] = useState(false);           // Animation d'entrée
     const [playerOpenAnimating, setPlayerOpenAnimating] = useState(false); // En cours d'ouverture
@@ -4510,6 +4471,7 @@ const handlePlayerTouchEnd = () => {
     };
 
     const dropboxButtonRef = useRef(null);
+    const [showVolumeOverlay, setShowVolumeOverlay] = useState(false);
     const [dashboardHeight, setDashboardHeight] = useState(0);
     const [showMainPlayerTrigger, setShowMainPlayerTrigger] = useState(false);
     const [mainPlayerTriggerOpacity, setMainPlayerTriggerOpacity] = useState(0);
@@ -4559,8 +4521,6 @@ const handlePlayerTouchEnd = () => {
       }
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
-    const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
-    const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
@@ -4580,8 +4540,6 @@ const handlePlayerTouchEnd = () => {
     const gainNodeRef = useRef(null);
     const mediaSourceRef = useRef(null);
     const fadeInterval = useRef(null);
-    const savedVolume = useRef(50);
-    const wasPlayingBeforeDuck = useRef(true); // Pour la pré-écoute: mémoriser si le lecteur jouait avant le duck
 
     // Détecter iOS pour désactiver Web Audio API (problème avec background playback)
     const isIOSDevice = useRef(/iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -4650,13 +4608,15 @@ const handlePlayerTouchEnd = () => {
           mediaSourceRef.current.connect(gainNodeRef.current);
           gainNodeRef.current.connect(audioContextRef.current.destination);
 
-          // Appliquer le volume à 100%
-          gainNodeRef.current.gain.value = 1.0;
+          // Appliquer le volume actuel
+          gainNodeRef.current.gain.value = volume / 100;
           console.log('[AudioContext] Web Audio API initialized (non-iOS)');
       } catch (e) {
           console.warn('Web Audio API not supported:', e);
       }
-  }, []);
+  }, [volume]);
+    const savedVolume = useRef(50);
+    const wasPlayingBeforeDuck = useRef(true); // Pour la pré-écoute: mémoriser si le lecteur jouait avant le duck
     const dragStartY = useRef(null);
     const startHeight = useRef(0);
     const drawerRafRef = useRef(null);
@@ -4800,10 +4760,11 @@ useEffect(() => {
         fadeInterval.current = null;
     }
 
-    // Le volume est fixe à 100%
+    // Sauvegarder le volume actuel pour le restaurer après
     const volumeBeforeFade = gainNodeRef.current
         ? gainNodeRef.current.gain.value
         : audioRef.current.volume;
+    savedVolume.current = volumeBeforeFade;
 
     // Flag pour éviter double appel de onComplete
     let completed = false;
@@ -4879,7 +4840,114 @@ useEffect(() => {
     }
   };
 
-  // Fonction pour duck/restore le volume principal (pour pré-écoute)
+  // Fade out rapide pour pause (garde le volume sauvegardé pour la reprise)
+  const PAUSE_FADE_DURATION_SEC = 0.15;
+
+  const fadeOutAndPause = () => {
+    if (!audioRef.current || audioRef.current.paused) return;
+
+    // Annuler tout fade précédent
+    if (fadeInterval.current) {
+        if (fadeInterval.current.cancel) {
+            fadeInterval.current.cancel();
+        } else {
+            clearTimeout(fadeInterval.current);
+        }
+        fadeInterval.current = null;
+    }
+
+    // Mettre isPlaying à false immédiatement (l'UI répond tout de suite)
+    setIsPlaying(false);
+
+    // Utiliser Web Audio API avec requestAnimationFrame pour iOS
+    if (audioContextRef.current && gainNodeRef.current) {
+        const gain = gainNodeRef.current.gain;
+
+        // Sauvegarder le volume actuel AVANT de changer quoi que ce soit
+        const currentGain = gain.value;
+        if (currentGain > 0.01) {
+            savedVolume.current = currentGain;
+        }
+
+        // Annuler tout scheduling précédent
+        gain.cancelScheduledValues(audioContextRef.current.currentTime);
+
+        const startValue = currentGain;
+        const startTime = performance.now();
+        const duration = PAUSE_FADE_DURATION_SEC * 1000; // en ms
+        let rafId = null;
+
+        const animateFade = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Calculer le nouveau gain (linéaire de startValue à 0)
+            const newGain = startValue * (1 - progress);
+            gain.value = Math.max(0, newGain);
+
+            if (progress < 1) {
+                rafId = requestAnimationFrame(animateFade);
+            } else {
+                // Fade terminé
+                gain.value = 0;
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                }
+                fadeInterval.current = null;
+            }
+        };
+
+        // Démarrer l'animation
+        rafId = requestAnimationFrame(animateFade);
+
+        // Stocker pour pouvoir annuler
+        fadeInterval.current = { cancel: () => cancelAnimationFrame(rafId) };
+    } else {
+        // Sur iOS, pas de fade possible (volume readonly) - pause directe
+        if (isIOSDevice.current) {
+            audioRef.current.pause();
+            return;
+        }
+
+        // Fallback sans Web Audio API - pour autres plateformes
+        const startVol = audioRef.current.volume;
+        if (startVol > 0.01) {
+            savedVolume.current = startVol;
+        }
+        const intervalTime = 20;
+        const totalSteps = (PAUSE_FADE_DURATION_SEC * 1000) / intervalTime;
+        const step = startVol / totalSteps;
+
+        const doFade = () => {
+            if (!audioRef.current) return;
+            const currentVol = audioRef.current.volume;
+            if (currentVol > step) {
+                audioRef.current.volume = currentVol - step;
+                fadeInterval.current = setTimeout(doFade, intervalTime);
+            } else {
+                audioRef.current.volume = 0;
+                audioRef.current.pause();
+                fadeInterval.current = null;
+            }
+        };
+        doFade();
+    }
+  };
+
+  // Toggle play avec fade out sur pause (pas de fade in sur play)
+  const togglePlayWithFade = () => {
+    if (isPlaying) {
+        // Fade out puis pause
+        fadeOutAndPause();
+    } else {
+        // Play direct (le useEffect restaurera le volume si nécessaire)
+        setIsPlaying(true);
+    }
+  };
+
+  // Ducking pour la pré-écoute
+  // Sur iOS: utilise muted (seule option qui fonctionne)
+  // Sur autres: utilise GainNode pour un vrai ducking progressif
   const fadeMainAudio = (direction, targetVolume = 0) => {
     if (!audioRef.current) return;
 
@@ -4933,111 +5001,6 @@ useEffect(() => {
         if (wasPlayingBeforeDuck.current && audioRef.current.paused) {
             audioRef.current.play().catch(() => {});
         }
-    }
-  };
-
-  // Fade out rapide pour pause (garde le volume sauvegardé pour la reprise)
-  const PAUSE_FADE_DURATION_SEC = 0.15;
-
-  const fadeOutAndPause = () => {
-    if (!audioRef.current) return;
-
-    // Si l'audio est déjà en pause (ex: pause depuis lock screen iOS),
-    // synchroniser le state React et sortir
-    if (audioRef.current.paused) {
-      setIsPlaying(false);
-      return;
-    }
-
-    // Annuler tout fade précédent
-    if (fadeInterval.current) {
-        if (fadeInterval.current.cancel) {
-            fadeInterval.current.cancel();
-        } else {
-            clearTimeout(fadeInterval.current);
-        }
-        fadeInterval.current = null;
-    }
-
-    // Mettre isPlaying à false immédiatement (l'UI répond tout de suite)
-    setIsPlaying(false);
-
-    // Utiliser Web Audio API avec requestAnimationFrame pour iOS
-    if (audioContextRef.current && gainNodeRef.current) {
-        const gain = gainNodeRef.current.gain;
-
-        const currentGain = gain.value;
-
-        // Annuler tout scheduling précédent
-        gain.cancelScheduledValues(audioContextRef.current.currentTime);
-
-        const startValue = currentGain;
-        const startTime = performance.now();
-        const duration = PAUSE_FADE_DURATION_SEC * 1000; // en ms
-        let rafId = null;
-
-        const animateFade = () => {
-            const elapsed = performance.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            // Calculer le nouveau gain (linéaire de startValue à 0)
-            const newGain = startValue * (1 - progress);
-            gain.value = Math.max(0, newGain);
-
-            if (progress < 1) {
-                rafId = requestAnimationFrame(animateFade);
-            } else {
-                // Fade terminé
-                gain.value = 0;
-                if (audioRef.current) {
-                    audioRef.current.pause();
-                }
-                fadeInterval.current = null;
-            }
-        };
-
-        // Démarrer l'animation
-        rafId = requestAnimationFrame(animateFade);
-
-        // Stocker pour pouvoir annuler
-        fadeInterval.current = { cancel: () => cancelAnimationFrame(rafId) };
-    } else {
-        // Sur iOS, pas de fade possible (volume readonly) - pause directe
-        if (isIOSDevice.current) {
-            audioRef.current.pause();
-            return;
-        }
-
-        // Fallback sans Web Audio API - pour autres plateformes
-        const startVol = audioRef.current.volume;
-        const intervalTime = 20;
-        const totalSteps = (PAUSE_FADE_DURATION_SEC * 1000) / intervalTime;
-        const step = startVol / totalSteps;
-
-        const doFade = () => {
-            if (!audioRef.current) return;
-            const currentVol = audioRef.current.volume;
-            if (currentVol > step) {
-                audioRef.current.volume = currentVol - step;
-                fadeInterval.current = setTimeout(doFade, intervalTime);
-            } else {
-                audioRef.current.volume = 0;
-                audioRef.current.pause();
-                fadeInterval.current = null;
-            }
-        };
-        doFade();
-    }
-  };
-
-  // Toggle play avec fade out sur pause (pas de fade in sur play)
-  const togglePlayWithFade = () => {
-    if (isPlaying) {
-        // Fade out puis pause
-        fadeOutAndPause();
-    } else {
-        // Play direct (le useEffect restaurera le volume si nécessaire)
-        setIsPlaying(true);
     }
   };
 
@@ -5674,6 +5637,14 @@ const vibeSearchResults = () => {
 }, []);
 
   useEffect(() => { const updateTime = () => { const now = new Date(); setCurrentTime(`${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`); }; updateTime(); const interval = setInterval(updateTime, 1000); return () => clearInterval(interval); }, []);
+  // UseEffect pour le volume uniquement (Web Audio API pour iOS)
+  useEffect(() => {
+    if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = volume / 100;
+    } else if (audioRef.current) {
+        audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
 
   // UseEffect pour le changement de chanson et play/pause
   useEffect(() => {
@@ -5701,16 +5672,8 @@ const vibeSearchResults = () => {
 
             // Si on doit utiliser Dropbox
             if (useDropbox && (!currentSrc || !audio.dataset.songId || audio.dataset.songId !== currentSong.id)) {
-                // Priorité 1: Vérifier le cache de liens pré-générés (queueLinksRef)
-                const cachedLink = queueLinksRef.current.get(currentSong.id);
-                const threeHours = 3 * 60 * 60 * 1000;
-
-                if (cachedLink && (Date.now() - cachedLink.timestamp) < threeHours) {
-                    console.log('Utilisation du lien pré-généré pour:', currentSong.title);
-                    newSrc = cachedLink.link;
-                }
-                // Priorité 2: Vérifier si on a un fichier préchargé (preloadedRef - ancien système)
-                else if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
+                // Vérifier si on a un fichier préchargé pour ce morceau
+                if (preloadedRef.current.songId === currentSong.id && preloadedRef.current.link) {
                     console.log('Utilisation du fichier préchargé pour:', currentSong.title);
                     newSrc = preloadedRef.current.link;
                     // Nettoyer le préchargement
@@ -5719,15 +5682,10 @@ const vibeSearchResults = () => {
                         preloadedRef.current.audio = null;
                     }
                     preloadedRef.current = { songId: null, link: null, audio: null };
-                }
-                // Priorité 3: Fallback - récupérer le lien en temps réel
-                else {
-                    console.log('Récupération du lien Dropbox en temps réel pour:', currentSong.title);
+                } else {
                     const link = await getDropboxTemporaryLink(currentSong.dropboxPath);
                     if (link) {
                         newSrc = link;
-                        // Stocker dans le cache pour éviter de refaire la requête
-                        queueLinksRef.current.set(currentSong.id, { link, timestamp: Date.now() });
                     } else {
                         console.error('Impossible d\'obtenir le lien Dropbox');
                         return;
@@ -5794,13 +5752,6 @@ const vibeSearchResults = () => {
           }
 
           if (isPlaying && currentSong) {
-              // Si on est en train de sync depuis visibilitychange, ne pas toucher à l'audio
-              // (on veut juste mettre à jour l'état React, pas relancer la lecture)
-              if (isSyncingFromVisibilityRef.current) {
-                  console.log('[useEffect] Skipping play - syncing from visibility change');
-                  return;
-              }
-
               // Annuler tout fade en cours (si on appuie play pendant un fade out)
               if (fadeInterval.current) {
                   clearTimeout(fadeInterval.current);
@@ -5813,8 +5764,9 @@ const vibeSearchResults = () => {
                   const gain = gainNodeRef.current.gain;
                   // Annuler tout scheduling (ramp en cours)
                   gain.cancelScheduledValues(ctx.currentTime);
-                  // Restaurer le volume à 100%
-                  gain.setValueAtTime(1.0, ctx.currentTime);
+                  // Utiliser le volume sauvegardé ou le volume par défaut
+                  const targetGain = savedVolume.current > 0.01 ? savedVolume.current : volume / 100;
+                  gain.setValueAtTime(targetGain, ctx.currentTime);
               }
 
               // Jouer l'audio
@@ -5856,7 +5808,6 @@ const vibeSearchResults = () => {
   const currentSongRef = useRef(currentSong);
   const queueRef = useRef(queue);
   const wakeLockRef = useRef(null);
-  const isSyncingFromVisibilityRef = useRef(false); // Pour bloquer le useEffect pendant la sync
 
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
@@ -6134,50 +6085,9 @@ const vibeSearchResults = () => {
       }
     };
 
-    // Passage automatique à la chanson suivante (natif, fonctionne en background)
-    const handleEnded = () => {
-      console.log('[MediaSession] audio ended event');
-      const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
-      if (currentIndex < queueRef.current.length - 1) {
-        setCurrentSong(queueRef.current[currentIndex + 1]);
-      } else {
-        setIsPlaying(false);
-      }
-    };
-
-    // Resynchroniser l'état quand l'app revient au premier plan
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && audio) {
-        console.log('[MediaSession] visibility changed to visible');
-
-        // Petit délai pour laisser les événements audio pendants (play/pause) se traiter d'abord
-        // Car quand l'app était en background, ces événements sont mis en file d'attente
-        setTimeout(() => {
-          const shouldBePlaying = !audio.paused;
-          console.log('[MediaSession] syncing state, audio.paused =', audio.paused, ', shouldBePlaying =', shouldBePlaying);
-
-          // Marquer qu'on est en train de sync pour bloquer le useEffect
-          isSyncingFromVisibilityRef.current = true;
-          setIsPlaying(shouldBePlaying);
-
-          if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
-          }
-          updatePositionState();
-
-          // Débloquer après que React ait traité le state update
-          setTimeout(() => {
-            isSyncingFromVisibilityRef.current = false;
-          }, 100);
-        }, 50); // 50ms pour laisser les événements pendants se traiter
-      }
-    };
-
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Cleanup
     return () => {
@@ -6191,8 +6101,6 @@ const vibeSearchResults = () => {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []); // Dépendances vides = une seule fois
 
@@ -6237,6 +6145,17 @@ const vibeSearchResults = () => {
         }
       }
 
+      // TOUJOURS redéfinir les handlers prev/next à chaque changement de chanson
+      // pour que iOS affiche ces boutons (sinon iOS affiche +10s/-10s par défaut)
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
+      });
+
     }
   }, [currentSong]);
 
@@ -6255,62 +6174,6 @@ const vibeSearchResults = () => {
   // Refs pour le préchargement du fichier Dropbox du morceau suivant
   const preloadedRef = useRef({ songId: null, link: null, audio: null });
   const isPreloadingRef = useRef(false);
-
-  // Cache de liens Dropbox pour toute la queue (pré-générés en background)
-  // Format: { songId: { link: string, timestamp: number } }
-  const queueLinksRef = useRef(new Map());
-  const isPreloadingQueueRef = useRef(false);
-
-  // Pré-générer les liens Dropbox pour toute la queue (non-bloquant)
-  const preloadQueueLinks = useCallback(async (songsToPreload) => {
-    if (isPreloadingQueueRef.current) return;
-    isPreloadingQueueRef.current = true;
-
-    const dropboxSongs = songsToPreload.filter(s => s.dropboxPath && !s.file);
-
-    // Ne rien faire s'il n'y a pas de chansons Dropbox
-    if (dropboxSongs.length === 0) {
-      isPreloadingQueueRef.current = false;
-      return;
-    }
-
-    console.log(`[PreloadQueue] Démarrage pour ${dropboxSongs.length} chansons Dropbox`);
-
-    for (const song of dropboxSongs) {
-      // Vérifier si le lien existe déjà et n'est pas expiré (< 3h)
-      const cached = queueLinksRef.current.get(song.id);
-      const threeHours = 3 * 60 * 60 * 1000;
-      if (cached && (Date.now() - cached.timestamp) < threeHours) {
-        continue; // Lien encore valide
-      }
-
-      try {
-        const link = await getDropboxTemporaryLink(song.dropboxPath);
-        if (link) {
-          queueLinksRef.current.set(song.id, { link, timestamp: Date.now() });
-        }
-      } catch (e) {
-        console.error(`[PreloadQueue] Erreur pour ${song.title}:`, e);
-      }
-
-      // Petit délai pour ne pas surcharger l'API
-      await new Promise(r => setTimeout(r, 100));
-    }
-
-    console.log(`[PreloadQueue] Terminé, ${queueLinksRef.current.size} liens en cache`);
-    isPreloadingQueueRef.current = false;
-  }, []);
-
-  // Lancer le préchargement quand la queue change
-  useEffect(() => {
-    if (queue.length > 0) {
-      // Délai de 1s pour ne pas bloquer le rendu initial
-      const timer = setTimeout(() => {
-        preloadQueueLinks(queue);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [queue, preloadQueueLinks]);
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
@@ -7241,7 +7104,131 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     const playPrev = () => { if (audioRef.current && audioRef.current.currentTime > 3) { audioRef.current.currentTime = 0; return; } const currentIndex = queue.findIndex(s => s === currentSong); if (currentIndex > 0) { setCurrentSong(queue[currentIndex - 1]); setScrollTrigger(t => t + 1); } else audioRef.current.currentTime = 0; };
     const skipForward10 = () => { if (audioRef.current) audioRef.current.currentTime += 10; };
     const skipBackward10 = () => { if (audioRef.current) audioRef.current.currentTime -= 10; };
+    // === HANDLERS VOLUME SLIDER ===
+    const handleVolumeTouchStart = (e) => {
+      const touch = e.touches[0];
+      volumeStartYRef.current = touch.clientY;
+      setVolumePreview(volume);
+      
+      // Capturer les coordonnées du beacon MAINTENANT (avant que l'UI change)
+      const beaconEl = showFullPlayer ? beaconNeonRef.current : drawerBeaconRef.current;
+      const containerEl = mainContainerRef.current;
+      if (beaconEl && containerEl) {
+          const beaconRect = beaconEl.getBoundingClientRect();
+          const containerRect = containerEl.getBoundingClientRect();
+          const containerBorderWidth = 8;
+          const beaconBorderWidth = CONFIG.BEACON_NEON_WIDTH;
+          setVolumeBeaconRect({
+              width: beaconRect.width - beaconBorderWidth * 2,
+              height: beaconRect.height - beaconBorderWidth * 2,
+              top: beaconRect.top - containerRect.top - containerBorderWidth + beaconBorderWidth,
+              left: beaconRect.left - containerRect.left - containerBorderWidth + beaconBorderWidth
+          });
+      }
+      
+      volumeLongPressRef.current = setTimeout(() => {
+          setIsVolumeActive(true);
+          setVolumeMorphProgress(0);
+          // Déclencher l'animation vers le tube après un court délai (pour que React render d'abord)
+          setTimeout(() => {
+              setVolumeMorphProgress(1);
+          }, 20);
+      }, CONFIG.VOLUME_LONG_PRESS_DELAY);
+    };
 
+  const handleVolumeTouchMove = (e) => {
+      if (!isVolumeActive) {
+          if (volumeLongPressRef.current) {
+              clearTimeout(volumeLongPressRef.current);
+              volumeLongPressRef.current = null;
+          }
+          return;
+      }
+      
+      const touch = e.touches[0];
+
+      // Dimensions du tube : centré sur l'écran
+      const tubeHeight = window.innerHeight * CONFIG.VOLUME_BAR_HEIGHT_PERCENT / 100;
+      const tubeTop = (window.innerHeight - tubeHeight) / 2;
+      const tubeBottom = tubeTop + tubeHeight;
+
+      // Calculer le volume basé sur la position Y dans le tube (inversé : haut = 100%)
+      const clampedY = Math.max(tubeTop, Math.min(tubeBottom, touch.clientY));
+      const progress = 1 - (clampedY - tubeTop) / tubeHeight;
+      const newVolume = Math.round(progress * 100);
+
+      setVolumePreview(newVolume);
+      // Appliquer le volume directement via Web Audio API (fonctionne sur iOS)
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = newVolume / 100;
+    } else if (audioRef.current) {
+        audioRef.current.volume = newVolume / 100;
+      }
+  };
+
+  const handleVolumeTouchEnd = () => {
+    const wasLongPressActive = volumeLongPressRef.current !== null;
+    
+    if (volumeLongPressRef.current) {
+        clearTimeout(volumeLongPressRef.current);
+        volumeLongPressRef.current = null;
+    }
+    
+    if (isVolumeActive) {
+      // C'était un drag, appliquer le volume final
+      setVolume(volumePreview);
+      if (volumePreview > 0) {
+          volumeBeforeMuteRef.current = volumePreview;
+      }
+      // Animation inverse : tube → beacon, puis fermer
+      setVolumeMorphProgress(0);
+      setTimeout(() => {
+          setIsVolumeActive(false);
+      }, CONFIG.VOLUME_MORPH_DURATION);
+  } else if (wasLongPressActive) {
+        // C'était un tap court → toggle mute/unmute avec fade
+        if (volumeFadeIntervalRef.current) {
+            clearInterval(volumeFadeIntervalRef.current);
+        }
+        
+        const currentVol = volume;
+        const targetVol = currentVol > 0 ? 0 : volumeBeforeMuteRef.current;
+        const steps = CONFIG.VOLUME_FADE_STEPS;
+        const stepDuration = CONFIG.VOLUME_FADE_DURATION / steps;
+        const stepSize = (targetVol - currentVol) / steps;
+        let currentStep = 0;
+        
+        if (currentVol > 0) {
+            volumeBeforeMuteRef.current = currentVol;
+        }
+        
+        volumeFadeIntervalRef.current = setInterval(() => {
+            currentStep++;
+            const newVol = Math.round(currentVol + stepSize * currentStep);
+            setVolume(newVol);
+            if (audioRef.current) {
+              if (gainNodeRef.current) {
+                gainNodeRef.current.gain.value = newVol / 100;
+            } else {
+                audioRef.current.volume = newVol / 100;
+            }
+            }
+            
+            if (currentStep >= steps) {
+                clearInterval(volumeFadeIntervalRef.current);
+                volumeFadeIntervalRef.current = null;
+                setVolume(targetVol);
+                if (audioRef.current) {
+                  if (gainNodeRef.current) {
+                    gainNodeRef.current.gain.value = targetVol / 100;
+                } else {
+                    audioRef.current.volume = targetVol / 100;
+                }
+                }
+            }
+        }, stepDuration);
+    }
+};
   const triggerRecenter = () => {
     // Si on est sur le dashboard (pas en full player) et le drawer est à sa hauteur minimale, l'ouvrir à 70%
     if (!showFullPlayer && mainContainerRef.current) {
@@ -7296,11 +7283,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
   return (
     <div className={isOnRealDevice ? "min-h-screen bg-white font-sans" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
       {/* Orientation lock overlay */}
-      {UNIFIED_CONFIG.ORIENTATION_LOCK_ENABLED && (
-        <div className="orientation-lock-overlay">
-          <div className="orientation-lock-icon">📱</div>
-        </div>
-      )}
+      <div className="orientation-lock-overlay">
+        <div className="orientation-lock-icon">📱</div>
+      </div>
       <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 
 
@@ -7373,7 +7358,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
                             }}
                         >
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
                             <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                             <input
                                 autoFocus
@@ -7416,9 +7400,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setSearchOverlayAnim('none');
                                     }, CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION);
                                 }}
-                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full overflow-hidden"
+                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
                             >
-                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-r-full" />
                                 <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
                             </button>
                         </div>
@@ -7462,7 +7445,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         }}
                     >
                       {/* Bouton Recherche */}
-                      <button
+                      <button 
                           onClick={() => {
                             if (searchOverlayAnim !== 'none' || showImportMenu) return;
                             setSearchCloseBtnAnimKey(0);
@@ -7472,10 +7455,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
                         }}
-                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden"
+                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600"
                           style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent' }}
                       >
-                          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                           <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </button>
                   
@@ -7499,7 +7481,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 overflow-hidden ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
+                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
                                   // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
@@ -7522,11 +7504,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       }}
                                   />
                               )}
-                              {/* Masque cylindre 3D - APRES le fond pour être visible */}
-                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
-                              {/* Crossfade FolderPlus ↔ Radar pendant le scan (cycle 4s) */}
+                              {/* Crossfade FolderDown ↔ Radar pendant le scan (cycle 4s) */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
-                                  <FolderPlus
+                                  <FolderDown
                                       className="absolute inset-0"
                                       style={{
                                           width: '100%',
@@ -7566,9 +7546,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
                               }}
-                              className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                              className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                           >
-                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
                           </button>
                       </div>
@@ -7593,7 +7572,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 rounded-full"
                                     style={{ zIndex: 0 }}
                                 />
-                                <button
+                                <button 
                                     onClick={() => {
                                         setImportBtnIgniting('nuke');
                                         setImportMenuVisible(false);
@@ -7606,9 +7585,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             handleNukeAll();
                                         }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                                     <Radiation style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`
@@ -7625,16 +7603,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 rounded-full"
                                     style={{ zIndex: 0 }}
                                 />
-                                <button
+                                <button 
                                     ref={dropboxButtonRef}
                                     onClick={() => {
                                         setImportBtnIgniting('dropbox');
                                         handleDropboxAuth();
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
-                                    <DropboxLogoVector
+                                    <DropboxLogoVector 
                                         size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.IMPORT_ICON_SIZE_PERCENT / 100 * 16}
                                         fill="#ffffff"
                                     />
@@ -7650,7 +7627,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="absolute inset-0 rounded-full"
                                     style={{ zIndex: 0 }}
                                 />
-                                <button
+                                <button 
                                     ref={folderButtonCallbackRef}
                                     onClick={() => {
                                         if (folderButtonRef.current) {
@@ -7660,10 +7637,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setImportBtnIgniting('folder');
                                         folderInputRef.current?.click();
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center"
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
-                                    <FolderOpen style={{
+                                    <FolderDown style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         color: CONFIG.IMPORT_FOLDER_ICON_COLOR
@@ -7935,8 +7911,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     setEditingVibeId(vibeId);
                                     setShowBuilder(true);
                                 }}
-                                showTitles={showTitles}
-                                is3DMode={is3DMode}
                             />
                         );
                     })}
@@ -7983,10 +7957,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             hasSong={!!currentSong}
             capsuleHeightVh={CONFIG.CAPSULE_HEIGHT_MINI_VH}
             onSwipeProgress={setVibeSwipePreview}
-            showTitles={showTitles}
-            setShowTitles={setShowTitles}
-            is3DMode={is3DMode}
-            setIs3DMode={setIs3DMode}
         />
         )}
 
@@ -8047,7 +8017,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 onCenteredIndexChange={setDrawerCenteredIndex}
                                 initialIndex={playerCenteredIndex}
                                 globalSwipeLockRef={globalSwipeLockRef}
-                                is3DMode={is3DMode}
                                 />
                                 </div>
                                 )}
@@ -8085,7 +8054,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         onRecenter={triggerRecenter}
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
-                        is3DMode={is3DMode}
                      />
 
                     {/* DOTTED OVERLAY sur TimeCapsule pendant le scrub */}
@@ -8102,7 +8070,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const tcWidth = `calc(100vw - ${paddingRem * 2 + gapRem * 2}rem - ${borderWidth * 2 + playPauseWidth + recenterWidth}px)`;
                         return (
                             <div
-                                className="absolute rounded-full overflow-hidden"
+                                className="absolute rounded-full"
                                 style={{
                                     left: tcLeft,
                                     width: tcWidth,
@@ -8115,9 +8083,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     transition: 'opacity 0.1s ease-out',
                                     pointerEvents: 'none',
                                 }}
-                            >
-                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
-                            </div>
+                            />
                         );
                     })()}
                 </div>
@@ -8172,7 +8138,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <div
                                 className="absolute inset-0 rounded-full overflow-hidden"
                                 style={{
-                                    background: '#e5e7eb',
+                                    background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
                                     boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
                                 }}
                             >
@@ -8215,7 +8181,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <span>-{formatScrubTime(duration - progress)}</span>
                                 </div>
                             </div>
-                            <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                         </div>
                     );
                 })()}
@@ -8346,62 +8311,38 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                         >
                             {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
-                            {!confirmFeedback && (() => {
-                                // Couleurs pour Kill (Fuchsia Overdose) et Nuke (Lava Flow)
-                                const gradientColors = pendingVibe
-                                    ? ['#ec4899', '#ff07a3']
-                                    : ['#f43f5e', '#b91c1c'];
-                                const gradientBg = `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`;
-                                const glowColor = gradientColors[0];
-                                return (
-                                    <div
-                                        className="absolute inset-0 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
-                                        style={{
-                                            background: gradientBg,
-                                            boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
-                                        }}
-                                    >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
-                                        <div
-                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase z-10"
-                                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                                        >
-                                            {pendingVibe ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
-                                            <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
-                                        </div>
+                            {!confirmFeedback && (
+                                <div
+                                    className="absolute inset-0 rounded-full flex items-center justify-center border"
+                                    style={{
+                                        background: pendingVibe
+                                            ? 'linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)'
+                                            : 'linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%)',
+                                        borderColor: pendingVibe ? '#d946ef' : '#CC0530',
+                                        boxShadow: pendingVibe
+                                            ? '0 0 25px rgba(236, 72, 153, 0.7), 0 0 50px rgba(255, 7, 163, 0.4)'
+                                            : '0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.4)'
+                                    }}
+                                >
+                                    <div className="flex items-center gap-2 text-white font-black tracking-widest text-xs">
+                                        {pendingVibe ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                        <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
                                     </div>
-                                );
-                            })()}
-                            {/* FeedbackOverlay avec animation ignite - Garde la couleur du bandeau initial */}
-                            {confirmFeedback && (() => {
-                                // Kill = Fuchsia Overdose, Nuke/Cancel = basé sur pendingVibe
-                                const isKillAction = pendingVibe !== null;
-                                const gradientColors = isKillAction
-                                    ? ['#ec4899', '#ff07a3']  // Fuchsia Overdose
-                                    : ['#f43f5e', '#b91c1c']; // Lava Flow
-                                const glowColor = gradientColors[0];
-                                // Convertir hex en RGB pour neonColor
-                                const hexToRgb = (hex) => {
-                                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '236, 72, 153';
-                                };
-                                return (
-                                <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
+                                </div>
+                            )}
+                            {/* FeedbackOverlay avec animation ignite quand on confirme */}
+                            {confirmFeedback && (
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={hexToRgb(glowColor)}
-                                    bgClass=""
-                                    bgStyle={{ background: `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)` }}
-                                    borderClass="border-transparent"
-                                    is3DMode={is3DMode}
+                                    neonColor={confirmFeedback.type === 'kill' ? CONFIG.NEON_COLOR_FUCHSIA : CONFIG.NEON_COLOR_RED}
+                                    bgClass={confirmFeedback.type === 'kill' ? 'bg-pink-500' : 'bg-red-500'}
+                                    borderClass={confirmFeedback.type === 'kill' ? 'border-pink-600' : 'border-red-600'}
                                 >
-                                    {confirmFeedback.type === 'cancel' ? <X size={16} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
-                                    <span className="text-lg">{confirmFeedback.text}</span>
+                                    {confirmFeedback.type === 'kill' ? <Skull size={20} strokeWidth={3} /> : <Radiation size={20} strokeWidth={3} />}
+                                    <span>{confirmFeedback.text}</span>
                                 </FeedbackOverlay>
-                                </div>
-                                );
-                            })()}
+                            )}
                         </div>
                     );
                 })()}
@@ -8443,13 +8384,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 // Swipe right = validate
                                 // NE PAS reset confirmSwipeX - le curseur reste à droite pendant l'animation ignite
                                 if (pendingVibe) {
-                                    setConfirmFeedback({ text: 'KILLING!!', type: 'kill', triggerValidation: Date.now() });
+                                    setConfirmFeedback({ text: CONFIG.KILL_TEXT, type: 'kill', triggerValidation: Date.now() });
                                     // Fade out audio pendant l'animation ignite
                                     if (audioRef.current && !audioRef.current.paused) {
                                         fadeOutAndStop();
                                     }
                                 } else {
-                                    setConfirmFeedback({ text: 'NUKING!!', type: 'nuke', triggerValidation: Date.now() });
+                                    setConfirmFeedback({ text: CONFIG.NUKE_TEXT, type: 'nuke', triggerValidation: Date.now() });
                                 }
                             } else if (isAtLeftThreshold) {
                                 // Swipe left = cancel
@@ -8468,25 +8409,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     >
                         {/* X icon à gauche - cachée quand la bulle la recouvre */}
                         <div
-                            className="flex items-center justify-center cursor-pointer"
+                            className="flex items-center justify-center"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
                                 opacity: isAtLeftThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
-                            }}
-                            onClick={() => {
-                                if (isAtLeftThreshold) return;
-                                // Animer le curseur vers la gauche
-                                setConfirmSwipeX(-maxSlide);
-                                // Après l'animation, exécuter l'action cancel
-                                setTimeout(() => {
-                                    if (pendingVibe) {
-                                        cancelKillVibe();
-                                    } else {
-                                        cancelNuke();
-                                    }
-                                }, 200);
                             }}
                         >
                             <X
@@ -8498,9 +8426,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                         {/* Curseur central draggable */}
                         <div
-                            className={`absolute flex items-center justify-center overflow-hidden ${
+                            className={`absolute flex items-center justify-center ${
                                 confirmFeedback
-                                    ? (confirmFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : 'animate-ignite-pill-green')
+                                    ? (confirmFeedback.type === 'kill' ? 'animate-ignite-pill-green' : 'animate-ignite-pill-red')
                                     : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
                             }`}
                             style={{
@@ -8509,50 +8437,59 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
-                                backgroundColor: isAtLeftThreshold
-                                    ? 'rgba(244, 63, 94, 0.9)'  // Rouge/Lava
-                                    : isAtRightThreshold
-                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
-                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                backgroundColor: isAtLeftThreshold || confirmFeedback?.type === 'nuke' || confirmFeedback?.type === 'cancel'
+                                    ? 'rgba(244, 63, 94, 0.9)'  // Lava Flow (rose #f43f5e)
+                                    : isAtRightThreshold || confirmFeedback?.type === 'kill'
+                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon sexy (#00ff88)
+                                        : CONFIG.CONFIRM_PILL_CURSOR_COLOR,
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
-                            {/* Icône X quand au seuil gauche */}
+                            {/* Chevrons horizontaux (gauche/droite) - cachés au seuil */}
+                            <div
+                                className="flex items-center"
+                                style={{
+                                    opacity: (isAtLeftThreshold || isAtRightThreshold) ? 0 : 0.6,
+                                    transition: 'opacity 150ms ease-out',
+                                }}
+                            >
+                                <ChevronLeft
+                                    size={iconSize * 0.5}
+                                    className="text-gray-500 -mr-2"
+                                    strokeWidth={2}
+                                />
+                                <ChevronRight
+                                    size={iconSize * 0.5}
+                                    className="text-gray-500"
+                                    strokeWidth={2}
+                                />
+                            </div>
+                            {/* Icône X ou Check quand au seuil (contenue dans la bulle) */}
                             {isAtLeftThreshold && (
-                                <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                <X
+                                    size={iconSize * 0.7}
+                                    className="text-white absolute"
+                                    strokeWidth={2.5}
+                                />
                             )}
-                            {/* Icône Check quand au seuil droite */}
                             {isAtRightThreshold && (
-                                <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                <Check
+                                    size={iconSize * 0.7}
+                                    className="text-white absolute"
+                                    strokeWidth={2.5}
+                                />
                             )}
                         </div>
 
                         {/* Check icon à droite - cachée quand la bulle la recouvre */}
                         <div
-                            className="flex items-center justify-center cursor-pointer"
+                            className="flex items-center justify-center"
                             style={{
                                 width: cursorSize,
                                 height: cursorSize,
                                 opacity: isAtRightThreshold ? 0 : 0.5,
                                 transition: 'opacity 150ms ease-out',
-                            }}
-                            onClick={() => {
-                                if (isAtRightThreshold) return;
-                                // Animer le curseur vers la droite
-                                setConfirmSwipeX(maxSlide);
-                                // Après l'animation, exécuter l'action validate
-                                setTimeout(() => {
-                                    if (pendingVibe) {
-                                        setConfirmFeedback({ text: 'KILLING!!', type: 'kill', triggerValidation: Date.now() });
-                                        if (audioRef.current && !audioRef.current.paused) {
-                                            fadeOutAndStop();
-                                        }
-                                    } else {
-                                        setConfirmFeedback({ text: 'NUKING!!', type: 'nuke', triggerValidation: Date.now() });
-                                    }
-                                }, 200);
                             }}
                         >
                             <Check
@@ -8625,21 +8562,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="px-3 relative z-10 w-full"
                 >
                 <div className="relative flex items-center gap-3">
-                <LiveHeaderCapsule
-                        activeFilter={activeFilter}
+                <LiveHeaderCapsule 
+                        activeFilter={activeFilter} 
                         setActiveFilter={applySort}
                         sortDirection={sortDirection}
                         onToggleSort={handleToggleSort}
-                        isSearching={false}
-                        setIsSearching={setIsPlayerSearching}
-                        searchQuery={playerSearchQuery}
+                        isSearching={false} 
+                        setIsSearching={setIsPlayerSearching} 
+                        searchQuery={playerSearchQuery} 
                         setSearchQuery={setPlayerSearchQuery}
                         hideGlow={(feedback && (feedback.type === 'next' || feedback.type === 'archive'))}
                         glowOpacity={(isPlayerSearching || playerSearchOverlayAnim === 'opening') ? 0 : (playerSearchOverlayAnim === 'closing' ? 1 : 1)}
                         transitionDuration={playerSearchOverlayAnim === 'opening' ? CONFIG.SEARCH_PLAYER_FADE_IN_DURATION : (playerSearchOverlayAnim === 'closing' ? CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION : 0)}
-                        is3DMode={is3DMode}
                     />
-                    <button
+                    <button 
                         onClick={() => {
                             if (playerSearchOverlayAnim !== 'none') return;
                             setPlayerSearchCloseBtnAnimKey(0);
@@ -8648,11 +8584,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setIsPlayerSearching(true);
                                 setPlayerSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
-                        }}
-                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden"
+                        }} 
+                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100"
                         style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}
                     >
-                        <SphereMaskT3 is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
                         <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                     </button>
                     
@@ -8678,14 +8613,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 }}
                             >
                                 {/* Champ de recherche */}
-                                <div
+                                <div 
                                     className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
                                     style={{
                                         paddingLeft: CONFIG.SEARCH_LIBRARY_PADDING_X,
                                         paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
                                     }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
                                     <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                                     <input
                                         autoFocus
@@ -8718,7 +8652,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             zIndex: 0
                                         }}
                                     />
-                                    <button
+                                    <button 
                                         onClick={() => {
                                             if (playerSearchOverlayAnim !== 'none') return;
                                             setPlayerSearchCloseBtnAnimKey(k => k + 1);
@@ -8729,9 +8663,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                                 setPlayerSearchOverlayAnim('none');
                                             }, CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION);
                                         }}
-                                        className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full overflow-hidden"
+                                        className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-r-full" />
                                         <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
                                     </button>
                                 </div>
@@ -8746,7 +8679,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             neonColor={feedback.type === 'next' ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE}
                             bgClass={feedback.type === 'next' ? 'bg-cyan-500' : 'bg-orange-500'}
                             borderClass={feedback.type === 'next' ? 'border-cyan-600' : 'border-orange-600'}
-                            is3DMode={is3DMode}
                         >
                             {feedback.type === 'next' ? <ListPlus size={20} strokeWidth={3} /> : <Ghost size={20} strokeWidth={3} />}
                             <span>{feedback.text}</span>
@@ -8774,7 +8706,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             <div 
                 ref={songWheelWrapperRef} 
                 className="flex-1 flex flex-col justify-center overflow-hidden relative bg-white"
-            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} is3DMode={is3DMode} />}</div>
+            >{wheelWrapperHeight > 0 && <SongWheel queue={filteredPlayerQueue} currentSong={currentSong} onSongSelect={(song) => { requestWakeLock(); setCurrentSong(song); setIsPlaying(true); setScrollTrigger(t => t + 1); if(isPlayerSearching) { setIsPlayerSearching(false); setPlayerSearchQuery(''); } }} isPlaying={isPlaying} togglePlay={togglePlayWithFade} playPrev={playPrev} playNext={playNext} onReorder={handleReorder} visibleItems={11} scrollTrigger={scrollTrigger} portalTarget={mainContainerRef} beaconNeonRef={beaconNeonRef} initialIndex={drawerCenteredIndex} onCenteredIndexChange={setPlayerCenteredIndex} realHeight={wheelWrapperHeight} globalSwipeLockRef={globalSwipeLockRef} />}</div>
                   </div>
                 )}
         
@@ -8903,8 +8835,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 });
                             }
                       }}
-                        onPlayNext={addToPlayNext}
                         fadeMainAudio={fadeMainAudio}
+                        onPlayNext={addToPlayNext}
                         hasActiveQueue={queue.length > 0 && currentSong !== null}
                         vibeCardConfig={{
                             height: `${CONFIG.VIBECARD_BUILDER_HEIGHT_VH}vh`,
@@ -8924,8 +8856,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         getGradientName={getGradientName}
                         usedGradientIndices={usedIndices}
                         totalGradients={ALL_GRADIENTS.length}
-                        showTitles={showTitles}
-                        is3DMode={is3DMode}
                     />
                   </ErrorBoundary>
                     </div>
