@@ -148,20 +148,202 @@ const cssToPixels = (cssValue) => {
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║              MASQUE CYLINDRIQUE 3D (30 tranches d'opacité)                 ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+// Valeurs d'ajustement d'opacité pour simuler un effet cylindrique 3D
+// Chaque valeur représente un delta d'opacité (-0.35 à +0.25) appliqué à une tranche
+export const CAPSULE_CYLINDER_SLICES = [
+    -0.10,
+    -0.07,
+    -0.03,
+    0.00,
+    0.00,
+    0.08,
+    0.15,
+    0.25,
+    0.35,
+    0.45,
+    0.35,
+    0.25,
+    0.15,
+    0.15,
+    0.08,
+    0.00,
+    -0.02,
+    -0.04,
+    -0.06,
+    -0.08,
+    -0.10,
+    -0.12,
+    -0.14,
+    -0.16,
+    -0.18,
+    -0.20,
+    -0.22,
+    -0.24,
+    -0.30,
+    -0.35
+];
+
+// Composant masque cylindre 3D réutilisable
+// intensity: 0-1 (force de l'effet)
+// className: classes CSS additionnelles (ex: 'rounded-full' pour les capsules)
+// is3DMode: contrôle l'affichage du masque
+export const CylinderMask = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden flex flex-col ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
+                <div
+                    key={i}
+                    className="flex-1"
+                    style={{
+                        backgroundColor: opacity > 0
+                            ? `rgba(255, 255, 255, ${opacity * intensity})`
+                            : opacity < 0
+                                ? `rgba(0, 0, 0, ${Math.abs(opacity) * intensity})`
+                                : 'transparent'
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
+// Composant masque cylindre 3D INVERSÉ (concave) - miroir vertical
+// Crée un effet de creux au lieu d'une bosse
+export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    // Inverser les slices pour l'effet concave
+    const invertedSlices = [...CAPSULE_CYLINDER_SLICES].reverse();
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden flex flex-col ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {invertedSlices.map((opacity, i) => (
+                <div
+                    key={i}
+                    className="flex-1"
+                    style={{
+                        backgroundColor: opacity > 0
+                            ? `rgba(255, 255, 255, ${opacity * intensity})`
+                            : opacity < 0
+                                ? `rgba(0, 0, 0, ${Math.abs(opacity) * intensity})`
+                                : 'transparent'
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
+// Composant masque sphère 3D - Technique 2 (radial-gradient multiples)
+// Utilise plusieurs gradients radiaux pour simuler un effet de sphère
+export const SphereMaskT2 = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{
+                background: `
+                    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,${0.5 * intensity}) 0%, transparent 50%),
+                    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0,0,0,${0.3 * intensity}) 0%, transparent 50%),
+                    radial-gradient(ellipse 50% 80% at 0% 50%, rgba(0,0,0,${0.15 * intensity}) 0%, transparent 50%),
+                    radial-gradient(ellipse 50% 80% at 100% 50%, rgba(0,0,0,${0.15 * intensity}) 0%, transparent 50%)
+                `,
+                transform: 'translateZ(0)'
+            }}
+        />
+    );
+};
+
+// Composant masque sphère 3D - Technique 3 (Tailwind simplifié)
+// Utilise un highlight en haut et une ombre en bas
+export const SphereMaskT3 = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {/* Highlight en haut */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(255,255,255,${0.6 * intensity}) 0%, transparent 60%)`
+                }}
+            />
+            {/* Ombre en bas */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(ellipse 100% 60% at 50% 110%, rgba(0,0,0,${0.4 * intensity}) 0%, transparent 60%)`
+                }}
+            />
+        </div>
+    );
+};
+
+// Composant masque sphère 3D - Technique 4 (SVG avec filter)
+// Utilise un SVG avec un filter feGaussianBlur pour un effet plus doux
+export const SphereMaskT4 = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    const filterId = `sphere-blur-${Math.random().toString(36).substring(2, 11)}`;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <filter id={filterId}>
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="8" />
+                    </filter>
+                    <radialGradient id={`${filterId}-highlight`} cx="50%" cy="20%" r="50%">
+                        <stop offset="0%" stopColor={`rgba(255,255,255,${0.7 * intensity})`} />
+                        <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                    <radialGradient id={`${filterId}-shadow`} cx="50%" cy="90%" r="50%">
+                        <stop offset="0%" stopColor={`rgba(0,0,0,${0.4 * intensity})`} />
+                        <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                </defs>
+                <ellipse cx="50" cy="25" rx="40" ry="25" fill={`url(#${filterId}-highlight)`} filter={`url(#${filterId})`} />
+                <ellipse cx="50" cy="80" rx="40" ry="20" fill={`url(#${filterId}-shadow)`} filter={`url(#${filterId})`} />
+            </svg>
+        </div>
+    );
+};
+
+// ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)       ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export const UNIFIED_CONFIG = {
+    // Orientation Lock (overlay mode paysage)
+    ORIENTATION_LOCK_ENABLED: false,     // Afficher l'overlay en mode paysage (true = bloqué, false = autorisé)
+
     // Capsules
     CAPSULE_HEIGHT: '2.0rem',           // Hauteur unifiée de toutes les capsules
     ICON_SIZE_PERCENT: 50,              // Taille des icônes = 50% de la hauteur capsule
 
     // Roue du lecteur - hauteur des éléments (% hauteur écran)
-    WHEEL_ITEM_HEIGHT_MAIN_VH: 7.0,     // Taille élément roue lecteur principal
-    WHEEL_ITEM_HEIGHT_MINI_VH: 7.0,     // Taille élément roue lecteur dashboard
+    WHEEL_ITEM_HEIGHT_MAIN_VH: 6.5,     // Taille élément roue lecteur principal
+    WHEEL_ITEM_HEIGHT_MINI_VH: 6.5,     // Taille élément roue lecteur dashboard
+
+    // Roue - hauteur variable selon distance du centre
+    WHEEL_VARIABLE_HEIGHT_ENABLED: true, // Activer la hauteur variable
+    WHEEL_CENTER_FULL_SIZE_COUNT: 3,     // Nombre d'éléments centraux à 100% (3 = centre + 1 dessus + 1 dessous)
+    WHEEL_HEIGHT_RATIO_STEP_1: 0.50,     // Ratio hauteur palier 1 (distance 2) - 50%
+    WHEEL_HEIGHT_RATIO_STEP_2: 0.20,     // Ratio hauteur palier 2 (distance 3+) - 20%
 
     // Capsules beacon et contrôle (hauteur en % de l'écran)
-    PLAYER_CAPSULE_HEIGHT_VH: 7.0,      // Hauteur capsule beacon + capsule de lecture (unifié)
+    PLAYER_CAPSULE_HEIGHT_VH: 6.5,      // Hauteur capsule beacon + capsule de lecture (unifié)
 
     // LECTEUR PRINCIPAL : taille texte (px)
     WHEEL_TITLE_SIZE_MAIN: 18,          // Taille titre chanson sélectionnée (centre roue)
