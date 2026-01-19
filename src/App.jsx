@@ -5858,9 +5858,29 @@ const vibeSearchResults = () => {
   const wakeLockRef = useRef(null);
   const isSyncingFromVisibilityRef = useRef(false); // Pour bloquer le useEffect pendant la sync
 
+  // === DEBUG OVERLAY STATE ===
+  const [debugInfo, setDebugInfo] = useState({
+    audioPaused: null,
+    isPlayingState: null,
+    lastEvent: 'none',
+    timestamp: ''
+  });
+  const DEBUG_ENABLED = true; // Mettre à false pour désactiver
+
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
   useEffect(() => { queueRef.current = queue; }, [queue]);
+
+  // Sync debug info with isPlaying state
+  useEffect(() => {
+    if (DEBUG_ENABLED) {
+      setDebugInfo(prev => ({
+        ...prev,
+        isPlayingState: isPlaying,
+        timestamp: new Date().toLocaleTimeString()
+      }));
+    }
+  }, [isPlaying]);
 
   // ══════════════════════════════════════════════════════════════════════════════
   // SCREEN WAKE LOCK - Empêcher l'écran de s'éteindre pendant la lecture
@@ -6055,12 +6075,28 @@ const vibeSearchResults = () => {
       navigator.mediaSession.playbackState = 'playing';
       setIsPlaying(true);
       updatePositionState();
+      if (DEBUG_ENABLED) {
+        setDebugInfo(prev => ({
+          ...prev,
+          audioPaused: false,
+          lastEvent: 'audio:play',
+          timestamp: new Date().toLocaleTimeString()
+        }));
+      }
     };
 
     const handlePause = () => {
       console.log('[MediaSession] audio pause event');
       navigator.mediaSession.playbackState = 'paused';
       setIsPlaying(false);
+      if (DEBUG_ENABLED) {
+        setDebugInfo(prev => ({
+          ...prev,
+          audioPaused: true,
+          lastEvent: 'audio:pause',
+          timestamp: new Date().toLocaleTimeString()
+        }));
+      }
     };
 
     const handleLoadedMetadata = () => {
@@ -6112,6 +6148,15 @@ const vibeSearchResults = () => {
       if (document.visibilityState === 'visible' && audio) {
         console.log('[MediaSession] visibility changed to visible');
 
+        if (DEBUG_ENABLED) {
+          setDebugInfo(prev => ({
+            ...prev,
+            audioPaused: audio.paused,
+            lastEvent: 'visibility:visible (avant délai)',
+            timestamp: new Date().toLocaleTimeString()
+          }));
+        }
+
         // Petit délai pour laisser les événements audio pendants (play/pause) se traiter d'abord
         // Car quand l'app était en background, ces événements sont mis en file d'attente
         setTimeout(() => {
@@ -6127,11 +6172,29 @@ const vibeSearchResults = () => {
           }
           updatePositionState();
 
+          if (DEBUG_ENABLED) {
+            setDebugInfo(prev => ({
+              ...prev,
+              audioPaused: audio.paused,
+              lastEvent: `visibility:visible (après délai) → setIsPlaying(${shouldBePlaying})`,
+              timestamp: new Date().toLocaleTimeString()
+            }));
+          }
+
           // Débloquer après que React ait traité le state update
           setTimeout(() => {
             isSyncingFromVisibilityRef.current = false;
           }, 100);
         }, 50); // 50ms pour laisser les événements pendants se traiter
+      } else if (document.visibilityState === 'hidden') {
+        if (DEBUG_ENABLED) {
+          setDebugInfo(prev => ({
+            ...prev,
+            audioPaused: audio?.paused,
+            lastEvent: 'visibility:hidden',
+            timestamp: new Date().toLocaleTimeString()
+          }));
+        }
       }
     };
 
@@ -8907,6 +8970,57 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
       </div>
 
+      {/* DEBUG OVERLAY */}
+      {DEBUG_ENABLED && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          color: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          zIndex: 99999,
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          minWidth: '300px',
+          border: '2px solid #00ff00'
+        }}>
+          <div style={{ marginBottom: '10px', fontWeight: 'bold', color: '#00ff00' }}>🔧 DEBUG AUDIO SYNC</div>
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ color: '#888' }}>audio.paused:</span>{' '}
+            <span style={{ color: debugInfo.audioPaused ? '#ff6b6b' : '#51cf66', fontWeight: 'bold' }}>
+              {debugInfo.audioPaused === null ? 'null' : debugInfo.audioPaused ? 'TRUE (pausé)' : 'FALSE (joue)'}
+            </span>
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ color: '#888' }}>isPlaying state:</span>{' '}
+            <span style={{ color: debugInfo.isPlayingState ? '#51cf66' : '#ff6b6b', fontWeight: 'bold' }}>
+              {debugInfo.isPlayingState === null ? 'null' : debugInfo.isPlayingState ? 'TRUE' : 'FALSE'}
+            </span>
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ color: '#888' }}>Sync OK:</span>{' '}
+            <span style={{
+              color: (debugInfo.audioPaused === null || debugInfo.isPlayingState === null) ? '#888' :
+                     (debugInfo.audioPaused !== debugInfo.isPlayingState) ? '#51cf66' : '#ff6b6b',
+              fontWeight: 'bold'
+            }}>
+              {(debugInfo.audioPaused === null || debugInfo.isPlayingState === null) ? '?' :
+               (debugInfo.audioPaused !== debugInfo.isPlayingState) ? '✓ OUI' : '✗ NON (désync!)'}
+            </span>
+          </div>
+          <div style={{ marginBottom: '8px', borderTop: '1px solid #333', paddingTop: '8px' }}>
+            <span style={{ color: '#888' }}>Dernier event:</span>{' '}
+            <span style={{ color: '#74c0fc' }}>{debugInfo.lastEvent}</span>
+          </div>
+          <div>
+            <span style={{ color: '#888' }}>Timestamp:</span>{' '}
+            <span style={{ color: '#888' }}>{debugInfo.timestamp}</span>
+          </div>
+        </div>
+      )}
 
     </div>
   );
