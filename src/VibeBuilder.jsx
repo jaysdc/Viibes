@@ -2446,7 +2446,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: isClosingWithX ? 'white' : futureGradientColors[0] }}
+                                    style={{ color: futureGradientColors[0] }}
                                 />
                             </div>
 
