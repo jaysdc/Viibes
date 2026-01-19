@@ -258,18 +258,18 @@ const styles = `
      ANIMATION NÉON UNIFIÉE - Utilise --neon-color (format: "R, G, B")
      ═══════════════════════════════════════════════════════════════════════════ */
   @keyframes neon-glow {
-    0%, 100% { 
-      box-shadow: 0 0 20px rgba(var(--neon-color), 0.8), 0 0 40px rgba(var(--neon-color), 0.4);
+    0%, 100% {
+      box-shadow: 0 0 20px rgb(var(--neon-color) / 0.8), 0 0 40px rgb(var(--neon-color) / 0.4);
     }
-    50% { 
-      box-shadow: 0 0 35px rgba(var(--neon-color), 1), 0 0 70px rgba(var(--neon-color), 0.6);
+    50% {
+      box-shadow: 0 0 35px rgb(var(--neon-color) / 1), 0 0 70px rgb(var(--neon-color) / 0.6);
     }
   }
-  
+
   .animate-neon-glow {
     animation: neon-glow 0.3s ease-in-out infinite;
   }
-  
+
   .animate-neon-glow-once {
     animation: neon-glow 0.3s ease-in-out;
   }
@@ -1355,87 +1355,130 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     };
     
     // SMARTWAVE LOGIC (Utilise rowHeightRef.current)
+    // Refs pour le scroll continu
+    const scrollIntervalRef = useRef(null);
+    const touchYRelativeRef = useRef(0);
+
     useEffect(() => {
         const container = listRef.current;
         if (!container) return;
 
+        const SCROLL_ZONE = rowHeightRef.current * 1.5;
+        const SCROLL_SPEED = 15;
+        const SCROLL_INTERVAL = 50; // ms entre chaque scroll
+
+        // Fonction pour mettre à jour la sélection basée sur la position actuelle
+        const updateSelection = (currentDragState) => {
+            const currentScrollTop = container.scrollTop;
+            const currentYAbsolute = Math.max(0, touchYRelativeRef.current + currentScrollTop);
+
+            setDragState(prev => prev ? ({ ...prev, currentYAbsolute: currentYAbsolute }) : null);
+
+            const paintStart = Math.min(currentDragState.startYAbsolute, currentYAbsolute);
+            const paintEnd = Math.max(currentDragState.startYAbsolute, currentYAbsolute);
+
+            const startIndex = Math.floor(paintStart / rowHeightRef.current);
+            const endIndex = Math.floor(paintEnd / rowHeightRef.current);
+
+            const songsTouched = stateRef.current.displaySongs.slice(Math.max(0, startIndex), endIndex + 1);
+            const touchedIds = new Set(songsTouched.map(s => s.id));
+
+            setSelectedSongs(prev => {
+                let newSelection = prev.filter(s => !touchedIds.has(s.id));
+                if (currentDragState.isAddingMode) {
+                    const songsToAdd = songsTouched;
+                    const combinedIds = new Set([...newSelection.map(s => s.id), ...songsToAdd.map(s => s.id)]);
+                    return stateRef.current.displaySongs.filter(s => combinedIds.has(s.id));
+                } else {
+                    return newSelection;
+                }
+            });
+        };
+
+        // Fonction de scroll continu appelée par setInterval
+        const continuousScroll = () => {
+            const currentDragState = stateRef.current.dragState;
+            if (!currentDragState) return;
+
+            const containerHeight = container.clientHeight;
+            const touchY = touchYRelativeRef.current;
+
+            // Scroll si dans les zones de bord
+            if (touchY < SCROLL_ZONE) {
+                container.scrollTop -= SCROLL_SPEED;
+                updateSelection(currentDragState);
+            } else if (touchY > containerHeight - SCROLL_ZONE) {
+                container.scrollTop += SCROLL_SPEED;
+                updateSelection(currentDragState);
+            }
+        };
+
         const handleTouchStart = (e) => {
             const touch = e.touches[0];
             const rect = container.getBoundingClientRect();
-            
+
             // ZONE GAUCHE RESPONSIVE
             if (touch.clientX - rect.left <= colWidthRef.current) {
-                if (e.cancelable) e.preventDefault(); 
+                if (e.cancelable) e.preventDefault();
                 const scrollTop = container.scrollTop;
                 const startY = touch.clientY - rect.top;
-                
+
                 // CALCUL ABSOLU DU DÉPART (ANCRE)
                 const startYAbsolute = startY + scrollTop;
-                
+
                 // Utilisation de la hauteur mesurée dynamiquement
                 const startIndex = Math.floor(startYAbsolute / rowHeightRef.current);
                 const currentDisplaySongs = stateRef.current.displaySongs;
                 const startSong = currentDisplaySongs[startIndex];
-                
+
                 let isAddingMode = true;
                 if (startSong && stateRef.current.selectedSongs.find(s => s.id === startSong.id)) {
                     isAddingMode = false;
                 }
+
+                touchYRelativeRef.current = startY;
                 setDragState({ startYAbsolute: startYAbsolute, currentYAbsolute: startYAbsolute, rectTop: rect.top, isAddingMode: isAddingMode });
+
+                // Démarrer le scroll continu
+                scrollIntervalRef.current = setInterval(continuousScroll, SCROLL_INTERVAL);
             }
         };
 
         const handleTouchMove = (e) => {
             const currentDragState = stateRef.current.dragState;
             if (currentDragState) {
-                if (e.cancelable) e.preventDefault(); 
+                if (e.cancelable) e.preventDefault();
                 const touch = e.touches[0];
-                const containerHeight = container.clientHeight;
-                const touchYRelative = touch.clientY - currentDragState.rectTop; 
-                
-                const SCROLL_ZONE = rowHeightRef.current * 1.5; 
-                const SCROLL_SPEED = 15; 
-                
-                // Si le doigt est près du bord, active le scroll du conteneur
-                if (touchYRelative < SCROLL_ZONE) {
-                    container.scrollTop -= SCROLL_SPEED;
-                } else if (touchYRelative > containerHeight - SCROLL_ZONE) {
-                    container.scrollTop += SCROLL_SPEED;
-                }
+                const touchYRelative = touch.clientY - currentDragState.rectTop;
 
-                const currentScrollTop = container.scrollTop;
-                const currentYAbsolute = Math.max(0, touchYRelative + currentScrollTop);
+                // Stocker la position Y pour le scroll continu
+                touchYRelativeRef.current = touchYRelative;
 
-                // La partie corrigée : On met à jour la position absolue du doigt
-                setDragState(prev => prev ? ({ ...prev, currentYAbsolute: currentYAbsolute }) : null);
-                
-                const paintStart = Math.min(currentDragState.startYAbsolute, currentYAbsolute);
-                const paintEnd = Math.max(currentDragState.startYAbsolute, currentYAbsolute);
-
-                const startIndex = Math.floor(paintStart / rowHeightRef.current);
-                const endIndex = Math.floor(paintEnd / rowHeightRef.current);
-                
-                const songsTouched = stateRef.current.displaySongs.slice(Math.max(0, startIndex), endIndex + 1);
-                const touchedIds = new Set(songsTouched.map(s => s.id));
-                
-                setSelectedSongs(prev => {
-                    let newSelection = prev.filter(s => !touchedIds.has(s.id));
-                    if (currentDragState.isAddingMode) {
-                        const songsToAdd = songsTouched;
-                        const combinedIds = new Set([...newSelection.map(s => s.id), ...songsToAdd.map(s => s.id)]);
-                        return stateRef.current.displaySongs.filter(s => combinedIds.has(s.id));
-                    } else {
-                        return newSelection;
-                    }
-                });
+                // Mettre à jour la sélection immédiatement
+                updateSelection(currentDragState);
             }
         };
 
-        const handleTouchEnd = () => { setDragState(null); };
+        const handleTouchEnd = () => {
+            // Arrêter le scroll continu
+            if (scrollIntervalRef.current) {
+                clearInterval(scrollIntervalRef.current);
+                scrollIntervalRef.current = null;
+            }
+            setDragState(null);
+        };
+
         container.addEventListener('touchstart', handleTouchStart, { passive: false });
         container.addEventListener('touchmove', handleTouchMove, { passive: false });
         container.addEventListener('touchend', handleTouchEnd);
-        return () => { container.removeEventListener('touchstart', handleTouchStart); container.removeEventListener('touchmove', handleTouchMove); container.removeEventListener('touchend', handleTouchEnd); };
+        return () => {
+            container.removeEventListener('touchstart', handleTouchStart);
+            container.removeEventListener('touchmove', handleTouchMove);
+            container.removeEventListener('touchend', handleTouchEnd);
+            if (scrollIntervalRef.current) {
+                clearInterval(scrollIntervalRef.current);
+            }
+        };
     }, []); 
 
     const handleAddAll = () => { 
@@ -1974,14 +2017,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                     )}
                     {dragState ? (
                             <div
-                                className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow overflow-hidden"
+                                className="absolute inset-0 rounded-full flex items-center justify-center animate-pop border-2 animate-neon-glow"
                                 style={{
                                     '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_CYAN : CONFIG.NEON_COLOR_ORANGE,
                                     backgroundColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                     borderColor: dragState.isAddingMode ? '#00D5FF' : '#FF6700',
                                 }}
                             >
-                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+                                <div className="absolute inset-0 rounded-full overflow-hidden">
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+                                </div>
                                 <div className={`flex items-center gap-2 font-black tracking-widest text-lg drop-shadow-sm text-white`}> {/* TEXTE BLANC */}
                                 {dragState.isAddingMode ? (
                                         <>
@@ -2006,10 +2051,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible relative"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
-                                    <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
-                                    <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
-                                    <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
-                                    <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none'} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
+                                    <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
+                                    <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState} is3DMode={is3DMode} />
                                 </div>
 
                                 {/* BOUTON LOUPE ROND (séparé) */}
@@ -2259,9 +2304,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Masque cylindre 3D */}
                             <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-xl" />
                             {/* Indication swipe - EN HAUT AU CENTRE */}
-                            <div 
+                            <div
                                 className="absolute flex items-center gap-0.5 text-white/50 z-10"
-                                style={{ 
+                                style={{
                                     top: CONFIG.DRAG_TOP,
                                     left: '50%',
                                     transform: 'translateX(-50%)'
