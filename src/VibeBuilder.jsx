@@ -2062,14 +2062,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                     )}
                     {dragState ? (
                         <>
-                            {/* GLOW PULSANT - dans les marges (-8px) */}
+                            {/* GLOW PULSANT - même taille que la capsule */}
                             <div
-                                className="absolute rounded-full animate-neon-glow"
+                                className="absolute inset-0 rounded-full animate-neon-glow"
                                 style={{
-                                    top: -8,
-                                    left: -8,
-                                    right: -8,
-                                    bottom: -8,
                                     '--neon-color': dragState.isAddingMode ? CONFIG.NEON_COLOR_PINK : CONFIG.NEON_COLOR_ORANGE,
                                     backgroundColor: 'transparent',
                                     boxShadow: `0 0 15px 5px rgba(${dragState.isAddingMode ? CONFIG.NEON_COLOR_PINK : CONFIG.NEON_COLOR_ORANGE}, 0.6)`,
