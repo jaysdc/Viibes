@@ -343,7 +343,7 @@ export const UNIFIED_CONFIG = {
     WHEEL_HEIGHT_RATIO_STEP_2: 0.20,     // Ratio hauteur palier 2 (distance 3+) - 20%
 
     // Capsules beacon et contrôle (hauteur en % de l'écran)
-    PLAYER_CAPSULE_HEIGHT_VH: 7.0,      // Hauteur capsule beacon + capsule de lecture (unifié)
+    PLAYER_CAPSULE_HEIGHT_VH: 6.5,      // Hauteur capsule beacon + capsule de lecture (unifié)
 
     // LECTEUR PRINCIPAL : taille texte (px)
     WHEEL_TITLE_SIZE_MAIN: 18,          // Taille titre chanson sélectionnée (centre roue)

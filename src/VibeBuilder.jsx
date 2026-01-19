@@ -1820,8 +1820,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                             ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
                                             : 'rgba(255, 255, 255, 0.15)',  // Transparent
                                 border: (isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
-                                left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
+                                left: `calc(50% - ${cursorSize / 2}px + ${isAtLeftThreshold ? -maxSlide : isAtRightThreshold ? maxSlide : (isAtCenter && previewHasDragged) ? 0 : clampedX}px)`,
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
+                                pointerEvents: (!previewHasDragged && isAtCenter) ? 'none' : 'auto',
                             }}
                         >
                             {/* Icône X quand au centre ET qu'on a dragué */}

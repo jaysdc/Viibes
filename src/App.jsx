@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import ReactDOM from 'react-dom';
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js';
-import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
+import { Play, Pause, Disc, Disc3, CirclePause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, MoveDown, MoveUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, RotateCw, ChevronLeft, ChevronRight, Check, FolderPlus, FolderOpen, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, CloudDownload, Radiation, Ghost, Skull, Loader2, Radar, Pointer } from 'lucide-react';
 import VibeBuilder from './VibeBuilder.jsx';
 import Tweaker, { TWEAKER_CONFIG } from './Tweaker.jsx';
 import SmartImport from './SmartImport.jsx';
@@ -7546,7 +7546,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
-                                    <FolderDown style={{
+                                    <FolderOpen style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         color: CONFIG.IMPORT_FOLDER_ICON_COLOR
