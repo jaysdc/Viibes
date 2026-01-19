@@ -216,7 +216,7 @@ const CONFIG = {
     NAME_WIDTH_FACTOR: 0.7,               // Facteur largeur par caractère
     NAME_MIN_WIDTH: '3.75rem',            // Largeur minimale du nom
     ADDALL_ICON_SIZE: '0.75rem',          // Taille icône Music2 dans AddAll
-    BLINK_ANIMATION_DURATION: 500,        // Durée de l'animation de clignotement (ms)
+    BLINK_ANIMATION_DURATION: 400,        // Durée de l'animation ignite (ms)
     LONG_PRESS_DURATION: 500,             // Durée avant déclenchement du long press (ms)
     BOTTOM_BAR_HEIGHT: 'calc(9vh + 24px + env(safe-area-inset-bottom, 0px))', // Hauteur bottom bar (carte + padding + safe area)
 };
@@ -341,13 +341,18 @@ const styles = `
     animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
-  @keyframes blink-3 {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0.3; }
+  @keyframes neon-ignite-card {
+    0% { opacity: 0.3; box-shadow: 0 0 8px var(--glow-color), 0 0 16px var(--glow-color); }
+    15% { opacity: 1; box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color), 0 0 60px var(--glow-color); }
+    25% { opacity: 0.4; box-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); }
+    40% { opacity: 1; box-shadow: 0 0 25px var(--glow-color), 0 0 50px var(--glow-color), 0 0 75px var(--glow-color); }
+    55% { opacity: 0.7; box-shadow: 0 0 15px var(--glow-color), 0 0 30px var(--glow-color); }
+    70% { opacity: 1; box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color), 0 0 60px var(--glow-color); }
+    100% { opacity: 1; box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color); }
   }
 
   .animate-blink {
-    animation: blink-3 0.5s linear; 
+    animation: neon-ignite-card 0.4s ease-out forwards;
   }
   
   @keyframes fade-out {
@@ -2384,10 +2389,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 style={{
                                     height: vibeCardConfig?.height || '9vh',
                                     background: futureGradient,
-                                    transition: 'box-shadow 0.1s ease-out',
-                                    boxShadow: isCreatingVibe
-                                        ? `0 0 20px ${futurePrimaryColor}, 0 0 40px ${futurePrimaryColor}99, 0 0 60px ${futurePrimaryColor}66`
-                                        : '0 10px 40px rgba(0,0,0,0.15)'
+                                    '--glow-color': futurePrimaryColor,
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)'
                                 }}
                             >
                             {/* Masque cylindre 3D */}
