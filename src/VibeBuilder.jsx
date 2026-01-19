@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines, Pencil } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, CylinderMask } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, CylinderMask, SAFE_AREA_HEIGHT_CSS } from './Config.jsx';
 import { VibesWave } from './Assets.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -101,8 +101,11 @@ const CONFIG = {
     DRAG_TOP: 4,                          // Position depuis le haut (px)
 
     // FADE SCROLL (indicateur de contenu non visible)
-    LIST_FADE_HEIGHT: 40,                 // Hauteur du fade en px
-    LIST_FADE_OPACITY: 0.8,               // Opacité max du fade blanc
+    LIST_FADE_HEIGHT: '6rem',             // Hauteur du fade (3 lignes de chansons)
+    LIST_FADE_OPACITY: 0.95,              // Opacité max du fade blanc
+
+    // BOTTOM BAR (carte preview en bas)
+    BOTTOM_CARD_PADDING_TOP: 12,          // Padding au-dessus de la carte preview (px)
 
     // ══════════════════════════════════════════════════════════════════════════
     // ÉCRAN PRÉ-ÉCOUTE
@@ -2256,7 +2259,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
 
 <div
                     ref={listRef}
-                    className={`absolute inset-0 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
+                    className={`absolute left-0 right-0 top-0 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
+                    style={{
+                        bottom: `calc(${CONFIG.BOTTOM_CARD_PADDING_TOP}px + ${vibeCardConfig?.height || '9vh'} + ${SAFE_AREA_HEIGHT_CSS})`
+                    }}
                     onScroll={(e) => {
                         setListScrollTop(e.target.scrollTop);
                         if (e.target.clientHeight !== listContainerHeight) {
@@ -2321,7 +2327,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         className="absolute left-0 right-0 pointer-events-none z-30 transition-opacity duration-150"
                         style={{
                             height: CONFIG.LIST_FADE_HEIGHT,
-                            bottom: 0,
+                            bottom: `calc(${CONFIG.BOTTOM_CARD_PADDING_TOP}px + ${vibeCardConfig?.height || '9vh'} + ${SAFE_AREA_HEIGHT_CSS})`,
                             background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.LIST_FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
                             opacity: listFades.bottomFadeOpacity
                         }}
@@ -2351,7 +2357,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         }}
                     >
                         {/* Padding au-dessus de la carte */}
-                        <div style={{ height: 12, flexShrink: 0 }} />
+                        <div style={{ height: CONFIG.BOTTOM_CARD_PADDING_TOP, flexShrink: 0 }} />
                         
                         {/* Future VibeCard - Swipable pour changer couleur */}
                         <div
