@@ -2027,7 +2027,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
-                                    <Search style={{ width: CONFIG.SEARCH_BTN_ICON_SIZE, height: CONFIG.SEARCH_BTN_ICON_SIZE }} />
+                                    <Search style={{ width: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)`, height: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)` }} />
                                 </button>
                                 
                                 {/* OVERLAY BARRE DE RECHERCHE (fade in/out) */}
@@ -2053,7 +2053,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                             }}
                                         >
                                             <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-l-full" is3DMode={is3DMode} />
-                                            <Search style={{ width: CONFIG.HEADER_SEARCH_ICON_SIZE, height: CONFIG.HEADER_SEARCH_ICON_SIZE }} className="text-gray-400 mr-3" />
+                                            <Search style={{ width: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)`, height: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)` }} className="text-gray-400 mr-3" />
                                             <input
                                                 autoFocus
                                                 type="search"
