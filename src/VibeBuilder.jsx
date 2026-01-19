@@ -100,6 +100,10 @@ const CONFIG = {
     // ICONE DRAG
     DRAG_TOP: 4,                          // Position depuis le haut (px)
 
+    // FADE SCROLL (indicateur de contenu non visible)
+    LIST_FADE_HEIGHT: 40,                 // Hauteur du fade en px
+    LIST_FADE_OPACITY: 0.8,               // Opacité max du fade blanc
+
     // ══════════════════════════════════════════════════════════════════════════
     // ÉCRAN PRÉ-ÉCOUTE
     // ══════════════════════════════════════════════════════════════════════════
@@ -1046,7 +1050,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     });
 
     const [dragState, setDragState] = useState(null);
-    const [listScrollTop, setListScrollTop] = useState(0); 
+    const [listScrollTop, setListScrollTop] = useState(0);
+    const [listContainerHeight, setListContainerHeight] = useState(0); 
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchOverlayAnim, setSearchOverlayAnim] = useState('none'); // 'none' | 'opening' | 'closing'
@@ -1236,6 +1241,28 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
         stateRef.current.displaySongs = displaySongs;
         stateRef.current.dragState = dragState;
     }, [selectedSongs, displaySongs, dragState]);
+
+    // Calcul des opacités des fades (indicateurs de scroll)
+    const listFades = useMemo(() => {
+        const totalContentHeight = displaySongs.length * rowHeightRef.current;
+        const maxScroll = Math.max(0, totalContentHeight - listContainerHeight);
+
+        // Fade du haut : visible si on n'est pas tout en haut
+        const topFadeOpacity = listScrollTop > 10 ? 1 : listScrollTop / 10;
+
+        // Fade du bas : visible si on n'est pas tout en bas
+        const distanceFromBottom = maxScroll - listScrollTop;
+        const bottomFadeOpacity = distanceFromBottom > 10 ? 1 : Math.max(0, distanceFromBottom / 10);
+
+        return { topFadeOpacity, bottomFadeOpacity };
+    }, [displaySongs.length, listContainerHeight, listScrollTop]);
+
+    // Initialiser la hauteur du conteneur au montage
+    useEffect(() => {
+        if (listRef.current && listContainerHeight === 0) {
+            setListContainerHeight(listRef.current.clientHeight);
+        }
+    }, [listContainerHeight]);
 
     // MESURE DE LA HAUTEUR RÉELLE POUR SMARTWAVE RESPONSIVE
     useEffect(() => {
@@ -2230,7 +2257,12 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
 <div
                     ref={listRef}
                     className={`absolute inset-0 no-scrollbar z-0 ${dragState ? 'overflow-hidden' : 'overflow-y-auto'}`}
-                    onScroll={(e) => setListScrollTop(e.target.scrollTop)}
+                    onScroll={(e) => {
+                        setListScrollTop(e.target.scrollTop);
+                        if (e.target.clientHeight !== listContainerHeight) {
+                            setListContainerHeight(e.target.clientHeight);
+                        }
+                    }}
                 >
                     {/* Conteneur avec hauteur totale pour le scroll */}
                     <div style={{ height: displaySongs.length * rowHeightRef.current, position: 'relative' }}>
@@ -2270,8 +2302,33 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         })()}
                     </div>
                 </div>
+
+                {/* FADE HAUT - Indicateur de contenu non visible en haut */}
+                {listFades.topFadeOpacity > 0 && (
+                    <div
+                        className="absolute left-0 right-0 top-0 pointer-events-none z-30 transition-opacity duration-150"
+                        style={{
+                            height: CONFIG.LIST_FADE_HEIGHT,
+                            background: `linear-gradient(to bottom, rgba(255,255,255,${CONFIG.LIST_FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
+                            opacity: listFades.topFadeOpacity
+                        }}
+                    />
+                )}
+
+                {/* FADE BAS - Indicateur de contenu non visible en bas */}
+                {listFades.bottomFadeOpacity > 0 && (
+                    <div
+                        className="absolute left-0 right-0 pointer-events-none z-30 transition-opacity duration-150"
+                        style={{
+                            height: CONFIG.LIST_FADE_HEIGHT,
+                            bottom: 0,
+                            background: `linear-gradient(to top, rgba(255,255,255,${CONFIG.LIST_FADE_OPACITY}) 0%, rgba(255,255,255,0) 100%)`,
+                            opacity: listFades.bottomFadeOpacity
+                        }}
+                    />
+                )}
             </div>
-            
+
             {/* BOTTOM BAR - VIBECARD PREVIEW - TOUJOURS VISIBLE */}
             {(() => {
                 // Calculer dispo/pas dispo
