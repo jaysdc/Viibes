@@ -724,7 +724,7 @@ const CONFIG = {
     // TIME CAPSULE - Progress Bar
     // ══════════════════════════════════════════════════════════════════════════
     TC_PROGRESS_HEIGHT: 1.125,            // Hauteur progress bar (rem) - réduit de 25%
-    TC_SCRUB_LONG_PRESS_MS: 50,           // Durée tap long pour activer scrub (ms)
+    TC_SCRUB_LONG_PRESS_MS: 10,           // Durée tap long pour activer scrub (ms)
     TC_SCRUB_SENSITIVITY: 1.5,            // Secondes par pixel de déplacement
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -736,7 +736,7 @@ const CONFIG = {
     TC_TIME_REMAINING_X_PERCENT: 100,     // Position X temps restant (100 = droite)
 
     // SCRUB OVERLAY - Overlay affiché pendant le scrub de la progress bar
-    SCRUB_OVERLAY_MORPH_DURATION: 125,    // Durée de l'animation morph (ms)
+    SCRUB_OVERLAY_MORPH_DURATION: 75,    // Durée de l'animation morph (ms)
     SCRUB_OVERLAY_OFFSET_REM: 3,          // Distance au-dessus du footer (rem)
     SCRUB_OVERLAY_HEIGHT_REM: 2.5,        // Hauteur de l'overlay (rem)
     SCRUB_OVERLAY_BG: 'rgba(255, 255, 255, 0.95)',  // Fond de l'overlay
