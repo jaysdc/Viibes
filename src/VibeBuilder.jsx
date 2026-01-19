@@ -292,6 +292,20 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
+  /* Animation ignite pour bouton X (fermer) - Rouge/Rose */
+  @keyframes ignite {
+    0% { box-shadow: 0 0 10px rgba(244, 63, 94, 0.4), 0 0 20px rgba(185, 28, 28, 0.2); }
+    15% { box-shadow: 0 0 25px rgba(244, 63, 94, 1), 0 0 50px rgba(185, 28, 28, 0.8); }
+    25% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), 0 0 30px rgba(185, 28, 28, 0.4); }
+    40% { box-shadow: 0 0 35px rgba(244, 63, 94, 1), 0 0 70px rgba(185, 28, 28, 0.9); }
+    55% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.6), 0 0 40px rgba(185, 28, 28, 0.5); }
+    70% { box-shadow: 0 0 30px rgba(244, 63, 94, 0.9), 0 0 60px rgba(185, 28, 28, 0.7); }
+    100% { box-shadow: 0 0 25px rgba(244, 63, 94, 0.7), 0 0 50px rgba(185, 28, 28, 0.5); }
+  }
+  .animate-ignite {
+    animation: ignite 0.3s ease-out forwards;
+  }
+
   @keyframes jiggle {
     0% { transform: rotate(-1deg); }
     50% { transform: rotate(1deg); }
@@ -1009,6 +1023,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     const nameInputRef = useRef(null);
     const [isCreatingVibe, setIsCreatingVibe] = useState(false);
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [isClosingWithX, setIsClosingWithX] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteConfirmSwipeX, setDeleteConfirmSwipeX] = useState(0);
     const deleteConfirmStartX = useRef(null);
@@ -2333,6 +2348,36 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             )}
                             
+                            {/* Bouton CLOSE (X) - Centré verticalement à gauche */}
+                            <div
+                                data-close-btn
+                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${isClosingWithX ? 'animate-ignite' : ''}`}
+                                style={{
+                                    left: CONFIG.CREATE_BTN_RIGHT,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    width: CONFIG.CREATE_BTN_SIZE,
+                                    height: CONFIG.CREATE_BTN_SIZE,
+                                    boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
+                                    background: 'white',
+                                    transition: 'background 0.15s, box-shadow 0.15s'
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsClosingWithX(true);
+                                    setTimeout(() => {
+                                        handleClose('left');
+                                    }, 300);
+                                }}
+                            >
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+                                <X
+                                    size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                    strokeWidth={3}
+                                    style={{ color: futureGradientColors[Math.floor(futureGradientColors.length / 2)] }}
+                                />
+                            </div>
+
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite - icône transparent découpé */}
                             <div
                                 data-create-btn
@@ -2370,7 +2415,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 )}
                             </div>
                             
-                            {/* Capsule Liquid Glass - Masquée si showTitles est false */}
+                            {/* Capsule Liquid Glass - CENTRÉE - Masquée si showTitles est false */}
                             {showTitles ? (
                                 <div
                                     data-capsule
@@ -2381,13 +2426,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         paddingTop: CONFIG.CAPSULE_PADDING_Y,
                                         paddingBottom: CONFIG.CAPSULE_PADDING_Y,
                                         bottom: CONFIG.CAPSULE_BOTTOM,
-                                        left: CONFIG.CAPSULE_LEFT,
-                                        maxWidth: `calc(100% - ${CONFIG.CAPSULE_LEFT}px - ${CONFIG.CAPSULE_RIGHT_MARGIN})`,
+                                        left: '50%',
+                                        transform: `translateX(-50%) translateZ(${displayGradientIndex * 0.001}px)`,
+                                        maxWidth: `calc(100% - ${CONFIG.CREATE_BTN_RIGHT * 2 + CONFIG.CREATE_BTN_SIZE * 2 + 16}px)`,
                                         backdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
                                         WebkitBackdropFilter: `blur(${vibeCardConfig?.liquidGlassBlur || 12}px)`,
                                         background: isEditingName ? 'rgba(255,255,255,0.15)' : 'transparent',
-                                        transition: 'background 0.2s, border-color 0.2s',
-                                        transform: `translateZ(${displayGradientIndex * 0.001}px)`
+                                        transition: 'background 0.2s, border-color 0.2s'
                                     }}
                                     onClick={(e) => {
                                         e.stopPropagation();
