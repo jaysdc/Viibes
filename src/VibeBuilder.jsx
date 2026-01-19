@@ -1365,7 +1365,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
 
         const SCROLL_ZONE = rowHeightRef.current * 1.5;
         const SCROLL_SPEED = 15;
-        const SCROLL_INTERVAL = 33; // ms entre chaque scroll (50% plus rapide)
+        const SCROLL_INTERVAL = 25; // ms entre chaque scroll
 
         // Fonction pour mettre à jour la sélection basée sur la position actuelle
         const updateSelection = (currentDragState) => {
@@ -1953,7 +1953,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                 </div>
                 </div>
                 <div className="flex items-center gap-2 relative z-20">
-                    <div className="flex-1 relative" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
+                    <div className="flex-1 relative overflow-visible" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
                     {/* OVERLAY NOM DU DÉGRADÉ (pendant swipe sur la carte) */}
                     {cardSwipeOffset !== 0 && !showDeleteConfirm && !dragState && !isSearching && searchOverlayAnim === 'none' && (() => {
                         const gradientName = getGradientName ? getGradientName(displayGradientIndex) : `Gradient ${displayGradientIndex}`;
