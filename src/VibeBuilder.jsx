@@ -1408,7 +1408,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
         const container = listRef.current;
         if (!container) return;
 
-        const SCROLL_ZONE = rowHeightRef.current * 1.5;
+        const SCROLL_ZONE = rowHeightRef.current * 3; // 3 lignes de chansons du bord
         const SCROLL_SPEED = 15;
         const SCROLL_INTERVAL = 25; // ms entre chaque scroll
 
