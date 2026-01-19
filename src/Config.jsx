@@ -333,8 +333,8 @@ export const UNIFIED_CONFIG = {
     ICON_SIZE_PERCENT: 50,              // Taille des icônes = 50% de la hauteur capsule
 
     // Roue du lecteur - hauteur des éléments (% hauteur écran)
-    WHEEL_ITEM_HEIGHT_MAIN_VH: 7.0,     // Taille élément roue lecteur principal
-    WHEEL_ITEM_HEIGHT_MINI_VH: 7.0,     // Taille élément roue lecteur dashboard
+    WHEEL_ITEM_HEIGHT_MAIN_VH: 6.5,     // Taille élément roue lecteur principal
+    WHEEL_ITEM_HEIGHT_MINI_VH: 6.5,     // Taille élément roue lecteur dashboard
 
     // Roue - hauteur variable selon distance du centre
     WHEEL_VARIABLE_HEIGHT_ENABLED: true, // Activer la hauteur variable

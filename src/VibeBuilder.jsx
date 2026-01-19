@@ -1795,8 +1795,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         <div
                             className={`absolute flex items-center justify-center ${
                                 previewFeedback
-                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : '')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
+                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : previewFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : '')
+                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : isAtCenter ? 'animate-pulse-pill-red' : '')
                             }`}
                             style={{
                                 '--pulse-scale-min': 1,
@@ -1804,16 +1804,22 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 width: cursorSize,
                                 height: cursorSize,
                                 borderRadius: '50%',
-                                backgroundColor: isAtLeftThreshold
-                                    ? 'rgba(6, 182, 212, 0.9)'  // Cyan
-                                    : isAtRightThreshold
-                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
-                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                backgroundColor: previewFeedback?.type === 'cancel' || isAtCenter
+                                    ? 'rgba(244, 63, 94, 0.9)'  // Rouge
+                                    : isAtLeftThreshold
+                                        ? 'rgba(6, 182, 212, 0.9)'  // Cyan
+                                        : isAtRightThreshold
+                                            ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
+                                            : 'rgba(255, 255, 255, 0.15)',  // Transparent
+                                border: (isAtLeftThreshold || isAtRightThreshold || isAtCenter) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${clampedX}px)`,
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
+                            {/* Icône X quand au centre */}
+                            {isAtCenter && (
+                                <X size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
+                            )}
                             {/* Icône ListPlus quand au seuil gauche */}
                             {isAtLeftThreshold && (
                                 <ListPlus size={iconSize * 0.7} className="text-white absolute" strokeWidth={2.5} />
@@ -2269,7 +2275,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite - icône transparent découpé */}
                             <div
                                 data-create-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center relative ${showNoSongsHint ? 'animate-shake' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full overflow-hidden flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
