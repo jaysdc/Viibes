@@ -4559,7 +4559,7 @@ const handlePlayerTouchEnd = () => {
     const [dropboxLoading, setDropboxLoading] = useState(false);
     const [dropboxScanProgress, setDropboxScanProgress] = useState(null); // null = pas de scan, 0-100 = progression
     const [smoothedScanProgress, setSmoothedScanProgress] = useState(null); // Progression lissée pour l'UI
-    const [preloadProgress, setPreloadProgress] = useState(50); // TEST: 50 pour vérifier le visuel
+    const [preloadProgress, setPreloadProgress] = useState(null); // null = pas de preload, 0-100 = progression
     const [smoothedPreloadProgress, setSmoothedPreloadProgress] = useState(null); // Progression lissée pour l'UI
     const [scanCompleteFlash, setScanCompleteFlash] = useState(false); // Flash cyan quand scan terminé
     const [scanDebugInfo, setScanDebugInfo] = useState({ hasRefreshToken: false, triggered: false, started: false, pathsCount: 0 });
@@ -6302,7 +6302,7 @@ const vibeSearchResults = () => {
     if (isPreloadingQueueRef.current) return;
     isPreloadingQueueRef.current = true;
 
-    const dropboxSongs = songsToPreload.filter(s => s.type === 'dropbox' && s.dropboxPath);
+    const dropboxSongs = songsToPreload.filter(s => s.dropboxPath && !s.file);
 
     // Ne rien faire s'il n'y a pas de chansons Dropbox
     if (dropboxSongs.length === 0) {
