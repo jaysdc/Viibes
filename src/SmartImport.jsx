@@ -1070,7 +1070,7 @@ const SmartImport = ({
                         </div>
                         
                         {/* Liste des vibes avec gradient sur toute la carte */}
-                        <div className="relative mb-2 flex-1 min-h-0" style={{ paddingLeft: 0, paddingRight: 0, overflow: 'clip', overflowClipMargin: '1rem' }}>
+                        <div className="relative flex-1 min-h-0" style={{ paddingLeft: 0, paddingRight: 0, overflow: 'clip', overflowClipMargin: '1rem' }}>
                             <div
                                 className="h-full"
                                 style={{ overflow: 'visible' }}
