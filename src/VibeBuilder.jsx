@@ -299,6 +299,34 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
+  /* Animation ignite pour bouton X (fermer) - Rouge (#f43f5e → #b91c1c) */
+  @keyframes ignite-btn-red {
+    0% { transform: translateY(-50%) scale(1.15); box-shadow: 0 0 10px rgba(244, 63, 94, 0.4), 0 0 20px rgba(185, 28, 28, 0.2); }
+    15% { transform: translateY(-50%) scale(1.12); box-shadow: 0 0 25px rgba(244, 63, 94, 1), 0 0 50px rgba(185, 28, 28, 0.8); }
+    25% { transform: translateY(-50%) scale(1.09); box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), 0 0 30px rgba(185, 28, 28, 0.4); }
+    40% { transform: translateY(-50%) scale(1.06); box-shadow: 0 0 35px rgba(244, 63, 94, 1), 0 0 70px rgba(185, 28, 28, 0.9); }
+    55% { transform: translateY(-50%) scale(1.03); box-shadow: 0 0 20px rgba(244, 63, 94, 0.6), 0 0 40px rgba(185, 28, 28, 0.5); }
+    70% { transform: translateY(-50%) scale(1.01); box-shadow: 0 0 30px rgba(244, 63, 94, 0.9), 0 0 60px rgba(185, 28, 28, 0.7); }
+    100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15); }
+  }
+  .animate-ignite-btn-red {
+    animation: ignite-btn-red 0.5s ease-out forwards;
+  }
+
+  /* Animation ignite pour bouton + (créer) - Vert (#00ff88 → #00cc6a) */
+  @keyframes ignite-btn-green {
+    0% { transform: translateY(-50%) scale(1.15); box-shadow: 0 0 10px rgba(0, 255, 136, 0.4), 0 0 20px rgba(0, 204, 106, 0.2); }
+    15% { transform: translateY(-50%) scale(1.12); box-shadow: 0 0 25px rgba(0, 255, 136, 1), 0 0 50px rgba(0, 204, 106, 0.8); }
+    25% { transform: translateY(-50%) scale(1.09); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5), 0 0 30px rgba(0, 204, 106, 0.4); }
+    40% { transform: translateY(-50%) scale(1.06); box-shadow: 0 0 35px rgba(0, 255, 136, 1), 0 0 70px rgba(0, 204, 106, 0.9); }
+    55% { transform: translateY(-50%) scale(1.03); box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(0, 204, 106, 0.5); }
+    70% { transform: translateY(-50%) scale(1.01); box-shadow: 0 0 30px rgba(0, 255, 136, 0.9), 0 0 60px rgba(0, 204, 106, 0.7); }
+    100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15); }
+  }
+  .animate-ignite-btn-green {
+    animation: ignite-btn-green 0.5s ease-out forwards;
+  }
+
   @keyframes jiggle {
     0% { transform: rotate(-1deg); }
     50% { transform: rotate(1deg); }
@@ -1012,6 +1040,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteConfirmSwipeX, setDeleteConfirmSwipeX] = useState(0);
     const deleteConfirmStartX = useRef(null);
+    const [closeBtnAnimating, setCloseBtnAnimating] = useState(false);
+    const [createBtnAnimating, setCreateBtnAnimating] = useState(false);
     
     const [sortMode, setSortMode] = useState('alphaTitle');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
@@ -2392,7 +2422,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CLOSE (X) - Centré verticalement à gauche */}
                             <div
                                 data-close-btn
-                                className="absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center"
+                                className={`absolute rounded-full flex items-center justify-center ${closeBtnAnimating ? 'animate-ignite-btn-red' : 'hover:scale-110 transition-transform'}`}
                                 style={{
                                     left: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2404,20 +2434,23 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleClose('left');
+                                    setCloseBtnAnimating(true);
+                                    setTimeout(() => {
+                                        handleClose('left');
+                                    }, 500);
                                 }}
                             >
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: futureGradientColors[0] }}
+                                    style={{ color: closeBtnAnimating ? '#f43f5e' : futureGradientColors[0] }}
                                 />
                             </div>
 
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite */}
                             <div
                                 data-create-btn
-                                className="absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center"
+                                className={`absolute rounded-full flex items-center justify-center ${createBtnAnimating ? 'animate-ignite-btn-green' : 'hover:scale-110 transition-transform'}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2429,13 +2462,20 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleSave();
+                                    if (selectedSongs.length > 0) {
+                                        setCreateBtnAnimating(true);
+                                        setTimeout(() => {
+                                            handleSave();
+                                        }, 500);
+                                    } else {
+                                        handleSave();
+                                    }
                                 }}
                             >
                                 <Plus
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: futureGradientColors[futureGradientColors.length - 1] }}
+                                    style={{ color: createBtnAnimating ? '#00ff88' : futureGradientColors[futureGradientColors.length - 1] }}
                                 />
                             </div>
                             
