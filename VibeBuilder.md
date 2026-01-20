@@ -280,4 +280,145 @@ Pour créer un effet knockout/cutout:
 
 ---
 
-*Dernière mise à jour: Session actuelle*
+## Session du 20 Janvier 2026 - Modifications
+
+### 10. Changement de l'Inertie du Drawer (Dashboard)
+
+**Fichier:** `src/App.jsx`
+
+**Modification:**
+```javascript
+DRAWER_INERTIA_MULTIPLIER: 30 → 25
+```
+
+---
+
+### 11. Animation de Création de Vibe (Carte Future)
+
+**Problème:** L'animation `blink-3` n'était pas assez impactante.
+
+**Solution:** Remplacement par `neon-ignite-card` - 3 pulsations avec glow.
+
+```css
+@keyframes neon-ignite-card {
+  0% { opacity: 0.3; box-shadow: 0 0 8px var(--glow-color), 0 0 16px var(--glow-color); }
+  15% { opacity: 1; box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color), 0 0 60px var(--glow-color); }
+  25% { opacity: 0.4; box-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); }
+  40% { opacity: 1; box-shadow: 0 0 25px var(--glow-color), 0 0 50px var(--glow-color), 0 0 75px var(--glow-color); }
+  55% { opacity: 0.7; box-shadow: 0 0 15px var(--glow-color), 0 0 30px var(--glow-color); }
+  70% { opacity: 1; box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color), 0 0 60px var(--glow-color); }
+  100% { opacity: 1; box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color); }
+}
+```
+
+---
+
+### 12. Animation Ignite Unifiée pour Boutons X et +
+
+**Objectif:** Les deux boutons (fermer X et créer +) utilisent la MÊME animation avec des couleurs différentes via variables CSS.
+
+**Animation CSS (version finale - EN COURS D'AMÉLIORATION):**
+```css
+/* Animation ignite - Double scale, couleur reste jusqu'à 70% puis retour blanc */
+@keyframes ignite {
+  0% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+  20% { transform: translateY(-50%) scale(1); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+  40% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+  70% { transform: translateY(-50%) scale(1); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+  100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+}
+.animate-ignite {
+  animation: ignite 0.8s ease-out forwards;
+}
+```
+
+**Comportement visuel:**
+- 0% : scale 1.2 + couleur
+- 20% : scale 1 + couleur
+- 40% : scale 1.2 + couleur (2ème grossissement)
+- 70% : scale 1 + couleur
+- 100% : scale 1 + blanc (retour progressif sur les 30 derniers %)
+
+**Variables CSS par bouton:**
+
+#### Bouton X (fermer) - Bleu glacial
+```jsx
+style={{
+  '--ignite-color': '#F0F8FF',
+  '--ignite-glow': 'rgba(173, 216, 230, 0.8)',
+  '--ignite-glow-soft': 'rgba(173, 216, 230, 0.4)',
+}}
+```
+- L'icône X devient rouge (`#ef4444`) pendant l'animation
+- Après 800ms, `handleClose('left')` est appelé
+
+#### Bouton + (créer) - Rouge
+```jsx
+style={{
+  '--ignite-color': '#ef4444',
+  '--ignite-glow': 'rgba(239, 68, 68, 0.8)',
+  '--ignite-glow-soft': 'rgba(239, 68, 68, 0.4)',
+}}
+```
+- Se déclenche quand on tap + sans avoir sélectionné de morceaux
+- L'icône + garde sa couleur originale (PAS de changement de couleur)
+- Timeout de 800ms pour correspondre à la durée de l'animation
+
+**Commentaire utilisateur:** "c'est nul à chier" - L'animation nécessite encore des ajustements. Le paroxysme de la taille doit être EXACTEMENT synchronisé avec le paroxysme de la couleur.
+
+---
+
+### 13. Suppression du Hover sur la Loupe (Search)
+
+**Modification:** Retrait de `hover:text-gray-600` pour que la loupe reste `text-gray-400` en permanence.
+
+---
+
+### 14. Correction du Glow des Capsules LET'S VIBE / GHOSTING
+
+**Problème initial:** Le glow n'apparaissait pas malgré `overflow-visible`.
+
+**Analyse:** La version précédente avait une div SÉPARÉE transparente avec `boxShadow` explicite pour le glow. Cette div avait été supprimée par erreur lors d'une simplification.
+
+**Solution:** Remettre la div séparée pour le glow :
+```jsx
+{/* Div séparée pour le glow */}
+<div
+  style={{
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'transparent',
+    boxShadow: `0 0 20px rgba(${neonColor}, 0.8), 0 0 40px rgba(${neonColor}, 0.4)`,
+  }}
+/>
+```
+
+---
+
+## Problèmes Identifiés (À Résoudre)
+
+### Animation Ignite - Désynchronisation
+
+**Symptôme:** Sur le bouton +, le changement de taille (scale) et le changement de couleur ne sont pas parfaitement synchronisés frame par frame.
+
+**Attendu:** Le PAROXYSME de la taille (scale 1.2) doit être EXACTEMENT au même moment que le PAROXYSME de la couleur rouge.
+
+**Tentatives:**
+1. Deux animations séparées (ignite et ignite-red) → Même problème
+2. Une seule animation avec variables CSS → Même problème
+3. Ajustement des keyframes → En cours
+
+**Note:** L'utilisateur a vérifié frame par frame et confirme la désynchronisation.
+
+---
+
+## Fichiers Modifiés (Session du 20 Janvier)
+
+| Fichier | Modifications |
+|---------|---------------|
+| `src/VibeBuilder.jsx` | Animation ignite unifiée, variables CSS, timeout 800ms |
+| `src/App.jsx` | `DRAWER_INERTIA_MULTIPLIER`: 30 → 25 |
+
+---
+
+*Dernière mise à jour: 20 Janvier 2026*
