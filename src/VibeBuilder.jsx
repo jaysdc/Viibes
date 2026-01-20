@@ -299,10 +299,12 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
-  /* Animation ignite - Couleur immédiate, retour progressif sur les 30 derniers % */
+  /* Animation ignite - Double scale, couleur reste rouge jusqu'à 70% puis retour blanc */
   @keyframes ignite {
     0% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
-    70% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+    20% { transform: translateY(-50%) scale(1); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+    40% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
+    70% { transform: translateY(-50%) scale(1); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
     100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
   .animate-ignite {
