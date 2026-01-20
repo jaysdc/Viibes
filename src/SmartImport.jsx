@@ -929,7 +929,7 @@ const SmartImport = ({
                         className="w-full h-full border border-white/20 shadow-2xl flex flex-col overflow-hidden"
                         style={{
                             paddingTop: SMARTIMPORT_CONFIG.DIALOG_PADDING_VERTICAL,
-                            paddingBottom: SMARTIMPORT_CONFIG.DIALOG_PADDING_VERTICAL,
+                            paddingBottom: 0,
                             paddingLeft: 0,
                             paddingRight: 0,
                             background: folderBg,
@@ -1242,7 +1242,9 @@ const SmartImport = ({
                             style={{
                                 flexShrink: 0,
                                 paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
-                                paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING
+                                paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                paddingTop: '0.5rem',
+                                paddingBottom: '0.5rem'
                             }}
                         >
                         {folderCount === 1 ? (

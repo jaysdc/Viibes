@@ -825,7 +825,7 @@ const DropboxBrowser = ({
                     style={{
                         ...morphStyles,
                         paddingTop: '0.75rem',
-                        paddingBottom: '0.75rem',
+                        paddingBottom: 0,
                         paddingLeft: 0,
                         paddingRight: 0,
                         background: CONFIG.DIALOG_BG_COLOR,
@@ -838,7 +838,7 @@ const DropboxBrowser = ({
                         className="flex-1 flex flex-col"
                         style={{
                             paddingTop: '0.75rem',
-                            paddingBottom: '0.75rem',
+                            paddingBottom: 0,
                         }}
                     >
                         {/* Header - capsule pleine largeur avec padding horizontal */}
