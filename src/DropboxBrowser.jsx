@@ -912,7 +912,7 @@ const DropboxBrowser = ({
                         </div>
 
                         {/* Liste des fichiers avec zone scrubbing à droite - pas de gap entre liste et scrub zone */}
-                        <div className="flex-1 flex mb-2" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                        <div className="flex-1 flex" style={{ paddingLeft: 0, paddingRight: 0 }}>
                             {/* Zone liste - padding gauche inclus, pas de padding droit */}
                             <div className="flex-1 relative">
                                 <div
