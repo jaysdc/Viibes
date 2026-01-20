@@ -299,18 +299,6 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
-  /* Animation ignite - Double scale, couleur reste rouge jusqu'à 70% puis retour blanc */
-  @keyframes ignite {
-    0% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
-    20% { transform: translateY(-50%) scale(1); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
-    40% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
-    70% { transform: translateY(-50%) scale(1); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
-    100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-  }
-  .animate-ignite {
-    animation: ignite 0.8s ease-out forwards;
-  }
-
   @keyframes jiggle {
     0% { transform: rotate(-1deg); }
     50% { transform: rotate(1deg); }
@@ -1021,11 +1009,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     const nameInputRef = useRef(null);
     const [isCreatingVibe, setIsCreatingVibe] = useState(false);
     const [isFadingOut, setIsFadingOut] = useState(false);
-    const [isClosingWithX, setIsClosingWithX] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteConfirmSwipeX, setDeleteConfirmSwipeX] = useState(0);
     const deleteConfirmStartX = useRef(null);
-    const [showNoSongsHint, setShowNoSongsHint] = useState(false);
     
     const [sortMode, setSortMode] = useState('alphaTitle');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
@@ -1535,10 +1521,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
             if (editMode) {
                 // Mode édition : proposer de supprimer la vibe
                 setShowDeleteConfirm(true);
-            } else {
-                // Mode création : feedback visuel pour indiquer qu'il faut sélectionner des morceaux
-                setShowNoSongsHint(true);
-                setTimeout(() => setShowNoSongsHint(false), 800);
             }
             return;
         }
@@ -2410,7 +2392,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CLOSE (X) - Centré verticalement à gauche */}
                             <div
                                 data-close-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${isClosingWithX ? 'animate-ignite' : ''}`}
+                                className="absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center"
                                 style={{
                                     left: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2419,30 +2401,23 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     height: CONFIG.CREATE_BTN_SIZE,
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
-                                    transition: 'background 0.15s, box-shadow 0.15s',
-                                    '--ignite-color': '#F0F8FF',
-                                    '--ignite-glow': 'rgba(173, 216, 230, 0.8)',
-                                    '--ignite-glow-soft': 'rgba(173, 216, 230, 0.4)',
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setIsClosingWithX(true);
-                                    setTimeout(() => {
-                                        handleClose('left');
-                                    }, 800);
+                                    handleClose('left');
                                 }}
                             >
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: isClosingWithX ? '#ef4444' : futureGradientColors[0] }}
+                                    style={{ color: futureGradientColors[0] }}
                                 />
                             </div>
 
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite */}
                             <div
                                 data-create-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${showNoSongsHint ? 'animate-ignite' : ''}`}
+                                className="absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center"
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2451,10 +2426,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     height: CONFIG.CREATE_BTN_SIZE,
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
-                                    transition: 'background 0.15s, box-shadow 0.15s',
-                                    '--ignite-color': '#ef4444',
-                                    '--ignite-glow': 'rgba(239, 68, 68, 0.8)',
-                                    '--ignite-glow-soft': 'rgba(239, 68, 68, 0.4)',
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
