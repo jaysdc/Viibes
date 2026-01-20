@@ -2458,6 +2458,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     height: CONFIG.CREATE_BTN_SIZE,
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
+                                    transition: 'background 0.15s, box-shadow 0.15s',
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
