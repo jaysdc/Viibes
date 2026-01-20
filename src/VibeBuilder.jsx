@@ -1042,6 +1042,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
     const deleteConfirmStartX = useRef(null);
     const [closeBtnAnimating, setCloseBtnAnimating] = useState(false);
     const [createBtnAnimating, setCreateBtnAnimating] = useState(false);
+    const [createBtnErrorAnimating, setCreateBtnErrorAnimating] = useState(false);
     
     const [sortMode, setSortMode] = useState('alphaTitle');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
@@ -2450,7 +2451,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite */}
                             <div
                                 data-create-btn
-                                className={`absolute rounded-full flex items-center justify-center ${createBtnAnimating ? 'animate-ignite-btn-green' : 'hover:scale-110 transition-transform'}`}
+                                className={`absolute rounded-full flex items-center justify-center ${createBtnAnimating ? 'animate-ignite-btn-green' : createBtnErrorAnimating ? 'animate-ignite-btn-red' : 'hover:scale-110 transition-transform'}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2464,18 +2465,19 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     e.stopPropagation();
                                     if (selectedSongs.length > 0) {
                                         setCreateBtnAnimating(true);
-                                        setTimeout(() => {
-                                            handleSave();
-                                        }, 500);
+                                        handleSave(); // Lance immédiatement (animations simultanées)
                                     } else {
-                                        handleSave();
+                                        // Pas de chansons : animation rouge
+                                        setCreateBtnErrorAnimating(true);
+                                        setTimeout(() => setCreateBtnErrorAnimating(false), 500);
+                                        handleSave(); // Gère le mode édition (delete confirm)
                                     }
                                 }}
                             >
                                 <Plus
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: createBtnAnimating ? '#00ff88' : futureGradientColors[futureGradientColors.length - 1] }}
+                                    style={{ color: createBtnAnimating ? '#00ff88' : createBtnErrorAnimating ? '#f43f5e' : futureGradientColors[futureGradientColors.length - 1] }}
                                 />
                             </div>
                             
