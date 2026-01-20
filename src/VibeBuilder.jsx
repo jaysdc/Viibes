@@ -313,6 +313,16 @@ const styles = `
     animation: ignite-btn-red 0.5s ease-out forwards;
   }
 
+  /* Animation shake latéral pour bouton + quand aucune chanson sélectionnée */
+  @keyframes shake-error {
+    0%, 100% { transform: translateY(-50%) translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateY(-50%) translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateY(-50%) translateX(4px); }
+  }
+  .animate-shake-error {
+    animation: shake-error 0.4s ease-out forwards;
+  }
+
   /* Animation ignite pour bouton + (créer) - Vert (#00ff88 → #00cc6a) */
   @keyframes ignite-btn-green {
     0% { transform: translateY(-50%) scale(1.15); box-shadow: 0 0 10px rgba(0, 255, 136, 0.4), 0 0 20px rgba(0, 204, 106, 0.2); }
@@ -2451,7 +2461,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite */}
                             <div
                                 data-create-btn
-                                className={`absolute rounded-full flex items-center justify-center ${createBtnAnimating ? 'animate-ignite-btn-green' : createBtnErrorAnimating ? 'animate-ignite-btn-red' : 'hover:scale-110 transition-transform'}`}
+                                className={`absolute rounded-full flex items-center justify-center ${createBtnAnimating ? 'animate-ignite-btn-green' : createBtnErrorAnimating ? 'animate-shake-error' : 'hover:scale-110 transition-transform'}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2467,9 +2477,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         setCreateBtnAnimating(true);
                                         handleSave(); // Lance immédiatement (animations simultanées)
                                     } else {
-                                        // Pas de chansons : animation rouge
+                                        // Pas de chansons : animation shake rouge
                                         setCreateBtnErrorAnimating(true);
-                                        setTimeout(() => setCreateBtnErrorAnimating(false), 500);
+                                        setTimeout(() => setCreateBtnErrorAnimating(false), 400);
                                         handleSave(); // Gère le mode édition (delete confirm)
                                     }
                                 }}
