@@ -302,12 +302,12 @@ const styles = `
   /* Animation ignite pour bouton X (fermer) - Double grossissement bleu glacial */
   @keyframes ignite {
     0% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
-    15% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-    30% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
+    20% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+    40% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
     100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
   .animate-ignite {
-    animation: ignite 0.7s ease-out forwards;
+    animation: ignite 0.8s ease-out forwards;
   }
 
   @keyframes jiggle {
@@ -363,13 +363,13 @@ const styles = `
 
   @keyframes shake {
     0% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
-    15% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-    30% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
+    20% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+    40% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
     100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
 
   .animate-shake {
-    animation: shake 0.7s ease-out forwards;
+    animation: shake 0.8s ease-out forwards;
   }
 
   @keyframes spin-slow {
@@ -2436,7 +2436,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     setIsClosingWithX(true);
                                     setTimeout(() => {
                                         handleClose('left');
-                                    }, 700);
+                                    }, 800);
                                 }}
                             >
                                 <X
