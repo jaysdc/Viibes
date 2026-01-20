@@ -952,16 +952,34 @@ const SmartImport = ({
                             }}
                         >
                         <div
-                            className="flex items-center justify-between rounded-full px-4 border border-gray-200 w-full"
+                            className="relative flex items-center justify-between rounded-full px-4 border border-gray-200 w-full overflow-hidden"
                             style={{
                                 background: 'white',
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                             }}
                         >
+                            {/* Preview gradient dans la capsule du header */}
+                            {swipePreview && (
+                                <div
+                                    className="absolute inset-0 z-10 flex items-center justify-center"
+                                    style={{
+                                        background: swipePreview.gradient,
+                                    }}
+                                >
+                                    <div
+                                        className="flex items-center gap-2 text-white font-black tracking-widest uppercase"
+                                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}
+                                    >
+                                        <ChevronLeft size={14} />
+                                        <span>{swipePreview.gradientName}</span>
+                                        <ChevronRight size={14} />
+                                    </div>
+                                </div>
+                            )}
                             {/* Nom du dossier avec autoscroll */}
                             <div className="flex-1 overflow-hidden mr-2">
-                                <div 
+                                <div
                                     className="font-bold text-gray-700 whitespace-nowrap"
                                     style={{
                                         fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE,
@@ -976,9 +994,9 @@ const SmartImport = ({
                             </div>
                             {/* Warning si > seuil */}
                             {importPreview.totalFiles > SMARTIMPORT_CONFIG.WARNING_THRESHOLD && (
-                                <div 
+                                <div
                                     className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0"
-                                    style={{ 
+                                    style={{
                                         background: 'rgba(251, 146, 60, 0.15)',
                                         border: '1px solid rgba(251, 146, 60, 0.3)',
                                         animation: 'smartimport-warning-bounce 1s ease-in-out infinite'
@@ -1227,26 +1245,6 @@ const SmartImport = ({
                                 paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING
                             }}
                         >
-                        {/* Capsule preview couleur - par-dessus les boutons */}
-                        {swipePreview && (
-                            <div 
-                                className="absolute inset-0 rounded-full z-20 flex items-center justify-center"
-                                style={{ 
-                                    background: swipePreview.gradient,
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-                                }}
-                            >
-                                <div 
-                                    className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                                >
-                                    <ChevronLeft size={16} />
-                                    <span>{swipePreview.gradientName}</span>
-                                    <ChevronRight size={16} />
-                                </div>
-                            </div>
-                        )}
-                        
                         {folderCount === 1 ? (
                             /* Cas 1 dossier : 2 boutons - X cercle + Vibe flex */
                             <div className="flex gap-2 items-center">
