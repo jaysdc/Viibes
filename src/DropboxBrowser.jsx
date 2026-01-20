@@ -1004,7 +1004,7 @@ const DropboxBrowser = ({
                         </div>
 
                         {/* Boutons browse */}
-                        <div className="relative" style={{ flexShrink: 0, paddingLeft: CONFIG.HORIZONTAL_PADDING, paddingRight: CONFIG.HORIZONTAL_PADDING }}>
+                        <div className="relative" style={{ flexShrink: 0, paddingLeft: CONFIG.HORIZONTAL_PADDING, paddingRight: CONFIG.HORIZONTAL_PADDING, paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
                             <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
                                 <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {closingButton === 'close' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
