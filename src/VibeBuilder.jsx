@@ -2127,7 +2127,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                             setSearchOverlayAnim('none');
                                         }, CONFIG.SEARCH_FADE_IN_DURATION);
                                     }}
-                                    className="h-full aspect-square rounded-full border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600 relative overflow-hidden"
+                                    className="h-full aspect-square rounded-full border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 relative overflow-hidden"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
