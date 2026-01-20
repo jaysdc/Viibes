@@ -365,15 +365,12 @@ const styles = `
   }
 
   @keyframes shake {
-    0%, 100% { transform: translateY(-50%) translateX(0); }
-    20% { transform: translateY(-50%) translateX(-4px); }
-    40% { transform: translateY(-50%) translateX(4px); }
-    60% { transform: translateY(-50%) translateX(-4px); }
-    80% { transform: translateY(-50%) translateX(4px); }
+    0% { transform: translateY(-50%) scale(1.1); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
+    100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
 
   .animate-shake {
-    animation: shake 0.4s ease-in-out;
+    animation: shake 0.6s cubic-bezier(0.1, 0, 0.2, 1) forwards;
   }
 
   @keyframes spin-slow {
