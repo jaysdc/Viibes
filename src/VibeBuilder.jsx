@@ -299,26 +299,15 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
-  /* Animation ignite pour bouton X (fermer) - Double grossissement bleu glacial */
+  /* Animation ignite - Double grossissement avec couleur variable */
   @keyframes ignite {
-    0% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
+    0% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
     20% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-    40% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
+    40% { transform: translateY(-50%) scale(1.2); background: var(--ignite-color); box-shadow: 0 0 20px var(--ignite-glow), 0 0 40px var(--ignite-glow-soft); }
     100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
   .animate-ignite {
     animation: ignite 0.8s ease-out forwards;
-  }
-
-  /* Animation ignite-red pour bouton + - Double grossissement rouge */
-  @keyframes ignite-red {
-    0% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
-    20% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-    40% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
-    100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-  }
-  .animate-ignite-red {
-    animation: ignite-red 0.8s ease-out forwards;
   }
 
   @keyframes jiggle {
@@ -2417,7 +2406,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             )}
                             
-                            {/* Bouton CLOSE (X) - Centré verticalement à gauche - MIX-BLEND-MODE SCREEN */}
+                            {/* Bouton CLOSE (X) - Centré verticalement à gauche */}
                             <div
                                 data-close-btn
                                 className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${isClosingWithX ? 'animate-ignite' : ''}`}
@@ -2430,6 +2419,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
                                     transition: 'background 0.15s, box-shadow 0.15s',
+                                    '--ignite-color': '#F0F8FF',
+                                    '--ignite-glow': 'rgba(173, 216, 230, 0.8)',
+                                    '--ignite-glow-soft': 'rgba(173, 216, 230, 0.4)',
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2446,10 +2438,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             </div>
 
-                            {/* Bouton CREATE/EDIT - Centré verticalement à droite - MIX-BLEND-MODE SCREEN */}
+                            {/* Bouton CREATE/EDIT - Centré verticalement à droite */}
                             <div
                                 data-create-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${showNoSongsHint ? 'animate-ignite-red' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${showNoSongsHint ? 'animate-ignite' : ''}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
@@ -2459,6 +2451,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
                                     background: 'white',
                                     transition: 'background 0.15s, box-shadow 0.15s',
+                                    '--ignite-color': '#ef4444',
+                                    '--ignite-glow': 'rgba(239, 68, 68, 0.8)',
+                                    '--ignite-glow-soft': 'rgba(239, 68, 68, 0.4)',
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
