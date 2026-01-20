@@ -365,12 +365,14 @@ const styles = `
   }
 
   @keyframes shake {
-    0% { transform: translateY(-50%) scale(1.1); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
+    0% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
+    15% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+    30% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
     100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
 
   .animate-shake {
-    animation: shake 0.6s cubic-bezier(0.1, 0, 0.2, 1) forwards;
+    animation: shake 0.7s ease-out forwards;
   }
 
   @keyframes spin-slow {
@@ -2457,11 +2459,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     transform: 'translateY(-50%)',
                                     width: CONFIG.CREATE_BTN_SIZE,
                                     height: CONFIG.CREATE_BTN_SIZE,
-                                    boxShadow: showNoSongsHint
-                                        ? `0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4)`
-                                        : `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
-                                    background: showNoSongsHint ? '#ef4444' : 'white',
-                                    transition: 'background 0.15s, box-shadow 0.15s',
+                                    boxShadow: `0 0 ${CONFIG.CREATE_BTN_GLOW_SPREAD}px rgba(255,255,255,${CONFIG.CREATE_BTN_GLOW_OPACITY}), 0 4px 12px rgba(0,0,0,0.15)`,
+                                    background: 'white',
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -2471,7 +2470,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 <Plus
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: showNoSongsHint ? 'white' : futureGradientColors[futureGradientColors.length - 1] }}
+                                    style={{ color: futureGradientColors[futureGradientColors.length - 1] }}
                                 />
                             </div>
                             
