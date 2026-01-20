@@ -299,18 +299,15 @@ const styles = `
     animation: pulse-flame 1.5s infinite ease-in-out;
   }
 
-  /* Animation ignite pour bouton X (fermer) - Fond bleu glacial, glow bleu glacial */
+  /* Animation ignite pour bouton X (fermer) - Double grossissement bleu glacial */
   @keyframes ignite {
-    0% { background: #F0F8FF; opacity: 0.3; box-shadow: 0 0 8px rgba(173, 216, 230, 0.4), 0 0 16px rgba(173, 216, 230, 0.2); }
-    15% { background: #F0F8FF; opacity: 1; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.6), 0 0 60px rgba(173, 216, 230, 0.4); }
-    25% { background: #F0F8FF; opacity: 0.4; box-shadow: 0 0 10px rgba(173, 216, 230, 0.3), 0 0 20px rgba(173, 216, 230, 0.2); }
-    40% { background: #F0F8FF; opacity: 1; box-shadow: 0 0 25px rgba(173, 216, 230, 0.9), 0 0 50px rgba(173, 216, 230, 0.7), 0 0 75px rgba(173, 216, 230, 0.5); }
-    55% { background: #F0F8FF; opacity: 0.7; box-shadow: 0 0 15px rgba(173, 216, 230, 0.5), 0 0 30px rgba(173, 216, 230, 0.3); }
-    70% { background: #F0F8FF; opacity: 1; box-shadow: 0 0 20px rgba(173, 216, 230, 0.7), 0 0 40px rgba(173, 216, 230, 0.5), 0 0 60px rgba(173, 216, 230, 0.3); }
-    100% { background: #F0F8FF; opacity: 1; box-shadow: 0 0 20px rgba(173, 216, 230, 0.6), 0 0 40px rgba(173, 216, 230, 0.4); }
+    0% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
+    15% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+    30% { transform: translateY(-50%) scale(1.2); background: #F0F8FF; box-shadow: 0 0 20px rgba(173, 216, 230, 0.8), 0 0 40px rgba(173, 216, 230, 0.4); }
+    100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
   }
   .animate-ignite {
-    animation: ignite 0.4s ease-out forwards;
+    animation: ignite 0.7s ease-out forwards;
   }
 
   @keyframes jiggle {
@@ -2439,13 +2436,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     setIsClosingWithX(true);
                                     setTimeout(() => {
                                         handleClose('left');
-                                    }, 400);
+                                    }, 700);
                                 }}
                             >
                                 <X
                                     size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
                                     strokeWidth={3}
-                                    style={{ color: isClosingWithX ? '#ef4444' : futureGradientColors[0] }}
+                                    style={{ color: futureGradientColors[0] }}
                                 />
                             </div>
 
