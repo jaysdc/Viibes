@@ -1548,7 +1548,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
             } else {
                 // Mode création : feedback visuel pour indiquer qu'il faut sélectionner des morceaux
                 setShowNoSongsHint(true);
-                setTimeout(() => setShowNoSongsHint(false), 600);
+                setTimeout(() => setShowNoSongsHint(false), 800);
             }
             return;
         }
