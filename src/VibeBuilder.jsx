@@ -310,6 +310,17 @@ const styles = `
     animation: ignite 0.8s ease-out forwards;
   }
 
+  /* Animation ignite-red pour bouton + - Double grossissement rouge */
+  @keyframes ignite-red {
+    0% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
+    20% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+    40% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
+    100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
+  }
+  .animate-ignite-red {
+    animation: ignite-red 0.8s ease-out forwards;
+  }
+
   @keyframes jiggle {
     0% { transform: rotate(-1deg); }
     50% { transform: rotate(1deg); }
@@ -359,17 +370,6 @@ const styles = `
   
   .animate-fade-out {
     animation: fade-out 0.3s ease-out forwards;
-  }
-
-  @keyframes shake {
-    0% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
-    20% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-    40% { transform: translateY(-50%) scale(1.2); background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4); }
-    100% { transform: translateY(-50%) scale(1); background: white; box-shadow: none; }
-  }
-
-  .animate-shake {
-    animation: shake 0.8s ease-out forwards;
   }
 
   @keyframes spin-slow {
@@ -2449,7 +2449,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bouton CREATE/EDIT - Centré verticalement à droite - MIX-BLEND-MODE SCREEN */}
                             <div
                                 data-create-btn
-                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${showNoSongsHint ? 'animate-shake' : ''}`}
+                                className={`absolute transition-transform hover:scale-110 rounded-full flex items-center justify-center ${showNoSongsHint ? 'animate-ignite-red' : ''}`}
                                 style={{
                                     right: CONFIG.CREATE_BTN_RIGHT,
                                     top: '50%',
