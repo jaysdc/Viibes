@@ -658,7 +658,7 @@ const Tweaker = ({
                     {/* Titre avec indicateurs de swipe */}
                     <div className="px-4 flex items-center justify-between">
                         {/* Indicateur gauche - Annuler */}
-                        <div className="flex items-center gap-0.5 swipe-hint-left">
+                        <div className="flex items-center gap-0.5 swipe-hint-left" style={{ minWidth: 40 }}>
                             <X size={14} className="text-red-400" strokeWidth={2.5} />
                             <ChevronLeft size={14} className="text-gray-300 -ml-1" strokeWidth={2} />
                             <ChevronLeft size={14} className="text-gray-200 -ml-2.5" strokeWidth={2} />
@@ -680,7 +680,7 @@ const Tweaker = ({
                         </div>
 
                         {/* Indicateur droite - Valider */}
-                        <div className="flex items-center gap-0.5 swipe-hint-right">
+                        <div className="flex items-center gap-0.5 swipe-hint-right" style={{ minWidth: 40, justifyContent: 'flex-end' }}>
                             <ChevronRight size={14} className="text-gray-200 -mr-2.5" strokeWidth={2} />
                             <ChevronRight size={14} className="text-gray-300 -mr-1" strokeWidth={2} />
                             <Check size={14} className="text-lime-500" strokeWidth={2.5} />
