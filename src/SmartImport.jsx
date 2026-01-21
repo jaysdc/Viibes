@@ -296,10 +296,16 @@ const SmartImportCard = ({
     const cardWidthRef = useRef(0);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
+    const swipeOffsetRef = useRef(0);
 
     const [swipeOffset, setSwipeOffset] = useState(0);
     const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false);
     const [swipePreview, setSwipePreview] = useState(null);
+
+    // Garder swipeOffsetRef synchronisé avec swipeOffset
+    useEffect(() => {
+        swipeOffsetRef.current = swipeOffset;
+    }, [swipeOffset]);
 
     // useEffect avec { passive: false } pour le touchmove
     useEffect(() => {
@@ -360,6 +366,7 @@ const SmartImportCard = ({
 
                 if (Math.abs(diffX) < maxSwipeDistance) {
                     setSwipeOffset(diffX);
+                    swipeOffsetRef.current = diffX;
 
                     const direction = diffX > 0 ? 1 : -1;
                     const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
@@ -379,13 +386,14 @@ const SmartImportCard = ({
             // Bloquer si carte existante
             if (isExisting) return;
 
-            const { x: touchStartX, y: touchStartY } = touchStartRef.current;
+            const { x: touchStartX } = touchStartRef.current;
             if (touchStartX === null) return;
 
             const elementWidth = cardWidthRef.current || 300;
             const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
-            const direction = swipeOffset > 0 ? 1 : -1;
-            const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
+            const currentSwipeOffset = swipeOffsetRef.current;
+            const direction = currentSwipeOffset > 0 ? 1 : -1;
+            const colorsTraversed = Math.floor((Math.abs(currentSwipeOffset) / maxSwipeDistance) * 20);
 
             // Si c'est un tap (pas de swipe significatif)
             if (swipeDirectionRef.current === null ||
@@ -400,6 +408,7 @@ const SmartImportCard = ({
 
             // Reset
             setSwipeOffset(0);
+            swipeOffsetRef.current = 0;
             setSwipePreview(null);
             touchStartRef.current = { x: null, y: null };
             swipeDirectionRef.current = null;
@@ -414,7 +423,7 @@ const SmartImportCard = ({
             element.removeEventListener('touchmove', handleTouchMove);
             element.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [isExisting, currentGradientIndex, getGradientByIndex, getGradientName, name, onToggleSelection, onGradientChange, swipeOffset]);
+    }, [isExisting, currentGradientIndex, getGradientByIndex, getGradientName, name, onToggleSelection, onGradientChange]);
 
     return (
         <div className="relative overflow-visible" style={{ marginBottom: SMARTIMPORT_CONFIG.CARD_GAP }}>
@@ -1155,24 +1164,6 @@ const SmartImport = ({
                                 minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                             }}
                         >
-                            {/* Preview gradient dans la capsule du header */}
-                            {swipePreview && (
-                                <div
-                                    className="absolute inset-0 z-10 flex items-center justify-center"
-                                    style={{
-                                        background: swipePreview.gradient,
-                                    }}
-                                >
-                                    <div
-                                        className="flex items-center gap-2 text-white font-black tracking-widest uppercase"
-                                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}
-                                    >
-                                        <ChevronLeft size={14} />
-                                        <span>{swipePreview.gradientName}</span>
-                                        <ChevronRight size={14} />
-                                    </div>
-                                </div>
-                            )}
                             {/* Nom du dossier avec autoscroll */}
                             <div className="flex-1 overflow-hidden mr-2">
                                 <div
