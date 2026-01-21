@@ -111,6 +111,46 @@ export const SMARTIMPORT_CONFIG = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
+// FONCTIONS UTILITAIRES - Détection de vibes existantes par contenu
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Calcule la signature d'une vibe existante (depuis playlists)
+const getVibeSignature = (vibe) => {
+    const ids = vibe.songIds || (vibe.songs ? vibe.songs.map(s => s.id) : []);
+    if (ids.length === 0) return null;
+    return [...ids].sort().join('|');
+};
+
+// Calcule la signature d'un dossier à importer (depuis folders)
+// files peut être: File[] (import local) ou {name, path_lower}[] (Dropbox)
+const getFolderSignature = (files) => {
+    if (!files || files.length === 0) return null;
+    const names = files.map(f => f.name).sort();
+    return names.join('|');
+};
+
+// Retourne un Set de signatures de toutes les vibes existantes
+const getExistingVibeSignatures = (playlists) => {
+    const signatures = new Set();
+    if (playlists) {
+        Object.values(playlists).forEach(vibe => {
+            const sig = getVibeSignature(vibe);
+            if (sig) signatures.add(sig);
+        });
+    }
+    return signatures;
+};
+
+// Retourne la liste des noms de dossiers dont le contenu existe déjà
+const findExistingFoldersByContent = (folders, playlists) => {
+    const existingSignatures = getExistingVibeSignatures(playlists);
+    return Object.keys(folders).filter(name => {
+        const folderSig = getFolderSignature(folders[name]);
+        return folderSig && existingSignatures.has(folderSig);
+    });
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
 // STYLES CSS
 // ══════════════════════════════════════════════════════════════════════════════
 const smartImportStyles = `
@@ -284,10 +324,12 @@ const SmartImport = ({
     // Initialiser selectedCards quand importPreview change
     useEffect(() => {
         if (importPreview && importPreview.folders) {
-            // Toutes les cartes sont sélectionnées par défaut
-            setSelectedCards(new Set(Object.keys(importPreview.folders)));
+            // Toutes les cartes sont sélectionnées par défaut SAUF celles dont le contenu existe déjà
+            const existingSet = new Set(importPreview.existingFolders || []);
+            const selectableFolders = Object.keys(importPreview.folders).filter(name => !existingSet.has(name));
+            setSelectedCards(new Set(selectableFolders));
         }
-    }, [importPreview?.folders]);
+    }, [importPreview?.folders, importPreview?.existingFolders]);
 
     // ══════════════════════════════════════════════════════════════════════════
     // ANALYSE DES FICHIERS
@@ -453,10 +495,8 @@ const SmartImport = ({
         // Sinon, afficher le dialog de preview
         const folderGradients = calculateGradients(folders);
         
-        // Détecter les dossiers qui existent déjà (nouveau format: { vibeId: { name, songs } })
-        const existingFolders = Object.keys(folders).filter(name =>
-            playlists && Object.values(playlists).some(v => v.name === name)
-        );
+        // Détecter les dossiers dont le CONTENU existe déjà (par signature)
+        const existingFolders = findExistingFoldersByContent(folders, playlists);
         
         // Afficher la capsule jaune immédiatement
         setShowMorphCapsule(true);
@@ -671,9 +711,8 @@ const SmartImport = ({
                 return;
             }
 
-            const existingFolders = Object.keys(folders).filter(name =>
-                playlists && Object.values(playlists).some(v => v.name === name)
-            );
+            // Détecter les dossiers dont le CONTENU existe déjà (par signature)
+            const existingFolders = findExistingFoldersByContent(folders, playlists);
 
             // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)
             const screenWidth = window.innerWidth;
@@ -717,11 +756,14 @@ const SmartImport = ({
     // Handlers pour le swipe de couleur
     const handleCardSwipeStart = (e, cardName) => {
         if (!e.touches || !e.touches[0]) return;
+        // Bloquer si la carte est une vibe existante (contenu identique)
+        if (importPreview?.existingFolders?.includes(cardName)) return;
+
         setSwipingCard(cardName);
         setSwipeTouchStartX(e.touches[0].clientX);
         setSwipeTouchStartY(e.touches[0].clientY);
         setSwipeDirection(null);
-        
+
         // Capturer la largeur de la carte
         if (e.currentTarget) {
             cardWidthRef.current = e.currentTarget.offsetWidth;
@@ -730,6 +772,8 @@ const SmartImport = ({
     };
 
     const handleCardSwipeMove = (e, cardName) => {
+        // Bloquer si la carte est une vibe existante (contenu identique)
+        if (importPreview?.existingFolders?.includes(cardName)) return;
         if (swipingCard !== cardName || swipeTouchStartX === null || swipeTouchStartY === null) return;
         const clientX = e.touches[0].clientX;
         const clientY = e.touches[0].clientY;
@@ -788,6 +832,8 @@ const SmartImport = ({
     };
 
     const handleCardSwipeEnd = (cardName) => {
+        // Bloquer si la carte est une vibe existante (contenu identique)
+        if (importPreview?.existingFolders?.includes(cardName)) return;
         if (swipingCard !== cardName) return;
 
         const elementWidth = cardWidthRef.current || 300;
@@ -1125,7 +1171,16 @@ const SmartImport = ({
                                         }, 50);
                                         return null;
                                     })()}
-                                    {Object.entries(importPreview.folders).map(([name, files]) => {
+                                    {Object.entries(importPreview.folders)
+                                        // Trier: non-existantes en haut, existantes en bas
+                                        .sort(([nameA], [nameB]) => {
+                                            const aExists = importPreview.existingFolders?.includes(nameA);
+                                            const bExists = importPreview.existingFolders?.includes(nameB);
+                                            if (aExists && !bExists) return 1;  // a en bas
+                                            if (!aExists && bExists) return -1; // a en haut
+                                            return 0; // garder l'ordre original
+                                        })
+                                        .map(([name, files]) => {
                                         const gradientIndex = importPreview.folderGradients?.[name] ?? 0;
                                         const gradientColors = getGradientByIndex(gradientIndex);
                                         const gradientStyle = gradientColors.length === 2
@@ -1162,7 +1217,9 @@ const SmartImport = ({
                                                             right: SMARTIMPORT_CONFIG.EXISTS_BADGE_RIGHT,
                                                             background: '#22c55e',
                                                             boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
-                                                            zIndex: 10
+                                                            zIndex: 10,
+                                                            // Compenser l'opacité du parent pour que le badge reste à 100%
+                                                            opacity: isSelected ? 1 : (1 / (vibeCardMinOpacity ?? 0.3))
                                                         }}
                                                     >
                                                         <Copy size={SMARTIMPORT_CONFIG.EXISTS_BADGE_ICON_SIZE} className="text-white" strokeWidth={3} />
