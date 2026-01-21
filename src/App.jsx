@@ -797,7 +797,7 @@ const CONFIG = {
     HEADER_PADDING_TOP: 3,                // Padding entre l'encoche et le header (rem)
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
-    HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
+    HEADER_LOGO_SIZE: 108,                // Taille du logo VibesLogo (px CSS) - était 36*3 avec ancien multiplicateur
     SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
     SPLASH_FLICKER_DURATION: 600,         // Durée du flicker néon (ms)
     SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
@@ -2088,7 +2088,7 @@ const NeonGlow = ({
 
 // --- 2. ASSETS & UI ATOMS ---
 // Logo "Vibes"
-const VibesLogo = ({ size = 40 }) => <VibesLogoVector size={size * 3} />;
+const VibesLogo = ({ size = 40 }) => <VibesLogoVector size={size} />;
 
 const VibingTitle = ({ size = 24 }) => (
     <div className="flex items-center justify-center">
