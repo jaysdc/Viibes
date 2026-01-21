@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector, VibesLogoVectorOutline, VibesLogoFlames, VibesLogoText, VibesLogoWave } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMaskT2, SphereMaskT3, SphereMask } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMask, SphereMaskInverted } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -7718,20 +7718,76 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         <style>{styles}</style>
 
-        {/* DEBUG: Sphère 3D avec SphereMask */}
+        {/* DEBUG: Croissants séparés pour visualiser les formes */}
         <div
-          className="absolute inset-0 flex items-center justify-center z-[9999] pointer-events-none"
-          style={{ background: 'rgba(255,255,255,0.9)' }}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-8 z-[9999] pointer-events-none"
+          style={{ background: 'rgba(255,255,255,0.95)' }}
         >
-          <div
-            className="relative rounded-full"
-            style={{
-              width: '50vw',
-              height: '50vw',
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #7C3AED 100%)'
-            }}
-          >
-            <SphereMask is3DMode={true} intensity={0.8} />
+          {/* Label */}
+          <div className="text-gray-800 font-bold text-lg">Croissants du SphereMask</div>
+
+          {/* Croissant OMBRE (bas-droite) */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-sm text-gray-600">Ombre (croissant sombre)</span>
+            <div
+              className="relative rounded-full overflow-hidden"
+              style={{ width: '40vw', height: '40vw', background: '#e5e7eb' }}
+            >
+              {/* Croissant d'ombre - utilise mask pour créer la forme de lune */}
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: `radial-gradient(
+                    ellipse 80% 80% at 65% 65%,
+                    rgba(0,0,0,0.8) 0%,
+                    rgba(0,0,0,0.5) 40%,
+                    transparent 70%
+                  )`,
+                  maskImage: `radial-gradient(
+                    circle at 37% 37%,
+                    transparent 30%,
+                    black 60%
+                  )`,
+                  WebkitMaskImage: `radial-gradient(
+                    circle at 37% 37%,
+                    transparent 30%,
+                    black 60%
+                  )`
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Croissant HIGHLIGHT (haut-gauche) */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-sm text-gray-600">Highlight (croissant clair)</span>
+            <div
+              className="relative rounded-full overflow-hidden"
+              style={{ width: '40vw', height: '40vw', background: '#374151' }}
+            >
+              {/* Croissant de highlight - utilise mask pour créer la forme de lune */}
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: `radial-gradient(
+                    ellipse 60% 60% at 32% 28%,
+                    rgba(255,255,255,0.9) 0%,
+                    rgba(255,255,255,0.5) 30%,
+                    transparent 60%
+                  )`,
+                  maskImage: `radial-gradient(
+                    circle at 45% 40%,
+                    transparent 20%,
+                    black 50%
+                  )`,
+                  WebkitMaskImage: `radial-gradient(
+                    circle at 45% 40%,
+                    transparent 20%,
+                    black 50%
+                  )`
+                }}
+              />
+            </div>
           </div>
         </div>
 
