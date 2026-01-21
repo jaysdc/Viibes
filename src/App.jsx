@@ -2973,17 +2973,17 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
     // MODE CONFIRMATION - priorité maximale
     if (confirmMode) {
         const isKill = confirmType === 'kill';
-        // Fuchsia Overdose (#ec4899 → #ff07a3) pour KILL, Lava Flow (#f43f5e → #b91c1c) pour NUKE
-        const bgColor = isKill ? '#ec4899' : '#f43f5e';
-        const borderColor = isKill ? '#db2777' : '#be123c';
-        const glowColor = isKill ? 'rgba(236, 72, 153, 0.7)' : 'rgba(244, 63, 94, 0.7)';
-        const glowColor2 = isKill ? 'rgba(255, 7, 163, 0.4)' : 'rgba(185, 28, 28, 0.4)';
+        // Fuchsia Overdose (#ec4899 → #ff07a3) pour KILL, Rouge uni (#FF0000) pour NUKE (comme bouton NUKE)
+        const bgColor = isKill ? '#ec4899' : CONFIG.IMPORT_NUKE_COLOR;
+        const borderColor = isKill ? '#db2777' : CONFIG.IMPORT_NUKE_COLOR;
+        const glowColor = isKill ? 'rgba(236, 72, 153, 0.7)' : CONFIG.IMPORT_NUKE_GLOW;
+        const glowColor2 = isKill ? 'rgba(255, 7, 163, 0.4)' : 'rgba(255, 0, 0, 0.4)';
         const text = isKill ? 'KILL CURRENT VIBE?!' : 'NUKE ALL???';
         const Icon = isKill ? Skull : Radiation;
         const isAnimating = feedback && (feedback.type === 'kill' || feedback.type === 'nuke');
         const animClass = isAnimating ? 'animate-neon-glow' : '';
-        const neonColor = isKill ? '236, 72, 153' : '244, 63, 94';
-        
+        const neonColor = isKill ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB;
+
         return (
             <div
             className={`flex-1 rounded-full flex items-center justify-center border animate-appear overflow-hidden relative ${animClass}`}
@@ -8450,17 +8450,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         >
                             {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
                             {!confirmFeedback && (() => {
-                                // Couleurs pour Kill (Fuchsia Overdose) et Nuke (Lava Flow)
-                                const gradientColors = pendingVibe
-                                    ? ['#ec4899', '#ff07a3']
-                                    : ['#f43f5e', '#b91c1c'];
-                                const gradientBg = `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`;
-                                const glowColor = gradientColors[0];
+                                // Couleurs pour Kill (Fuchsia Overdose) et Nuke (rouge uni comme bouton NUKE)
+                                const isKillMode = pendingVibe !== null;
+                                const bgColor = isKillMode
+                                    ? `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)`
+                                    : CONFIG.IMPORT_NUKE_COLOR; // Rouge uni #FF0000
+                                const glowColor = isKillMode ? '#ec4899' : CONFIG.IMPORT_NUKE_COLOR;
                                 return (
                                     <div
                                         className="absolute inset-0 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
                                         style={{
-                                            background: gradientBg,
+                                            background: bgColor,
                                             boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
                                         }}
                                     >
@@ -8477,25 +8477,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             })()}
                             {/* FeedbackOverlay avec animation ignite - Garde la couleur du bandeau initial */}
                             {confirmFeedback && (() => {
-                                // Kill = Fuchsia Overdose, Nuke/Cancel = basé sur pendingVibe
+                                // Kill = Fuchsia Overdose, Nuke/Cancel = rouge uni comme bouton NUKE
                                 const isKillAction = pendingVibe !== null;
-                                const gradientColors = isKillAction
-                                    ? ['#ec4899', '#ff07a3']  // Fuchsia Overdose
-                                    : ['#f43f5e', '#b91c1c']; // Lava Flow
-                                const glowColor = gradientColors[0];
-                                // Convertir hex en RGB pour neonColor
-                                const hexToRgb = (hex) => {
-                                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '236, 72, 153';
-                                };
+                                const bgStyle = isKillAction
+                                    ? { background: `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)` }
+                                    : { background: CONFIG.IMPORT_NUKE_COLOR }; // Rouge uni #FF0000
+                                const neonColorRgb = isKillAction ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB; // 255, 0, 0
                                 return (
                                 <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
                                 <FeedbackOverlay
                                     feedback={confirmFeedback}
                                     onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={hexToRgb(glowColor)}
+                                    neonColor={neonColorRgb}
                                     bgClass=""
-                                    bgStyle={{ background: `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)` }}
+                                    bgStyle={bgStyle}
                                     borderClass="border-transparent"
                                     is3DMode={is3DMode}
                                 >
