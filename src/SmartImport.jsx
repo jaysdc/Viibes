@@ -277,6 +277,231 @@ const MarqueeText = ({ text, className, style }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
+// COMPOSANT CARTE INDIVIDUELLE : SmartImportCard
+// ══════════════════════════════════════════════════════════════════════════════
+const SmartImportCard = ({
+    name,
+    files,
+    gradientStyle,
+    isExisting,
+    isSelected,
+    vibeCardMinOpacity,
+    onToggleSelection,
+    onGradientChange,
+    getGradientByIndex,
+    getGradientName,
+    currentGradientIndex,
+}) => {
+    const cardRef = useRef(null);
+    const cardWidthRef = useRef(0);
+    const touchStartRef = useRef({ x: null, y: null });
+    const swipeDirectionRef = useRef(null);
+
+    const [swipeOffset, setSwipeOffset] = useState(0);
+    const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false);
+    const [swipePreview, setSwipePreview] = useState(null);
+
+    // useEffect avec { passive: false } pour le touchmove
+    useEffect(() => {
+        const element = cardRef.current;
+        if (!element) return;
+
+        const handleTouchStart = (e) => {
+            if (!e.touches || !e.touches[0]) return;
+            // Bloquer si carte existante
+            if (isExisting) return;
+
+            touchStartRef.current = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
+            swipeDirectionRef.current = null;
+            cardWidthRef.current = element.offsetWidth;
+        };
+
+        const handleTouchMove = (e) => {
+            // Bloquer si carte existante
+            if (isExisting) return;
+
+            const { x: touchStartX, y: touchStartY } = touchStartRef.current;
+            if (touchStartX === null || touchStartY === null) return;
+
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const diffX = currentX - touchStartX;
+            const diffY = currentY - touchStartY;
+
+            // Déterminer la direction au premier mouvement significatif
+            if (swipeDirectionRef.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+                swipeDirectionRef.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+
+                if (swipeDirectionRef.current === 'horizontal') {
+                    setIsSwipeCatchingUp(true);
+                    setTimeout(() => setIsSwipeCatchingUp(false), 120);
+                    // Afficher le gradient actuel
+                    const currentGradient = getGradientByIndex(currentGradientIndex);
+                    const gradStyle = currentGradient.length === 2
+                        ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
+                        : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
+                    const safeIndex = ((currentGradientIndex % 20) + 20) % 20;
+                    setSwipePreview({ gradient: gradStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+                }
+            }
+
+            // Si vertical, laisser le scroll natif
+            if (swipeDirectionRef.current === 'vertical') return;
+
+            // Si horizontal, bloquer le scroll et gérer le swipe couleur
+            if (swipeDirectionRef.current === 'horizontal') {
+                e.preventDefault(); // Fonctionne car passive: false
+
+                const elementWidth = cardWidthRef.current || 300;
+                const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
+
+                if (Math.abs(diffX) < maxSwipeDistance) {
+                    setSwipeOffset(diffX);
+
+                    const direction = diffX > 0 ? 1 : -1;
+                    const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
+                    const previewIdx = currentGradientIndex + (direction * colorsTraversed);
+                    const previewGradient = getGradientByIndex(previewIdx);
+
+                    const gradStyle = previewGradient.length === 2
+                        ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
+                        : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
+                    const safeIndex = ((previewIdx % 20) + 20) % 20;
+                    setSwipePreview({ gradient: gradStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+                }
+            }
+        };
+
+        const handleTouchEnd = () => {
+            // Bloquer si carte existante
+            if (isExisting) return;
+
+            const { x: touchStartX, y: touchStartY } = touchStartRef.current;
+            if (touchStartX === null) return;
+
+            const elementWidth = cardWidthRef.current || 300;
+            const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
+            const direction = swipeOffset > 0 ? 1 : -1;
+            const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
+
+            // Si c'est un tap (pas de swipe significatif)
+            if (swipeDirectionRef.current === null ||
+                (swipeDirectionRef.current === 'horizontal' && colorsTraversed === 0)) {
+                // Toggle selection
+                onToggleSelection(name);
+            } else if (swipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
+                // Appliquer le changement de gradient
+                const newIndex = currentGradientIndex + (direction * colorsTraversed);
+                onGradientChange(name, newIndex);
+            }
+
+            // Reset
+            setSwipeOffset(0);
+            setSwipePreview(null);
+            touchStartRef.current = { x: null, y: null };
+            swipeDirectionRef.current = null;
+        };
+
+        element.addEventListener('touchstart', handleTouchStart, { passive: true });
+        element.addEventListener('touchmove', handleTouchMove, { passive: false });
+        element.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+        return () => {
+            element.removeEventListener('touchstart', handleTouchStart);
+            element.removeEventListener('touchmove', handleTouchMove);
+            element.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [isExisting, currentGradientIndex, getGradientByIndex, getGradientName, name, onToggleSelection, onGradientChange, swipeOffset]);
+
+    return (
+        <div className="relative overflow-visible" style={{ marginBottom: SMARTIMPORT_CONFIG.CARD_GAP }}>
+            {/* Badge Copy - EN DEHORS de la carte pour ne pas être affecté par l'opacité */}
+            {isExisting && (
+                <div
+                    className="absolute flex items-center justify-center rounded-full z-20"
+                    style={{
+                        width: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE,
+                        height: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE,
+                        top: SMARTIMPORT_CONFIG.EXISTS_BADGE_TOP,
+                        right: SMARTIMPORT_CONFIG.EXISTS_BADGE_RIGHT,
+                        background: '#22c55e',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                    }}
+                >
+                    <Copy size={SMARTIMPORT_CONFIG.EXISTS_BADGE_ICON_SIZE} className="text-white" strokeWidth={3} />
+                </div>
+            )}
+
+            {/* Carte principale */}
+            <div
+                ref={cardRef}
+                className="flex items-end px-3 pb-2 flex-shrink-0 relative overflow-visible"
+                style={{
+                    background: swipePreview ? swipePreview.gradient : gradientStyle,
+                    borderRadius: SMARTIMPORT_CONFIG.CARD_RADIUS,
+                    height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : 'translateX(0)',
+                    transition: swipeOffset !== 0 ? (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none') : 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                    opacity: isSelected ? 1 : (vibeCardMinOpacity ?? 0.3)
+                }}
+            >
+                {/* Indicateur de swipe - chevrons + pointer en haut centré */}
+                {!isExisting && (
+                    <div
+                        className="absolute left-0 right-0 flex items-center justify-center pointer-events-none"
+                        style={{
+                            top: SMARTIMPORT_CONFIG.SWIPE_INDICATOR_TOP,
+                            opacity: SMARTIMPORT_CONFIG.SWIPE_CHEVRON_OPACITY
+                        }}
+                    >
+                        <ChevronLeft size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white" />
+                        <Pointer size={SMARTIMPORT_CONFIG.SWIPE_POINTER_SIZE} className="text-white" />
+                        <ChevronRight size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} className="text-white" />
+                    </div>
+                )}
+
+                {/* Capsule liquid glass avec nom + compteur */}
+                <div
+                    className="rounded-full border border-white/20 shadow-lg flex items-baseline gap-2"
+                    style={{
+                        padding: `${SMARTIMPORT_CONFIG.CAPSULE_PY} ${SMARTIMPORT_CONFIG.CAPSULE_PX}`,
+                        backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)`,
+                        WebkitBackdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)`,
+                        background: 'transparent',
+                        maxWidth: 'calc(100% - 0.5rem)'
+                    }}
+                >
+                    <div className="overflow-hidden">
+                        <MarqueeText
+                            text={name}
+                            className="font-black text-white"
+                            style={{
+                                fontSize: SMARTIMPORT_CONFIG.CAPSULE_FONT_SIZE,
+                                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                            }}
+                        />
+                    </div>
+                    <span
+                        className="font-semibold text-white/90 flex items-center gap-0.5 flex-shrink-0"
+                        style={{
+                            fontSize: SMARTIMPORT_CONFIG.CAPSULE_COUNT_SIZE,
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                        }}
+                    >
+                        <CheckCircle2 size={10} />
+                        {files.length}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL : SmartImport
 // ══════════════════════════════════════════════════════════════════════════════
 const SmartImport = ({
@@ -316,16 +541,6 @@ const SmartImport = ({
     const listRef = useRef(null);
     const dialogRef = useRef(null);
     const animationRef = useRef(null); // ID de l'animation en cours
-    
-    // États pour le swipe de couleur
-    const [swipingCard, setSwipingCard] = useState(null); // nom de la carte en cours de swipe
-    const [swipeOffset, setSwipeOffset] = useState(0);
-    const [swipeTouchStartX, setSwipeTouchStartX] = useState(null);
-    const [swipeTouchStartY, setSwipeTouchStartY] = useState(null);
-    const [swipeDirection, setSwipeDirection] = useState(null); // 'horizontal', 'vertical', ou null
-    const [swipePreview, setSwipePreview] = useState(null); // { gradient, gradientName } pour preview locale
-    const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false); // Animation de rattrapage
-    const cardWidthRef = useRef(0); // Largeur de la carte pour limiter le swipe à 50%
 
     // État pour la sélection des cartes (toutes sélectionnées par défaut)
     const [selectedCards, setSelectedCards] = useState(new Set());
@@ -780,127 +995,31 @@ const SmartImport = ({
         }
     }, [dropboxData]);
 
-    // Handlers pour le swipe de couleur
-    const handleCardSwipeStart = (e, cardName) => {
-        if (!e.touches || !e.touches[0]) return;
-        // Bloquer si la carte est une vibe existante (contenu identique)
+    // Callback pour toggle la sélection d'une carte
+    const handleCardToggle = (cardName) => {
+        // Ne pas permettre de sélectionner une carte existante
         if (importPreview?.existingFolders?.includes(cardName)) return;
 
-        setSwipingCard(cardName);
-        setSwipeTouchStartX(e.touches[0].clientX);
-        setSwipeTouchStartY(e.touches[0].clientY);
-        setSwipeDirection(null);
-
-        // Capturer la largeur de la carte
-        if (e.currentTarget) {
-            cardWidthRef.current = e.currentTarget.offsetWidth;
-        }
-        // Ne PAS afficher le preview ici - attendre la détection horizontal
-    };
-
-    const handleCardSwipeMove = (e, cardName) => {
-        // Bloquer si la carte est une vibe existante (contenu identique)
-        if (importPreview?.existingFolders?.includes(cardName)) return;
-        if (swipingCard !== cardName || swipeTouchStartX === null || swipeTouchStartY === null) return;
-        const clientX = e.touches[0].clientX;
-        const clientY = e.touches[0].clientY;
-        const diffX = clientX - swipeTouchStartX;
-        const diffY = clientY - swipeTouchStartY;
-        
-        // Déterminer la direction au premier mouvement significatif
-        if (swipeDirection === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                setSwipeDirection('horizontal');
-                // Activer l'animation de rattrapage
-                setIsSwipeCatchingUp(true);
-                setTimeout(() => setIsSwipeCatchingUp(false), 120);
-                // Afficher immédiatement le dégradé actuel
-                const currentIdx = importPreview?.folderGradients?.[cardName] ?? 0;
-                const currentGradient = getGradientByIndex(currentIdx);
-                const gradientStyle = currentGradient.length === 2
-                    ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
-                    : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
-                const safeIndex = ((currentIdx % 20) + 20) % 20;
-                setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+        setSelectedCards(prev => {
+            const next = new Set(prev);
+            if (next.has(cardName)) {
+                next.delete(cardName);
             } else {
-                setSwipeDirection('vertical');
+                next.add(cardName);
             }
-        }
-        
-        // Si c'est un swipe vertical, on ignore (laisser le scroll se faire)
-        if (swipeDirection === 'vertical') return;
-        
-        // Si direction pas encore déterminée ou si c'est horizontal, on gère le swipe couleur
-        if (swipeDirection === 'horizontal') {
-            // Empêcher le scroll du parent quand on swipe horizontalement
-            e.preventDefault();
-            e.stopPropagation();
-
-            const elementWidth = cardWidthRef.current || 300;
-            const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
-
-            if (Math.abs(diffX) < maxSwipeDistance) {
-                setSwipeOffset(diffX);
-
-                const direction = diffX > 0 ? 1 : -1;
-                const colorsTraversed = Math.floor((Math.abs(diffX) / maxSwipeDistance) * 20);
-                const currentIdx = importPreview?.folderGradients?.[cardName] ?? 0;
-                const previewIdx = currentIdx + (direction * colorsTraversed);
-                const previewGradient = getGradientByIndex(previewIdx);
-                
-                // Preview locale (capsule par-dessus les boutons)
-                const gradientStyle = previewGradient.length === 2
-                    ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
-                    : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
-                const safeIndex = ((previewIdx % 20) + 20) % 20;
-                setSwipePreview({ gradient: gradientStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
-            }
-        }
+            return next;
+        });
     };
 
-    const handleCardSwipeEnd = (cardName) => {
-        // Bloquer si la carte est une vibe existante (contenu identique)
-        if (importPreview?.existingFolders?.includes(cardName)) return;
-        if (swipingCard !== cardName) return;
-
-        const elementWidth = cardWidthRef.current || 300;
-        const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
-        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
-
-        // Si c'est un tap (pas de swipe horizontal significatif et pas de scroll vertical)
-        const isTap = swipeDirection === null && Math.abs(swipeOffset) < 10;
-
-        if (isTap) {
-            // Toggle la sélection de la carte
-            setSelectedCards(prev => {
-                const next = new Set(prev);
-                if (next.has(cardName)) {
-                    next.delete(cardName);
-                } else {
-                    next.add(cardName);
-                }
-                return next;
-            });
-        } else if (swipeDirection === 'horizontal' && colorsTraversed >= 1 && importPreview) {
-            const direction = swipeOffset > 0 ? 1 : -1;
-            const currentIdx = importPreview.folderGradients?.[cardName] ?? 0;
-            const newIdx = currentIdx + (direction * colorsTraversed);
-
-            setImportPreview(prev => ({
-                ...prev,
-                folderGradients: {
-                    ...prev.folderGradients,
-                    [cardName]: newIdx
-                }
-            }));
-        }
-
-        setSwipingCard(null);
-        setSwipeOffset(0);
-        setSwipeTouchStartX(null);
-        setSwipeTouchStartY(null);
-        setSwipeDirection(null);
-        setSwipePreview(null);
+    // Callback pour changer le gradient d'une carte
+    const handleGradientChange = (cardName, newIndex) => {
+        setImportPreview(prev => ({
+            ...prev,
+            folderGradients: {
+                ...prev.folderGradients,
+                [cardName]: newIndex
+            }
+        }));
     };
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -1208,107 +1327,31 @@ const SmartImport = ({
                                             return 0; // garder l'ordre original
                                         })
                                         .map(([name, files]) => {
-                                        const gradientIndex = importPreview.folderGradients?.[name] ?? 0;
-                                        const gradientColors = getGradientByIndex(gradientIndex);
-                                        const gradientStyle = gradientColors.length === 2
-                                            ? `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`
-                                            : `linear-gradient(135deg, ${gradientColors.join(', ')})`;
-                                        const isExisting = importPreview.existingFolders?.includes(name);
-                                        const isSelected = selectedCards.has(name);
+                                            const gradientIndex = importPreview.folderGradients?.[name] ?? 0;
+                                            const gradientColors = getGradientByIndex(gradientIndex);
+                                            const gradientStyle = gradientColors.length === 2
+                                                ? `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`
+                                                : `linear-gradient(135deg, ${gradientColors.join(', ')})`;
+                                            const isExisting = importPreview.existingFolders?.includes(name);
+                                            const isSelected = selectedCards.has(name);
 
-                                        return (
-                                            <div
-                                                key={name}
-                                                className="flex items-end px-3 pb-2 flex-shrink-0 relative overflow-visible"
-                                                style={{
-                                                    background: gradientStyle,
-                                                    borderRadius: SMARTIMPORT_CONFIG.CARD_RADIUS,
-                                                    height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
-                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                                                    transform: swipingCard === name ? `translateX(${swipeOffset}px)` : 'translateX(0)',
-                                                    transition: swipingCard === name ? (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none') : 'transform 0.2s ease-out, opacity 0.2s ease-out',
-                                                    opacity: isSelected ? 1 : (vibeCardMinOpacity ?? 0.3)
-                                                }}
-                                                onTouchStart={(e) => handleCardSwipeStart(e, name)}
-                                                onTouchMove={(e) => handleCardSwipeMove(e, name)}
-                                                onTouchEnd={() => handleCardSwipeEnd(name)}
-                                            >
-                                                {/* Bulle Copy verte pour les vibes existantes */}
-                                                {isExisting && (
-                                                    <div
-                                                        className="absolute flex items-center justify-center rounded-full"
-                                                        style={{
-                                                            width: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE,
-                                                            height: SMARTIMPORT_CONFIG.EXISTS_BADGE_SIZE,
-                                                            top: SMARTIMPORT_CONFIG.EXISTS_BADGE_TOP,
-                                                            right: SMARTIMPORT_CONFIG.EXISTS_BADGE_RIGHT,
-                                                            background: '#22c55e',
-                                                            boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
-                                                            zIndex: 10,
-                                                            // Compenser l'opacité du parent pour que le badge reste à 100%
-                                                            opacity: isSelected ? 1 : (1 / (vibeCardMinOpacity ?? 0.3))
-                                                        }}
-                                                    >
-                                                        <Copy size={SMARTIMPORT_CONFIG.EXISTS_BADGE_ICON_SIZE} className="text-white" strokeWidth={3} />
-                                                    </div>
-                                                )}
-                                                {/* Indicateur de swipe - chevrons + pointer en haut centré */}
-                                                <div 
-                                                    className="absolute left-0 right-0 flex items-center justify-center pointer-events-none"
-                                                    style={{ 
-                                                        top: SMARTIMPORT_CONFIG.SWIPE_INDICATOR_TOP,
-                                                        opacity: SMARTIMPORT_CONFIG.SWIPE_CHEVRON_OPACITY 
-                                                    }}
-                                                >
-                                                    <ChevronLeft 
-                                                        size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} 
-                                                        className="text-white"
-                                                    />
-                                                    <Pointer 
-                                                        size={SMARTIMPORT_CONFIG.SWIPE_POINTER_SIZE} 
-                                                        className="text-white"
-                                                    />
-                                                    <ChevronRight 
-                                                        size={SMARTIMPORT_CONFIG.SWIPE_CHEVRON_SIZE} 
-                                                        className="text-white"
-                                                    />
-                                                </div>
-                                                
-                                                {/* Capsule liquid glass avec nom + compteur */}
-                                                <div 
-                                                    className="rounded-full border border-white/20 shadow-lg flex items-baseline gap-2"
-                                                    style={{ 
-                                                        padding: `${SMARTIMPORT_CONFIG.CAPSULE_PY} ${SMARTIMPORT_CONFIG.CAPSULE_PX}`,
-                                                        backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)`,
-                                                        WebkitBackdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)`,
-                                                        background: 'transparent',
-                                                        maxWidth: 'calc(100% - 0.5rem)'
-                                                    }}
-                                                >
-                                                    <div className="overflow-hidden">
-                                                        <MarqueeText
-                                                            text={name}
-                                                            className="font-black text-white"
-                                                            style={{ 
-                                                                fontSize: SMARTIMPORT_CONFIG.CAPSULE_FONT_SIZE,
-                                                                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <span 
-                                                        className="font-semibold text-white/90 flex items-center gap-0.5 flex-shrink-0"
-                                                        style={{ 
-                                                            fontSize: SMARTIMPORT_CONFIG.CAPSULE_COUNT_SIZE,
-                                                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                                                        }}
-                                                    >
-                                                        <CheckCircle2 size={10} />
-                                                        {files.length}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            return (
+                                                <SmartImportCard
+                                                    key={name}
+                                                    name={name}
+                                                    files={files}
+                                                    gradientStyle={gradientStyle}
+                                                    isExisting={isExisting}
+                                                    isSelected={isSelected}
+                                                    vibeCardMinOpacity={vibeCardMinOpacity}
+                                                    onToggleSelection={handleCardToggle}
+                                                    onGradientChange={handleGradientChange}
+                                                    getGradientByIndex={getGradientByIndex}
+                                                    getGradientName={getGradientName}
+                                                    currentGradientIndex={gradientIndex}
+                                                />
+                                            );
+                                        })}
                                 </div>
                             </div>
                             {/* Fade indicator pour scroll */}
