@@ -356,6 +356,114 @@ const getFooterHeight = () => {
 // ║  Modifie les valeurs ci-dessous pour personnaliser l'apparence de l'app   ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
+// ══════════════════════════════════════════════════════════════════════════
+// SON NÉON - Web Audio API
+// ══════════════════════════════════════════════════════════════════════════
+
+// AudioContext partagé (créé une seule fois)
+let audioContext = null;
+
+/**
+ * Joue un son de néon qui s'allume (buzz électrique)
+ * @param {Object} options - Options du son
+ * @param {number} options.frequency - Fréquence de base du hum (50-60Hz typique)
+ * @param {number} options.duration - Durée du son en ms
+ * @param {number} options.volume - Volume (0-1)
+ * @param {number} options.buzzIntensity - Intensité du crépitement (0-1)
+ */
+const playNeonBuzz = ({ frequency = 55, duration = 300, volume = 0.15, buzzIntensity = 0.6 } = {}) => {
+  try {
+    // Créer ou réutiliser l'AudioContext
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Reprendre si suspendu (politique autoplay des navigateurs)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    const durationSec = duration / 1000;
+
+    // 1. Oscillateur principal - le "hum" électrique (50-60Hz)
+    const hum = audioContext.createOscillator();
+    hum.type = 'sawtooth';
+    hum.frequency.setValueAtTime(frequency, now);
+
+    // 2. Oscillateur harmonique - donne le caractère "bzzzz"
+    const harmonic = audioContext.createOscillator();
+    harmonic.type = 'square';
+    harmonic.frequency.setValueAtTime(frequency * 2, now);
+
+    // 3. Bruit blanc pour le crépitement
+    const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * durationSec, audioContext.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseData.length; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * buzzIntensity;
+    }
+    const noise = audioContext.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    // Gains pour mixer les sources
+    const humGain = audioContext.createGain();
+    const harmonicGain = audioContext.createGain();
+    const noiseGain = audioContext.createGain();
+    const masterGain = audioContext.createGain();
+
+    // Enveloppe d'attaque rapide puis stabilisation (caractéristique du néon)
+    humGain.gain.setValueAtTime(0, now);
+    humGain.gain.linearRampToValueAtTime(volume * 0.7, now + 0.02); // Attaque rapide
+    humGain.gain.linearRampToValueAtTime(volume * 0.4, now + 0.1);  // Léger decay
+    humGain.gain.linearRampToValueAtTime(volume * 0.5, now + durationSec * 0.5); // Sustain
+    humGain.gain.linearRampToValueAtTime(0, now + durationSec); // Release
+
+    harmonicGain.gain.setValueAtTime(0, now);
+    harmonicGain.gain.linearRampToValueAtTime(volume * 0.3, now + 0.01);
+    harmonicGain.gain.linearRampToValueAtTime(volume * 0.15, now + 0.08);
+    harmonicGain.gain.linearRampToValueAtTime(0, now + durationSec);
+
+    // Le bruit crépite fort au début puis s'atténue
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(volume * 0.4, now + 0.015);
+    noiseGain.gain.linearRampToValueAtTime(volume * 0.1, now + 0.1);
+    noiseGain.gain.linearRampToValueAtTime(0, now + durationSec * 0.7);
+
+    // Filtre passe-bas pour adoucir le son
+    const filter = audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.linearRampToValueAtTime(400, now + durationSec);
+
+    // Connexions
+    hum.connect(humGain);
+    harmonic.connect(harmonicGain);
+    noise.connect(noiseGain);
+
+    humGain.connect(filter);
+    harmonicGain.connect(filter);
+    noiseGain.connect(filter);
+
+    filter.connect(masterGain);
+    masterGain.connect(audioContext.destination);
+
+    masterGain.gain.setValueAtTime(1, now);
+
+    // Démarrer et arrêter
+    hum.start(now);
+    harmonic.start(now);
+    noise.start(now);
+
+    hum.stop(now + durationSec);
+    harmonic.stop(now + durationSec);
+    noise.stop(now + durationSec);
+
+  } catch (e) {
+    // Silencieux si Web Audio n'est pas supporté
+    console.warn('Web Audio non supporté:', e);
+  }
+};
+
 const CONFIG = {
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -691,13 +799,13 @@ const CONFIG = {
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
     SPLASH_LOGO_SIZE: 140,                // Taille du logo dans le splash screen (px CSS)
-    SPLASH_DELAY_BEFORE_CASCADE: 200,     // Délai avant de commencer la cascade (ms)
-    SPLASH_CASCADE_FLICKER_DURATION: 300, // Durée du flicker pour chaque élément (ms)
+    SPLASH_DELAY_BEFORE_CASCADE: 300,     // Délai avant de commencer la cascade (ms)
+    SPLASH_CASCADE_FLICKER_DURATION: 400, // Durée du flicker pour chaque élément (ms)
     SPLASH_CASCADE_DELAY_FLAMES: 0,       // Délai pour les flammes (ms)
-    SPLASH_CASCADE_DELAY_TEXT: 250,       // Délai pour le texte VIBES (ms)
-    SPLASH_CASCADE_DELAY_WAVE: 500,       // Délai pour la wave (ms)
-    SPLASH_CASCADE_TOTAL: 800,            // Durée totale de la cascade (ms)
-    SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
+    SPLASH_CASCADE_DELAY_TEXT: 400,       // Délai pour le texte VIBES (ms)
+    SPLASH_CASCADE_DELAY_WAVE: 800,       // Délai pour la wave (ms)
+    SPLASH_CASCADE_TOTAL: 1200,           // Durée totale de la cascade (ms)
+    SPLASH_MORPH_DURATION: 600,           // Durée du morph vers le header (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
     HEADER_Z_INDEX: 40,                   // Z-index du header sticky
@@ -1730,7 +1838,7 @@ const styles = `
   }
 
   .splash-cascade-on {
-    animation: splash-cascade-flicker 300ms ease-out forwards;
+    animation: splash-cascade-flicker 400ms ease-out forwards;
   }
 
   /* Morph vers le header */
@@ -4738,6 +4846,7 @@ const handlePlayerTouchEnd = () => {
     const [vibeColorIndices, setVibeColorIndices] = useState({});
     const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'cascade' | 'morph' | 'done'
     const [splashCascade, setSplashCascade] = useState({ flames: false, text: false, wave: false }); // Éléments allumés
+    const [splashReady, setSplashReady] = useState(false); // Logo chargé et dimensionné correctement
     const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
     const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
@@ -4924,9 +5033,23 @@ useEffect(() => {
   setVibeColorIndices(initialColorIndices);
 }, []);
 
+// SPLASH SCREEN - Attendre que le logo soit prêt avant d'afficher
+useEffect(() => {
+  // Utiliser requestAnimationFrame pour s'assurer que le DOM est peint
+  const raf = requestAnimationFrame(() => {
+    // Petit délai supplémentaire pour garantir le dimensionnement correct
+    const timer = setTimeout(() => {
+      setSplashReady(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  });
+  return () => cancelAnimationFrame(raf);
+}, []);
+
 // SPLASH SCREEN - Animation cascade de démarrage
 useEffect(() => {
   if (playlists === null) return; // Attendre que les données soient chargées
+  if (!splashReady) return; // Attendre que le logo soit prêt
   if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
 
   // Tous les timers avec leurs délais calculés depuis le début
@@ -4938,14 +5061,20 @@ useEffect(() => {
 
   const t2 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, flames: true }));
+    // Son néon pour les flammes - fréquence basse, buzz intense
+    playNeonBuzz({ frequency: 50, duration: 350, volume: 0.12, buzzIntensity: 0.7 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
 
   const t3 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, text: true }));
+    // Son néon pour le texte - fréquence moyenne
+    playNeonBuzz({ frequency: 65, duration: 300, volume: 0.10, buzzIntensity: 0.5 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_TEXT);
 
   const t4 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, wave: true }));
+    // Son néon pour la wave - fréquence plus haute, plus doux
+    playNeonBuzz({ frequency: 80, duration: 400, volume: 0.08, buzzIntensity: 0.4 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_WAVE);
 
   const t5 = setTimeout(() => {
@@ -4964,7 +5093,7 @@ useEffect(() => {
     clearTimeout(t5);
     clearTimeout(t6);
   };
-}, [playlists]);
+}, [playlists, splashReady]);
 
 // 2. SAUVEGARDE AUTOMATIQUE - PLAYLISTS (format bibliothèque: { vibeId: { name, songIds } })
 useEffect(() => {
@@ -9132,7 +9261,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             })()}
 
         {/* SPLASH SCREEN - Overlay de démarrage avec animation cascade */}
-        {splashPhase !== 'done' && (() => {
+        {splashPhase !== 'done' && splashReady && (() => {
             // Calculer la position du logo header pour le morph
             let morphX = '-50%';
             let morphY = '-50%';
