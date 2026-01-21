@@ -799,7 +799,8 @@ const CONFIG = {
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 108,                // Taille du logo VibesLogo (px CSS) - était 36*3 avec ancien multiplicateur
     SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
-    SPLASH_FLICKER_DURATION: 600,         // Durée du flicker néon (ms)
+    SPLASH_FLICKER_DURATION: 1000,        // Durée du flicker néon initial (ms)
+    SPLASH_PULSE_DURATION: 2000,          // Durée de la phase pulse avec micro-flickers (ms)
     SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
     SPLASH_DELAY_BEFORE_FLICKER: 200,     // Délai avant de commencer le flicker (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
@@ -1825,17 +1826,44 @@ const styles = `
 
   /* Phase 1: Flicker néon - le logo s'allume */
   @keyframes splash-neon-flicker {
-    0% { opacity: 0; filter: brightness(0.5) grayscale(1); }
-    10% { opacity: 1; filter: brightness(1.2) grayscale(0); }
-    20% { opacity: 0.3; filter: brightness(0.6) grayscale(0.5); }
-    35% { opacity: 1; filter: brightness(1.3) grayscale(0); }
-    45% { opacity: 0.5; filter: brightness(0.7) grayscale(0.3); }
-    60% { opacity: 1; filter: brightness(1.1) grayscale(0); }
+    0% { opacity: 0; filter: brightness(0.3) grayscale(1); }
+    5% { opacity: 0.8; filter: brightness(1.1) grayscale(0.2); }
+    10% { opacity: 0.2; filter: brightness(0.4) grayscale(0.8); }
+    15% { opacity: 1; filter: brightness(1.3) grayscale(0); }
+    22% { opacity: 0.4; filter: brightness(0.5) grayscale(0.6); }
+    28% { opacity: 0.9; filter: brightness(1.2) grayscale(0.1); }
+    35% { opacity: 0.15; filter: brightness(0.3) grayscale(0.9); }
+    42% { opacity: 1; filter: brightness(1.4) grayscale(0); }
+    50% { opacity: 0.6; filter: brightness(0.7) grayscale(0.4); }
+    58% { opacity: 1; filter: brightness(1.2) grayscale(0); }
+    65% { opacity: 0.3; filter: brightness(0.5) grayscale(0.5); }
+    72% { opacity: 1; filter: brightness(1.3) grayscale(0); }
+    80% { opacity: 0.85; filter: brightness(1.1) grayscale(0.1); }
+    88% { opacity: 1; filter: brightness(1.15) grayscale(0); }
     100% { opacity: 1; filter: brightness(1) grayscale(0); }
   }
 
   .splash-logo-flicker {
-    animation: splash-neon-flicker 600ms ease-out forwards;
+    animation: splash-neon-flicker 1000ms ease-out forwards;
+  }
+
+  /* Phase Pulse: logo stable avec micro-flickers subtils */
+  @keyframes splash-neon-pulse {
+    0%, 100% { opacity: 1; filter: brightness(1) grayscale(0); }
+    8% { opacity: 0.85; filter: brightness(0.9) grayscale(0.1); }
+    10% { opacity: 1; filter: brightness(1.1) grayscale(0); }
+    25% { opacity: 0.9; filter: brightness(0.95) grayscale(0.05); }
+    27% { opacity: 1; filter: brightness(1.05) grayscale(0); }
+    45% { opacity: 0.8; filter: brightness(0.85) grayscale(0.15); }
+    48% { opacity: 1; filter: brightness(1.15) grayscale(0); }
+    70% { opacity: 0.88; filter: brightness(0.92) grayscale(0.08); }
+    73% { opacity: 1; filter: brightness(1.08) grayscale(0); }
+    90% { opacity: 0.92; filter: brightness(0.98) grayscale(0.02); }
+    93% { opacity: 1; filter: brightness(1.02) grayscale(0); }
+  }
+
+  .splash-logo-pulse {
+    animation: splash-neon-pulse 2000ms ease-in-out forwards;
   }
 
   /* Phase 2: Morph vers le header */
@@ -1865,18 +1893,45 @@ const styles = `
   }
 
   /* Glow néon rose pendant le flicker */
-  @keyframes splash-glow-pulse {
+  @keyframes splash-glow-flicker {
     0% { filter: drop-shadow(0 0 0px rgba(236, 72, 153, 0)); }
-    10% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
-    20% { filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.2)); }
-    35% { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 1)) drop-shadow(0 0 50px rgba(236, 72, 153, 0.6)); }
-    45% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.3)); }
-    60% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.4)); }
-    100% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.3)); }
+    5% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
+    10% { filter: drop-shadow(0 0 3px rgba(236, 72, 153, 0.1)); }
+    15% { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 1)) drop-shadow(0 0 50px rgba(236, 72, 153, 0.5)); }
+    22% { filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.2)); }
+    28% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
+    35% { filter: drop-shadow(0 0 2px rgba(236, 72, 153, 0.1)); }
+    42% { filter: drop-shadow(0 0 30px rgba(236, 72, 153, 1)) drop-shadow(0 0 60px rgba(236, 72, 153, 0.6)); }
+    50% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.2)); }
+    58% { filter: drop-shadow(0 0 22px rgba(236, 72, 153, 0.9)) drop-shadow(0 0 45px rgba(236, 72, 153, 0.5)); }
+    65% { filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.2)); }
+    72% { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 1)) drop-shadow(0 0 50px rgba(236, 72, 153, 0.5)); }
+    80% { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 35px rgba(236, 72, 153, 0.4)); }
+    88% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
+    100% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
   }
 
-  .splash-glow {
-    animation: splash-glow-pulse 600ms ease-out forwards;
+  .splash-glow-flicker {
+    animation: splash-glow-flicker 1000ms ease-out forwards;
+  }
+
+  /* Glow pendant la phase pulse - micro-flickers subtils */
+  @keyframes splash-glow-pulse {
+    0%, 100% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
+    8% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.2)); }
+    10% { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 35px rgba(236, 72, 153, 0.4)); }
+    25% { filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.5)) drop-shadow(0 0 25px rgba(236, 72, 153, 0.25)); }
+    27% { filter: drop-shadow(0 0 16px rgba(236, 72, 153, 0.65)) drop-shadow(0 0 32px rgba(236, 72, 153, 0.35)); }
+    45% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.35)) drop-shadow(0 0 18px rgba(236, 72, 153, 0.18)); }
+    48% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.75)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
+    70% { filter: drop-shadow(0 0 11px rgba(236, 72, 153, 0.45)) drop-shadow(0 0 22px rgba(236, 72, 153, 0.22)); }
+    73% { filter: drop-shadow(0 0 17px rgba(236, 72, 153, 0.68)) drop-shadow(0 0 34px rgba(236, 72, 153, 0.36)); }
+    90% { filter: drop-shadow(0 0 13px rgba(236, 72, 153, 0.55)) drop-shadow(0 0 28px rgba(236, 72, 153, 0.28)); }
+    93% { filter: drop-shadow(0 0 16px rgba(236, 72, 153, 0.62)) drop-shadow(0 0 32px rgba(236, 72, 153, 0.32)); }
+  }
+
+  .splash-glow-pulse {
+    animation: splash-glow-pulse 2000ms ease-in-out forwards;
   }
 `;
 
@@ -5061,19 +5116,26 @@ useEffect(() => {
   const flickerTimer = setTimeout(() => {
     setSplashPhase('flicker');
 
-    // Phase 2: Après le flicker, morph vers le header
-    const morphTimer = setTimeout(() => {
-      setSplashPhase('morph');
+    // Phase 2: Après le flicker, phase pulse avec micro-flickers
+    const pulseTimer = setTimeout(() => {
+      setSplashPhase('pulse');
 
-      // Phase 3: Après le morph, terminer
-      const doneTimer = setTimeout(() => {
-        setSplashPhase('done');
-      }, CONFIG.SPLASH_MORPH_DURATION);
+      // Phase 3: Après le pulse, morph vers le header
+      const morphTimer = setTimeout(() => {
+        setSplashPhase('morph');
 
-      return () => clearTimeout(doneTimer);
+        // Phase 4: Après le morph, terminer
+        const doneTimer = setTimeout(() => {
+          setSplashPhase('done');
+        }, CONFIG.SPLASH_MORPH_DURATION);
+
+        return () => clearTimeout(doneTimer);
+      }, CONFIG.SPLASH_PULSE_DURATION);
+
+      return () => clearTimeout(morphTimer);
     }, CONFIG.SPLASH_FLICKER_DURATION);
 
-    return () => clearTimeout(morphTimer);
+    return () => clearTimeout(pulseTimer);
   }, CONFIG.SPLASH_DELAY_BEFORE_FLICKER);
 
   return () => clearTimeout(flickerTimer);
@@ -9287,9 +9349,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 <VibesLogoVectorOutline size={CONFIG.SPLASH_LOGO_SIZE} strokeColor="#d1d5db" strokeWidth={2} />
                             </div>
 
-                            {/* Logo coloré avec flicker et glow */}
+                            {/* Logo coloré avec flicker, pulse et glow */}
                             <div
-                                className={`absolute ${splashPhase === 'flicker' ? 'splash-logo-flicker splash-glow' : ''} ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
+                                className={`absolute ${splashPhase === 'flicker' ? 'splash-logo-flicker splash-glow-flicker' : ''} ${splashPhase === 'pulse' ? 'splash-logo-pulse splash-glow-pulse' : ''} ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
                                 style={{
                                     left: '50%',
                                     top: '50%',
