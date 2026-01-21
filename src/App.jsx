@@ -5894,6 +5894,16 @@ const vibeSearchResults = () => {
   }, [addDebugLog]);
 
   const handleAudioPause = useCallback(() => {
+    const audio = audioRef.current;
+
+    // Ignorer la pause si on est à la fin du morceau (pause technique avant ended)
+    // Cela évite de mettre isPlaying=false avant que handleSongEnd puisse lancer le suivant
+    if (audio && audio.duration > 0 && (audio.duration - audio.currentTime) < 0.5) {
+      console.log('[Audio] pause event IGNORED (end of track)');
+      addDebugLog('PAUSE_IGN', 'end of track');
+      return;
+    }
+
     console.log('[Audio] pause event');
     addDebugLog('PAUSE', `changing=${isChangingSongRef.current}`);
     if ('mediaSession' in navigator) {
