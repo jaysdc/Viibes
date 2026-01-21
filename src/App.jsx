@@ -690,7 +690,7 @@ const CONFIG = {
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
-    SPLASH_LOGO_SIZE: 80,                 // Taille du logo dans le splash screen (px CSS)
+    SPLASH_LOGO_SIZE: 140,                // Taille du logo dans le splash screen (px CSS)
     SPLASH_DELAY_BEFORE_CASCADE: 200,     // Délai avant de commencer la cascade (ms)
     SPLASH_CASCADE_FLICKER_DURATION: 300, // Durée du flicker pour chaque élément (ms)
     SPLASH_CASCADE_DELAY_FLAMES: 0,       // Délai pour les flammes (ms)
@@ -9180,6 +9180,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             transform: 'translate(-50%, -50%)',
                             width: CONFIG.SPLASH_LOGO_SIZE,
                             height: CONFIG.SPLASH_LOGO_SIZE * 0.54,
+                            overflow: 'visible',
                             '--morph-x': morphX,
                             '--morph-y': morphY,
                             '--morph-scale': morphScale
@@ -9190,6 +9191,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             className={splashCascade.flames ? 'splash-cascade-on' : ''}
                             style={{
                                 opacity: splashCascade.flames ? 1 : 0,
+                                overflow: 'visible',
                                 '--glow-color': 'rgba(236, 0, 140, 0.8)'
                             }}
                         >
@@ -9201,6 +9203,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             className={splashCascade.text ? 'splash-cascade-on' : ''}
                             style={{
                                 opacity: splashCascade.text ? 1 : 0,
+                                overflow: 'visible',
                                 '--glow-color': 'rgba(236, 0, 140, 0.6)'
                             }}
                         >
@@ -9212,6 +9215,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             className={splashCascade.wave ? 'splash-cascade-on' : ''}
                             style={{
                                 opacity: splashCascade.wave ? 1 : 0,
+                                overflow: 'visible',
                                 '--glow-color': 'rgba(0, 174, 239, 0.8)'
                             }}
                         >
