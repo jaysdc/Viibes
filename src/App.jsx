@@ -798,13 +798,14 @@ const CONFIG = {
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
-    SPLASH_LOGO_SIZE: 140,                // Taille du logo dans le splash screen (px CSS)
+    SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
     SPLASH_DELAY_BEFORE_CASCADE: 400,     // Délai avant de commencer la cascade (ms)
     SPLASH_CASCADE_FLICKER_DURATION: 500, // Durée du flicker pour chaque élément (ms)
-    SPLASH_CASCADE_DELAY_FLAMES: 0,       // Délai pour les flammes (ms)
-    SPLASH_CASCADE_DELAY_TEXT: 600,       // Délai pour le texte VIBES (ms)
-    SPLASH_CASCADE_DELAY_WAVE: 1200,      // Délai pour la wave (ms)
-    SPLASH_CASCADE_TOTAL: 1800,           // Durée totale de la cascade (ms)
+    SPLASH_CASCADE_DELAY_TEXT: 0,         // Délai pour le texte V+ibes (ms) - EN PREMIER
+    SPLASH_CASCADE_DELAY_WAVE: 500,       // Délai pour la wave (ms) - EN DEUXIÈME
+    SPLASH_CASCADE_DELAY_FLAMES: 1000,    // Délai pour les flammes (ms) - EN DERNIER
+    SPLASH_CASCADE_TOTAL: 1500,           // Durée totale de la cascade (ms)
+    SPLASH_PAUSE_BEFORE_MORPH: 1000,      // Pause après allumage avant de lancer le morph (ms)
     SPLASH_MORPH_DURATION: 700,           // Durée du morph vers le header (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
@@ -4856,6 +4857,7 @@ const handlePlayerTouchEnd = () => {
     const [vibeColorIndices, setVibeColorIndices] = useState({});
     const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'cascade' | 'morph' | 'done'
     const [splashCascade, setSplashCascade] = useState({ flames: false, text: false, wave: false }); // Éléments allumés
+    const [splashLogoSize, setSplashLogoSize] = useState(() => Math.min(window.innerWidth * 0.8, 400)); // 80% de la largeur, max 400px
     const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
     const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
@@ -5054,31 +5056,33 @@ useEffect(() => {
     setSplashPhase('cascade');
   }, baseDelay);
 
+  // Ordre: 1) V+ibes, 2) wave, 3) flamme
   const t2 = setTimeout(() => {
-    setSplashCascade(prev => ({ ...prev, flames: true }));
-    // Son néon pour les flammes - fréquence basse, buzz intense
-    playNeonBuzz({ frequency: 50, duration: 350, volume: 0.12, buzzIntensity: 0.7 });
-  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
-
-  const t3 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, text: true }));
-    // Son néon pour le texte - fréquence moyenne
+    // Son néon pour le texte V+ibes - EN PREMIER
     playNeonBuzz({ frequency: 65, duration: 300, volume: 0.10, buzzIntensity: 0.5 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_TEXT);
 
-  const t4 = setTimeout(() => {
+  const t3 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, wave: true }));
-    // Son néon pour la wave - fréquence plus haute, plus doux
+    // Son néon pour la wave - EN DEUXIÈME
     playNeonBuzz({ frequency: 80, duration: 400, volume: 0.08, buzzIntensity: 0.4 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_WAVE);
 
+  const t4 = setTimeout(() => {
+    setSplashCascade(prev => ({ ...prev, flames: true }));
+    // Son néon pour les flammes - EN DERNIER, buzz intense
+    playNeonBuzz({ frequency: 50, duration: 350, volume: 0.12, buzzIntensity: 0.7 });
+  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
+
+  // Pause de 1000ms après la fin de la cascade avant de lancer le morph
   const t5 = setTimeout(() => {
     setSplashPhase('morph');
-  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL);
+  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL + CONFIG.SPLASH_PAUSE_BEFORE_MORPH);
 
   const t6 = setTimeout(() => {
     setSplashPhase('done');
-  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL + CONFIG.SPLASH_MORPH_DURATION);
+  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL + CONFIG.SPLASH_PAUSE_BEFORE_MORPH + CONFIG.SPLASH_MORPH_DURATION);
 
   return () => {
     clearTimeout(t1);
@@ -9260,7 +9264,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             // Calculer la position du logo header pour le morph
             let morphX = '-50%';
             let morphY = '-50%';
-            let morphScale = CONFIG.HEADER_LOGO_SIZE / CONFIG.SPLASH_LOGO_SIZE;
+            let morphScale = CONFIG.HEADER_LOGO_SIZE / splashLogoSize;
 
             if (headerLogoRef.current && mainContainerRef.current) {
                 const headerRect = headerLogoRef.current.getBoundingClientRect();
@@ -9293,7 +9297,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             overflow: 'visible'
                         }}
                     >
-                        <VibesLogoVectorOutline size={CONFIG.SPLASH_LOGO_SIZE} strokeColor="#d1d5db" strokeWidth={1.5} />
+                        <VibesLogoVectorOutline size={splashLogoSize} strokeColor="#d1d5db" strokeWidth={1.5} />
                     </div>
 
                     {/* Conteneur pour les éléments cascade (avec morph) */}
@@ -9303,8 +9307,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             left: '50%',
                             top: '50%',
                             transform: 'translate(-50%, -50%)',
-                            width: CONFIG.SPLASH_LOGO_SIZE,
-                            height: CONFIG.SPLASH_LOGO_SIZE * 0.54,
+                            width: splashLogoSize,
+                            height: splashLogoSize * 0.54,
                             overflow: 'visible',
                             '--morph-x': morphX,
                             '--morph-y': morphY,
@@ -9322,7 +9326,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 '--glow-color': 'rgba(236, 0, 140, 0.8)'
                             }}
                         >
-                            <VibesLogoFlames size={CONFIG.SPLASH_LOGO_SIZE} style={{ overflow: 'visible' }} />
+                            <VibesLogoFlames size={splashLogoSize} style={{ overflow: 'visible' }} />
                         </div>
 
                         {/* Texte VIBES - s'allume ensuite */}
@@ -9336,7 +9340,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 '--glow-color': 'rgba(236, 0, 140, 0.6)'
                             }}
                         >
-                            <VibesLogoText size={CONFIG.SPLASH_LOGO_SIZE} style={{ overflow: 'visible' }} />
+                            <VibesLogoText size={splashLogoSize} style={{ overflow: 'visible' }} />
                         </div>
 
                         {/* Wave multicolore - s'allume en dernier */}
@@ -9350,7 +9354,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 '--glow-color': 'rgba(0, 174, 239, 0.8)'
                             }}
                         >
-                            <VibesLogoWave size={CONFIG.SPLASH_LOGO_SIZE} style={{ overflow: 'visible' }} />
+                            <VibesLogoWave size={splashLogoSize} style={{ overflow: 'visible' }} />
                         </div>
                     </div>
                 </div>
