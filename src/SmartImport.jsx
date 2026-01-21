@@ -761,6 +761,10 @@ const SmartImport = ({
         
         // Si direction pas encore déterminée ou si c'est horizontal, on gère le swipe couleur
         if (swipeDirection === 'horizontal') {
+            // Empêcher le scroll du parent quand on swipe horizontalement
+            e.preventDefault();
+            e.stopPropagation();
+
             const elementWidth = cardWidthRef.current || 300;
             const maxSwipeDistance = elementWidth * SMARTIMPORT_CONFIG.COLOR_SWIPE_PERCENT / 100;
 
