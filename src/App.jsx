@@ -7718,75 +7718,30 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         <style>{styles}</style>
 
-        {/* DEBUG: Croissants séparés pour visualiser les formes */}
+        {/* DEBUG: Deux sphères avec SphereMask */}
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-8 z-[9999] pointer-events-none"
-          style={{ background: 'rgba(255,255,255,0.95)' }}
+          className="fixed inset-0 flex items-center justify-center gap-8 z-[9999] pointer-events-none"
+          style={{ background: 'rgba(0,0,0,0.85)' }}
         >
-          {/* Label */}
-          <div className="text-gray-800 font-bold text-lg">Croissants du SphereMask</div>
-
-          {/* Croissant OMBRE (bas-droite) */}
+          {/* Sphère 1 - gradient clair */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm text-gray-600">Ombre (croissant sombre)</span>
+            <span className="text-white text-sm font-medium">Lumière 315°</span>
             <div
               className="relative rounded-full overflow-hidden"
-              style={{ width: '40vw', height: '40vw', background: '#e5e7eb' }}
+              style={{ width: '35vw', height: '35vw', background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
             >
-              {/* Croissant d'ombre - utilise mask pour créer la forme de lune */}
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `radial-gradient(
-                    ellipse 80% 80% at 65% 65%,
-                    rgba(0,0,0,0.8) 0%,
-                    rgba(0,0,0,0.5) 40%,
-                    transparent 70%
-                  )`,
-                  maskImage: `radial-gradient(
-                    circle at 37% 37%,
-                    transparent 30%,
-                    black 60%
-                  )`,
-                  WebkitMaskImage: `radial-gradient(
-                    circle at 37% 37%,
-                    transparent 30%,
-                    black 60%
-                  )`
-                }}
-              />
+              <SphereMask intensity={0.7} is3DMode={true} lightAngle={315} />
             </div>
           </div>
 
-          {/* Croissant HIGHLIGHT (haut-gauche) */}
+          {/* Sphère 2 - gradient foncé */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm text-gray-600">Highlight (croissant clair)</span>
+            <span className="text-white text-sm font-medium">Lumière 45°</span>
             <div
               className="relative rounded-full overflow-hidden"
-              style={{ width: '40vw', height: '40vw', background: '#374151' }}
+              style={{ width: '35vw', height: '35vw', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}
             >
-              {/* Croissant de highlight - utilise mask pour créer la forme de lune */}
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `radial-gradient(
-                    ellipse 60% 60% at 32% 28%,
-                    rgba(255,255,255,0.9) 0%,
-                    rgba(255,255,255,0.5) 30%,
-                    transparent 60%
-                  )`,
-                  maskImage: `radial-gradient(
-                    circle at 45% 40%,
-                    transparent 20%,
-                    black 50%
-                  )`,
-                  WebkitMaskImage: `radial-gradient(
-                    circle at 45% 40%,
-                    transparent 20%,
-                    black 50%
-                  )`
-                }}
-              />
+              <SphereMask intensity={0.7} is3DMode={true} lightAngle={45} />
             </div>
           </div>
         </div>
