@@ -690,6 +690,10 @@ const CONFIG = {
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
+    SPLASH_LOGO_SIZE: 80,                 // Taille du logo dans le splash screen (px CSS)
+    SPLASH_FLICKER_DURATION: 600,         // Durée du flicker néon (ms)
+    SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
+    SPLASH_DELAY_BEFORE_FLICKER: 200,     // Délai avant de commencer le flicker (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
     HEADER_Z_INDEX: 40,                   // Z-index du header sticky
@@ -1705,6 +1709,66 @@ const styles = `
     50% { opacity: 1; }          /* 1-2s: fade in */
     50.1%, 75% { opacity: 1; }   /* 2-3s: radar visible */
     100% { opacity: 0; }         /* 3-4s: fade out */
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════ */
+  /* SPLASH SCREEN - Neon Wake Up Animation */
+  /* ══════════════════════════════════════════════════════════════════════════ */
+
+  /* Phase 1: Flicker néon - le logo s'allume */
+  @keyframes splash-neon-flicker {
+    0% { opacity: 0; filter: brightness(0.5) grayscale(1); }
+    10% { opacity: 1; filter: brightness(1.2) grayscale(0); }
+    20% { opacity: 0.3; filter: brightness(0.6) grayscale(0.5); }
+    35% { opacity: 1; filter: brightness(1.3) grayscale(0); }
+    45% { opacity: 0.5; filter: brightness(0.7) grayscale(0.3); }
+    60% { opacity: 1; filter: brightness(1.1) grayscale(0); }
+    100% { opacity: 1; filter: brightness(1) grayscale(0); }
+  }
+
+  .splash-logo-flicker {
+    animation: splash-neon-flicker 600ms ease-out forwards;
+  }
+
+  /* Phase 2: Morph vers le header */
+  @keyframes splash-morph {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--morph-x), var(--morph-y)) scale(var(--morph-scale));
+      opacity: 0;
+    }
+  }
+
+  .splash-logo-morph {
+    animation: splash-morph 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Fade out du fond blanc */
+  @keyframes splash-bg-fade {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .splash-bg-fade {
+    animation: splash-bg-fade 500ms ease-out forwards;
+  }
+
+  /* Glow néon rose pendant le flicker */
+  @keyframes splash-glow-pulse {
+    0% { filter: drop-shadow(0 0 0px rgba(236, 72, 153, 0)); }
+    10% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
+    20% { filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.2)); }
+    35% { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 1)) drop-shadow(0 0 50px rgba(236, 72, 153, 0.6)); }
+    45% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.3)); }
+    60% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.4)); }
+    100% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.3)); }
+  }
+
+  .splash-glow {
+    animation: splash-glow-pulse 600ms ease-out forwards;
   }
 `;
 
@@ -4684,6 +4748,7 @@ const handlePlayerTouchEnd = () => {
       }
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
+    const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'flicker' | 'morph' | 'done'
     const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
     const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
@@ -4700,6 +4765,7 @@ const handlePlayerTouchEnd = () => {
     const importMenuTimer = useRef(null);
 
     // ===== TOUS LES useRef ENSUITE =====
+    const headerLogoRef = useRef(null); // Ref du logo dans le header pour le morph du splash
     const audioRef = useRef(null);
     const audioContextRef = useRef(null);
     const gainNodeRef = useRef(null);
@@ -4868,6 +4934,33 @@ useEffect(() => {
   setLibrary(initialLibrary);
   setVibeColorIndices(initialColorIndices);
 }, []);
+
+// SPLASH SCREEN - Animation de démarrage
+useEffect(() => {
+  if (playlists === null) return; // Attendre que les données soient chargées
+  if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
+
+  // Phase 1: Délai initial puis flicker
+  const flickerTimer = setTimeout(() => {
+    setSplashPhase('flicker');
+
+    // Phase 2: Après le flicker, morph vers le header
+    const morphTimer = setTimeout(() => {
+      setSplashPhase('morph');
+
+      // Phase 3: Après le morph, terminer
+      const doneTimer = setTimeout(() => {
+        setSplashPhase('done');
+      }, CONFIG.SPLASH_MORPH_DURATION);
+
+      return () => clearTimeout(doneTimer);
+    }, CONFIG.SPLASH_FLICKER_DURATION);
+
+    return () => clearTimeout(morphTimer);
+  }, CONFIG.SPLASH_DELAY_BEFORE_FLICKER);
+
+  return () => clearTimeout(flickerTimer);
+}, [playlists, splashPhase]);
 
 // 2. SAUVEGARDE AUTOMATIQUE - PLAYLISTS (format bibliothèque: { vibeId: { name, songIds } })
 useEffect(() => {
@@ -7387,11 +7480,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
     });
   };
 
-  // ÉCRAN DE CHARGEMENT
+  // ÉCRAN DE CHARGEMENT - Logo éteint (gris) en attendant les données
   if (playlists === null) {
       return (
-          <div className="w-full h-screen sm:h-[800px] sm:w-[390px] bg-white sm:rounded-[3rem] flex justify-center items-center">
-              <VibesLogo size={60} />
+          <div className={isOnRealDevice ? "w-full h-screen bg-white flex justify-center items-center" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
+              <div className={isOnRealDevice ? "w-full h-full bg-white flex justify-center items-center" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 flex justify-center items-center shadow-2xl"}>
+                  <div style={{ filter: 'grayscale(1) brightness(0.7)' }}>
+                      <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
+                  </div>
+              </div>
           </div>
       );
   }
@@ -7435,7 +7532,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         >
           
           {/* Logo centré */}
-          <div className="flex justify-center items-center" style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}>
+          <div ref={headerLogoRef} className="flex justify-center items-center" style={{ marginBottom: UNIFIED_CONFIG.TITLE_MARGIN_BOTTOM }}>
              <VibesLogo size={CONFIG.HEADER_LOGO_SIZE} />
              <span className="text-[10px] text-gray-300 ml-1 font-bold">v72</span>
           </div>
@@ -9029,6 +9126,66 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     </div>
                 );
             })()}
+
+        {/* SPLASH SCREEN - Overlay de démarrage */}
+        {splashPhase !== 'done' && (() => {
+            // Calculer la position du logo header pour le morph
+            let morphX = '-50%';
+            let morphY = '-50%';
+            let morphScale = CONFIG.HEADER_LOGO_SIZE / CONFIG.SPLASH_LOGO_SIZE;
+
+            if (headerLogoRef.current && mainContainerRef.current) {
+                const headerRect = headerLogoRef.current.getBoundingClientRect();
+                const containerRect = mainContainerRef.current.getBoundingClientRect();
+                // Position du centre du logo header relative au conteneur
+                const headerCenterX = headerRect.left + headerRect.width / 2 - containerRect.left;
+                const headerCenterY = headerRect.top + headerRect.height / 2 - containerRect.top;
+                // Position du centre de l'écran
+                const screenCenterX = containerRect.width / 2;
+                const screenCenterY = containerRect.height / 2;
+                // Calcul du déplacement depuis le centre
+                morphX = `calc(-50% + ${headerCenterX - screenCenterX}px)`;
+                morphY = `calc(-50% + ${headerCenterY - screenCenterY}px)`;
+            }
+
+            return (
+                <div
+                    className={`absolute inset-0 z-[9999] flex items-center justify-center ${splashPhase === 'morph' ? 'splash-bg-fade pointer-events-none' : ''}`}
+                    style={{ backgroundColor: splashPhase === 'morph' ? undefined : 'white' }}
+                >
+                    {/* Logo éteint (gris) - toujours présent en fond */}
+                    <div
+                        className="absolute"
+                        style={{
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            filter: 'grayscale(1) brightness(0.7)',
+                            opacity: splashPhase === 'waiting' ? 1 : 0,
+                            transition: 'opacity 100ms ease-out'
+                        }}
+                    >
+                        <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
+                    </div>
+
+                    {/* Logo coloré avec flicker et glow */}
+                    <div
+                        className={`absolute ${splashPhase === 'flicker' ? 'splash-logo-flicker splash-glow' : ''} ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
+                        style={{
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            opacity: splashPhase === 'waiting' ? 0 : 1,
+                            '--morph-x': morphX,
+                            '--morph-y': morphY,
+                            '--morph-scale': morphScale
+                        }}
+                    >
+                        <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
+                    </div>
+                </div>
+            );
+        })()}
 
       </div>
 
