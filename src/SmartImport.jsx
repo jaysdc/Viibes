@@ -150,6 +150,15 @@ const findExistingFoldersByContent = (folders, playlists) => {
     });
 };
 
+// Vérifie si la fusion de tous les fichiers existe déjà comme vibe
+const checkFusionExists = (folders, playlists) => {
+    const existingSignatures = getExistingVibeSignatures(playlists);
+    // Fusionner tous les fichiers de tous les dossiers
+    const allFiles = Object.values(folders).flat();
+    const fusionSig = getFolderSignature(allFiles);
+    return fusionSig && existingSignatures.has(fusionSig);
+};
+
 // ══════════════════════════════════════════════════════════════════════════════
 // STYLES CSS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -497,7 +506,18 @@ const SmartImport = ({
         
         // Détecter les dossiers dont le CONTENU existe déjà (par signature)
         const existingFolders = findExistingFoldersByContent(folders, playlists);
-        
+
+        // Vérifier si la fusion de tous les fichiers existe déjà
+        const fusionExists = checkFusionExists(folders, playlists);
+
+        // Si TOUT existe déjà (toutes les cartes + fusion), ne pas afficher le dialog
+        const allFoldersExist = existingFolders.length === Object.keys(folders).length;
+        if (allFoldersExist && fusionExists) {
+            // Rien de nouveau à créer, fermer silencieusement
+            event.target.value = '';
+            return;
+        }
+
         // Afficher la capsule jaune immédiatement
         setShowMorphCapsule(true);
         
@@ -541,6 +561,7 @@ const SmartImport = ({
             totalFiles: totalFiles,
             rootName: rootName,
             existingFolders: existingFolders,
+            fusionExists: fusionExists,
             event: event
         });
         
@@ -579,20 +600,14 @@ const SmartImport = ({
             if (action === 'cancel') {
                 if (importPreview.event) importPreview.event.target.value = '';
             } else if (action === 'fusion') {
-                // Fusionner uniquement les fichiers des cartes sélectionnées
-                const selectedFiles = Object.entries(importPreview.folders)
-                    .filter(([name]) => selectedCards.has(name))
-                    .flatMap(([, files]) => files);
-                if (selectedFiles.length === 0) {
-                    if (importPreview.event) importPreview.event.target.value = '';
-                } else {
-                    const mergedFolders = { [importPreview.rootName]: selectedFiles };
-                    // Pour fusion, utiliser le premier gradient sélectionné
-                    const firstSelectedName = [...selectedCards][0];
-                    const fusionGradients = { [importPreview.rootName]: importPreview.folderGradients?.[firstSelectedName] ?? 0 };
-                    onImportComplete(mergedFolders, 'fusion', fusionGradients, importPreview.isDropbox);
-                    if (importPreview.event) importPreview.event.target.value = '';
-                }
+                // Fusionner TOUS les fichiers de tous les dossiers (indépendamment de la sélection)
+                const allFiles = Object.values(importPreview.folders).flat();
+                const mergedFolders = { [importPreview.rootName]: allFiles };
+                // Pour fusion, utiliser le premier gradient disponible
+                const firstFolderName = Object.keys(importPreview.folders)[0];
+                const fusionGradients = { [importPreview.rootName]: importPreview.folderGradients?.[firstFolderName] ?? 0 };
+                onImportComplete(mergedFolders, 'fusion', fusionGradients, importPreview.isDropbox);
+                if (importPreview.event) importPreview.event.target.value = '';
             } else if (action === 'vibes') {
                 // Filtrer uniquement les dossiers sélectionnés
                 const selectedFolders = {};
@@ -714,6 +729,17 @@ const SmartImport = ({
             // Détecter les dossiers dont le CONTENU existe déjà (par signature)
             const existingFolders = findExistingFoldersByContent(folders, playlists);
 
+            // Vérifier si la fusion de tous les fichiers existe déjà
+            const fusionExists = checkFusionExists(folders, playlists);
+
+            // Si TOUT existe déjà (toutes les cartes + fusion), ne pas afficher le dialog
+            const allFoldersExist = existingFolders.length === Object.keys(folders).length;
+            if (allFoldersExist && fusionExists) {
+                // Rien de nouveau à créer, fermer silencieusement
+                if (onDropboxDataClear) onDropboxDataClear();
+                return;
+            }
+
             // Utiliser des valeurs fixes pour le dialog Dropbox (centré à l'écran)
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
@@ -744,6 +770,7 @@ const SmartImport = ({
                 totalFiles: totalFiles,
                 rootName: rootName,
                 existingFolders: existingFolders,
+                fusionExists: fusionExists,
                 event: null,
                 isDropbox: true
             });
@@ -1376,7 +1403,7 @@ const SmartImport = ({
                                         <X size={18} />
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, opacity: importPreview.fusionExists ? 0.4 : 1 }}>
                                     {btnIgniting === 'fusion' && (
                                         <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-solar"
@@ -1388,7 +1415,7 @@ const SmartImport = ({
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('fusion')}
-                                        disabled={btnIgniting !== null}
+                                        disabled={btnIgniting !== null || importPreview.fusionExists}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1 text-white"
                                         style={{
                                             background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)'
@@ -1398,7 +1425,7 @@ const SmartImport = ({
                                         FUSION
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, opacity: selectedCount === 0 ? 0.4 : 1 }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
                                             className="absolute inset-0 rounded-full smartimport-ignite-roseMagenta"
@@ -1410,7 +1437,7 @@ const SmartImport = ({
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('vibes')}
-                                        disabled={btnIgniting !== null}
+                                        disabled={btnIgniting !== null || selectedCount === 0}
                                         className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
                                         style={{
                                             background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)'
