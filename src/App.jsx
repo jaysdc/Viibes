@@ -8291,7 +8291,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="absolute left-0 right-0 z-[64] pointer-events-none"
                     style={{
                         top: headerBottom,
-                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                        bottom: currentSong ? `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)` : safeAreaBottom,
                         backdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         opacity: confirmOverlayVisible ? 1 : 0,
@@ -8379,7 +8379,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"
                     style={{
                         top: 0,
-                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
+                        bottom: currentSong ? `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)` : safeAreaBottom,
                         opacity: confirmOverlayVisible ? 1 : 0,
                         transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                     }}
