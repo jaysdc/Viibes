@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Tag, EyeOff } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask, SphereMaskT4 } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask, SphereMask } from './Config.jsx';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -823,7 +823,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
+                    <SphereMask is3DMode={is3DMode} intensity={0.6} />
                     {is3DMode
                         ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
@@ -844,7 +844,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <SphereMaskT4 is3DMode={is3DMode} intensity={0.6} />
+                    <SphereMask is3DMode={is3DMode} intensity={0.6} />
                     {showTitles
                         ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
