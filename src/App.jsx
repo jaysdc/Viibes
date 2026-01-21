@@ -7718,31 +7718,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         <style>{styles}</style>
 
-        {/* DEBUG: Deux sphères avec SphereMask */}
-        <div
-          className="fixed inset-0 flex items-center justify-center gap-8 z-[9999] pointer-events-none"
-          style={{ background: 'rgba(0,0,0,0.85)' }}
-        >
-          {/* Sphère 1 - gradient clair */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-white text-sm font-medium">Lumière 315°</span>
-            <div
-              className="relative rounded-full overflow-hidden"
-              style={{ width: '35vw', height: '35vw', background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
-            >
-              <SphereMask intensity={0.7} is3DMode={true} lightAngle={315} />
-            </div>
-          </div>
-
-          {/* Sphère 2 - gradient foncé */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-white text-sm font-medium">Lumière 45°</span>
-            <div
-              className="relative rounded-full overflow-hidden"
-              style={{ width: '35vw', height: '35vw', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}
-            >
-              <SphereMask intensity={0.7} is3DMode={true} lightAngle={45} />
-            </div>
+        {/* DEBUG: Une sphère avec SphereMask */}
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]" style={{ background: '#222' }}>
+          <div
+            className="relative rounded-full"
+            style={{ width: '60vw', height: '60vw', background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
+          >
+            <SphereMask intensity={0.8} is3DMode={true} lightAngle={315} />
           </div>
         </div>
 
