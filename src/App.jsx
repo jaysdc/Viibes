@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector, VibesLogoVectorOutline, VibesLogoFlames, VibesLogoText, VibesLogoWave } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMaskT2, SphereMaskT3 } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMaskT2, SphereMaskT3, SphereMask } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -7717,6 +7717,23 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         )}
 
         <style>{styles}</style>
+
+        {/* DEBUG: Sphère 3D avec SphereMask */}
+        <div
+          className="absolute inset-0 flex items-center justify-center z-[9999] pointer-events-none"
+          style={{ background: 'rgba(255,255,255,0.9)' }}
+        >
+          <div
+            className="relative rounded-full"
+            style={{
+              width: '50vw',
+              height: '50vw',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #7C3AED 100%)'
+            }}
+          >
+            <SphereMask is3DMode={true} intensity={0.8} />
+          </div>
+        </div>
 
         {/* HEADER - Indépendant */}
         <div

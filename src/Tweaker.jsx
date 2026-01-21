@@ -785,7 +785,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode || activeMode === 'reorder'} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
@@ -804,22 +804,22 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode || activeMode === 'delete'} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
 
-                {/* Bouton 2D/3D - Rond - Electric Lagoon quand ON */}
+                {/* Bouton 2D/3D - Rond - Vert néon quand ON */}
                 <button
                     onClick={() => setIs3DMode(!is3DMode)}
                     className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: is3DMode ? 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)' : '#F3F4F6',
+                        background: is3DMode ? '#00FF88' : '#F3F4F6',
                         color: is3DMode ? 'white' : '#9CA3AF',
                         boxShadow: is3DMode
-                            ? '0 0 20px rgba(1, 255, 229, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
+                            ? '0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
@@ -830,17 +830,17 @@ const Tweaker = ({
                     }
                 </button>
 
-                {/* Bouton Show/Hide Titles - Rond - Electric Lagoon quand ON */}
+                {/* Bouton Show/Hide Titles - Rond - Vert néon quand ON */}
                 <button
                     onClick={() => setShowTitles(!showTitles)}
                     className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: showTitles ? 'linear-gradient(135deg, #01ffe5 0%, #57a9ed 50%, #a855f7 100%)' : '#F3F4F6',
+                        background: showTitles ? '#00FF88' : '#F3F4F6',
                         color: showTitles ? 'white' : '#9CA3AF',
                         boxShadow: showTitles
-                            ? '0 0 20px rgba(1, 255, 229, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
+                            ? '0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3)'
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >

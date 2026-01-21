@@ -157,16 +157,16 @@ export const CAPSULE_CYLINDER_SLICES = [
     -0.20,
     -0.10,
     0.00,
-    0.25,
-    0.45,
-    0.25,
-    0.35,
-    0.45,
-    0.35,
-    0.25,
+    0.08,
     0.15,
+    0.25,
+    0.35,
+    0.60,
+    0.35,
+    0.25,
     0.15,
     0.08,
+    0.00,
     0.00,
     0.00,
     0.00,
@@ -316,6 +316,49 @@ export const SphereMaskT4 = ({ intensity = 0.6, className = '', is3DMode = false
                 <ellipse cx="50" cy="25" rx="40" ry="25" fill={`url(#${filterId}-highlight)`} filter={`url(#${filterId})`} />
                 <ellipse cx="50" cy="80" rx="40" ry="20" fill={`url(#${filterId}-shadow)`} filter={`url(#${filterId})`} />
             </svg>
+        </div>
+    );
+};
+
+// Composant masque sphère 3D - Effet réaliste avec highlight excentré
+// Basé sur un éclairage venant du haut-gauche
+// intensity: 0-1 (force de l'effet)
+// lightAngle: position de la source lumineuse (0-360°, 315 = haut-gauche par défaut)
+export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, lightAngle = 315 }) => {
+    if (!is3DMode || intensity === 0) return null;
+
+    // Calculer la position du highlight basée sur l'angle de lumière
+    // 315° = haut-gauche (comme l'image de référence)
+    const angleRad = (lightAngle * Math.PI) / 180;
+    const highlightX = 50 + Math.cos(angleRad) * 25; // 25% de décalage du centre
+    const highlightY = 50 - Math.sin(angleRad) * 25;
+
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {/* Couche 1: Assombrissement global des bords (vignette) */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,${0.5 * intensity}) 100%)`
+                }}
+            />
+            {/* Couche 2: Highlight principal (point de lumière excentré) */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(circle at ${highlightX}% ${highlightY}%, rgba(255,255,255,${0.8 * intensity}) 0%, rgba(255,255,255,${0.3 * intensity}) 20%, transparent 50%)`
+                }}
+            />
+            {/* Couche 3: Assombrissement opposé à la lumière (bas-droite) */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(circle at ${100 - highlightX}% ${100 - highlightY}%, rgba(0,0,0,${0.4 * intensity}) 0%, transparent 60%)`
+                }}
+            />
         </div>
     );
 };
