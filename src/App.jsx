@@ -799,14 +799,9 @@ const CONFIG = {
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
     SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
-    SPLASH_DELAY_BEFORE_CASCADE: 400,     // Délai avant de commencer la cascade (ms)
-    SPLASH_CASCADE_FLICKER_DURATION: 500, // Durée du flicker pour chaque élément (ms)
-    SPLASH_CASCADE_DELAY_TEXT: 0,         // Délai pour le texte V+ibes (ms) - EN PREMIER
-    SPLASH_CASCADE_DELAY_WAVE: 800,       // Délai pour la wave (ms) - EN DEUXIÈME
-    SPLASH_CASCADE_DELAY_FLAMES: 1600,    // Délai pour les flammes (ms) - EN DERNIER
-    SPLASH_CASCADE_TOTAL: 2400,           // Durée totale de la cascade (ms) - 1600 + 800ms durée animation
-    SPLASH_PAUSE_BEFORE_MORPH: 1000,      // Pause après allumage avant de lancer le morph (ms)
-    SPLASH_MORPH_DURATION: 700,           // Durée du morph vers le header (ms)
+    SPLASH_FLICKER_DURATION: 600,         // Durée du flicker néon (ms)
+    SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
+    SPLASH_DELAY_BEFORE_FLICKER: 200,     // Délai avant de commencer le flicker (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
     HEADER_BLUR: 12,                      // Flou du backdrop (px)
     HEADER_Z_INDEX: 40,                   // Z-index du header sticky
@@ -1825,55 +1820,25 @@ const styles = `
   }
 
   /* ══════════════════════════════════════════════════════════════════════════ */
-  /* SPLASH SCREEN - Neon Cascade Animation */
+  /* SPLASH SCREEN - Neon Wake Up Animation */
   /* ══════════════════════════════════════════════════════════════════════════ */
 
-  /* Centrage du logo avant morph */
-  .splash-logo-centered {
-    transform: translate(-50%, -50%);
+  /* Phase 1: Flicker néon - le logo s'allume */
+  @keyframes splash-neon-flicker {
+    0% { opacity: 0; filter: brightness(0.5) grayscale(1); }
+    10% { opacity: 1; filter: brightness(1.2) grayscale(0); }
+    20% { opacity: 0.3; filter: brightness(0.6) grayscale(0.5); }
+    35% { opacity: 1; filter: brightness(1.3) grayscale(0); }
+    45% { opacity: 0.5; filter: brightness(0.7) grayscale(0.3); }
+    60% { opacity: 1; filter: brightness(1.1) grayscale(0); }
+    100% { opacity: 1; filter: brightness(1) grayscale(0); }
   }
 
-  /* Animation 1: TEXTE V+ibes - Allumage doux et progressif */
-  @keyframes splash-cascade-text {
-    0% { opacity: 0; filter: brightness(0.2); }
-    20% { opacity: 0.4; filter: brightness(0.6) drop-shadow(0 0 8px var(--glow-color)); }
-    50% { opacity: 0.8; filter: brightness(1.0) drop-shadow(0 0 12px var(--glow-color)); }
-    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 6px var(--glow-color)); }
+  .splash-logo-flicker {
+    animation: splash-neon-flicker 600ms ease-out forwards;
   }
 
-  .splash-cascade-text {
-    animation: splash-cascade-text 600ms ease-out forwards;
-  }
-
-  /* Animation 2: WAVE - Allumage avec rebond d'intensité */
-  @keyframes splash-cascade-wave {
-    0% { opacity: 0; filter: brightness(0.3); }
-    25% { opacity: 1; filter: brightness(1.6) drop-shadow(0 0 20px var(--glow-color)); }
-    45% { opacity: 0.5; filter: brightness(0.7) drop-shadow(0 0 10px var(--glow-color)); }
-    70% { opacity: 1; filter: brightness(1.3) drop-shadow(0 0 15px var(--glow-color)); }
-    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 8px var(--glow-color)); }
-  }
-
-  .splash-cascade-wave {
-    animation: splash-cascade-wave 700ms ease-in-out forwards;
-  }
-
-  /* Animation 3: FLAMMES - Allumage intense et flamboyant */
-  @keyframes splash-cascade-flames {
-    0% { opacity: 0; filter: brightness(0.1); }
-    10% { opacity: 0.3; filter: brightness(0.5); }
-    25% { opacity: 1; filter: brightness(2) drop-shadow(0 0 30px var(--glow-color)); }
-    40% { opacity: 0.4; filter: brightness(0.6) drop-shadow(0 0 15px var(--glow-color)); }
-    55% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 25px var(--glow-color)); }
-    75% { opacity: 0.7; filter: brightness(1) drop-shadow(0 0 12px var(--glow-color)); }
-    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 10px var(--glow-color)); }
-  }
-
-  .splash-cascade-flames {
-    animation: splash-cascade-flames 800ms ease-out forwards;
-  }
-
-  /* Morph vers le header */
+  /* Phase 2: Morph vers le header */
   @keyframes splash-morph {
     0% {
       transform: translate(-50%, -50%) scale(1);
@@ -1899,14 +1864,19 @@ const styles = `
     animation: splash-bg-fade 500ms ease-out forwards;
   }
 
-  /* Fade-in pour le logo au démarrage - évite le flash de redimensionnement */
-  @keyframes splash-logo-fadein {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+  /* Glow néon rose pendant le flicker */
+  @keyframes splash-glow-pulse {
+    0% { filter: drop-shadow(0 0 0px rgba(236, 72, 153, 0)); }
+    10% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
+    20% { filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.2)); }
+    35% { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 1)) drop-shadow(0 0 50px rgba(236, 72, 153, 0.6)); }
+    45% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.3)); }
+    60% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.4)); }
+    100% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.5)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.3)); }
   }
 
-  .splash-logo-fadein {
-    animation: splash-logo-fadein 100ms ease-out forwards;
+  .splash-glow {
+    animation: splash-glow-pulse 600ms ease-out forwards;
   }
 `;
 
@@ -4886,9 +4856,7 @@ const handlePlayerTouchEnd = () => {
       }
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
-    const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'cascade' | 'morph' | 'done'
-    const [splashCascade, setSplashCascade] = useState({ flames: false, text: false, wave: false }); // Éléments allumés
-    const [splashLogoSize, setSplashLogoSize] = useState(() => Math.min(window.innerWidth * 0.8, 400)); // 80% de la largeur, max 400px
+    const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'flicker' | 'morph' | 'done'
     const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
     const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
@@ -5075,49 +5043,32 @@ useEffect(() => {
   setVibeColorIndices(initialColorIndices);
 }, []);
 
-// SPLASH SCREEN - Animation cascade de démarrage
+// SPLASH SCREEN - Animation de démarrage
 useEffect(() => {
   if (playlists === null) return; // Attendre que les données soient chargées
   if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
 
-  // Tous les timers avec leurs délais calculés depuis le début
-  const baseDelay = CONFIG.SPLASH_DELAY_BEFORE_CASCADE;
+  // Phase 1: Délai initial puis flicker
+  const flickerTimer = setTimeout(() => {
+    setSplashPhase('flicker');
 
-  const t1 = setTimeout(() => {
-    setSplashPhase('cascade');
-  }, baseDelay);
+    // Phase 2: Après le flicker, morph vers le header
+    const morphTimer = setTimeout(() => {
+      setSplashPhase('morph');
 
-  // Ordre: 1) V+ibes, 2) wave, 3) flamme
-  const t2 = setTimeout(() => {
-    setSplashCascade(prev => ({ ...prev, text: true }));
-  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_TEXT);
+      // Phase 3: Après le morph, terminer
+      const doneTimer = setTimeout(() => {
+        setSplashPhase('done');
+      }, CONFIG.SPLASH_MORPH_DURATION);
 
-  const t3 = setTimeout(() => {
-    setSplashCascade(prev => ({ ...prev, wave: true }));
-  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_WAVE);
+      return () => clearTimeout(doneTimer);
+    }, CONFIG.SPLASH_FLICKER_DURATION);
 
-  const t4 = setTimeout(() => {
-    setSplashCascade(prev => ({ ...prev, flames: true }));
-  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
+    return () => clearTimeout(morphTimer);
+  }, CONFIG.SPLASH_DELAY_BEFORE_FLICKER);
 
-  // Pause de 1000ms après la fin de la cascade avant de lancer le morph
-  const t5 = setTimeout(() => {
-    setSplashPhase('morph');
-  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL + CONFIG.SPLASH_PAUSE_BEFORE_MORPH);
-
-  const t6 = setTimeout(() => {
-    setSplashPhase('done');
-  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL + CONFIG.SPLASH_PAUSE_BEFORE_MORPH + CONFIG.SPLASH_MORPH_DURATION);
-
-  return () => {
-    clearTimeout(t1);
-    clearTimeout(t2);
-    clearTimeout(t3);
-    clearTimeout(t4);
-    clearTimeout(t5);
-    clearTimeout(t6);
-  };
-}, [playlists]);
+  return () => clearTimeout(flickerTimer);
+}, [playlists, splashPhase]);
 
 // 2. SAUVEGARDE AUTOMATIQUE - PLAYLISTS (format bibliothèque: { vibeId: { name, songIds } })
 useEffect(() => {
@@ -9284,12 +9235,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 );
             })()}
 
-        {/* SPLASH SCREEN - Overlay de démarrage avec animation cascade */}
-        {splashPhase !== 'done' && splashPhase !== 'waiting' && (() => {
+        {/* SPLASH SCREEN - Overlay de démarrage */}
+        {splashPhase !== 'done' && (() => {
             // Calculer la position du logo header pour le morph
             let morphX = '-50%';
             let morphY = '-50%';
-            let morphScale = CONFIG.HEADER_LOGO_SIZE / splashLogoSize;
+            let morphScale = CONFIG.HEADER_LOGO_SIZE / CONFIG.SPLASH_LOGO_SIZE;
 
             if (headerLogoRef.current && mainContainerRef.current) {
                 const headerRect = headerLogoRef.current.getBoundingClientRect();
@@ -9308,95 +9259,43 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             return (
                 <div
                     className={`absolute inset-0 z-[9999] flex items-center justify-center ${splashPhase === 'morph' ? 'splash-bg-fade pointer-events-none' : ''}`}
-                    style={{ backgroundColor: splashPhase === 'morph' ? undefined : 'white', overflow: 'visible' }}
+                    style={{ backgroundColor: splashPhase === 'morph' ? undefined : 'white' }}
                 >
-                    {/* Logo outline gris (tube éteint) - toujours visible en fond */}
+                    {/* Logo éteint (gris) - toujours présent en fond */}
                     <div
-                        className="absolute splash-logo-fadein"
+                        className="absolute"
                         style={{
                             left: '50%',
                             top: '50%',
                             transform: 'translate(-50%, -50%)',
-                            opacity: splashPhase === 'morph' ? 0 : undefined,
-                            transition: splashPhase === 'morph' ? 'opacity 200ms ease-out' : undefined,
-                            overflow: 'visible'
+                            filter: 'grayscale(1) brightness(0.7)',
+                            opacity: splashPhase === 'waiting' ? 1 : 0,
+                            transition: 'opacity 100ms ease-out'
                         }}
                     >
-                        <VibesLogoVectorOutline size={splashLogoSize} strokeColor="#d1d5db" strokeWidth={1.5} />
+                        <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
                     </div>
 
-                    {/* Conteneur pour les éléments cascade (avec morph) */}
+                    {/* Logo coloré avec flicker et glow */}
                     <div
-                        className={`absolute splash-logo-fadein ${splashPhase === 'morph' ? 'splash-logo-morph' : 'splash-logo-centered'}`}
+                        className={`absolute ${splashPhase === 'flicker' ? 'splash-logo-flicker splash-glow' : ''} ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
                         style={{
                             left: '50%',
                             top: '50%',
-                            width: splashLogoSize,
-                            height: splashLogoSize * 0.54,
-                            overflow: 'visible',
+                            transform: 'translate(-50%, -50%)',
+                            opacity: splashPhase === 'waiting' ? 0 : 1,
                             '--morph-x': morphX,
                             '--morph-y': morphY,
                             '--morph-scale': morphScale
                         }}
                     >
-                        {/* Flammes - s'allument EN DERNIER */}
-                        <div
-                            className={splashCascade.flames ? 'splash-cascade-flames' : ''}
-                            style={{
-                                opacity: splashCascade.flames ? 1 : 0,
-                                overflow: 'visible',
-                                position: 'absolute',
-                                inset: 0,
-                                '--glow-color': 'rgba(236, 0, 140, 0.8)'
-                            }}
-                        >
-                            <VibesLogoFlames size={splashLogoSize} style={{ overflow: 'visible' }} />
-                        </div>
-
-                        {/* Texte VIBES - s'allume EN PREMIER */}
-                        <div
-                            className={splashCascade.text ? 'splash-cascade-text' : ''}
-                            style={{
-                                opacity: splashCascade.text ? 1 : 0,
-                                overflow: 'visible',
-                                position: 'absolute',
-                                inset: 0,
-                                '--glow-color': 'rgba(236, 0, 140, 0.6)'
-                            }}
-                        >
-                            <VibesLogoText size={splashLogoSize} style={{ overflow: 'visible' }} />
-                        </div>
-
-                        {/* Wave multicolore - s'allume EN DEUXIÈME */}
-                        <div
-                            className={splashCascade.wave ? 'splash-cascade-wave' : ''}
-                            style={{
-                                opacity: splashCascade.wave ? 1 : 0,
-                                overflow: 'visible',
-                                position: 'absolute',
-                                inset: 0,
-                                '--glow-color': 'rgba(0, 174, 239, 0.8)'
-                            }}
-                        >
-                            <VibesLogoWave size={splashLogoSize} style={{ overflow: 'visible' }} />
-                        </div>
+                        <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
                     </div>
                 </div>
             );
         })()}
 
       </div>
-
-      {/* SPLASH SCREEN GLOW LAYER - en dehors du mainContainer pour éviter le clip par overflow-hidden */}
-      {splashPhase !== 'done' && splashPhase !== 'waiting' && (
-        <div
-          className="fixed inset-0 z-[9998] pointer-events-none"
-          style={{
-            background: splashPhase === 'morph' ? 'transparent' : 'radial-gradient(circle at center, rgba(236, 0, 140, 0.15) 0%, transparent 60%)',
-            transition: 'background 500ms ease-out'
-          }}
-        />
-      )}
 
     </div>
   );
