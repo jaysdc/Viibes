@@ -4634,7 +4634,7 @@ export default function App() {
     const [library, setLibrary] = useState({});         // Bibliothèque centrale de tous les morceaux
     const [fileCache, setFileCache] = useState({});     // Cache runtime des blob URLs { songId: blobUrl }
     const [currentTime, setCurrentTime] = useState('');
-    const [isOnRealDevice, setIsOnRealDevice] = useState(false);
+    const [isOnRealDevice, setIsOnRealDevice] = useState(() => isRealDevice()); // Initialisation immédiate pour éviter flash de bordures
     const [safeAreaBottom, setSafeAreaBottom] = useState(0);
 
     // Lire safe-area-inset-bottom au démarrage
