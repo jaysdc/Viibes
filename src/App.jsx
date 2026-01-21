@@ -798,7 +798,7 @@ const CONFIG = {
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 36,                 // Taille du logo VibesLogo (px CSS)
-    SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
+    SPLASH_LOGO_SIZE: 80,                 // Taille du logo dans le splash screen (px CSS)
     SPLASH_FLICKER_DURATION: 600,         // Durée du flicker néon (ms)
     SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
     SPLASH_DELAY_BEFORE_FLICKER: 200,     // Délai avant de commencer le flicker (ms)
