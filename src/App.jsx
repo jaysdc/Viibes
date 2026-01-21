@@ -4359,6 +4359,15 @@ export default function App() {
     }, []);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSong, setCurrentSong] = useState(null);
+
+    // DEBUG: Audio events log
+    const [audioDebugLogs, setAudioDebugLogs] = useState([]);
+    const isChangingSongRef = useRef(false); // Track when we're changing songs
+    const addDebugLog = useCallback((event, details = '') => {
+      const now = new Date();
+      const time = `${now.getMinutes()}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+      setAudioDebugLogs(prev => [...prev.slice(-9), { time, event, details }]);
+    }, []);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isProgressScrubbing, setIsProgressScrubbing] = useState(false);
@@ -5818,10 +5827,19 @@ const vibeSearchResults = () => {
               }
 
               // Jouer l'audio
+              addDebugLog('PLAY_CMD', `song=${currentSong?.title?.slice(0,15)}`);
               const playPromise = audio.play();
               if (playPromise !== undefined) {
-                  playPromise.catch(error => {
-                      if (error.name !== 'AbortError') console.error("Playback error:", error);
+                  playPromise.then(() => {
+                      // Reset the flag once audio is actually playing
+                      isChangingSongRef.current = false;
+                      addDebugLog('PLAY_OK', '');
+                  }).catch(error => {
+                      isChangingSongRef.current = false;
+                      if (error.name !== 'AbortError') {
+                          console.error("Playback error:", error);
+                          addDebugLog('PLAY_ERR', error.name);
+                      }
                   });
               }
         } else {
@@ -5868,19 +5886,21 @@ const vibeSearchResults = () => {
 
   const handleAudioPlay = useCallback(() => {
     console.log('[Audio] play event');
+    addDebugLog('PLAY', `changing=${isChangingSongRef.current}`);
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'playing';
     }
     setIsPlaying(true);
-  }, []);
+  }, [addDebugLog]);
 
   const handleAudioPause = useCallback(() => {
     console.log('[Audio] pause event');
+    addDebugLog('PAUSE', `changing=${isChangingSongRef.current}`);
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'paused';
     }
     setIsPlaying(false);
-  }, []);
+  }, [addDebugLog]);
 
   // ══════════════════════════════════════════════════════════════════════════════
   // VISIBILITY CHANGE HANDLER (sync quand app revient au premier plan)
@@ -6330,12 +6350,16 @@ const vibeSearchResults = () => {
   const handleSongEnd = () => {
     // Ignorer si on est en train de scrubber (évite de passer à la chanson suivante)
     if (isProgressScrubbing) return;
+    addDebugLog('ENDED', currentSong?.title?.slice(0, 15) || '?');
     if (currentSong) updatePlayCount(currentSong);
     const currentIndex = queue.findIndex(s => s === currentSong);
     if (currentIndex < queue.length - 1) {
       // Passer au morceau suivant SANS faire tourner la roue
+      isChangingSongRef.current = true;
+      addDebugLog('→NEXT', queue[currentIndex + 1]?.title?.slice(0, 15) || '?');
       setCurrentSong(queue[currentIndex + 1]);
     } else {
+      addDebugLog('QUEUE_END', '');
       setIsPlaying(false);
       setProgress(0);
     }
@@ -8022,6 +8046,44 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 )}
                             </div>
                         )}
+
+                {/* DEBUG OVERLAY - Au-dessus du footer */}
+                {currentSong && (
+                  <div
+                    className="absolute left-2 right-2 z-[100] bg-black/80 rounded-lg p-2 font-mono text-[10px] text-white"
+                    style={{
+                      bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + 8px)`,
+                    }}
+                  >
+                    <div className="flex justify-between mb-1">
+                      <span className={`font-bold ${isPlaying ? 'text-green-400' : 'text-red-400'}`}>
+                        React: {isPlaying ? 'PLAYING' : 'PAUSED'}
+                      </span>
+                      <span className={`font-bold ${!audioRef.current?.paused ? 'text-green-400' : 'text-red-400'}`}>
+                        Audio: {audioRef.current?.paused ? 'paused' : 'playing'}
+                      </span>
+                      <span className={`font-bold ${isChangingSongRef.current ? 'text-yellow-400' : 'text-gray-400'}`}>
+                        Chg: {isChangingSongRef.current ? 'YES' : 'no'}
+                      </span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-1 max-h-[100px] overflow-y-auto">
+                      {audioDebugLogs.map((log, i) => (
+                        <div key={i} className="flex gap-2">
+                          <span className="text-gray-500">{log.time}</span>
+                          <span className={
+                            log.event === 'PLAY' || log.event === 'PLAY_OK' ? 'text-green-400' :
+                            log.event === 'PAUSE' ? 'text-red-400' :
+                            log.event === 'ENDED' ? 'text-yellow-400' :
+                            log.event === '→NEXT' ? 'text-cyan-400' :
+                            'text-white'
+                          }>{log.event}</span>
+                          <span className="text-gray-300 truncate">{log.details}</span>
+                        </div>
+                      ))}
+                      {audioDebugLogs.length === 0 && <span className="text-gray-500">En attente d'événements...</span>}
+                    </div>
+                  </div>
+                )}
 
                 {/* FOOTER - BARRE DU BAS */}
                 <div
