@@ -9261,19 +9261,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className={`absolute inset-0 z-[9999] flex items-center justify-center ${splashPhase === 'morph' ? 'splash-bg-fade pointer-events-none' : ''}`}
                     style={{ backgroundColor: splashPhase === 'morph' ? undefined : 'white' }}
                 >
-                    {/* Logo éteint (gris) - toujours présent en fond */}
+                    {/* Logo éteint (outline gris) - tube néon éteint */}
                     <div
                         className="absolute"
                         style={{
                             left: '50%',
                             top: '50%',
                             transform: 'translate(-50%, -50%)',
-                            filter: 'grayscale(1) brightness(0.7)',
-                            opacity: splashPhase === 'waiting' ? 1 : 0,
-                            transition: 'opacity 100ms ease-out'
+                            opacity: splashPhase === 'morph' ? 0 : 1,
+                            transition: 'opacity 200ms ease-out'
                         }}
                     >
-                        <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
+                        <VibesLogoVectorOutline size={CONFIG.SPLASH_LOGO_SIZE} strokeColor="#d1d5db" strokeWidth={2} />
                     </div>
 
                     {/* Logo coloré avec flicker et glow */}
