@@ -316,11 +316,11 @@ const styles = `
   /* Animation shake latéral pour bouton + quand aucune chanson sélectionnée */
   @keyframes shake-error {
     0%, 100% { transform: translateY(-50%) translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateY(-50%) translateX(-4px); }
-    20%, 40%, 60%, 80% { transform: translateY(-50%) translateX(4px); }
+    20%, 60% { transform: translateY(-50%) translateX(-2px); }
+    40%, 80% { transform: translateY(-50%) translateX(2px); }
   }
   .animate-shake-error {
-    animation: shake-error 0.4s ease-out forwards;
+    animation: shake-error 0.3s ease-out forwards;
   }
 
   /* Animation ignite pour bouton + (créer) - Vert (#00ff88 → #00cc6a) */
