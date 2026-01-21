@@ -288,6 +288,7 @@ const SmartImportCard = ({
     vibeCardMinOpacity,
     onToggleSelection,
     onGradientChange,
+    onSwipePreview,
     getGradientByIndex,
     getGradientName,
     currentGradientIndex,
@@ -350,7 +351,9 @@ const SmartImportCard = ({
                         ? `linear-gradient(135deg, ${currentGradient[0]} 0%, ${currentGradient[1]} 100%)`
                         : `linear-gradient(135deg, ${currentGradient.join(', ')})`;
                     const safeIndex = ((currentGradientIndex % 20) + 20) % 20;
-                    setSwipePreview({ gradient: gradStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+                    const preview = { gradient: gradStyle, index: safeIndex, gradientName: getGradientName(safeIndex) };
+                    setSwipePreview(preview);
+                    if (onSwipePreview) onSwipePreview(preview);
                 }
             }
 
@@ -377,7 +380,9 @@ const SmartImportCard = ({
                         ? `linear-gradient(135deg, ${previewGradient[0]} 0%, ${previewGradient[1]} 100%)`
                         : `linear-gradient(135deg, ${previewGradient.join(', ')})`;
                     const safeIndex = ((previewIdx % 20) + 20) % 20;
-                    setSwipePreview({ gradient: gradStyle, index: safeIndex, gradientName: getGradientName(safeIndex) });
+                    const preview = { gradient: gradStyle, index: safeIndex, gradientName: getGradientName(safeIndex) };
+                    setSwipePreview(preview);
+                    if (onSwipePreview) onSwipePreview(preview);
                 }
             }
         };
@@ -410,6 +415,7 @@ const SmartImportCard = ({
             setSwipeOffset(0);
             swipeOffsetRef.current = 0;
             setSwipePreview(null);
+            if (onSwipePreview) onSwipePreview(null);
             touchStartRef.current = { x: null, y: null };
             swipeDirectionRef.current = null;
         };
@@ -423,7 +429,7 @@ const SmartImportCard = ({
             element.removeEventListener('touchmove', handleTouchMove);
             element.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [isExisting, currentGradientIndex, getGradientByIndex, getGradientName, name, onToggleSelection, onGradientChange]);
+    }, [isExisting, currentGradientIndex, getGradientByIndex, getGradientName, name, onToggleSelection, onGradientChange, onSwipePreview]);
 
     return (
         <div className="relative overflow-visible" style={{ marginBottom: SMARTIMPORT_CONFIG.CARD_GAP }}>
@@ -475,7 +481,7 @@ const SmartImportCard = ({
 
                 {/* Capsule liquid glass avec nom + compteur */}
                 <div
-                    className="rounded-full border border-white/20 shadow-lg flex items-baseline gap-2"
+                    className="rounded-full border border-white/20 flex items-baseline gap-2"
                     style={{
                         padding: `${SMARTIMPORT_CONFIG.CAPSULE_PY} ${SMARTIMPORT_CONFIG.CAPSULE_PX}`,
                         backdropFilter: `blur(${SMARTIMPORT_CONFIG.CAPSULE_BLUR}px)`,
@@ -553,6 +559,9 @@ const SmartImport = ({
 
     // État pour la sélection des cartes (toutes sélectionnées par défaut)
     const [selectedCards, setSelectedCards] = useState(new Set());
+
+    // État pour le preview de swipe (affiché dans le header)
+    const [activeSwipePreview, setActiveSwipePreview] = useState(null);
 
     // Initialiser selectedCards quand importPreview change
     useEffect(() => {
@@ -1164,6 +1173,24 @@ const SmartImport = ({
                                 minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                             }}
                         >
+                            {/* Preview gradient dans la capsule du header */}
+                            {activeSwipePreview && (
+                                <div
+                                    className="absolute inset-0 z-10 flex items-center justify-center"
+                                    style={{
+                                        background: activeSwipePreview.gradient,
+                                    }}
+                                >
+                                    <div
+                                        className="flex items-center gap-2 text-white font-black tracking-widest uppercase"
+                                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}
+                                    >
+                                        <ChevronLeft size={14} />
+                                        <span>{activeSwipePreview.gradientName}</span>
+                                        <ChevronRight size={14} />
+                                    </div>
+                                </div>
+                            )}
                             {/* Nom du dossier avec autoscroll */}
                             <div className="flex-1 overflow-hidden mr-2">
                                 <div
@@ -1337,6 +1364,7 @@ const SmartImport = ({
                                                     vibeCardMinOpacity={vibeCardMinOpacity}
                                                     onToggleSelection={handleCardToggle}
                                                     onGradientChange={handleGradientChange}
+                                                    onSwipePreview={setActiveSwipePreview}
                                                     getGradientByIndex={getGradientByIndex}
                                                     getGradientName={getGradientName}
                                                     currentGradientIndex={gradientIndex}
