@@ -580,7 +580,7 @@ const CONFIG = {
     BACK_TO_VIBES_START_PERCENT: 25,      // % depuis le HAUT de l'écran où on COMMENCE à afficher (opacité 0)
     BACK_TO_VIBES_FULL_PERCENT: 8,        // % depuis le HAUT de l'écran où opacité = 100%
     BACK_TO_VIBES_TRIGGER_PERCENT: 17,    // % depuis le HAUT de l'écran où on switch au lecteur principal
-    DRAWER_INERTIA_MULTIPLIER: 25,        // Multiplicateur de vélocité pour l'inertie du tiroir
+    DRAWER_INERTIA_MULTIPLIER: 20,        // Multiplicateur de vélocité pour l'inertie du tiroir
 
     // CARD ANIMATION - Animation éventail (Player, Tweaker, etc.)
     CARD_ANIM_OPEN_DURATION: 800,            // Durée de l'animation d'ouverture (ms)
@@ -5863,58 +5863,6 @@ const vibeSearchResults = () => {
   useEffect(() => { queueRef.current = queue; }, [queue]);
 
   // ══════════════════════════════════════════════════════════════════════════════
-  // AUDIO EVENT HANDLERS (pour JSX onPlay/onPause)
-  // ══════════════════════════════════════════════════════════════════════════════
-
-  const handleAudioPlay = useCallback(() => {
-    console.log('[Audio] play event');
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'playing';
-    }
-    setIsPlaying(true);
-  }, []);
-
-  const handleAudioPause = useCallback(() => {
-    console.log('[Audio] pause event');
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'paused';
-    }
-    setIsPlaying(false);
-  }, []);
-
-  // ══════════════════════════════════════════════════════════════════════════════
-  // VISIBILITY CHANGE HANDLER (sync quand app revient au premier plan)
-  // ══════════════════════════════════════════════════════════════════════════════
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const audio = audioRef.current;
-
-      if (document.visibilityState === 'visible' && audio) {
-        console.log('[Visibility] changed to visible');
-
-        // Sync immédiat
-        const shouldBePlaying = !audio.paused;
-        console.log('[Visibility] syncing state, audio.paused =', audio.paused, ', shouldBePlaying =', shouldBePlaying);
-
-        isSyncingFromVisibilityRef.current = true;
-        setIsPlaying(shouldBePlaying);
-
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
-        }
-
-        setTimeout(() => {
-          isSyncingFromVisibilityRef.current = false;
-        }, 100);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
-  // ══════════════════════════════════════════════════════════════════════════════
   // SCREEN WAKE LOCK - Empêcher l'écran de s'éteindre pendant la lecture
   // ══════════════════════════════════════════════════════════════════════════════
 
@@ -6027,29 +5975,35 @@ const vibeSearchResults = () => {
     return; // DÉSACTIVÉ pour forcer iOS à afficher prev/next
   }, []);
 
-  // Enregistrer les handlers Media Session (AirPods, lock screen, etc.)
+  // Enregistrer les handlers ET les listeners audio
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
     // === ACTION HANDLERS (contrôles du widget) ===
-    // Note: on utilise audioRef.current dans les callbacks, pas au montage
-    // Comme ça les handlers sont enregistrés immédiatement et fonctionnent avec AirPods
 
-    // Play
+    // Play: appeler directement .play() sur l'audio
     navigator.mediaSession.setActionHandler('play', async () => {
       console.log('[MediaSession] play handler called');
-      const audio = audioRef.current;
-      if (!audio) return;
       try {
+        // Sur iOS, l'AudioContext peut être suspendu quand l'app est en background
+        // On essaie de le résumer, mais si ça échoue, l'audio jouera quand même
+        // (juste sans le contrôle de volume via Web Audio API)
         if (audioContextRef.current?.state === 'suspended') {
           console.log('[MediaSession] AudioContext suspended, trying to resume...');
           try {
             await audioContextRef.current.resume();
             console.log('[MediaSession] AudioContext resumed successfully');
           } catch (resumeError) {
+            // Sur iOS en background, resume() peut échouer sans interaction utilisateur
+            // L'audio jouera quand même via l'élément audio directement
             console.log('[MediaSession] AudioContext resume failed (expected on iOS background):', resumeError);
           }
         }
+
+        // Lancer la lecture - ceci fonctionne même si AudioContext est suspendu
+        // car l'élément audio peut jouer indépendamment
         await audio.play();
         console.log('[MediaSession] audio.play() succeeded');
       } catch (e) {
@@ -6057,19 +6011,15 @@ const vibeSearchResults = () => {
       }
     });
 
-    // Pause
+    // Pause: appeler directement .pause() sur l'audio
     navigator.mediaSession.setActionHandler('pause', () => {
       console.log('[MediaSession] pause handler called');
-      const audio = audioRef.current;
-      if (!audio) return;
       audio.pause();
     });
 
     // Previous track
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       console.log('[MediaSession] previoustrack handler called');
-      const audio = audioRef.current;
-      if (!audio) return;
       if (audio.currentTime > 3) {
         audio.currentTime = 0;
       } else {
@@ -6085,8 +6035,6 @@ const vibeSearchResults = () => {
     // Next track
     navigator.mediaSession.setActionHandler('nexttrack', () => {
       console.log('[MediaSession] nexttrack handler called');
-      const audio = audioRef.current;
-      if (!audio) return;
       const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
       if (currentIndex < queueRef.current.length - 1) {
         setCurrentSong(queueRef.current[currentIndex + 1]);
@@ -6099,37 +6047,35 @@ const vibeSearchResults = () => {
     // NOTE: On n'enregistre PAS seekbackward/seekforward/seekto
     // pour qu'iOS affiche les boutons prev/next au lieu de +10/-10
 
-    // Cleanup
-    return () => {
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', null);
-        navigator.mediaSession.setActionHandler('pause', null);
-        navigator.mediaSession.setActionHandler('previoustrack', null);
-        navigator.mediaSession.setActionHandler('nexttrack', null);
-        try { navigator.mediaSession.setActionHandler('seekto', null); } catch (e) {}
-      }
-    };
-  }, []); // Dépendances vides = une seule fois
+    // === LISTENERS SUR L'ÉLÉMENT AUDIO (sync iOS) ===
+    // iOS a besoin de ces listeners pour synchroniser l'état du widget
 
-  // Listener loadedmetadata pour extraire l'artwork
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const handlePlay = () => {
+      console.log('[MediaSession] audio play event');
+      navigator.mediaSession.playbackState = 'playing';
+      setIsPlaying(true);
+      updatePositionState();
+    };
+
+    const handlePause = () => {
+      console.log('[MediaSession] audio pause event');
+      navigator.mediaSession.playbackState = 'paused';
+      setIsPlaying(false);
+    };
 
     const handleLoadedMetadata = () => {
       console.log('[MediaSession] loadedmetadata event');
+      updatePositionState();
 
       // Re-définir les handlers prev/next pour activer les boutons sur iOS
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('previoustrack', () => {
-          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-          if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
-        });
-        navigator.mediaSession.setActionHandler('nexttrack', () => {
-          const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
-          if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
-        });
-      }
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx > 0) setCurrentSong(queueRef.current[idx - 1]);
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const idx = queueRef.current.findIndex(s => s.id === currentSongRef.current?.id);
+        if (idx < queueRef.current.length - 1) setCurrentSong(queueRef.current[idx + 1]);
+      });
 
       // Extraire l'artwork maintenant que l'audio est chargé
       const song = currentSongRef.current;
@@ -6150,8 +6096,66 @@ const vibeSearchResults = () => {
       }
     };
 
+    // Passage automatique à la chanson suivante (natif, fonctionne en background)
+    const handleEnded = () => {
+      console.log('[MediaSession] audio ended event');
+      const currentIndex = queueRef.current.findIndex(s => s === currentSongRef.current);
+      if (currentIndex < queueRef.current.length - 1) {
+        setCurrentSong(queueRef.current[currentIndex + 1]);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    // Resynchroniser l'état quand l'app revient au premier plan
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && audio) {
+        console.log('[MediaSession] visibility changed to visible');
+
+        // Petit délai pour laisser les événements audio pendants (play/pause) se traiter d'abord
+        // Car quand l'app était en background, ces événements sont mis en file d'attente
+        setTimeout(() => {
+          const shouldBePlaying = !audio.paused;
+          console.log('[MediaSession] syncing state, audio.paused =', audio.paused, ', shouldBePlaying =', shouldBePlaying);
+
+          // Marquer qu'on est en train de sync pour bloquer le useEffect
+          isSyncingFromVisibilityRef.current = true;
+          setIsPlaying(shouldBePlaying);
+
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
+          }
+          updatePositionState();
+
+          // Débloquer après que React ait traité le state update
+          setTimeout(() => {
+            isSyncingFromVisibilityRef.current = false;
+          }, 100);
+        }, 50); // 50ms pour laisser les événements pendants se traiter
+      }
+    };
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        try { navigator.mediaSession.setActionHandler('seekto', null); } catch (e) {}
+      }
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []); // Dépendances vides = une seule fois
 
   // Mettre à jour les métadonnées quand la chanson change
@@ -7270,7 +7274,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           <div className="orientation-lock-icon">📱</div>
         </div>
       )}
-      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} onPlay={handleAudioPlay} onPause={handleAudioPause} crossOrigin="anonymous" />
+      <audio ref={audioRef} onTimeUpdate={handleTimeUpdate} onEnded={handleSongEnd} crossOrigin="anonymous" />
 
 
 
@@ -8291,7 +8295,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="absolute left-0 right-0 z-[64] pointer-events-none"
                     style={{
                         top: headerBottom,
-                        bottom: currentSong ? `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)` : safeAreaBottom,
+                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                         backdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_BACKDROP_BLUR}px)`,
                         opacity: confirmOverlayVisible ? 1 : 0,
@@ -8379,7 +8383,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"
                     style={{
                         top: 0,
-                        bottom: currentSong ? `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)` : safeAreaBottom,
+                        bottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px)`,
                         opacity: confirmOverlayVisible ? 1 : 0,
                         transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                     }}
@@ -8902,6 +8906,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             })()}
 
       </div>
+
 
     </div>
   );
