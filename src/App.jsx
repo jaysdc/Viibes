@@ -802,9 +802,9 @@ const CONFIG = {
     SPLASH_DELAY_BEFORE_CASCADE: 400,     // Délai avant de commencer la cascade (ms)
     SPLASH_CASCADE_FLICKER_DURATION: 500, // Durée du flicker pour chaque élément (ms)
     SPLASH_CASCADE_DELAY_TEXT: 0,         // Délai pour le texte V+ibes (ms) - EN PREMIER
-    SPLASH_CASCADE_DELAY_WAVE: 500,       // Délai pour la wave (ms) - EN DEUXIÈME
-    SPLASH_CASCADE_DELAY_FLAMES: 1000,    // Délai pour les flammes (ms) - EN DERNIER
-    SPLASH_CASCADE_TOTAL: 1500,           // Durée totale de la cascade (ms)
+    SPLASH_CASCADE_DELAY_WAVE: 800,       // Délai pour la wave (ms) - EN DEUXIÈME
+    SPLASH_CASCADE_DELAY_FLAMES: 1600,    // Délai pour les flammes (ms) - EN DERNIER
+    SPLASH_CASCADE_TOTAL: 2400,           // Durée totale de la cascade (ms) - 1600 + 800ms durée animation
     SPLASH_PAUSE_BEFORE_MORPH: 1000,      // Pause après allumage avant de lancer le morph (ms)
     SPLASH_MORPH_DURATION: 700,           // Durée du morph vers le header (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
@@ -1828,18 +1828,49 @@ const styles = `
   /* SPLASH SCREEN - Neon Cascade Animation */
   /* ══════════════════════════════════════════════════════════════════════════ */
 
-  /* Animation flicker pour chaque élément de la cascade */
-  @keyframes splash-cascade-flicker {
+  /* Centrage du logo avant morph */
+  .splash-logo-centered {
+    transform: translate(-50%, -50%);
+  }
+
+  /* Animation 1: TEXTE V+ibes - Allumage doux et progressif */
+  @keyframes splash-cascade-text {
+    0% { opacity: 0; filter: brightness(0.2); }
+    20% { opacity: 0.4; filter: brightness(0.6) drop-shadow(0 0 8px var(--glow-color)); }
+    50% { opacity: 0.8; filter: brightness(1.0) drop-shadow(0 0 12px var(--glow-color)); }
+    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 6px var(--glow-color)); }
+  }
+
+  .splash-cascade-text {
+    animation: splash-cascade-text 600ms ease-out forwards;
+  }
+
+  /* Animation 2: WAVE - Allumage avec rebond d'intensité */
+  @keyframes splash-cascade-wave {
     0% { opacity: 0; filter: brightness(0.3); }
-    15% { opacity: 1; filter: brightness(1.5) drop-shadow(0 0 15px var(--glow-color)); }
-    30% { opacity: 0.2; filter: brightness(0.5); }
-    50% { opacity: 1; filter: brightness(1.3) drop-shadow(0 0 20px var(--glow-color)); }
-    70% { opacity: 0.6; filter: brightness(0.8); }
+    25% { opacity: 1; filter: brightness(1.6) drop-shadow(0 0 20px var(--glow-color)); }
+    45% { opacity: 0.5; filter: brightness(0.7) drop-shadow(0 0 10px var(--glow-color)); }
+    70% { opacity: 1; filter: brightness(1.3) drop-shadow(0 0 15px var(--glow-color)); }
     100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 8px var(--glow-color)); }
   }
 
-  .splash-cascade-on {
-    animation: splash-cascade-flicker 500ms ease-out forwards;
+  .splash-cascade-wave {
+    animation: splash-cascade-wave 700ms ease-in-out forwards;
+  }
+
+  /* Animation 3: FLAMMES - Allumage intense et flamboyant */
+  @keyframes splash-cascade-flames {
+    0% { opacity: 0; filter: brightness(0.1); }
+    10% { opacity: 0.3; filter: brightness(0.5); }
+    25% { opacity: 1; filter: brightness(2) drop-shadow(0 0 30px var(--glow-color)); }
+    40% { opacity: 0.4; filter: brightness(0.6) drop-shadow(0 0 15px var(--glow-color)); }
+    55% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 25px var(--glow-color)); }
+    75% { opacity: 0.7; filter: brightness(1) drop-shadow(0 0 12px var(--glow-color)); }
+    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 10px var(--glow-color)); }
+  }
+
+  .splash-cascade-flames {
+    animation: splash-cascade-flames 800ms ease-out forwards;
   }
 
   /* Morph vers le header */
@@ -5059,20 +5090,14 @@ useEffect(() => {
   // Ordre: 1) V+ibes, 2) wave, 3) flamme
   const t2 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, text: true }));
-    // Son néon pour le texte V+ibes - EN PREMIER
-    playNeonBuzz({ frequency: 65, duration: 300, volume: 0.10, buzzIntensity: 0.5 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_TEXT);
 
   const t3 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, wave: true }));
-    // Son néon pour la wave - EN DEUXIÈME
-    playNeonBuzz({ frequency: 80, duration: 400, volume: 0.08, buzzIntensity: 0.4 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_WAVE);
 
   const t4 = setTimeout(() => {
     setSplashCascade(prev => ({ ...prev, flames: true }));
-    // Son néon pour les flammes - EN DERNIER, buzz intense
-    playNeonBuzz({ frequency: 50, duration: 350, volume: 0.12, buzzIntensity: 0.7 });
   }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
 
   // Pause de 1000ms après la fin de la cascade avant de lancer le morph
@@ -9260,7 +9285,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             })()}
 
         {/* SPLASH SCREEN - Overlay de démarrage avec animation cascade */}
-        {splashPhase !== 'done' && (() => {
+        {splashPhase !== 'done' && splashPhase !== 'waiting' && (() => {
             // Calculer la position du logo header pour le morph
             let morphX = '-50%';
             let morphY = '-50%';
@@ -9302,11 +9327,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                     {/* Conteneur pour les éléments cascade (avec morph) */}
                     <div
-                        className={`absolute splash-logo-fadein ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
+                        className={`absolute splash-logo-fadein ${splashPhase === 'morph' ? 'splash-logo-morph' : 'splash-logo-centered'}`}
                         style={{
                             left: '50%',
                             top: '50%',
-                            transform: 'translate(-50%, -50%)',
                             width: splashLogoSize,
                             height: splashLogoSize * 0.54,
                             overflow: 'visible',
@@ -9315,9 +9339,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             '--morph-scale': morphScale
                         }}
                     >
-                        {/* Flammes - s'allument en premier */}
+                        {/* Flammes - s'allument EN DERNIER */}
                         <div
-                            className={splashCascade.flames ? 'splash-cascade-on' : ''}
+                            className={splashCascade.flames ? 'splash-cascade-flames' : ''}
                             style={{
                                 opacity: splashCascade.flames ? 1 : 0,
                                 overflow: 'visible',
@@ -9329,9 +9353,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <VibesLogoFlames size={splashLogoSize} style={{ overflow: 'visible' }} />
                         </div>
 
-                        {/* Texte VIBES - s'allume ensuite */}
+                        {/* Texte VIBES - s'allume EN PREMIER */}
                         <div
-                            className={splashCascade.text ? 'splash-cascade-on' : ''}
+                            className={splashCascade.text ? 'splash-cascade-text' : ''}
                             style={{
                                 opacity: splashCascade.text ? 1 : 0,
                                 overflow: 'visible',
@@ -9343,9 +9367,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <VibesLogoText size={splashLogoSize} style={{ overflow: 'visible' }} />
                         </div>
 
-                        {/* Wave multicolore - s'allume en dernier */}
+                        {/* Wave multicolore - s'allume EN DEUXIÈME */}
                         <div
-                            className={splashCascade.wave ? 'splash-cascade-on' : ''}
+                            className={splashCascade.wave ? 'splash-cascade-wave' : ''}
                             style={{
                                 opacity: splashCascade.wave ? 1 : 0,
                                 overflow: 'visible',
@@ -9362,6 +9386,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
         })()}
 
       </div>
+
+      {/* SPLASH SCREEN GLOW LAYER - en dehors du mainContainer pour éviter le clip par overflow-hidden */}
+      {splashPhase !== 'done' && splashPhase !== 'waiting' && (
+        <div
+          className="fixed inset-0 z-[9998] pointer-events-none"
+          style={{
+            background: splashPhase === 'morph' ? 'transparent' : 'radial-gradient(circle at center, rgba(236, 0, 140, 0.15) 0%, transparent 60%)',
+            transition: 'background 500ms ease-out'
+          }}
+        />
+      )}
 
     </div>
   );
