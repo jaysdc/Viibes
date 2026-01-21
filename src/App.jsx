@@ -4929,47 +4929,42 @@ useEffect(() => {
   if (playlists === null) return; // Attendre que les données soient chargées
   if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
 
-  const timers = [];
+  // Tous les timers avec leurs délais calculés depuis le début
+  const baseDelay = CONFIG.SPLASH_DELAY_BEFORE_CASCADE;
 
-  // Phase 1: Délai initial puis démarrage de la cascade
-  const startTimer = setTimeout(() => {
+  const t1 = setTimeout(() => {
     setSplashPhase('cascade');
+  }, baseDelay);
 
-    // Cascade: Flammes en premier
-    const flamesTimer = setTimeout(() => {
-      setSplashCascade(prev => ({ ...prev, flames: true }));
-    }, CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
-    timers.push(flamesTimer);
+  const t2 = setTimeout(() => {
+    setSplashCascade(prev => ({ ...prev, flames: true }));
+  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_FLAMES);
 
-    // Cascade: Texte VIBES ensuite
-    const textTimer = setTimeout(() => {
-      setSplashCascade(prev => ({ ...prev, text: true }));
-    }, CONFIG.SPLASH_CASCADE_DELAY_TEXT);
-    timers.push(textTimer);
+  const t3 = setTimeout(() => {
+    setSplashCascade(prev => ({ ...prev, text: true }));
+  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_TEXT);
 
-    // Cascade: Wave en dernier
-    const waveTimer = setTimeout(() => {
-      setSplashCascade(prev => ({ ...prev, wave: true }));
-    }, CONFIG.SPLASH_CASCADE_DELAY_WAVE);
-    timers.push(waveTimer);
+  const t4 = setTimeout(() => {
+    setSplashCascade(prev => ({ ...prev, wave: true }));
+  }, baseDelay + CONFIG.SPLASH_CASCADE_DELAY_WAVE);
 
-    // Phase 2: Après la cascade complète, morph vers le header
-    const morphTimer = setTimeout(() => {
-      setSplashPhase('morph');
+  const t5 = setTimeout(() => {
+    setSplashPhase('morph');
+  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL);
 
-      // Phase 3: Après le morph, terminer
-      const doneTimer = setTimeout(() => {
-        setSplashPhase('done');
-      }, CONFIG.SPLASH_MORPH_DURATION);
-      timers.push(doneTimer);
-    }, CONFIG.SPLASH_CASCADE_TOTAL);
-    timers.push(morphTimer);
+  const t6 = setTimeout(() => {
+    setSplashPhase('done');
+  }, baseDelay + CONFIG.SPLASH_CASCADE_TOTAL + CONFIG.SPLASH_MORPH_DURATION);
 
-  }, CONFIG.SPLASH_DELAY_BEFORE_CASCADE);
-  timers.push(startTimer);
-
-  return () => timers.forEach(t => clearTimeout(t));
-}, [playlists, splashPhase]);
+  return () => {
+    clearTimeout(t1);
+    clearTimeout(t2);
+    clearTimeout(t3);
+    clearTimeout(t4);
+    clearTimeout(t5);
+    clearTimeout(t6);
+  };
+}, [playlists]);
 
 // 2. SAUVEGARDE AUTOMATIQUE - PLAYLISTS (format bibliothèque: { vibeId: { name, songIds } })
 useEffect(() => {
