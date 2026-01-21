@@ -4857,6 +4857,7 @@ const handlePlayerTouchEnd = () => {
   }, [showTweaker]);
     const [vibeColorIndices, setVibeColorIndices] = useState({});
     const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'flicker' | 'morph' | 'done'
+    const [splashReady, setSplashReady] = useState(false); // Anti-FOUC: true seulement après hydratation React
     const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
     const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
@@ -5043,8 +5044,16 @@ useEffect(() => {
   setVibeColorIndices(initialColorIndices);
 }, []);
 
+// SPLASH SCREEN - Anti-FOUC: marquer comme prêt après hydratation
+useEffect(() => {
+  // Ce useEffect s'exécute après le premier rendu React
+  // Donc on est sûr que les styles sont appliqués
+  setSplashReady(true);
+}, []);
+
 // SPLASH SCREEN - Animation de démarrage
 useEffect(() => {
+  if (!splashReady) return; // Attendre que React soit hydraté
   if (playlists === null) return; // Attendre que les données soient chargées
   if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
 
@@ -5068,7 +5077,7 @@ useEffect(() => {
   }, CONFIG.SPLASH_DELAY_BEFORE_FLICKER);
 
   return () => clearTimeout(flickerTimer);
-}, [playlists, splashPhase]);
+}, [splashReady, playlists, splashPhase]);
 
 // 2. SAUVEGARDE AUTOMATIQUE - PLAYLISTS (format bibliothèque: { vibeId: { name, songIds } })
 useEffect(() => {
@@ -9261,35 +9270,41 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                     className={`absolute inset-0 z-[9999] flex items-center justify-center ${splashPhase === 'morph' ? 'splash-bg-fade pointer-events-none' : ''}`}
                     style={{ backgroundColor: splashPhase === 'morph' ? undefined : 'white' }}
                 >
-                    {/* Logo éteint (outline gris) - tube néon éteint */}
-                    <div
-                        className="absolute"
-                        style={{
-                            left: '50%',
-                            top: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            opacity: splashPhase === 'morph' ? 0 : 1,
-                            transition: 'opacity 200ms ease-out'
-                        }}
-                    >
-                        <VibesLogoVectorOutline size={CONFIG.SPLASH_LOGO_SIZE} strokeColor="#d1d5db" strokeWidth={2} />
-                    </div>
+                    {/* Anti-FOUC: ne rendre les logos qu'après hydratation React */}
+                    {splashReady && (
+                        <>
+                            {/* Logo éteint (outline gris) - tube néon éteint */}
+                            <div
+                                className="absolute"
+                                style={{
+                                    left: '50%',
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    opacity: splashPhase === 'morph' ? 0 : 1,
+                                    transition: 'opacity 200ms ease-out'
+                                }}
+                            >
+                                <VibesLogoVectorOutline size={CONFIG.SPLASH_LOGO_SIZE} strokeColor="#d1d5db" strokeWidth={2} />
+                            </div>
 
-                    {/* Logo coloré avec flicker et glow */}
-                    <div
-                        className={`absolute ${splashPhase === 'flicker' ? 'splash-logo-flicker splash-glow' : ''} ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
-                        style={{
-                            left: '50%',
-                            top: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            opacity: splashPhase === 'waiting' ? 0 : 1,
-                            '--morph-x': morphX,
-                            '--morph-y': morphY,
-                            '--morph-scale': morphScale
-                        }}
-                    >
-                        <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
-                    </div>
+                            {/* Logo coloré avec flicker et glow */}
+                            <div
+                                className={`absolute ${splashPhase === 'flicker' ? 'splash-logo-flicker splash-glow' : ''} ${splashPhase === 'morph' ? 'splash-logo-morph' : ''}`}
+                                style={{
+                                    left: '50%',
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    visibility: splashPhase === 'waiting' ? 'hidden' : 'visible',
+                                    opacity: splashPhase === 'waiting' ? 0 : 1,
+                                    '--morph-x': morphX,
+                                    '--morph-y': morphY,
+                                    '--morph-scale': morphScale
+                                }}
+                            >
+                                <VibesLogo size={CONFIG.SPLASH_LOGO_SIZE} />
+                            </div>
+                        </>
+                    )}
                 </div>
             );
         })()}
