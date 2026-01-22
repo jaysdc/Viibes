@@ -242,181 +242,85 @@ export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode
     );
 };
 
-// Composant masque sphère 3D - Effet réaliste avec CROISSANTS
-// Utilise des cercles superposés pour créer des formes de lune (croissants)
+// Composant masque sphère 3D - Effet réaliste avec highlight excentré
+// Basé sur un éclairage venant du haut-gauche
 // intensity: 0-1 (force de l'effet)
 // lightAngle: position de la source lumineuse (0-360°, 315 = haut-gauche par défaut)
 export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, lightAngle = 315 }) => {
     if (!is3DMode || intensity === 0) return null;
 
-    // Calculer la direction de la lumière
+    // Calculer la position du highlight basée sur l'angle de lumière
+    // 315° = haut-gauche (comme l'image de référence)
     const angleRad = (lightAngle * Math.PI) / 180;
-    const lightDirX = Math.cos(angleRad);
-    const lightDirY = -Math.sin(angleRad);
-
-    // Position du highlight (côté lumière)
-    const highlightX = 50 + lightDirX * 30;
-    const highlightY = 50 + lightDirY * 30;
-
-    // Position de l'ombre (côté opposé) - décalée pour créer le croissant
-    const shadowX = 50 - lightDirX * 15;
-    const shadowY = 50 - lightDirY * 15;
-
-    // Décalage du "trou" qui crée le croissant (vers la lumière)
-    const crescentOffsetX = lightDirX * 35;
-    const crescentOffsetY = lightDirY * 35;
+    const highlightX = 50 + Math.cos(angleRad) * 25; // 25% de décalage du centre
+    const highlightY = 50 - Math.sin(angleRad) * 25;
 
     return (
         <div
             className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
             style={{ transform: 'translateZ(0)' }}
         >
-            {/* Couche 1: Ombre en croissant (côté opposé à la lumière) */}
-            {/* On utilise deux radial-gradients superposés pour créer la forme de lune */}
+            {/* Couche 1: Assombrissement global des bords (vignette) */}
             <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                    background: `
-                        radial-gradient(
-                            circle at ${shadowX + crescentOffsetX}% ${shadowY + crescentOffsetY}%,
-                            transparent 0%,
-                            transparent 45%,
-                            transparent 100%
-                        ),
-                        radial-gradient(
-                            ellipse 80% 80% at ${shadowX}% ${shadowY}%,
-                            rgba(0,0,0,${0.6 * intensity}) 0%,
-                            rgba(0,0,0,${0.4 * intensity}) 40%,
-                            transparent 70%
-                        )
-                    `,
-                    maskImage: `radial-gradient(
-                        circle at ${shadowX + crescentOffsetX * 0.8}% ${shadowY + crescentOffsetY * 0.8}%,
-                        transparent 30%,
-                        black 60%
-                    )`,
-                    WebkitMaskImage: `radial-gradient(
-                        circle at ${shadowX + crescentOffsetX * 0.8}% ${shadowY + crescentOffsetY * 0.8}%,
-                        transparent 30%,
-                        black 60%
-                    )`
+                    background: `radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,${0.5 * intensity}) 100%)`
                 }}
             />
-
-            {/* Couche 2: Vignette subtile sur les bords */}
+            {/* Couche 2: Highlight principal (point de lumière excentré) */}
             <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                    background: `radial-gradient(circle at 50% 50%, transparent 50%, rgba(0,0,0,${0.3 * intensity}) 100%)`
+                    background: `radial-gradient(circle at ${highlightX}% ${highlightY}%, rgba(255,255,255,${0.8 * intensity}) 0%, rgba(255,255,255,${0.3 * intensity}) 20%, transparent 50%)`
                 }}
             />
-
-            {/* Couche 3: Highlight en croissant (côté lumière) */}
+            {/* Couche 3: Assombrissement opposé à la lumière (bas-droite) */}
             <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                    background: `radial-gradient(
-                        ellipse 60% 60% at ${highlightX}% ${highlightY}%,
-                        rgba(255,255,255,${0.7 * intensity}) 0%,
-                        rgba(255,255,255,${0.3 * intensity}) 30%,
-                        transparent 60%
-                    )`,
-                    maskImage: `radial-gradient(
-                        circle at ${highlightX - crescentOffsetX * 0.5}% ${highlightY - crescentOffsetY * 0.5}%,
-                        transparent 20%,
-                        black 50%
-                    )`,
-                    WebkitMaskImage: `radial-gradient(
-                        circle at ${highlightX - crescentOffsetX * 0.5}% ${highlightY - crescentOffsetY * 0.5}%,
-                        transparent 20%,
-                        black 50%
-                    )`
+                    background: `radial-gradient(circle at ${100 - highlightX}% ${100 - highlightY}%, rgba(0,0,0,${0.4 * intensity}) 0%, transparent 60%)`
                 }}
             />
         </div>
     );
 };
 
-// Composant masque sphère 3D INVERSÉ (concave) - Effet de creux avec CROISSANTS
+// Composant masque sphère 3D INVERSÉ (concave) - Effet de creux
 // Le highlight est en bas-droite au lieu de haut-gauche (effet de bouton enfoncé)
 // intensity: 0-1 (force de l'effet)
 // lightAngle: position de la source lumineuse (0-360°, 135 = bas-droite par défaut pour effet inversé)
 export const SphereMaskInverted = ({ intensity = 0.6, className = '', is3DMode = false, lightAngle = 135 }) => {
     if (!is3DMode || intensity === 0) return null;
 
-    // Calculer la direction de la lumière (inversée)
+    // Calculer la position du highlight basée sur l'angle de lumière inversé
     const angleRad = (lightAngle * Math.PI) / 180;
-    const lightDirX = Math.cos(angleRad);
-    const lightDirY = -Math.sin(angleRad);
-
-    // Position du highlight (côté lumière - en bas-droite pour inversé)
-    const highlightX = 50 + lightDirX * 30;
-    const highlightY = 50 + lightDirY * 30;
-
-    // Position de l'ombre (côté opposé - haut-gauche pour inversé)
-    const shadowX = 50 - lightDirX * 15;
-    const shadowY = 50 - lightDirY * 15;
-
-    // Décalage du "trou" qui crée le croissant
-    const crescentOffsetX = lightDirX * 35;
-    const crescentOffsetY = lightDirY * 35;
+    const highlightX = 50 + Math.cos(angleRad) * 25;
+    const highlightY = 50 - Math.sin(angleRad) * 25;
 
     return (
         <div
             className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
             style={{ transform: 'translateZ(0)' }}
         >
-            {/* Couche 1: Ombre en croissant (haut-gauche pour effet concave) */}
+            {/* Couche 1: Assombrissement central (effet concave) */}
             <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                    background: `radial-gradient(
-                        ellipse 80% 80% at ${shadowX}% ${shadowY}%,
-                        rgba(0,0,0,${0.6 * intensity}) 0%,
-                        rgba(0,0,0,${0.4 * intensity}) 40%,
-                        transparent 70%
-                    )`,
-                    maskImage: `radial-gradient(
-                        circle at ${shadowX + crescentOffsetX * 0.8}% ${shadowY + crescentOffsetY * 0.8}%,
-                        transparent 30%,
-                        black 60%
-                    )`,
-                    WebkitMaskImage: `radial-gradient(
-                        circle at ${shadowX + crescentOffsetX * 0.8}% ${shadowY + crescentOffsetY * 0.8}%,
-                        transparent 30%,
-                        black 60%
-                    )`
+                    background: `radial-gradient(circle at 50% 50%, rgba(0,0,0,${0.3 * intensity}) 0%, transparent 60%)`
                 }}
             />
-
-            {/* Couche 2: Assombrissement central (effet concave) */}
+            {/* Couche 2: Ombre opposée à la lumière (haut-gauche pour inversé) */}
             <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                    background: `radial-gradient(circle at 50% 50%, rgba(0,0,0,${0.25 * intensity}) 0%, transparent 60%)`
+                    background: `radial-gradient(circle at ${100 - highlightX}% ${100 - highlightY}%, rgba(0,0,0,${0.5 * intensity}) 0%, transparent 60%)`
                 }}
             />
-
-            {/* Couche 3: Highlight en croissant (bas-droite pour effet concave) */}
+            {/* Couche 3: Highlight (bas-droite pour inversé) */}
             <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                    background: `radial-gradient(
-                        ellipse 60% 60% at ${highlightX}% ${highlightY}%,
-                        rgba(255,255,255,${0.5 * intensity}) 0%,
-                        rgba(255,255,255,${0.2 * intensity}) 30%,
-                        transparent 60%
-                    )`,
-                    maskImage: `radial-gradient(
-                        circle at ${highlightX - crescentOffsetX * 0.5}% ${highlightY - crescentOffsetY * 0.5}%,
-                        transparent 20%,
-                        black 50%
-                    )`,
-                    WebkitMaskImage: `radial-gradient(
-                        circle at ${highlightX - crescentOffsetX * 0.5}% ${highlightY - crescentOffsetY * 0.5}%,
-                        transparent 20%,
-                        black 50%
-                    )`
+                    background: `radial-gradient(circle at ${highlightX}% ${highlightY}%, rgba(255,255,255,${0.6 * intensity}) 0%, rgba(255,255,255,${0.2 * intensity}) 20%, transparent 50%)`
                 }}
             />
         </div>

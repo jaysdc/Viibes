@@ -7718,11 +7718,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         <style>{styles}</style>
 
-        {/* DEBUG: Une sphère avec SphereMask */}
+        {/* DEBUG: Une sphère VIOLETTE avec SphereMask */}
         <div className="fixed inset-0 flex items-center justify-center z-[9999]" style={{ background: '#222' }}>
           <div
             className="relative rounded-full"
-            style={{ width: '60vw', height: '60vw', background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
+            style={{ width: '60vw', height: '60vw', background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}
           >
             <SphereMask intensity={0.8} is3DMode={true} lightAngle={315} />
           </div>
