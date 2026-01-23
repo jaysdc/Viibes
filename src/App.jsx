@@ -8195,7 +8195,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       const step = 100 / (nextGradient.length - 1);
                       const gradientBg = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
                       return (
-                          <div className="absolute inset-0 flex items-center">
+                          <div className="absolute inset-0 flex items-center z-50">
                               <div
                                   className="w-full rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
                                   style={{
