@@ -2365,79 +2365,89 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 // En mode 3D, l'enfoncement remplace l'animation de clignotement
 const shouldPress = is3DMode && (isPressed || isPressedByBlink);
 
-const cardContent = (
+// En mode 3D: wrapper qui reste pleine largeur, fond avec scaleY, contenu avec scale
+const cardContent = is3DMode ? (
       <div
           ref={cardRef}
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
           onTouchStart={(e) => {
               handleTouchStart(e);
-              if (is3DMode) setIsPressed(true);
+              setIsPressed(true);
           }}
           onTouchEnd={() => {
-              if (is3DMode) setIsPressed(false);
+              setIsPressed(false);
               handleTouchEnd();
           }}
           onTouchCancel={() => {
-              if (is3DMode) setIsPressed(false);
+              setIsPressed(false);
           }}
-
-          className={`w-full flex shadow-lg cursor-pointer relative overflow-hidden ${is3DMode ? 'items-center' : 'px-4 rounded-xl py-3 items-end'}`}
+          className="w-full cursor-pointer relative"
           style={{
-            height: is3DMode ? `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh` : `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
-            background: baseGradient,
-            isolation: 'isolate',
+              height: `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh`,
               transform: hasAnimated
-                  ? `translateX(${swipeOffset * 0.8}px)${shouldPress ? ' scale(0.90)' : ''}`
+                  ? `translateX(${swipeOffset * 0.8}px)`
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
-              boxShadow: shouldPress
-                  ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
-                  : undefined,
               transition: hasAnimated
                   ? (swipeOffset === 0
-                      ? `transform 0.2s ease-out, opacity 0.2s ease-out${is3DMode ? ', box-shadow 0.15s ease-out' : ''}`
-                      : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : (is3DMode ? 'transform 0.15s ease-out, box-shadow 0.15s ease-out' : 'none')))
+                      ? 'transform 0.2s ease-out, opacity 0.2s ease-out'
+                      : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none'))
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
-          {/* Masque cylindre 3D */}
-          <CylinderMask is3DMode={is3DMode} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-xl'} />
-          {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
-          {unavailableCount > 0 && (() => {
-              const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
-              const fadeWidth = CONFIG.VIBECARD_OPACITY_GRADIENT_WIDTH;
-              const maxOpacity = 1 - CONFIG.VIBECARD_MIN_OPACITY;
-
-              // Si aucun morceau dispo, opacité uniforme sur toute la carte
-              if (availableCount === 0) {
+          {/* Fond dégradé - scaleY uniquement pour effet d'enfoncement vertical */}
+          <div
+              className="absolute inset-0 shadow-lg overflow-hidden"
+              style={{
+                  background: baseGradient,
+                  isolation: 'isolate',
+                  transform: shouldPress ? 'scaleY(0.90)' : 'scaleY(1)',
+                  boxShadow: shouldPress
+                      ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
+                      : undefined,
+                  transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out'
+              }}
+          >
+              {/* Masque cylindre 3D sur le fond */}
+              <CylinderMask is3DMode={true} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} />
+              {/* Overlay de transparence progressif */}
+              {unavailableCount > 0 && (() => {
+                  const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
+                  const fadeWidth = CONFIG.VIBECARD_OPACITY_GRADIENT_WIDTH;
+                  const maxOpacity = 1 - CONFIG.VIBECARD_MIN_OPACITY;
+                  if (availableCount === 0) {
+                      return (
+                          <div
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
+                          />
+                      );
+                  }
                   return (
                       <div
-                          className={`absolute inset-0 pointer-events-none ${is3DMode ? '' : 'rounded-xl'}`}
-                          style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                              background: `linear-gradient(to right,
+                                  rgba(255,255,255,0) 0%,
+                                  rgba(255,255,255,0) ${ratio}%,
+                                  rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%,
+                                  rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%,
+                                  rgba(255,255,255,${maxOpacity * 0.95}) ${ratio + fadeWidth * 0.8}%,
+                                  rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%,
+                                  rgba(255,255,255,${maxOpacity}) 100%)`
+                          }}
                       />
                   );
-              }
-
-              return (
-                  <div
-                      className={`absolute inset-0 pointer-events-none ${is3DMode ? '' : 'rounded-xl'}`}
-                      style={{
-                          background: `linear-gradient(to right,
-                              rgba(255,255,255,0) 0%,
-                              rgba(255,255,255,0) ${ratio}%,
-                              rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%,
-                              rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%,
-                              rgba(255,255,255,${maxOpacity * 0.95}) ${ratio + fadeWidth * 0.8}%,
-                              rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%,
-                              rgba(255,255,255,${maxOpacity}) 100%)`
-                      }}
-                  />
-              );
-          })()}
-
-          {/* Mode 3D: Layout cylindre avec titre à gauche et icône à droite, centrés verticalement */}
-          {is3DMode ? (
-            <div className="w-full h-full flex items-center px-4">
+              })()}
+          </div>
+          {/* Contenu - scale uniforme pour effet d'enfoncement */}
+          <div
+              className="absolute inset-0 flex items-center px-4"
+              style={{
+                  transform: shouldPress ? 'scale(0.90)' : 'scale(1)',
+                  transition: 'transform 0.15s ease-out'
+              }}
+          >
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
               {/* En mode no-tag: compteurs en bas du cylindre */}
               {!showTitles ? (
@@ -2517,8 +2527,69 @@ const cardContent = (
                       <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                   </div>
               </div>
-            </div>
-          ) : (
+          </div>
+      </div>
+) : (
+      <div
+          ref={cardRef}
+          onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
+          onTouchStart={(e) => {
+              handleTouchStart(e);
+          }}
+          onTouchEnd={() => {
+              handleTouchEnd();
+          }}
+          className="w-full flex shadow-lg cursor-pointer relative overflow-hidden px-4 rounded-xl py-3 items-end"
+          style={{
+            height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
+            background: baseGradient,
+            isolation: 'isolate',
+              transform: hasAnimated
+                  ? `translateX(${swipeOffset * 0.8}px)`
+                  : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
+              opacity: hasAnimated ? 1 : 0,
+              transition: hasAnimated
+                  ? (swipeOffset === 0
+                      ? 'transform 0.2s ease-out, opacity 0.2s ease-out'
+                      : (isSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none'))
+                  : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
+          }}
+      >
+          {/* Masque cylindre 3D */}
+          <CylinderMask is3DMode={false} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
+          {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
+          {unavailableCount > 0 && (() => {
+              const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
+              const fadeWidth = CONFIG.VIBECARD_OPACITY_GRADIENT_WIDTH;
+              const maxOpacity = 1 - CONFIG.VIBECARD_MIN_OPACITY;
+
+              // Si aucun morceau dispo, opacité uniforme sur toute la carte
+              if (availableCount === 0) {
+                  return (
+                      <div
+                          className="absolute inset-0 pointer-events-none rounded-xl"
+                          style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
+                      />
+                  );
+              }
+
+              return (
+                  <div
+                      className="absolute inset-0 pointer-events-none rounded-xl"
+                      style={{
+                          background: `linear-gradient(to right,
+                              rgba(255,255,255,0) 0%,
+                              rgba(255,255,255,0) ${ratio}%,
+                              rgba(255,255,255,${maxOpacity * 0.5}) ${ratio + fadeWidth * 0.3}%,
+                              rgba(255,255,255,${maxOpacity * 0.8}) ${ratio + fadeWidth * 0.5}%,
+                              rgba(255,255,255,${maxOpacity * 0.95}) ${ratio + fadeWidth * 0.8}%,
+                              rgba(255,255,255,${maxOpacity}) ${ratio + fadeWidth}%,
+                              rgba(255,255,255,${maxOpacity}) 100%)`
+                      }}
+                  />
+              );
+          })()}
+
             <>
               {/* Mode normal: Layout original avec icône en haut à droite et contenu en bas */}
               {/* Icône en haut à droite - cliquable pour éditer la vibe/dossier */}
@@ -2627,7 +2698,6 @@ const cardContent = (
                 </span>
               )}
             </>
-          )}
         </div>
 );
 
