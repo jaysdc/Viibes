@@ -2393,8 +2393,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         {/* Future VibeCard - Swipable pour changer couleur */}
                         <div
                             style={{
-                                marginLeft: 16,
-                                marginRight: 16,
+                                marginLeft: is3DMode ? 0 : 16,
+                                marginRight: is3DMode ? 0 : 16,
                             }}
                         >
                         <div
@@ -2404,16 +2404,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 onMouseDown={handleCardSwipeStart}
                                 onMouseMove={handleCardSwipeMove}
                                 onMouseUp={handleCardSwipeEnd}
-                                className={`w-full rounded-xl cursor-pointer relative overflow-hidden ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
+                                className={`w-full cursor-pointer relative overflow-hidden ${is3DMode ? 'rounded-full' : 'rounded-xl'} ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
                                 style={{
-                                    height: vibeCardConfig?.height || '9vh',
+                                    height: is3DMode ? `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh` : (vibeCardConfig?.height || '9vh'),
                                     background: futureGradient,
                                     '--glow-color': futurePrimaryColor,
                                     boxShadow: '0 10px 40px rgba(0,0,0,0.15)'
                                 }}
                             >
                             {/* Masque cylindre 3D */}
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-xl" />
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? 'rounded-full' : 'rounded-xl'} />
                             {/* Indication swipe - EN HAUT AU CENTRE */}
                             <div
                                 className="absolute flex items-center gap-0.5 text-white/50 z-10"
@@ -2431,7 +2431,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bordure mobile pendant le swipe (pointillée si dégradé déjà utilisé) */}
                             {cardSwipeOffset !== 0 && (
                                 <div
-                                    className="absolute inset-0 pointer-events-none rounded-[10px]"
+                                    className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-[10px]'}`}
                                     style={{
                                         transform: `translateX(${cardSwipeOffset}px)`,
                                         transition: isCardSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none',
@@ -2574,24 +2574,24 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     </span>
                                 </div>
                             ) : showTitles && is3DMode ? (
-                                /* Mode 3D avec titres: Titre centré directement dans la carte (pas de capsule liquid glass) */
+                                /* Mode 3D avec titres: Titre centré directement dans la carte, ENTRE les boutons X et + */
                                 <div
-                                    className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+                                    className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none overflow-hidden"
                                     style={{
-                                        paddingLeft: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 8,
-                                        paddingRight: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 8
+                                        paddingLeft: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 12,
+                                        paddingRight: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 12
                                     }}
                                 >
                                     <div
-                                        className="flex items-center gap-2 pointer-events-auto"
+                                        className="flex items-center gap-2 pointer-events-auto overflow-hidden max-w-full"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setIsEditingName(true);
                                             setTimeout(() => nameInputRef.current?.focus(), 0);
                                         }}
                                     >
-                                        {/* Nom éditable */}
-                                        <div className="overflow-hidden flex-shrink min-w-0" style={{ maxWidth: `${vibeCardConfig?.capsuleNameMaxWidth || 9}rem` }}>
+                                        {/* Nom éditable - contraint à l'espace disponible */}
+                                        <div className="overflow-hidden flex-shrink min-w-0">
                                             <div
                                                 className={`whitespace-nowrap ${isNameLong && !isEditingName ? 'animate-marquee' : ''}`}
                                                 style={{ '--marquee-speed': `${vibeCardConfig?.marqueeSpeed || 8}s` }}
@@ -2608,7 +2608,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                     style={{
                                                         fontSize: `${vibeCardConfig?.capsuleFontSize || 1.125}rem`,
                                                         textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                                                        width: `${Math.max(vibeName.length * CONFIG.NAME_WIDTH_FACTOR, parseFloat(CONFIG.NAME_MIN_WIDTH))}rem`
+                                                        width: `${Math.max(vibeName.length * CONFIG.NAME_WIDTH_FACTOR, parseFloat(CONFIG.NAME_MIN_WIDTH))}rem`,
+                                                        maxWidth: '100%'
                                                     }}
                                                     spellCheck={false}
                                                     autoCorrect="off"
@@ -2629,8 +2630,25 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         </span>
                                     </div>
                                 </div>
+                            ) : is3DMode ? (
+                                /* Mode 3D sans titres: compteurs centrés entre les boutons */
+                                <div
+                                    className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+                                    style={{
+                                        paddingLeft: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 12,
+                                        paddingRight: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 12
+                                    }}
+                                >
+                                    <span
+                                        className="text-[10px] font-semibold text-white/50 flex items-center gap-1.5"
+                                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                                    >
+                                        <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
+                                        {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                                    </span>
+                                </div>
                             ) : (
-                                /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
+                                /* Mode normal sans titres: compteurs en bas à gauche */
                                 <span
                                     className="absolute text-[10px] font-semibold text-white/80 flex items-center gap-1.5"
                                     style={{ bottom: CONFIG.CAPSULE_BOTTOM, left: CONFIG.CAPSULE_LEFT }}
