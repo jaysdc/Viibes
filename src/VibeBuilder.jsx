@@ -2500,8 +2500,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 />
                             </div>
                             
-                            {/* Capsule Liquid Glass - CENTRÉE - Masquée si showTitles est false */}
-                            {showTitles ? (
+                            {/* Titre et compteurs - 3 modes différents */}
+                            {showTitles && !is3DMode ? (
+                                /* Mode normal: Capsule Liquid Glass en bas centrée */
                                 <div
                                     data-capsule
                                     className={`absolute rounded-full border shadow-lg flex items-baseline gap-2 ${isEditingName ? 'border-white/40' : 'border-white/20'}`}
@@ -2562,6 +2563,62 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
                                         {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                                     </span>
+                                </div>
+                            ) : showTitles && is3DMode ? (
+                                /* Mode 3D avec titres: Titre centré directement dans la carte (pas de capsule liquid glass) */
+                                <div
+                                    className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+                                    style={{
+                                        paddingLeft: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 8,
+                                        paddingRight: CONFIG.CREATE_BTN_RIGHT + CONFIG.CREATE_BTN_SIZE + 8
+                                    }}
+                                >
+                                    <div
+                                        className="flex items-center gap-2 pointer-events-auto"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsEditingName(true);
+                                            setTimeout(() => nameInputRef.current?.focus(), 0);
+                                        }}
+                                    >
+                                        {/* Nom éditable */}
+                                        <div className="overflow-hidden flex-shrink min-w-0" style={{ maxWidth: `${vibeCardConfig?.capsuleNameMaxWidth || 9}rem` }}>
+                                            <div
+                                                className={`whitespace-nowrap ${isNameLong && !isEditingName ? 'animate-marquee' : ''}`}
+                                                style={{ '--marquee-speed': `${vibeCardConfig?.marqueeSpeed || 8}s` }}
+                                            >
+                                                <input
+                                                    ref={nameInputRef}
+                                                    type="text"
+                                                    value={vibeName}
+                                                    onChange={(e) => { setVibeName(e.target.value); setNameWasEdited(true); }}
+                                                    onFocus={() => setIsEditingName(true)}
+                                                    onBlur={() => setIsEditingName(false)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur(); } }}
+                                                    className="bg-transparent border-none outline-none font-black leading-tight text-white text-center"
+                                                    style={{
+                                                        fontSize: `${vibeCardConfig?.capsuleFontSize || 1.125}rem`,
+                                                        textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                                                        width: `${Math.max(vibeName.length * CONFIG.NAME_WIDTH_FACTOR, parseFloat(CONFIG.NAME_MIN_WIDTH))}rem`
+                                                    }}
+                                                    spellCheck={false}
+                                                    autoCorrect="off"
+                                                    autoCapitalize="off"
+                                                    autoComplete="off"
+                                                    enterKeyHint="done"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Compteur dispo/pas dispo */}
+                                        <span
+                                            className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0"
+                                            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                                        >
+                                            <span className="flex items-center gap-0.5"><CheckCircle2 size={10} />{availableCount}</span>
+                                            {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                                        </span>
+                                    </div>
                                 </div>
                             ) : (
                                 /* Mode sans titres: compteurs directement sur la carte en bas à gauche */
