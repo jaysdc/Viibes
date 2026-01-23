@@ -1008,9 +1008,9 @@ const Tweaker = ({
                                 ref={(el) => { if (el) cardRefsMap.current.set(vibe.vibeId, el); }}
                                 className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
-                                {/* Indicateur de swipe - centré horizontalement en haut de la carte */}
+                                {/* Indicateur de swipe - centré horizontalement en bas de la carte */}
                                 <div
-                                    className="absolute top-2 left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
+                                    className="absolute bottom-2 left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
                                     style={{ transform: 'translateX(-50%)' }}
                                 >
                                     <ChevronLeft size={10} />
