@@ -168,22 +168,22 @@ export const CAPSULE_CYLINDER_SLICES = [
     0.08,
     0.00,
     0.00,
-    -0.03,
+    0.00,
+    -0.02,
+    -0.04,
     -0.06,
-    -0.09,
+    -0.08,
+    -0.10,
     -0.12,
-    -0.15,
+    -0.14,
+    -0.16,
     -0.18,
-    -0.21,
+    -0.20,
+    -0.22,
     -0.24,
     -0.27,
-    -0.30,
-    -0.33,
-    -0.36,
-    -0.39,
-    -0.45,
-    -0.52,
-    -0.61
+    -0.31,
+    -0.32
 ];
 
 // Composant masque cylindre 3D réutilisable
@@ -246,7 +246,7 @@ export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode
 // Basé sur un éclairage venant du haut-gauche
 // intensity: 0-1 (force de l'effet)
 // lightAngle: position de la source lumineuse (0-360°, 315 = haut-gauche par défaut)
-export const SphereMask = ({ intensity = 0.4, className = '', is3DMode = false, lightAngle = 315 }) => {
+export const SphereMask = ({ intensity = 0.15, className = '', is3DMode = false, lightAngle = 315 }) => {
     if (!is3DMode || intensity === 0) return null;
 
     // Calculer la position du highlight basée sur l'angle de lumière
