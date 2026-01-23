@@ -714,6 +714,8 @@ const Tweaker = ({
                                             boxShadow: `0 0 25px ${gradientColors[Math.floor(gradientColors.length / 2)]}66, 0 0 50px ${gradientColors[Math.floor(gradientColors.length / 2)]}33`
                                         }}
                                     >
+                                        {/* Masque cylindrique en mode 3D */}
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                                         {/* Afficher le nom du dégradé et chevrons uniquement si showTitles est true */}
                                         {showTitles && (
                                             <div
