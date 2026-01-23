@@ -345,6 +345,9 @@ const Tweaker = ({
     // Sauvegarder l'état original complet pour pouvoir annuler
     const [originalShowTitles] = useState(showTitles);
     const [originalIs3DMode] = useState(is3DMode);
+
+    // Ref pour savoir si l'undo doit restaurer le mode 3D (après l'animation)
+    const pendingIs3DModeRestoreRef = useRef(null);
     const [originalColorIndices] = useState(() => ({ ...vibeColorIndices }));
     const [originalVibes] = useState(() =>
         Object.keys(playlists).map(vibeId => ({
@@ -384,13 +387,19 @@ const Tweaker = ({
         setDeletedVibes([]);
         setMarkedForDeletion([]);
         setActiveMode(null);
-        // Restaurer les toggles à leur valeur d'origine
+        // Restaurer showTitles immédiatement
         setShowTitles(originalShowTitles);
-        setIs3DMode(originalIs3DMode);
+        // Mémoriser qu'il faut restaurer is3DMode APRÈS l'animation (pour que les masques restent visibles pendant le feedback)
+        pendingIs3DModeRestoreRef.current = originalIs3DMode;
     };
     
     const handleUndoAnimationComplete = () => {
         setUndoFeedback(false);
+        // Restaurer le mode 3D APRÈS l'animation (pour que les masques restent visibles pendant le feedback)
+        if (pendingIs3DModeRestoreRef.current !== null) {
+            setIs3DMode(pendingIs3DModeRestoreRef.current);
+            pendingIs3DModeRestoreRef.current = null;
+        }
     };
     
     const handleDeleteAnimationComplete = () => {
