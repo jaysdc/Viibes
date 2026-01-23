@@ -2235,6 +2235,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
     const tapValidRef = useRef(false); // Pour détecter un tap valide (sans scroll/swipe)
+    const swipeOffsetRef = useRef(0); // Valeur synchrone pour touchEnd
     const [swipeOffset, setSwipeOffset] = useState(0);
     const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false); // Animation de rattrapage
 
@@ -2295,6 +2296,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
                 if (Math.abs(diffX) < maxSwipeDistance) {
                     setSwipeOffset(diffX);
+                    swipeOffsetRef.current = diffX; // Garder une ref synchrone
 
                     if (onSwipeProgress) {
                         const direction = diffX > 0 ? 1 : -1;
@@ -2332,12 +2334,15 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         // Ne changer la couleur que si c'était un swipe horizontal
         const elementWidth = cardRef.current?.offsetWidth || 300;
         const maxSwipeDistance = elementWidth * CONFIG.COLOR_SWIPE_PERCENT / 100;
-        const colorsTraversed = Math.floor((Math.abs(swipeOffset) / maxSwipeDistance) * 20);
+        // Utiliser la ref pour avoir la valeur synchrone (le state peut être en retard)
+        const currentSwipeOffset = swipeOffsetRef.current;
+        const colorsTraversed = Math.floor((Math.abs(currentSwipeOffset) / maxSwipeDistance) * 20);
         if (swipeDirectionRef.current === 'horizontal' && colorsTraversed >= 1) {
-            const direction = swipeOffset > 0 ? 1 : -1;
+            const direction = currentSwipeOffset > 0 ? 1 : -1;
             if (onColorChange) onColorChange(direction * colorsTraversed);
         }
         setSwipeOffset(0);
+        swipeOffsetRef.current = 0;
         touchStartRef.current = { x: null, y: null };
         swipeDirectionRef.current = null;
 
@@ -2372,14 +2377,14 @@ const shouldPress = is3DMode && (isPressed || isPressedByBlink);
 const cardContent = (
       <div
           ref={cardRef}
-          onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
+          onClick={() => { if (Math.abs(swipeOffsetRef.current) < 10) handleClick(); }}
           onTouchStart={(e) => {
               handleTouchStart(e);
               // Ne pas enfoncer immédiatement - on attend le touchEnd pour valider le tap
           }}
           onTouchEnd={() => {
               // En mode 3D, si c'est un tap valide (pas de scroll/swipe), faire l'animation d'enfoncement
-              if (is3DMode && tapValidRef.current && Math.abs(swipeOffset) < 10) {
+              if (is3DMode && tapValidRef.current && Math.abs(swipeOffsetRef.current) < 10) {
                   setIsPressed(true);
                   // Relâcher après un court délai pour l'effet visuel
                   setTimeout(() => setIsPressed(false), 150);
