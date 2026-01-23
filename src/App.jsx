@@ -2234,6 +2234,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     const cardRef = useRef(null);
     const touchStartRef = useRef({ x: null, y: null });
     const swipeDirectionRef = useRef(null);
+    const tapValidRef = useRef(false); // Pour détecter un tap valide (sans scroll/swipe)
     const [swipeOffset, setSwipeOffset] = useState(0);
     const [isSwipeCatchingUp, setIsSwipeCatchingUp] = useState(false); // Animation de rattrapage
 
@@ -2272,6 +2273,8 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
             // Déterminer la direction au premier mouvement significatif (verrouillage)
             if (swipeDirectionRef.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
                 swipeDirectionRef.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+                // Invalider le tap dès qu'on détecte un mouvement (scroll ou swipe)
+                tapValidRef.current = false;
 
                 // Si horizontal, activer l'animation de rattrapage
                 if (swipeDirectionRef.current === 'horizontal') {
@@ -2322,6 +2325,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
             y: e.touches[0].clientY
         };
         swipeDirectionRef.current = null;
+        tapValidRef.current = true; // On suppose un tap valide au départ
     };
 
     const handleTouchEnd = () => {
@@ -2371,13 +2375,19 @@ const cardContent = (
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
           onTouchStart={(e) => {
               handleTouchStart(e);
-              if (is3DMode) setIsPressed(true);
+              // Ne pas enfoncer immédiatement - on attend le touchEnd pour valider le tap
           }}
           onTouchEnd={() => {
+              // En mode 3D, si c'est un tap valide (pas de scroll/swipe), faire l'animation d'enfoncement
+              if (is3DMode && tapValidRef.current && Math.abs(swipeOffset) < 10) {
+                  setIsPressed(true);
+                  // Relâcher après un court délai pour l'effet visuel
+                  setTimeout(() => setIsPressed(false), 150);
+              }
               handleTouchEnd();
-              if (is3DMode) setIsPressed(false);
           }}
           onTouchCancel={() => {
+              tapValidRef.current = false;
               if (is3DMode) setIsPressed(false);
           }}
 
@@ -7977,8 +7987,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
                               }}
-                              onTouchStart={() => { if (is3DMode) setBuilderBtnPressed(true); }}
-                              onTouchEnd={() => { if (is3DMode) setBuilderBtnPressed(false); }}
+                              onTouchStart={() => { /* Pas d'enfoncement immédiat */ }}
+                              onTouchEnd={() => {
+                                  // Animation d'enfoncement au relâchement
+                                  if (is3DMode) {
+                                      setBuilderBtnPressed(true);
+                                      setTimeout(() => setBuilderBtnPressed(false), 150);
+                                  }
+                              }}
                               onTouchCancel={() => { if (is3DMode) setBuilderBtnPressed(false); }}
                               className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
                               style={{
