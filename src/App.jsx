@@ -2391,7 +2391,7 @@ const cardContent = (
               if (is3DMode) setIsPressed(false);
           }}
 
-          className={`w-full px-4 flex shadow-lg cursor-pointer relative overflow-hidden ${is3DMode ? 'rounded-full items-center' : 'rounded-xl py-3 items-end'}`}
+          className={`w-full flex shadow-lg cursor-pointer relative overflow-hidden ${is3DMode ? 'items-center' : 'px-4 rounded-xl py-3 items-end'}`}
           style={{
             height: is3DMode ? `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh` : `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
             background: baseGradient,
@@ -2411,7 +2411,7 @@ const cardContent = (
           }}
       >
           {/* Masque cylindre 3D */}
-          <CylinderMask is3DMode={is3DMode} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? 'rounded-full' : 'rounded-xl'} />
+          <CylinderMask is3DMode={is3DMode} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-xl'} />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
           {unavailableCount > 0 && (() => {
               const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -2422,7 +2422,7 @@ const cardContent = (
               if (availableCount === 0) {
                   return (
                       <div
-                          className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-xl'}`}
+                          className={`absolute inset-0 pointer-events-none ${is3DMode ? '' : 'rounded-xl'}`}
                           style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
                       />
                   );
@@ -2430,7 +2430,7 @@ const cardContent = (
 
               return (
                   <div
-                      className={`absolute inset-0 pointer-events-none ${is3DMode ? 'rounded-full' : 'rounded-xl'}`}
+                      className={`absolute inset-0 pointer-events-none ${is3DMode ? '' : 'rounded-xl'}`}
                       style={{
                           background: `linear-gradient(to right,
                               rgba(255,255,255,0) 0%,
@@ -2445,11 +2445,11 @@ const cardContent = (
               );
           })()}
 
-          {/* Mode 3D: Layout tube avec titre à gauche et icône à droite, centrés verticalement */}
+          {/* Mode 3D: Layout cylindre avec titre à gauche et icône à droite, centrés verticalement */}
           {is3DMode ? (
-            <>
+            <div className="w-full h-full flex items-center px-4">
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
-              {/* En mode no-tag: compteurs en bas de la capsule */}
+              {/* En mode no-tag: compteurs en bas du cylindre */}
               {!showTitles ? (
                   // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets (50% opacité)
                   <>
@@ -2527,7 +2527,7 @@ const cardContent = (
                       <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                   </div>
               </div>
-            </>
+            </div>
           ) : (
             <>
               {/* Mode normal: Layout original avec icône en haut à droite et contenu en bas */}
