@@ -8285,7 +8285,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         {/* LIBRARY */}
         <div
-            className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar"
+            className={`flex-1 overflow-y-auto pb-6 no-scrollbar ${is3DMode ? '' : 'px-6'}`}
             style={{ paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {
