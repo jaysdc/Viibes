@@ -2025,13 +2025,14 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         const progress = Math.min(1, Math.abs(cardSwipeOffset) / 100);
                         return (
                             <div
-                                className="absolute inset-0 rounded-full flex items-center justify-center z-40"
+                                className="absolute inset-0 rounded-full flex items-center justify-center z-40 overflow-hidden"
                                 style={{
                                     background: futureGradient,
                                     opacity: 1,
                                     boxShadow: `0 0 25px ${futureGradientColors[Math.floor(futureGradientColors.length / 2)]}66, 0 0 50px ${futureGradientColors[Math.floor(futureGradientColors.length / 2)]}33`
                                 }}
                             >
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
                                 <div
                                     className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
                                     style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
