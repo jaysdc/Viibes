@@ -2502,7 +2502,7 @@ const cardContent = (
               )}
 
               {/* Icône - alignée à droite, centrée verticalement */}
-              {/* En mode no-tag: icône seule sans cercle, discrète */}
+              {/* En mode 3D: icône directement sans cercle */}
               <div
                   className="flex-shrink-0 ml-2"
                   onClick={(e) => {
@@ -2512,17 +2512,10 @@ const cardContent = (
                       }
                   }}
               >
-                  {!showTitles ? (
-                      // Mode 3D + no tag: icône seule sans cercle, discrète (50% opacité)
-                      <div className={`flex items-center justify-center text-white/50 ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
-                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </div>
-                  ) : (
-                      // Mode 3D + avec tags: icône dans cercle
-                      <div className={`w-8 h-8 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center text-white shadow-inner ${onEditVibe ? 'cursor-pointer active:bg-white/50' : ''}`}>
-                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </div>
-                  )}
+                  {/* Mode 3D: icône directement sans cercle (opacité selon showTitles) */}
+                  <div className={`flex items-center justify-center ${showTitles ? 'text-white' : 'text-white/50'} ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
+                      <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                  </div>
               </div>
             </>
           ) : (
