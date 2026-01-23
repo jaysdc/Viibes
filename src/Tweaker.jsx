@@ -125,7 +125,7 @@ const TweakerStyles = `
 `;
 
 // Composant FeedbackOverlay pour le Tweaker
-const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgClass, bgGradient, borderClass, children }) => {
+const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgClass, bgGradient, borderClass, is3DMode, children }) => {
     const [phase, setPhase] = useState('idle');
     const [textOpacity, setTextOpacity] = useState(0);
     const [glowIntensity, setGlowIntensity] = useState(0);
@@ -225,16 +225,17 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
     };
     
     return (
-        <div 
+        <div
             className={`absolute inset-0 z-10 rounded-full flex items-center justify-center border ${bgClass || ''} ${borderClass}`}
             style={{
                 ...containerStyle,
                 background: bgGradient || undefined
             }}
         >
-            <div 
+            <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+            <div
                 className="flex items-center gap-2 text-white font-black tracking-widest uppercase text-lg"
-                style={{ 
+                style={{
                     opacity: textOpacity / 100,
                     transition: `opacity ${phase === 'validating' ? `${TWEAKER_CONFIG.FEEDBACK_BLINK_TRANSITION}ms` : getTransitionDuration()} ease-out`
                 }}
@@ -725,6 +726,7 @@ const Tweaker = ({
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_ORANGE}
                                 bgGradient="linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)"
                                 borderClass="border-orange-600"
+                                is3DMode={is3DMode}
                             >
                                 <Undo2 size={18} strokeWidth={3} />
                                 <span>UNDO</span>
@@ -737,6 +739,7 @@ const Tweaker = ({
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_RED}
                                 bgGradient="linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)"
                                 borderClass="border-rose-600"
+                                is3DMode={is3DMode}
                             >
                                 <Trash2 size={18} strokeWidth={3} />
                                 <span>DELETED</span>
@@ -749,6 +752,7 @@ const Tweaker = ({
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_CYAN}
                                 bgGradient="linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)"
                                 borderClass="border-cyan-600"
+                                is3DMode={is3DMode}
                             >
                                 <BetweenHorizontalEnd size={18} strokeWidth={3} />
                                 <span>APPLIED</span>
