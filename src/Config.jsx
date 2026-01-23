@@ -154,8 +154,8 @@ const cssToPixels = (cssValue) => {
 // Valeurs d'ajustement d'opacité pour simuler un effet cylindrique 3D
 // Chaque valeur représente un delta d'opacité (-0.35 à +0.25) appliqué à une tranche
 export const CAPSULE_CYLINDER_SLICES = [
-    -0.20,
     -0.10,
+    -0.05,
     0.00,
     0.08,
     0.15,
@@ -170,20 +170,20 @@ export const CAPSULE_CYLINDER_SLICES = [
     0.00,
     0.00,
     0.00,
-    -0.04,
-    -0.08,
-    -0.16,
-    -0.20,
+    -0.03,
+    -0.06,
+    -0.09,
+    -0.12,
+    -0.15,
+    -0.18,
+    -0.21,
     -0.24,
-    -0.28,
-    -0.32,
-    -0.36,
-    -0.40,
-    -0.44,
-    -0.48,
-    -0.55,
-    -0.62,
-    -0.72
+    -0.27,
+    -0.30,
+    -0.33,
+    -0.38,
+    -0.45,
+    -0.54
 ];
 
 // Composant masque cylindre 3D réutilisable
