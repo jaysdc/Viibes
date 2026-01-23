@@ -800,7 +800,7 @@ const CONFIG = {
     HEADER_LOGO_SIZE: 108,                // Taille du logo VibesLogo (px CSS) - était 36*3 avec ancien multiplicateur
     SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
     SPLASH_FLICKER_DURATION: 1000,        // Durée du flicker néon initial (ms)
-    SPLASH_PULSE_DURATION: 2000,          // Durée de la phase pulse avec micro-flickers (ms)
+    SPLASH_PULSE_DURATION: 1300,          // Durée de la phase pulse avec grésillement (ms)
     SPLASH_MORPH_DURATION: 500,           // Durée du morph vers le header (ms)
     SPLASH_DELAY_BEFORE_FLICKER: 200,     // Délai avant de commencer le flicker (ms)
     HEADER_BG_OPACITY: 0.97,              // Opacité du fond blanc (0-1)
@@ -1847,33 +1847,27 @@ const styles = `
     animation: splash-neon-flicker 1000ms ease-out forwards;
   }
 
-  /* Phase Pulse: respiration douce avec saute + grésillement */
+  /* Phase Pulse: respiration douce avec grésillement */
   @keyframes splash-neon-pulse {
     0% { opacity: 1; filter: brightness(1) grayscale(0); }
     /* Respiration douce */
-    20% { opacity: 0.95; filter: brightness(1.05) grayscale(0); }
-    /* Première saute - coupure franche */
-    29% { opacity: 1; filter: brightness(1) grayscale(0); }
-    30% { opacity: 0.3; filter: brightness(0.5) grayscale(0.8); }
-    32% { opacity: 1; filter: brightness(1.1) grayscale(0); }
-    /* Retour respiration */
-    50% { opacity: 0.92; filter: brightness(1.08) grayscale(0); }
-    /* Grésillement - plusieurs micro-variations rapides */
-    64% { opacity: 1; filter: brightness(1) grayscale(0); }
-    65% { opacity: 0.7; filter: brightness(0.8) grayscale(0.3); }
-    66% { opacity: 0.95; filter: brightness(1.05) grayscale(0); }
-    67% { opacity: 0.5; filter: brightness(0.6) grayscale(0.5); }
-    68% { opacity: 0.9; filter: brightness(0.95) grayscale(0.1); }
-    69% { opacity: 0.6; filter: brightness(0.7) grayscale(0.4); }
-    70% { opacity: 1; filter: brightness(1.1) grayscale(0); }
-    71% { opacity: 0.75; filter: brightness(0.85) grayscale(0.2); }
-    72% { opacity: 1; filter: brightness(1.08) grayscale(0); }
+    30% { opacity: 0.95; filter: brightness(1.05) grayscale(0); }
+    /* Grésillement - plusieurs micro-variations rapides (50-65%) */
+    49% { opacity: 1; filter: brightness(1) grayscale(0); }
+    50% { opacity: 0.7; filter: brightness(0.8) grayscale(0.3); }
+    52% { opacity: 0.95; filter: brightness(1.05) grayscale(0); }
+    54% { opacity: 0.5; filter: brightness(0.6) grayscale(0.5); }
+    56% { opacity: 0.9; filter: brightness(0.95) grayscale(0.1); }
+    58% { opacity: 0.6; filter: brightness(0.7) grayscale(0.4); }
+    60% { opacity: 1; filter: brightness(1.1) grayscale(0); }
+    62% { opacity: 0.75; filter: brightness(0.85) grayscale(0.2); }
+    65% { opacity: 1; filter: brightness(1.08) grayscale(0); }
     /* Fin respiration */
     100% { opacity: 1; filter: brightness(1) grayscale(0); }
   }
 
   .splash-logo-pulse {
-    animation: splash-neon-pulse 2000ms ease-in-out forwards;
+    animation: splash-neon-pulse 1300ms ease-in-out forwards;
   }
 
   /* Phase 2: Morph vers le header */
@@ -1925,33 +1919,27 @@ const styles = `
     animation: splash-glow-flicker 1000ms ease-out forwards;
   }
 
-  /* Glow pendant la phase pulse - respiration douce avec saute + grésillement */
+  /* Glow pendant la phase pulse - respiration douce avec grésillement */
   @keyframes splash-glow-pulse {
     0% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
     /* Respiration douce */
-    20% { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 35px rgba(236, 72, 153, 0.35)); }
-    /* Première saute - glow s'éteint */
-    29% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
-    30% { filter: drop-shadow(0 0 0px rgba(236, 72, 153, 0)) drop-shadow(0 0 0px rgba(236, 72, 153, 0)); }
-    32% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.75)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4)); }
-    /* Retour respiration */
-    50% { filter: drop-shadow(0 0 17px rgba(236, 72, 153, 0.65)) drop-shadow(0 0 34px rgba(236, 72, 153, 0.32)); }
-    /* Grésillement - glow instable */
-    64% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
-    65% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.35)) drop-shadow(0 0 16px rgba(236, 72, 153, 0.18)); }
-    66% { filter: drop-shadow(0 0 16px rgba(236, 72, 153, 0.65)) drop-shadow(0 0 32px rgba(236, 72, 153, 0.32)); }
-    67% { filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.2)) drop-shadow(0 0 10px rgba(236, 72, 153, 0.1)); }
-    68% { filter: drop-shadow(0 0 14px rgba(236, 72, 153, 0.55)) drop-shadow(0 0 28px rgba(236, 72, 153, 0.28)); }
-    69% { filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.25)) drop-shadow(0 0 12px rgba(236, 72, 153, 0.12)); }
-    70% { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 36px rgba(236, 72, 153, 0.35)); }
-    71% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.2)); }
-    72% { filter: drop-shadow(0 0 17px rgba(236, 72, 153, 0.68)) drop-shadow(0 0 34px rgba(236, 72, 153, 0.34)); }
+    30% { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 35px rgba(236, 72, 153, 0.35)); }
+    /* Grésillement - glow instable (50-65%) */
+    49% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
+    50% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.35)) drop-shadow(0 0 16px rgba(236, 72, 153, 0.18)); }
+    52% { filter: drop-shadow(0 0 16px rgba(236, 72, 153, 0.65)) drop-shadow(0 0 32px rgba(236, 72, 153, 0.32)); }
+    54% { filter: drop-shadow(0 0 5px rgba(236, 72, 153, 0.2)) drop-shadow(0 0 10px rgba(236, 72, 153, 0.1)); }
+    56% { filter: drop-shadow(0 0 14px rgba(236, 72, 153, 0.55)) drop-shadow(0 0 28px rgba(236, 72, 153, 0.28)); }
+    58% { filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.25)) drop-shadow(0 0 12px rgba(236, 72, 153, 0.12)); }
+    60% { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 36px rgba(236, 72, 153, 0.35)); }
+    62% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)) drop-shadow(0 0 20px rgba(236, 72, 153, 0.2)); }
+    65% { filter: drop-shadow(0 0 17px rgba(236, 72, 153, 0.68)) drop-shadow(0 0 34px rgba(236, 72, 153, 0.34)); }
     /* Fin respiration */
     100% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.3)); }
   }
 
   .splash-glow-pulse {
-    animation: splash-glow-pulse 2000ms ease-in-out forwards;
+    animation: splash-glow-pulse 1300ms ease-in-out forwards;
   }
 `;
 
