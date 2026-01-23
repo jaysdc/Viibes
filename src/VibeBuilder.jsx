@@ -2494,13 +2494,21 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     }
                                 }}
                             >
-                                <Plus
-                                    size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
-                                    strokeWidth={3}
-                                    style={{ color: createBtnAnimating ? '#00ff88' : createBtnErrorAnimating ? '#f43f5e' : futureGradientColors[futureGradientColors.length - 1] }}
-                                />
+                                {editMode ? (
+                                    <Pencil
+                                        size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                        strokeWidth={3}
+                                        style={{ color: createBtnAnimating ? '#00ff88' : createBtnErrorAnimating ? '#f43f5e' : futureGradientColors[futureGradientColors.length - 1] }}
+                                    />
+                                ) : (
+                                    <Plus
+                                        size={parseInt(CONFIG.CREATE_BTN_SIZE) * 0.5}
+                                        strokeWidth={3}
+                                        style={{ color: createBtnAnimating ? '#00ff88' : createBtnErrorAnimating ? '#f43f5e' : futureGradientColors[futureGradientColors.length - 1] }}
+                                    />
+                                )}
                             </div>
-                            
+
                             {/* Titre et compteurs - 3 modes différents */}
                             {showTitles && !is3DMode ? (
                                 /* Mode normal: Capsule Liquid Glass en bas centrée */
