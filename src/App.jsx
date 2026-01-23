@@ -7760,7 +7760,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
   };
 
   // ÉCRAN DE CHARGEMENT - Logo éteint (gris) en attendant les données
-  if (playlists === null) {
+  // Ne pas afficher si le Dropbox browser est ouvert
+  if (playlists === null && !showDropboxBrowser) {
       return (
           <div className={isOnRealDevice ? "w-full h-screen bg-white flex justify-center items-center" : "min-h-screen bg-gray-100 flex justify-center items-center py-8 font-sans"}>
               <div className={isOnRealDevice ? "w-full h-full bg-white flex justify-center items-center" : "w-[390px] h-[95vh] max-h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 flex justify-center items-center shadow-2xl"}>
