@@ -4878,6 +4878,7 @@ const handlePlayerTouchEnd = () => {
     const [showBuilder, setShowBuilder] = useState(false);
     const [editingVibeId, setEditingVibeId] = useState(null); // null = création, vibeId = édition
     const [builderBtnIgniting, setBuilderBtnIgniting] = useState(false);
+    const [builderBtnPressed, setBuilderBtnPressed] = useState(false);
     const [isPlayerSearching, setIsPlayerSearching] = useState(false);
     const [playerSearchQuery, setPlayerSearchQuery] = useState('');
     const [isLibrarySearching, setIsLibrarySearching] = useState(false);
@@ -7971,7 +7972,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               className={`absolute inset-0 rounded-full ${builderBtnIgniting ? 'animate-neon-ignite-pink' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
                               style={{
                                   background: 'white',
-                                  zIndex: 0
+                                  zIndex: 0,
+                                  transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
+                                  transition: 'transform 0.1s ease-out'
                               }}
                           />
                           <button
@@ -7981,7 +7984,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
                               }}
+                              onTouchStart={() => { if (is3DMode) setBuilderBtnPressed(true); }}
+                              onTouchEnd={() => { if (is3DMode) setBuilderBtnPressed(false); }}
+                              onTouchCancel={() => { if (is3DMode) setBuilderBtnPressed(false); }}
                               className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                              style={{
+                                  transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
+                                  transition: 'transform 0.1s ease-out'
+                              }}
                           >
                               <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
