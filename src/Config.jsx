@@ -328,10 +328,12 @@ export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, 
     if (!is3DMode || intensity === 0) return null;
 
     // Calculer la position du highlight basée sur l'angle de lumière
-    // 315° = haut-gauche (comme l'image de référence)
-    const angleRad = (lightAngle * Math.PI) / 180;
-    const highlightX = 50 + Math.cos(angleRad) * 25; // 25% de décalage du centre
-    const highlightY = 50 - Math.sin(angleRad) * 25;
+    // Convention horloge: 0° = haut, 90° = droite, 180° = bas, 270° = gauche
+    // 315° = haut-gauche (entre haut et gauche)
+    // En CSS: X=0 gauche, X=100 droite, Y=0 haut, Y=100 bas
+    const angleRad = ((lightAngle - 90) * Math.PI) / 180; // -90 pour convertir en convention CSS
+    const highlightX = 50 + Math.cos(angleRad) * 25;
+    const highlightY = 50 + Math.sin(angleRad) * 25;
 
     return (
         <div
