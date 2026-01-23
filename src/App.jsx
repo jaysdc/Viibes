@@ -2209,6 +2209,24 @@ const generateVibeColors = (seed) => {
 };
 
 const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false }) => {
+    // En mode 3D, gérer l'animation d'enfoncement quand isBlinking est true
+    const [isPressedByBlink, setIsPressedByBlink] = useState(false);
+    const blinkTimeoutRef = useRef(null);
+
+    useEffect(() => {
+        if (is3DMode && isBlinking) {
+            // Déclencher l'enfoncement
+            setIsPressedByBlink(true);
+            // Après un délai, terminer l'animation et appeler onBlinkComplete
+            blinkTimeoutRef.current = setTimeout(() => {
+                setIsPressedByBlink(false);
+                if (onBlinkComplete) onBlinkComplete();
+            }, 300); // Durée de l'animation d'enfoncement
+        }
+        return () => {
+            if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
+        };
+    }, [is3DMode, isBlinking, onBlinkComplete]);
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -2343,8 +2361,11 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 // ========== LAYOUT BANDE HORIZONTALE ==========
 // En mode 3D: tube (capsule rounded-full) avec contenu centré verticalement
 // En mode normal: carte rectangulaire avec contenu en bas
-return (
-  <FeedbackCardOverlay isActive={isBlinking} onAnimationComplete={onBlinkComplete}>
+
+// En mode 3D, l'enfoncement remplace l'animation de clignotement
+const shouldPress = is3DMode && (isPressed || isPressedByBlink);
+
+const cardContent = (
       <div
           ref={cardRef}
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
@@ -2366,10 +2387,10 @@ return (
             background: baseGradient,
             isolation: 'isolate',
               transform: hasAnimated
-                  ? `translateX(${swipeOffset * 0.8}px)${is3DMode && isPressed ? ' scale(0.90)' : ''}`
+                  ? `translateX(${swipeOffset * 0.8}px)${shouldPress ? ' scale(0.90)' : ''}`
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
-              boxShadow: is3DMode && isPressed
+              boxShadow: shouldPress
                   ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
                   : undefined,
               transition: hasAnimated
@@ -2380,7 +2401,7 @@ return (
           }}
       >
           {/* Masque cylindre 3D */}
-          <CylinderMask is3DMode={is3DMode} intensity={is3DMode && isPressed ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? 'rounded-full' : 'rounded-xl'} />
+          <CylinderMask is3DMode={is3DMode} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? 'rounded-full' : 'rounded-xl'} />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
           {unavailableCount > 0 && (() => {
               const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -2615,8 +2636,15 @@ return (
             </>
           )}
         </div>
+);
+
+// En mode 3D, pas de FeedbackCardOverlay (l'enfoncement remplace le clignotement)
+// En mode normal, utiliser le FeedbackCardOverlay pour le clignotement
+return is3DMode ? cardContent : (
+    <FeedbackCardOverlay isActive={isBlinking} onAnimationComplete={onBlinkComplete}>
+        {cardContent}
     </FeedbackCardOverlay>
-    );
+);
 };
 
 const MarqueeText = ({ text, className, style }) => {
