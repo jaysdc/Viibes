@@ -2381,7 +2381,7 @@ const cardContent = is3DMode ? (
           onTouchCancel={() => {
               setIsPressed(false);
           }}
-          className="w-full cursor-pointer relative rounded-full overflow-hidden"
+          className="w-full cursor-pointer relative rounded-xl overflow-hidden"
           style={{
               height: `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh`,
               transform: hasAnimated
@@ -2397,7 +2397,7 @@ const cardContent = is3DMode ? (
       >
           {/* Fond dégradé - scaleY uniquement pour effet d'enfoncement vertical */}
           <div
-              className="absolute inset-0 shadow-lg overflow-hidden rounded-full"
+              className="absolute inset-0 shadow-lg overflow-hidden rounded-xl"
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
