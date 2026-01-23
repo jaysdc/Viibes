@@ -8204,6 +8204,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
                                   }}
                               >
+                                  <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
                                   <div
                                       className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
                                       style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
