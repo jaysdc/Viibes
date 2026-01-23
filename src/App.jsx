@@ -2208,7 +2208,7 @@ const generateVibeColors = (seed) => {
     return `linear-gradient(135deg, ${stops})`;
 };
 
-const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false }) => {
+const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false, swipeIndicator = null }) => {
     // En mode 3D, gérer l'animation d'enfoncement quand isBlinking est true
     const [isPressedByBlink, setIsPressedByBlink] = useState(false);
     const blinkTimeoutRef = useRef(null);
@@ -2395,6 +2395,8 @@ const cardContent = is3DMode ? (
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
+          {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
+          {swipeIndicator}
           {/* Fond dégradé - scaleY uniquement pour effet d'enfoncement vertical */}
           <div
               className="absolute inset-0 shadow-lg overflow-hidden"
@@ -2555,6 +2557,8 @@ const cardContent = is3DMode ? (
                   : `transform ${CONFIG.VIBECARD_SLIDE_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CONFIG.VIBECARD_SLIDE_DURATION}ms ease-out`
           }}
       >
+          {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
+          {swipeIndicator}
           {/* Masque cylindre 3D */}
           <CylinderMask is3DMode={false} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}

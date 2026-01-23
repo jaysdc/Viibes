@@ -1008,17 +1008,17 @@ const Tweaker = ({
                                 ref={(el) => { if (el) cardRefsMap.current.set(vibe.vibeId, el); }}
                                 className={`relative ${deletingVibe === vibe.vibeId ? 'animate-shake-delete opacity-50' : ''} ${orderNumber !== -1 && activeMode === 'reorder' ? 'animate-wiggle' : ''}`}
                             >
-                                {/* Indicateur de swipe - centré horizontalement en haut de la carte */}
-                                <div
-                                    className="absolute top-2 left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
-                                    style={{ transform: 'translateX(-50%)' }}
-                                >
-                                    <ChevronLeft size={10} />
-                                    <Pointer size={12} />
-                                    <ChevronRight size={10} />
-                                </div>
-
                                 <VibeCardComponent
+                                    swipeIndicator={
+                                        <div
+                                            className={`absolute ${is3DMode ? 'bottom-2' : 'top-2'} left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none`}
+                                            style={{ transform: 'translateX(-50%)' }}
+                                        >
+                                            <ChevronLeft size={10} />
+                                            <Pointer size={12} />
+                                            <ChevronRight size={10} />
+                                        </div>
+                                    }
                                     vibeId={vibe.vibeId}
                                     vibeName={vibe.name}
                                     availableCount={availableCount}
