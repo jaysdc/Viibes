@@ -125,7 +125,7 @@ const TweakerStyles = `
 `;
 
 // Composant FeedbackOverlay pour le Tweaker
-const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgClass, bgGradient, borderClass, is3DMode, children }) => {
+const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgClass, bgGradient, borderClass, children }) => {
     const [phase, setPhase] = useState('idle');
     const [textOpacity, setTextOpacity] = useState(0);
     const [glowIntensity, setGlowIntensity] = useState(0);
@@ -225,17 +225,16 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
     };
     
     return (
-        <div
-            className={`absolute inset-0 z-10 rounded-full flex items-center justify-center border overflow-hidden ${bgClass || ''} ${borderClass}`}
+        <div 
+            className={`absolute inset-0 z-10 rounded-full flex items-center justify-center border ${bgClass || ''} ${borderClass}`}
             style={{
                 ...containerStyle,
                 background: bgGradient || undefined
             }}
         >
-            <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
-            <div
+            <div 
                 className="flex items-center gap-2 text-white font-black tracking-widest uppercase text-lg"
-                style={{
+                style={{ 
                     opacity: textOpacity / 100,
                     transition: `opacity ${phase === 'validating' ? `${TWEAKER_CONFIG.FEEDBACK_BLINK_TRANSITION}ms` : getTransitionDuration()} ease-out`
                 }}
@@ -726,7 +725,6 @@ const Tweaker = ({
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_ORANGE}
                                 bgGradient="linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)"
                                 borderClass="border-orange-600"
-                                is3DMode={is3DMode}
                             >
                                 <Undo2 size={18} strokeWidth={3} />
                                 <span>UNDO</span>
@@ -739,7 +737,6 @@ const Tweaker = ({
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_RED}
                                 bgGradient="linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)"
                                 borderClass="border-rose-600"
-                                is3DMode={is3DMode}
                             >
                                 <Trash2 size={18} strokeWidth={3} />
                                 <span>DELETED</span>
@@ -752,7 +749,6 @@ const Tweaker = ({
                                 neonColor={TWEAKER_CONFIG.NEON_COLOR_CYAN}
                                 bgGradient="linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)"
                                 borderClass="border-cyan-600"
-                                is3DMode={is3DMode}
                             >
                                 <BetweenHorizontalEnd size={18} strokeWidth={3} />
                                 <span>APPLIED</span>
@@ -764,7 +760,7 @@ const Tweaker = ({
                     className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : (is3DMode ? '#D1D5DB' : '#F3F4F6'),
+                        background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : '#F3F4F6',
                         color: undoFeedback ? 'white' : '#9CA3AF',
                         boxShadow: undoFeedback
                             ? '0 0 20px rgba(250, 204, 21, 0.5), 0 0 40px rgba(220, 38, 38, 0.3)'
@@ -782,7 +778,7 @@ const Tweaker = ({
                     className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : (is3DMode ? '#D1D5DB' : '#F3F4F6'),
+                        background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
                         boxShadow: activeMode === 'reorder'
                             ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
@@ -801,7 +797,7 @@ const Tweaker = ({
                     className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
-                        background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : (is3DMode ? '#D1D5DB' : '#F3F4F6'),
+                        background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'delete' ? 'white' : '#9CA3AF',
                         boxShadow: activeMode === 'delete'
                             ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
