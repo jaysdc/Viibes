@@ -246,7 +246,7 @@ export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode
 // Basé sur un éclairage venant du haut-gauche
 // intensity: 0-1 (force de l'effet)
 // lightAngle: position de la source lumineuse (0-360°, 315 = haut-gauche par défaut)
-export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, lightAngle = 315 }) => {
+export const SphereMask = ({ intensity = 0.4, className = '', is3DMode = false, lightAngle = 315 }) => {
     if (!is3DMode || intensity === 0) return null;
 
     // Calculer la position du highlight basée sur l'angle de lumière

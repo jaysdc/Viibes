@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music, Plus, ChevronDown, ChevronUp, User, ArrowDownAZ, ArrowUpZA, ArrowDownUp, RotateCcw, Headphones, Flame, Snowflake, Dices, Maximize2, ListPlus, Archive, RotateCw, ChevronLeft, ChevronRight, Volume2, VolumeX, ChevronsUpDown, Check, FolderPlus, Sparkles, X, FolderDown, Folder, ListMusic, Search, ListChecks, LocateFixed, Music2, ArrowRight, MinusCircle, Bomb, ListOrdered, CheckCircle2, XCircle, Trash2, ChevronsUp, ChevronsDown, Ghost, Pointer, Hand, Disc3, Copy, Type, MoveDown, MoveUp, AudioLines, Pencil } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, CylinderMask, SAFE_AREA_HEIGHT_CSS } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, CylinderMask, SphereMask, SAFE_AREA_HEIGHT_CSS } from './Config.jsx';
 import { VibesWave } from './Assets.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -828,8 +828,10 @@ const ToggleSortBtn = ({
     
     return (
         <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`} style={{ transform: 'translateZ(0)' }}>
-            {/* Masque cylindre individuel */}
-            <CylinderMask intensity={isActive ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} is3DMode={is3DMode} />
+            {/* Masque cylindre pour boutons OFF (sans NeonGlow) */}
+            {!isActive && (
+                <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} is3DMode={is3DMode} />
+            )}
             {isActive && !hideGlow && (
                 <NeonGlow
                     key={animKey}
@@ -845,8 +847,12 @@ const ToggleSortBtn = ({
                     }}
                 />
             )}
-            <button 
-                onClick={handleClick} 
+            {/* Masque cylindre pour boutons ON (par-dessus le NeonGlow) */}
+            {isActive && (
+                <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={roundedClass} is3DMode={is3DMode} />
+            )}
+            <button
+                onClick={handleClick}
                 className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-200 ${roundedClass} ${isActive ? 'text-white' : 'bg-transparent text-gray-400 hover:text-gray-600'}`}
             > 
                 {type === 'artist' ? (
@@ -911,8 +917,6 @@ const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false, is3DMode =
     
     return (
         <div className="flex-1 h-full relative overflow-visible rounded-r-full" style={{ transform: 'translateZ(0)' }}>
-            {/* Masque cylindre - toujours actif car ce bouton est toujours coloré */}
-            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
             {!hideGlow && (
                 <NeonGlow
                     key={animKey}
@@ -928,6 +932,8 @@ const FileFilterBtn = ({ fileFilter, setFileFilter, hideGlow = false, is3DMode =
                     }}
                 />
             )}
+            {/* Masque cylindre - toujours actif car ce bouton est toujours coloré (par-dessus le NeonGlow) */}
+            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
             <button
                 onClick={cycleFilter}
                 className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
@@ -2140,7 +2146,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     className="h-full aspect-square rounded-full border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 relative overflow-hidden"
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+                                    <SphereMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
                                     <Search style={{ width: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)`, height: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)` }} />
                                 </button>
                                 
@@ -2185,7 +2191,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                             />
                                         </div>
                                         <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.CLOSE_BTN_FLEX }}>
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
                                             <NeonGlow
                                                 key={closeBtnAnimKey}
                                                 colorName="pink"
@@ -2199,6 +2204,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                     zIndex: 0
                                                 }}
                                             />
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
                                             <button 
                                                 onClick={() => {
                                                     if (searchOverlayAnim !== 'none') return;

@@ -2366,7 +2366,7 @@ return (
             background: baseGradient,
             isolation: 'isolate',
               transform: hasAnimated
-                  ? `translateX(${swipeOffset * 0.8}px)${is3DMode && isPressed ? ' scale(0.98)' : ''}`
+                  ? `translateX(${swipeOffset * 0.8}px)${is3DMode && isPressed ? ' scale(0.90)' : ''}`
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
               opacity: hasAnimated ? 1 : 0,
               boxShadow: is3DMode && isPressed
