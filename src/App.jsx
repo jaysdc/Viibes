@@ -9362,7 +9362,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             })()}
 
         {/* SPLASH SCREEN - Overlay de démarrage */}
-        {splashPhase !== 'done' && (() => {
+        {splashPhase !== 'done' && !showDropboxBrowser && (() => {
             // Calculer la position du logo header pour le morph
             let morphX = '-50%';
             let morphY = '-50%';
