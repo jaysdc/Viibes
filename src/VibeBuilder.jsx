@@ -2127,8 +2127,11 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                                 >
                                     <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
+                                    <div className="w-px h-full bg-gray-200"></div>
                                     <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
+                                    <div className="w-px h-full bg-gray-200"></div>
                                     <ToggleSortBtn type="playCount" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
+                                    <div className="w-px h-full bg-gray-200"></div>
                                     <FileFilterBtn fileFilter={fileFilter} setFileFilter={setFileFilter} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
                                 </div>
 
