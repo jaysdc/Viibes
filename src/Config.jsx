@@ -242,6 +242,84 @@ export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode
     );
 };
 
+// Composant masque sphère 3D - Technique 2 (radial-gradient multiples)
+// Utilise plusieurs gradients radiaux pour simuler un effet de sphère
+export const SphereMaskT2 = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{
+                background: `
+                    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,${0.5 * intensity}) 0%, transparent 50%),
+                    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0,0,0,${0.3 * intensity}) 0%, transparent 50%),
+                    radial-gradient(ellipse 50% 80% at 0% 50%, rgba(0,0,0,${0.15 * intensity}) 0%, transparent 50%),
+                    radial-gradient(ellipse 50% 80% at 100% 50%, rgba(0,0,0,${0.15 * intensity}) 0%, transparent 50%)
+                `,
+                transform: 'translateZ(0)'
+            }}
+        />
+    );
+};
+
+// Composant masque sphère 3D - Technique 3 (Tailwind simplifié)
+// Utilise un highlight en haut et une ombre en bas
+export const SphereMaskT3 = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            {/* Highlight en haut */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(255,255,255,${0.6 * intensity}) 0%, transparent 60%)`
+                }}
+            />
+            {/* Ombre en bas */}
+            <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                    background: `radial-gradient(ellipse 100% 60% at 50% 110%, rgba(0,0,0,${0.4 * intensity}) 0%, transparent 60%)`
+                }}
+            />
+        </div>
+    );
+};
+
+// Composant masque sphère 3D - Technique 4 (SVG avec filter)
+// Utilise un SVG avec un filter feGaussianBlur pour un effet plus doux
+export const SphereMaskT4 = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+    if (!is3DMode || intensity === 0) return null;
+    const filterId = `sphere-blur-${Math.random().toString(36).substring(2, 11)}`;
+    return (
+        <div
+            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+        >
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <filter id={filterId}>
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="8" />
+                    </filter>
+                    <radialGradient id={`${filterId}-highlight`} cx="50%" cy="20%" r="50%">
+                        <stop offset="0%" stopColor={`rgba(255,255,255,${0.7 * intensity})`} />
+                        <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                    <radialGradient id={`${filterId}-shadow`} cx="50%" cy="90%" r="50%">
+                        <stop offset="0%" stopColor={`rgba(0,0,0,${0.4 * intensity})`} />
+                        <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                </defs>
+                <ellipse cx="50" cy="25" rx="40" ry="25" fill={`url(#${filterId}-highlight)`} filter={`url(#${filterId})`} />
+                <ellipse cx="50" cy="80" rx="40" ry="20" fill={`url(#${filterId}-shadow)`} filter={`url(#${filterId})`} />
+            </svg>
+        </div>
+    );
+};
+
 // Composant masque sphère 3D - Effet réaliste avec highlight excentré
 // Basé sur un éclairage venant du haut-gauche
 // intensity: 0-1 (force de l'effet)
@@ -279,48 +357,6 @@ export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, 
                 className="absolute inset-0 rounded-full"
                 style={{
                     background: `radial-gradient(circle at ${100 - highlightX}% ${100 - highlightY}%, rgba(0,0,0,${0.4 * intensity}) 0%, transparent 60%)`
-                }}
-            />
-        </div>
-    );
-};
-
-// Composant masque sphère 3D INVERSÉ (concave) - Effet de creux
-// Le highlight est en bas-droite au lieu de haut-gauche (effet de bouton enfoncé)
-// intensity: 0-1 (force de l'effet)
-// lightAngle: position de la source lumineuse (0-360°, 135 = bas-droite par défaut pour effet inversé)
-export const SphereMaskInverted = ({ intensity = 0.6, className = '', is3DMode = false, lightAngle = 135 }) => {
-    if (!is3DMode || intensity === 0) return null;
-
-    // Calculer la position du highlight basée sur l'angle de lumière inversé
-    const angleRad = (lightAngle * Math.PI) / 180;
-    const highlightX = 50 + Math.cos(angleRad) * 25;
-    const highlightY = 50 - Math.sin(angleRad) * 25;
-
-    return (
-        <div
-            className={`absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-full ${className}`}
-            style={{ transform: 'translateZ(0)' }}
-        >
-            {/* Couche 1: Assombrissement central (effet concave) */}
-            <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                    background: `radial-gradient(circle at 50% 50%, rgba(0,0,0,${0.3 * intensity}) 0%, transparent 60%)`
-                }}
-            />
-            {/* Couche 2: Ombre opposée à la lumière (haut-gauche pour inversé) */}
-            <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                    background: `radial-gradient(circle at ${100 - highlightX}% ${100 - highlightY}%, rgba(0,0,0,${0.5 * intensity}) 0%, transparent 60%)`
-                }}
-            />
-            {/* Couche 3: Highlight (bas-droite pour inversé) */}
-            <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                    background: `radial-gradient(circle at ${highlightX}% ${highlightY}%, rgba(255,255,255,${0.6 * intensity}) 0%, rgba(255,255,255,${0.2 * intensity}) 20%, transparent 50%)`
                 }}
             />
         </div>
