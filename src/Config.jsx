@@ -168,8 +168,6 @@ export const CAPSULE_CYLINDER_SLICES = [
     0.08,
     0.00,
     0.00,
-    0.00,
-    0.00,
     -0.03,
     -0.06,
     -0.09,
@@ -181,9 +179,11 @@ export const CAPSULE_CYLINDER_SLICES = [
     -0.27,
     -0.30,
     -0.33,
-    -0.38,
+    -0.36,
+    -0.39,
     -0.45,
-    -0.54
+    -0.52,
+    -0.61
 ];
 
 // Composant masque cylindre 3D réutilisable
@@ -288,7 +288,7 @@ export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, 
 };
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)       ║
+// ║              PARAMÈTRES UNIFIÉS (partagés entre tous les composants)      ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export const UNIFIED_CONFIG = {
