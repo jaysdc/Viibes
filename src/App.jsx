@@ -8225,14 +8225,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   }}
                               >
                                   <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
-                                  <div
-                                      className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
-                                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                                  >
-                                      <ChevronLeft size={16} />
-                                      <span>{gradientName}</span>
-                                      <ChevronRight size={16} />
-                                  </div>
+                                  {showTitles && (
+                                      <div
+                                          className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
+                                          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                                      >
+                                          <ChevronLeft size={16} />
+                                          <span>{gradientName}</span>
+                                          <ChevronRight size={16} />
+                                      </div>
+                                  )}
                               </div>
                           </div>
                       );
