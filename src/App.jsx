@@ -5017,8 +5017,14 @@ const handlePlayerTouchEnd = () => {
     const [vibeColorIndices, setVibeColorIndices] = useState({});
     const [splashPhase, setSplashPhase] = useState('waiting'); // 'waiting' | 'flicker' | 'morph' | 'done'
     const [splashReady, setSplashReady] = useState(false); // Anti-FOUC: true seulement après hydratation React
-    const [showTitles, setShowTitles] = useState(true); // Toggle global pour afficher/masquer les titres des vibes
-    const [is3DMode, setIs3DMode] = useState(false); // Toggle global pour activer/désactiver les masques d'opacité 3D
+    const [showTitles, setShowTitles] = useState(() => {
+        const saved = localStorage.getItem('vibes_show_titles');
+        return saved !== null ? JSON.parse(saved) : true;
+    }); // Toggle global pour afficher/masquer les titres des vibes
+    const [is3DMode, setIs3DMode] = useState(() => {
+        const saved = localStorage.getItem('vibes_3d_mode');
+        return saved !== null ? JSON.parse(saved) : false;
+    }); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
     const [vibeTheseGradientIndex, setVibeTheseGradientIndex] = useState(0); // Index du dégradé pour VIBE THESE
@@ -5274,6 +5280,16 @@ useEffect(() => {
     localStorage.setItem('vibes_color_indices', JSON.stringify(vibeColorIndices));
   }
 }, [vibeColorIndices]);
+
+// Sauvegarder showTitles (tag/no-tag) dans localStorage
+useEffect(() => {
+    localStorage.setItem('vibes_show_titles', JSON.stringify(showTitles));
+}, [showTitles]);
+
+// Sauvegarder is3DMode (2D/3D) dans localStorage
+useEffect(() => {
+    localStorage.setItem('vibes_3d_mode', JSON.stringify(is3DMode));
+}, [is3DMode]);
 
   // AUDIO FADING UTILS
   // Durée du fade out pour kill vibe (en secondes pour Web Audio API)
