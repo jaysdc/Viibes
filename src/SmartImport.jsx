@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer, Copy } from 'lucide-react';
 import { FlameWhiteVector } from './Assets.jsx';
-import { UNIFIED_CONFIG } from './Config.jsx';
+import { UNIFIED_CONFIG, CylinderMask } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    SMARTIMPORT - PARAMÈTRES TWEAKABLES                    ║
@@ -292,6 +292,7 @@ const SmartImportCard = ({
     getGradientByIndex,
     getGradientName,
     currentGradientIndex,
+    is3DMode,
 }) => {
     const cardRef = useRef(null);
     const cardWidthRef = useRef(0);
@@ -453,10 +454,10 @@ const SmartImportCard = ({
             {/* Carte principale */}
             <div
                 ref={cardRef}
-                className="flex items-end px-3 pb-2 flex-shrink-0 relative overflow-visible"
+                className="flex items-end px-3 pb-2 flex-shrink-0 relative overflow-hidden"
                 style={{
                     background: swipePreview ? swipePreview.gradient : gradientStyle,
-                    borderRadius: SMARTIMPORT_CONFIG.CARD_RADIUS,
+                    borderRadius: is3DMode ? '0.5rem' : SMARTIMPORT_CONFIG.CARD_RADIUS,
                     height: SMARTIMPORT_CONFIG.CARD_HEIGHT,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : 'translateX(0)',
@@ -464,6 +465,9 @@ const SmartImportCard = ({
                     opacity: isSelected ? 1 : (vibeCardMinOpacity ?? 0.3)
                 }}
             >
+                {/* Masque cylindrique 3D */}
+                <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+
                 {/* Indicateur de swipe - chevrons + pointer en haut centré */}
                 {!isExisting && (
                     <div
@@ -525,6 +529,7 @@ const SmartImport = ({
     getGradientByIndex,
     getGradientName,
     vibeCardMinOpacity,    // Opacité des cartes désélectionnées (depuis CONFIG)
+    is3DMode,              // Mode 3D (masques cylindriques)
     onImportComplete,
     onMenuClose,
     dropboxData,
@@ -1298,8 +1303,8 @@ const SmartImport = ({
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: SMARTIMPORT_CONFIG.CARD_GAP,
-                                        paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
-                                        paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                        paddingLeft: is3DMode ? 0 : SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                        paddingRight: is3DMode ? 0 : SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
                                         paddingTop: '0.5rem',
                                         paddingBottom: '0.5rem'
                                     }}
@@ -1368,6 +1373,7 @@ const SmartImport = ({
                                                     getGradientByIndex={getGradientByIndex}
                                                     getGradientName={getGradientName}
                                                     currentGradientIndex={gradientIndex}
+                                                    is3DMode={is3DMode}
                                                 />
                                             );
                                         })}

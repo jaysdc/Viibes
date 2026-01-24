@@ -9302,6 +9302,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         getGradientByIndex={getGradientByIndex}
                         getGradientName={getGradientName}
                         vibeCardMinOpacity={CONFIG.VIBECARD_MIN_OPACITY}
+                        is3DMode={is3DMode}
                         dropboxData={pendingDropboxData}
                         onDropboxDataClear={() => setPendingDropboxData(null)}
                         onImportComplete={(folders, mode, folderGradients, isDropbox) => {
