@@ -2286,6 +2286,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
             // Si c'est horizontal, on BLOQUE le scroll et on gère le swipe couleur
             if (swipeDirectionRef.current === 'horizontal') {
                 e.preventDefault(); // Fonctionne car passive: false
+                e.stopPropagation(); // Empêcher la propagation vers les parents
 
                 const elementWidth = element.offsetWidth;
                 const maxSwipeDistance = elementWidth * CONFIG.COLOR_SWIPE_PERCENT / 100;
@@ -2317,6 +2318,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     const handleTouchStart = (e) => {
         if (!e.touches || !e.touches[0]) return;
+        e.stopPropagation(); // Empêcher la propagation vers les parents
         touchStartRef.current = {
             x: e.touches[0].clientX,
             y: e.touches[0].clientY
