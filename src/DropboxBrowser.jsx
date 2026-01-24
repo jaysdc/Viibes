@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
-import { UNIFIED_CONFIG } from './Config.jsx';
+import { UNIFIED_CONFIG, CylinderMask, SphereMask } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    DROPBOX BROWSER - PARAMÈTRES                           ║
@@ -137,6 +137,7 @@ const DropboxBrowser = ({
     headerLogoSize,
     headerPaddingX,
     headerButtonsGap,
+    is3DMode,
 }) => {
     // Calculer la position du bouton Dropbox (constante basée sur la config)
     const computeDropboxButtonRect = () => {
@@ -851,13 +852,16 @@ const DropboxBrowser = ({
                             }}
                         >
                             <div
-                                className="flex items-center rounded-full px-3 border border-gray-200 w-full relative overflow-hidden"
+                                className={`flex items-center ${is3DMode ? '' : 'rounded-full'} px-3 border border-gray-200 w-full relative overflow-hidden`}
                                 style={{
                                     background: 'white',
                                     height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                     minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                    borderRadius: is3DMode ? '0.5rem' : undefined,
                                 }}
                             >
+                                {/* Masque cylindrique 3D sur le header */}
+                                <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                                 {/* Barre de progression - se remplit de gauche à droite */}
                                 {scanPhase === 'processing' && totalFilesToProcess > 0 && (
                                     <div
@@ -888,7 +892,7 @@ const DropboxBrowser = ({
                                 )}
 
                                 {/* Nom du dossier + compteurs (MP3 d'abord, puis dossiers) */}
-                                <div className="flex items-center gap-2 ml-2">
+                                <div className="flex items-center gap-2 ml-2 relative z-10">
                                     <span
                                         className="font-bold text-gray-700 truncate"
                                         style={{ fontSize: '0.8rem' }}
@@ -938,7 +942,7 @@ const DropboxBrowser = ({
                                                         <div
                                                             key={file.path_lower || index}
                                                             onClick={() => !loading && navigateToFolder(file.path_lower, file.name)}
-                                                            className="flex items-center pl-3 pr-2 cursor-pointer"
+                                                            className="flex items-center pl-3 pr-2 cursor-pointer relative overflow-hidden"
                                                             style={{
                                                                 height: CONFIG.CARD_HEIGHT,
                                                                 background: 'white',
@@ -949,8 +953,10 @@ const DropboxBrowser = ({
                                                                 pointerEvents: loading ? 'none' : 'auto',
                                                             }}
                                                         >
+                                                            {/* Masque cylindrique 3D sur les cartes dossiers */}
+                                                            <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                                                             <span
-                                                                className="flex-1 truncate font-bold text-gray-900"
+                                                                className="flex-1 truncate font-bold text-gray-900 relative z-10"
                                                                 style={{ fontSize: CONFIG.ROW_TITLE_SIZE }}
                                                             >
                                                                 {file.name}
@@ -1006,23 +1012,27 @@ const DropboxBrowser = ({
                         {/* Boutons browse */}
                         <div className="relative" style={{ flexShrink: 0, paddingLeft: CONFIG.HORIZONTAL_PADDING, paddingRight: CONFIG.HORIZONTAL_PADDING, paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
                             <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
+                                {/* Bouton Close (X) - cercle */}
                                 <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {closingButton === 'close' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
-                                    <button onClick={handleClose} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center" style={{ background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'close' ? 'white' : '#9ca3af' }}>
-                                        <X size={18} />
+                                    <button onClick={handleClose} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center overflow-hidden" style={{ background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'close' ? 'white' : '#9ca3af' }}>
+                                        <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                    {closingButton === 'disconnect' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
-                                    <button onClick={handleDisconnect} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'disconnect' ? 'white' : '#ef4444' }}>
-                                        <LogOut size={14} />
-                                        <span>LOGOUT</span>
+                                {/* Bouton Logout - capsule */}
+                                <div className={`flex-1 relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
+                                    {closingButton === 'disconnect' && <div className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} dropbox-ignite-red`} style={{ background: '#ef4444', zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }} />}
+                                    <button onClick={handleDisconnect} disabled={!!closingButton || scanning} className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center gap-1 overflow-hidden`} style={{ background: closingButton === 'disconnect' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'disconnect' ? 'white' : '#ef4444', borderRadius: is3DMode ? '0.5rem' : undefined }}>
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10 flex items-center gap-1"><LogOut size={14} /><span>LOGOUT</span></span>
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-hidden rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                    <button onClick={handleImport} disabled={!canImport || !!closingButton} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1" style={{ background: scanPhase === 'counting' ? 'white' : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'), border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none', color: scanPhase === 'counting' ? CONFIG.DROPBOX_BLUE : (canImport ? 'white' : '#9CA3AF'), opacity: canImport || scanning ? 1 : 0.4, boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none' }}>
-                                        {scanPhase === 'counting' ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}
-                                        <span>IMPORT</span>
+                                {/* Bouton Import - capsule */}
+                                <div className={`flex-1 relative overflow-hidden ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
+                                    <button onClick={handleImport} disabled={!canImport || !!closingButton} className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center gap-1 overflow-hidden`} style={{ background: scanPhase === 'counting' ? 'white' : (canImport ? CONFIG.DROPBOX_BLUE : 'rgba(0,0,0,0.05)'), border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none', color: scanPhase === 'counting' ? CONFIG.DROPBOX_BLUE : (canImport ? 'white' : '#9CA3AF'), opacity: canImport || scanning ? 1 : 0.4, boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none', borderRadius: is3DMode ? '0.5rem' : undefined }}>
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10 flex items-center gap-1">{scanPhase === 'counting' ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}<span>IMPORT</span></span>
                                     </button>
                                 </div>
                             </div>

@@ -8803,6 +8803,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             headerLogoSize={CONFIG.HEADER_LOGO_SIZE}
             headerPaddingX={CONFIG.HEADER_PADDING_X}
             headerButtonsGap={CONFIG.HEADER_BUTTONS_GAP}
+            is3DMode={is3DMode}
         />}
 
         {/* CONFIRMATION PILL (slide to confirm) */}

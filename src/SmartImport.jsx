@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer, Copy } from 'lucide-react';
 import { FlameWhiteVector } from './Assets.jsx';
-import { UNIFIED_CONFIG, CylinderMask } from './Config.jsx';
+import { UNIFIED_CONFIG, CylinderMask, SphereMask } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    SMARTIMPORT - PARAMÈTRES TWEAKABLES                    ║
@@ -1171,13 +1171,16 @@ const SmartImport = ({
                             }}
                         >
                         <div
-                            className="relative flex items-center justify-between rounded-full px-4 border border-gray-200 w-full overflow-hidden"
+                            className={`relative flex items-center justify-between ${is3DMode ? '' : 'rounded-full'} px-4 border border-gray-200 w-full overflow-hidden`}
                             style={{
                                 background: 'white',
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,
                                 minHeight: UNIFIED_CONFIG.CAPSULE_HEIGHT,
+                                borderRadius: is3DMode ? '0.5rem' : undefined,
                             }}
                         >
+                            {/* Masque cylindrique 3D sur le header */}
+                            <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                             {/* Preview gradient dans la capsule du header */}
                             {activeSwipePreview && (
                                 <div
@@ -1186,8 +1189,9 @@ const SmartImport = ({
                                         background: activeSwipePreview.gradient,
                                     }}
                                 >
+                                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                                     <div
-                                        className="flex items-center gap-2 text-white font-black tracking-widest uppercase"
+                                        className="flex items-center gap-2 text-white font-black tracking-widest uppercase relative z-10"
                                         style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}
                                     >
                                         <ChevronLeft size={14} />
@@ -1197,7 +1201,7 @@ const SmartImport = ({
                                 </div>
                             )}
                             {/* Nom du dossier avec autoscroll */}
-                            <div className="flex-1 overflow-hidden mr-2">
+                            <div className="flex-1 overflow-hidden mr-2 relative z-10">
                                 <div
                                     className="font-bold text-gray-700 whitespace-nowrap"
                                     style={{
@@ -1214,7 +1218,7 @@ const SmartImport = ({
                             {/* Warning si > seuil */}
                             {importPreview.totalFiles > SMARTIMPORT_CONFIG.WARNING_THRESHOLD && (
                                 <div
-                                    className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0"
+                                    className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 relative z-10"
                                     style={{
                                         background: 'rgba(251, 146, 60, 0.15)',
                                         border: '1px solid rgba(251, 146, 60, 0.3)',
@@ -1240,7 +1244,7 @@ const SmartImport = ({
                             <div className="flex items-center gap-1.5">
                                 {/* Badge nouvelles vibes (+X) rose */}
                                 <div
-                                    className="font-bold flex items-center justify-center gap-0.5"
+                                    className="font-bold flex items-center justify-center gap-0.5 relative overflow-hidden"
                                     style={{
                                         background: SMARTIMPORT_CONFIG.BADGE_BG,
                                         color: SMARTIMPORT_CONFIG.BADGE_COLOR,
@@ -1252,12 +1256,13 @@ const SmartImport = ({
                                         fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                     }}
                                 >
-                                    <span>+{selectedNewCount}</span>
+                                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                    <span className="relative z-10">+{selectedNewCount}</span>
                                 </div>
                                 {/* Badge vibes existantes (✓X) vert */}
                                 {selectedExistingCount > 0 && (
                                     <div
-                                        className="font-bold flex items-center justify-center gap-0.5"
+                                        className="font-bold flex items-center justify-center gap-0.5 relative overflow-hidden"
                                         style={{
                                             background: 'rgba(34, 197, 94, 0.15)',
                                             color: '#16a34a',
@@ -1269,8 +1274,9 @@ const SmartImport = ({
                                             fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                         }}
                                     >
-                                        <Copy size={12} strokeWidth={3} />
-                                        <span>{selectedExistingCount}</span>
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <Copy size={12} strokeWidth={3} className="relative z-10" />
+                                        <span className="relative z-10">{selectedExistingCount}</span>
                                     </div>
                                 )}
                             </div>
@@ -1303,8 +1309,8 @@ const SmartImport = ({
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: SMARTIMPORT_CONFIG.CARD_GAP,
-                                        paddingLeft: is3DMode ? 0 : SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
-                                        paddingRight: is3DMode ? 0 : SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                        paddingLeft: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
+                                        paddingRight: SMARTIMPORT_CONFIG.HORIZONTAL_PADDING,
                                         paddingTop: '0.5rem',
                                         paddingBottom: '0.5rem'
                                     }}
@@ -1406,6 +1412,7 @@ const SmartImport = ({
                         {folderCount === 1 ? (
                             /* Cas 1 dossier : 2 boutons - X cercle + Vibe flex */
                             <div className="flex gap-2 items-center">
+                                {/* Bouton Cancel (X) - cercle */}
                                 <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'cancel' && (
                                         <div
@@ -1416,42 +1423,47 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
+                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center overflow-hidden"
                                         style={{
                                             background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
                                             color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
                                         }}
                                     >
-                                        <X size={18} />
+                                        <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                {/* Bouton 1 VIBE - capsule */}
+                                <div className={`flex-1 relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-roseMagenta"
+                                            className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} smartimport-ignite-roseMagenta`}
                                             style={{
                                                 background: 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                borderRadius: is3DMode ? '0.5rem' : undefined
                                             }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('vibes')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-2"
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm text-white flex items-center justify-center gap-2 overflow-hidden`}
                                         style={{
                                             background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
-                                            border: '1px solid #9f1239'
+                                            border: '1px solid #9f1239',
+                                            borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <FlameWhiteVector size={16} />
-                                        1 VIBE
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10 flex items-center gap-2"><FlameWhiteVector size={16} />1 VIBE</span>
                                     </button>
                                 </div>
                             </div>
                         ) : (
                             /* Cas plusieurs dossiers : 3 boutons - X cercle + Fusion/Vibes flex égaux */
                             <div className="flex gap-2 items-center">
+                                {/* Bouton Cancel (X) - cercle */}
                                 <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
                                     {btnIgniting === 'cancel' && (
                                         <div
@@ -1462,57 +1474,64 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center"
+                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center overflow-hidden"
                                         style={{
                                             background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
                                             color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
                                         }}
                                     >
-                                        <X size={18} />
+                                        <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, opacity: importPreview.fusionExists ? 0.4 : 1 }}>
+                                {/* Bouton FUSION - capsule */}
+                                <div className={`flex-1 relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, opacity: importPreview.fusionExists ? 0.4 : 1, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {btnIgniting === 'fusion' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-solar"
+                                            className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} smartimport-ignite-solar`}
                                             style={{
                                                 background: 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                borderRadius: is3DMode ? '0.5rem' : undefined
                                             }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('fusion')}
                                         disabled={btnIgniting !== null || importPreview.fusionExists}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center gap-1 text-white"
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center gap-1 text-white overflow-hidden`}
                                         style={{
-                                            background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)'
+                                            background: btnIgniting === 'fusion' ? 'transparent' : 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)',
+                                            borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <Layers size={14} />
-                                        FUSION
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10 flex items-center gap-1"><Layers size={14} />FUSION</span>
                                     </button>
                                 </div>
-                                <div className="flex-1 relative overflow-visible rounded-full" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, opacity: selectedCount === 0 ? 0.4 : 1 }}>
+                                {/* Bouton X VIBES - capsule */}
+                                <div className={`flex-1 relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, opacity: selectedCount === 0 ? 0.4 : 1, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {btnIgniting === 'vibes' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-roseMagenta"
+                                            className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} smartimport-ignite-roseMagenta`}
                                             style={{
                                                 background: 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                borderRadius: is3DMode ? '0.5rem' : undefined
                                             }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('vibes')}
                                         disabled={btnIgniting !== null || selectedCount === 0}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm text-white flex items-center justify-center gap-1"
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm text-white flex items-center justify-center gap-1 overflow-hidden`}
                                         style={{
-                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)'
+                                            background: btnIgniting === 'vibes' ? 'transparent' : 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)',
+                                            borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <FlameWhiteVector size={14} />
-                                        {selectedCount} VIBE{selectedCount > 1 ? 'S' : ''}
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <span className="relative z-10 flex items-center gap-1"><FlameWhiteVector size={14} />{selectedCount} VIBE{selectedCount > 1 ? 'S' : ''}</span>
                                     </button>
                                 </div>
                             </div>
