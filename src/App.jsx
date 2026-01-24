@@ -5037,8 +5037,6 @@ const handlePlayerTouchEnd = () => {
     const vibeTheseBtnRef = useRef(null); // Ref du bouton pour le touch handler
     const vibeTheseBtnWidthRef = useRef(0); // Largeur du bouton pour calcul swipe
     const importMenuTimer = useRef(null);
-    const splashPlayedRef = useRef(false); // Flag pour ne jouer le splash qu'une fois par session
-
     // ===== TOUS LES useRef ENSUITE =====
     const headerLogoRef = useRef(null); // Ref du logo dans le header pour le morph du splash
     const audioRef = useRef(null);
@@ -5222,11 +5220,11 @@ useEffect(() => {
   if (!splashReady) return; // Attendre que React soit hydraté
   if (playlists === null) return; // Attendre que les données soient chargées
   if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
-  if (splashPlayedRef.current) { // Splash déjà joué cette session (ex: retour de SmartImport)
+  if (sessionStorage.getItem('vibes_splash_played') === 'true') { // Splash déjà joué cette session (ex: retour OAuth Dropbox)
     setSplashPhase('done');
     return;
   }
-  splashPlayedRef.current = true; // Marquer comme joué
+  sessionStorage.setItem('vibes_splash_played', 'true'); // Marquer comme joué (survit au rechargement de page)
 
   // Phase 1: Délai initial puis flicker
   const flickerTimer = setTimeout(() => {
