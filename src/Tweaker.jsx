@@ -1011,7 +1011,7 @@ const Tweaker = ({
                                 <VibeCardComponent
                                     swipeIndicator={
                                         <div
-                                            className={`absolute ${is3DMode ? 'bottom-2' : 'top-2'} left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none`}
+                                            className={`absolute ${is3DMode ? 'bottom-1' : 'top-2'} left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none`}
                                             style={{ transform: 'translateX(-50%)' }}
                                         >
                                             <ChevronLeft size={10} />
