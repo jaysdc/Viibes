@@ -2215,7 +2215,8 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     // État pour l'animation d'enfoncement 3D
     const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
     const [isPressing, setIsPressing] = useState(false); // true = enfoncement, false = retour
-    const blinkTimeoutRef = useRef(null);
+    const pressTimeoutRef = useRef(null);
+    const releaseTimeoutRef = useRef(null);
 
     // Ref pour stocker le callback (évite les problèmes de closure)
     const onBlinkCompleteRef = useRef(onBlinkComplete);
@@ -2223,18 +2224,25 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     useEffect(() => {
         if (isBlinking) {
-            // Animation d'enfoncement (3D ou 2D)
+            // Phase 1: Press (80ms)
             setIsPressing(true);
             if (is3DMode) setPressProgress(1);
-            blinkTimeoutRef.current = setTimeout(() => {
-                if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
-            }, 120); // Timeout: press (80ms) + petit moment enfoncé
-        } else {
-            setIsPressing(false);
-            setPressProgress(0);
+
+            // Phase 2: Release après 80ms (180ms de transition)
+            pressTimeoutRef.current = setTimeout(() => {
+                setIsPressing(false);
+                setPressProgress(0);
+
+                // Phase 3: Action après release (180ms)
+                releaseTimeoutRef.current = setTimeout(() => {
+                    if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
+                }, 180);
+            }, 80);
         }
+        // Note: pas de else - le parent gère le reset de isBlinking après l'action
         return () => {
-            if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
+            if (pressTimeoutRef.current) clearTimeout(pressTimeoutRef.current);
+            if (releaseTimeoutRef.current) clearTimeout(releaseTimeoutRef.current);
         };
     }, [isBlinking, is3DMode]);
 
