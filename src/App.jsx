@@ -3755,9 +3755,9 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
             boxShadow: `0 -${GLOW_VERTICAL_SPREAD}px ${GLOW_BLUR}px rgba(${GLOW_COLOR_SEARCH}, ${GLOW_OPACITY}), 0 ${GLOW_VERTICAL_SPREAD}px ${GLOW_BLUR}px rgba(${GLOW_COLOR_SEARCH}, ${GLOW_OPACITY})`
         };
         return (
-            <div 
-            className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200"
-            style={{ ...searchGlowStyle, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}
+            <div
+            className={`flex-1 bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200`}
+            style={{ ...searchGlowStyle, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}
             >
                 <div className="w-full h-full flex items-center px-4">
                 <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} className="text-gray-400 mr-3" />
@@ -7878,11 +7878,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           {(isLibrarySearching || searchOverlayAnim !== 'none') ? (
                 <div className="w-full relative">
                     <div
-                        className="w-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible"
+                        className={`w-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center overflow-visible`}
                         style={{
                             height: CONFIG.HEADER_BUTTONS_HEIGHT,
                             backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
                             boxShadow: `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`,
+                            borderRadius: is3DMode ? '0.5rem' : undefined,
                             animation: searchOverlayAnim === 'opening'
                                 ? `search-fade-in ${CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION}ms ease-out forwards`
                                 : searchOverlayAnim === 'closing'
@@ -7891,13 +7892,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         }}
                     >
                         <div
-                            className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
+                            className={`flex-1 h-full flex items-center ${is3DMode ? '' : 'rounded-l-full'} relative overflow-hidden`}
                             style={{
                                 paddingLeft: CONFIG.SEARCH_LIBRARY_PADDING_X,
-                                paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
+                                paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X,
+                                borderTopLeftRadius: is3DMode ? '0.5rem' : undefined,
+                                borderBottomLeftRadius: is3DMode ? '0.5rem' : undefined
                             }}
                         >
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-l-full'} />
                             <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                             <input
                                 autoFocus
@@ -7915,7 +7918,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                             />
                         </div>
-                        <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX }}>
+                        <div className={`h-full relative overflow-visible ${is3DMode ? '' : 'rounded-r-full'}`} style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX, borderTopRightRadius: is3DMode ? '0.5rem' : undefined, borderBottomRightRadius: is3DMode ? '0.5rem' : undefined }}>
                             <NeonGlow
                                 key={searchCloseBtnAnimKey}
                                 colorName="pink"
@@ -7923,10 +7926,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 enabled={true}
                                 igniteOnMount={searchCloseBtnAnimKey > 0}
                                 flickerEnabled={searchOverlayAnim !== 'closing'}
-                                className="absolute inset-0 rounded-r-full"
+                                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-r-full'}`}
                                 style={{
                                     background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
-                                    zIndex: 0
+                                    zIndex: 0,
+                                    borderTopRightRadius: is3DMode ? '0.5rem' : undefined,
+                                    borderBottomRightRadius: is3DMode ? '0.5rem' : undefined
                                 }}
                             />
                             <button
@@ -7940,9 +7945,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setSearchOverlayAnim('none');
                                     }, CONFIG.SEARCH_LIBRARY_FADE_OUT_DURATION);
                                 }}
-                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full overflow-hidden"
+                                className={`relative z-10 w-full h-full flex items-center justify-center text-white ${is3DMode ? '' : 'rounded-r-full'} overflow-hidden`}
+                                style={{ borderTopRightRadius: is3DMode ? '0.5rem' : undefined, borderBottomRightRadius: is3DMode ? '0.5rem' : undefined }}
                             >
-                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-r-full" />
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-r-full'} />
                                 <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
                             </button>
                         </div>
@@ -7955,10 +7961,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const gradientStyle = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
                         return (
                             <div
-                                className="absolute inset-0 rounded-full flex items-center justify-center z-50 pointer-events-none"
+                                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center z-50 pointer-events-none`}
                                 style={{
                                     background: gradientStyle,
-                                    boxShadow: `0 4px 15px ${nextGradient[0]}66`
+                                    boxShadow: `0 4px 15px ${nextGradient[0]}66`,
+                                    borderRadius: is3DMode ? '0.5rem' : undefined
                                 }}
                             >
                                 <div className="flex items-center gap-2 text-white font-black tracking-widest text-sm uppercase"
@@ -9220,23 +9227,26 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         : 'none'
                             }}
                         >
-                            <div 
-                                className="w-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible"
+                            <div
+                                className={`w-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center overflow-visible`}
                                   style={{
                                     height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT,
                                     backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
-                                    boxShadow: `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`
+                                    boxShadow: `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`,
+                                    borderRadius: is3DMode ? '0.5rem' : undefined
                                 }}
                             >
                                 {/* Champ de recherche */}
                                 <div
-                                    className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
+                                    className={`flex-1 h-full flex items-center ${is3DMode ? '' : 'rounded-l-full'} relative overflow-hidden`}
                                     style={{
                                         paddingLeft: CONFIG.SEARCH_LIBRARY_PADDING_X,
-                                        paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X
+                                        paddingRight: CONFIG.SEARCH_LIBRARY_PADDING_X,
+                                        borderTopLeftRadius: is3DMode ? '0.5rem' : undefined,
+                                        borderBottomLeftRadius: is3DMode ? '0.5rem' : undefined
                                     }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-l-full" />
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-l-full'} />
                                     <Search style={{ width: CONFIG.SEARCH_LIBRARY_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_ICON_SIZE }} className="text-gray-400 mr-3" />
                                     <input
                                         autoFocus
@@ -9255,7 +9265,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     />
                                 </div>
                                 {/* Bouton X */}
-                                <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX }}>
+                                <div className={`h-full relative overflow-visible ${is3DMode ? '' : 'rounded-r-full'}`} style={{ flex: CONFIG.SEARCH_LIBRARY_CLOSE_BTN_FLEX, borderTopRightRadius: is3DMode ? '0.5rem' : undefined, borderBottomRightRadius: is3DMode ? '0.5rem' : undefined }}>
                                     <NeonGlow
                                         key={playerSearchCloseBtnAnimKey}
                                         colorName="pink"
@@ -9263,10 +9273,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         enabled={true}
                                         igniteOnMount={playerSearchCloseBtnAnimKey > 0}
                                         flickerEnabled={playerSearchOverlayAnim !== 'closing'}
-                                        className="absolute inset-0 rounded-r-full"
+                                        className={`absolute inset-0 ${is3DMode ? '' : 'rounded-r-full'}`}
                                         style={{
                                             background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
-                                            zIndex: 0
+                                            zIndex: 0,
+                                            borderTopRightRadius: is3DMode ? '0.5rem' : undefined,
+                                            borderBottomRightRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     />
                                     <button
@@ -9280,9 +9292,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                                 setPlayerSearchOverlayAnim('none');
                                             }, CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION);
                                         }}
-                                        className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full overflow-hidden"
+                                        className={`relative z-10 w-full h-full flex items-center justify-center text-white ${is3DMode ? '' : 'rounded-r-full'} overflow-hidden`}
+                                        style={{ borderTopRightRadius: is3DMode ? '0.5rem' : undefined, borderBottomRightRadius: is3DMode ? '0.5rem' : undefined }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-r-full" />
+                                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-r-full'} />
                                         <X style={{ width: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE, height: CONFIG.SEARCH_LIBRARY_X_ICON_SIZE }} />
                                     </button>
                                 </div>

@@ -2170,12 +2170,13 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 
                                 {/* OVERLAY BARRE DE RECHERCHE (fade in/out) */}
                                 {(isSearching || searchOverlayAnim !== 'none') && (
-                                    <div 
-                                        className="absolute inset-0 w-full h-full rounded-full border border-gray-100 shadow-sm flex items-center"
+                                    <div
+                                        className={`absolute inset-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center`}
                                         style={{
                                             backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
                                             boxShadow: `0 -5px 12px ${CONFIG.SEARCH_BOX_GLOW_COLOR}, 0 5px 12px ${CONFIG.SEARCH_BOX_GLOW_COLOR}`,
                                             zIndex: 10,
+                                            borderRadius: is3DMode ? '0.5rem' : undefined,
                                             animation: searchOverlayAnim === 'opening'
                                                 ? `search-fade-in ${CONFIG.SEARCH_FADE_IN_DURATION}ms ease-out forwards`
                                                 : searchOverlayAnim === 'closing'
@@ -2183,14 +2184,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                     : 'none'
                                         }}
                                     >
-                                        <div 
-                                            className="flex-1 h-full flex items-center rounded-l-full relative overflow-hidden"
+                                        <div
+                                            className={`flex-1 h-full flex items-center ${is3DMode ? '' : 'rounded-l-full'} relative overflow-hidden`}
                                             style={{
                                                 paddingLeft: CONFIG.SEARCH_PADDING_X,
-                                                paddingRight: CONFIG.SEARCH_PADDING_X
+                                                paddingRight: CONFIG.SEARCH_PADDING_X,
+                                                borderTopLeftRadius: is3DMode ? '0.5rem' : undefined,
+                                                borderBottomLeftRadius: is3DMode ? '0.5rem' : undefined
                                             }}
                                         >
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-l-full" is3DMode={is3DMode} />
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-l-full'} is3DMode={is3DMode} />
                                             <Search style={{ width: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)`, height: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)` }} className="text-gray-400 mr-3" />
                                             <input
                                                 autoFocus
@@ -2208,7 +2211,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                             />
                                         </div>
-                                        <div className="h-full relative overflow-visible rounded-r-full" style={{ flex: CONFIG.CLOSE_BTN_FLEX }}>
+                                        <div className={`h-full relative overflow-visible ${is3DMode ? '' : 'rounded-r-full'}`} style={{ flex: CONFIG.CLOSE_BTN_FLEX, borderTopRightRadius: is3DMode ? '0.5rem' : undefined, borderBottomRightRadius: is3DMode ? '0.5rem' : undefined }}>
                                             <NeonGlow
                                                 key={closeBtnAnimKey}
                                                 colorName="pink"
@@ -2216,14 +2219,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                 enabled={true}
                                                 igniteOnMount={closeBtnAnimKey > 0}
                                                 flickerEnabled={searchOverlayAnim !== 'closing'}
-                                                className="absolute inset-0 rounded-r-full"
+                                                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-r-full'}`}
                                                 style={{
                                                     background: CONFIG.BTN_SEARCH_COLOR,
-                                                    zIndex: 0
+                                                    zIndex: 0,
+                                                    borderTopRightRadius: is3DMode ? '0.5rem' : undefined,
+                                                    borderBottomRightRadius: is3DMode ? '0.5rem' : undefined
                                                 }}
                                             />
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-r-full" is3DMode={is3DMode} />
-                                            <button 
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-r-full'} is3DMode={is3DMode} />
+                                            <button
                                                 onClick={() => {
                                                     if (searchOverlayAnim !== 'none') return;
                                                     setCloseBtnAnimKey(k => k + 1);
@@ -2234,7 +2239,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                         setSearchOverlayAnim('none');
                                                     }, CONFIG.SEARCH_FADE_OUT_DURATION);
                                                 }}
-                                                className="relative z-10 w-full h-full flex items-center justify-center text-white rounded-r-full"
+                                                className={`relative z-10 w-full h-full flex items-center justify-center text-white ${is3DMode ? '' : 'rounded-r-full'}`}
+                                                style={{ borderTopRightRadius: is3DMode ? '0.5rem' : undefined, borderBottomRightRadius: is3DMode ? '0.5rem' : undefined }}
                                             >
                                                 <X style={{ width: CONFIG.SEARCH_BTN_ICON_SIZE, height: CONFIG.SEARCH_BTN_ICON_SIZE }} />
                                             </button>
