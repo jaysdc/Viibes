@@ -2211,24 +2211,36 @@ const generateVibeColors = (seed) => {
 };
 
 const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false, swipeIndicator = null }) => {
-    // En mode 3D, gérer l'animation d'enfoncement quand isBlinking est true
-    const [isPressedByBlink, setIsPressedByBlink] = useState(false);
+    // État pour l'animation d'enfoncement 3D
+    const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
     const blinkTimeoutRef = useRef(null);
 
     useEffect(() => {
-        if (is3DMode && isBlinking) {
-            // Déclencher l'enfoncement
-            setIsPressedByBlink(true);
-            // Après un délai, terminer l'animation et appeler onBlinkComplete
-            blinkTimeoutRef.current = setTimeout(() => {
-                setIsPressedByBlink(false);
-                if (onBlinkComplete) onBlinkComplete();
-            }, 300); // Durée de l'animation d'enfoncement
+        if (isBlinking) {
+            if (is3DMode) {
+                // Animation d'enfoncement en mode 3D
+                setPressProgress(1);
+                blinkTimeoutRef.current = setTimeout(() => {
+                    if (onBlinkComplete) onBlinkComplete();
+                }, 300);
+            } else {
+                // Mode 2D: juste le callback après délai
+                blinkTimeoutRef.current = setTimeout(() => {
+                    if (onBlinkComplete) onBlinkComplete();
+                }, 300);
+            }
+        } else {
+            setPressProgress(0);
         }
         return () => {
             if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
         };
-    }, [is3DMode, isBlinking, onBlinkComplete]);
+    }, [isBlinking, is3DMode, onBlinkComplete]);
+
+    // Calculs pour l'effet d'enfoncement 3D
+    const pressScale = 1 - (pressProgress * 0.1); // 1 → 0.90
+    const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
+    const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
     const step = 100 / (gradientColors.length - 1);
     const baseGradient = `linear-gradient(135deg, ${gradientColors.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
@@ -2357,32 +2369,17 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         onClick();
     };
     
-// État pour l'effet de press
-    const [isPressed, setIsPressed] = useState(false);
-
 // ========== LAYOUT BANDE HORIZONTALE ==========
 // En mode 3D: tube (capsule rounded-full) avec contenu centré verticalement
 // En mode normal: carte rectangulaire avec contenu en bas
-
-// En mode 3D, l'enfoncement remplace l'animation de clignotement
-const shouldPress = is3DMode && (isPressed || isPressedByBlink);
 
 // En mode 3D: wrapper qui reste pleine largeur, fond avec scaleY, contenu avec scale
 const cardContent = is3DMode ? (
       <div
           ref={cardRef}
           onClick={() => { if (Math.abs(swipeOffset) < 10) handleClick(); }}
-          onTouchStart={(e) => {
-              handleTouchStart(e);
-              setIsPressed(true);
-          }}
-          onTouchEnd={() => {
-              setIsPressed(false);
-              handleTouchEnd();
-          }}
-          onTouchCancel={() => {
-              setIsPressed(false);
-          }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           className="w-full cursor-pointer relative overflow-hidden"
           style={{
               height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
@@ -2399,22 +2396,28 @@ const cardContent = is3DMode ? (
       >
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
-          {/* Fond dégradé - scaleY uniquement pour effet d'enfoncement vertical */}
-          {/* En mode 3D: même forme que 2D (rounded-xl) mais avec CylinderMask */}
+          {/* Fond dégradé avec effet d'enfoncement 3D */}
           <div
               className="absolute inset-0 shadow-lg overflow-hidden rounded-xl"
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
-                  transform: shouldPress ? 'scale(0.90)' : 'scale(1)',
-                  boxShadow: shouldPress
-                      ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
-                      : undefined,
-                  transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out'
+                  transform: pressProgress > 0 ? `scale(${pressScale})` : undefined,
+                  transition: 'transform 0.15s ease-out'
               }}
           >
-              {/* Masque cylindre 3D sur le fond */}
-              <CylinderMask is3DMode={true} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-xl" />
+              {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
+              <CylinderMask is3DMode={true} intensity={pressProgress > 0 ? pressIntensity : CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-xl" />
+              {/* Overlay d'assombrissement quand enfoncé */}
+              {pressProgress > 0 && (
+                  <div
+                      className="absolute inset-0 pointer-events-none rounded-xl"
+                      style={{
+                          backgroundColor: `rgba(0,0,0,${pressDarken})`,
+                          transition: 'background-color 0.15s ease-out'
+                      }}
+                  />
+              )}
               {/* Overlay de transparence progressif */}
               {unavailableCount > 0 && (() => {
                   const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -2445,11 +2448,11 @@ const cardContent = is3DMode ? (
                   );
               })()}
           </div>
-          {/* Contenu - scale uniforme pour effet d'enfoncement */}
+          {/* Contenu - avec effet d'enfoncement 3D */}
           <div
               className="absolute inset-0 flex items-center px-4"
               style={{
-                  transform: shouldPress ? 'scale(0.90)' : 'scale(1)',
+                  transform: pressProgress > 0 ? `scale(${pressScale})` : undefined,
                   transition: 'transform 0.15s ease-out'
               }}
           >
@@ -2459,7 +2462,13 @@ const cardContent = is3DMode ? (
                   // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets (50% opacité)
                   <>
                       <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
-                      <span className="absolute bottom-1 left-4 text-[10px] font-semibold text-white/50 flex items-center gap-1.5 z-10">
+                      <span
+                          className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
+                          style={{
+                              color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)',
+                              transition: 'color 0.15s ease-out'
+                          }}
+                      >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
                           {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
                       </span>
@@ -2500,16 +2509,24 @@ const cardContent = is3DMode ? (
                               ) : (
                                   <MarqueeText
                                       text={vibeName || ''}
-                                      className="font-black leading-tight text-white"
+                                      className="font-black leading-tight"
                                       style={{
-                                          fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`
+                                          fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                                          color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white',
+                                          transition: 'color 0.15s ease-out'
                                       }}
                                   />
                               )}
                           </div>
                       )}
                       {/* Compteurs */}
-                      <span className="text-[10px] font-semibold text-white/90 flex items-center gap-1.5 flex-shrink-0">
+                      <span
+                          className="text-[10px] font-semibold flex items-center gap-1.5 flex-shrink-0"
+                          style={{
+                              color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)',
+                              transition: 'color 0.15s ease-out'
+                          }}
+                      >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
                           {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
                       </span>
@@ -2528,7 +2545,13 @@ const cardContent = is3DMode ? (
                   }}
               >
                   {/* Mode 3D: icône directement sans cercle (opacité selon showTitles) */}
-                  <div className={`flex items-center justify-center ${showTitles ? 'text-white' : 'text-white/50'} ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}>
+                  <div
+                      className={`flex items-center justify-center ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}
+                      style={{
+                          color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)'),
+                          transition: 'color 0.15s ease-out'
+                      }}
+                  >
                       <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                   </div>
               </div>
@@ -7954,7 +7977,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         </div>
                     </div>
                     {/* Overlay de preview du dégradé VIBE THESE - par-dessus la barre de recherche */}
-                    {vibeSwipePreview && (() => {
+                    {vibeSwipePreview && vibeSwipePreview.progress > 0 && (() => {
                         const { nextGradient, previewIndex } = vibeSwipePreview;
                         const gradientName = getGradientName(previewIndex);
                         const step = 100 / (nextGradient.length - 1);
@@ -7988,7 +8011,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         style={{
                             gap: CONFIG.HEADER_BUTTONS_GAP,
                             opacity: (showImportMenu || importOverlayAnim !== 'none') ? (importMenuVisible ? 0 : 1)
-                                : (pendingVibe || nukeConfirmMode || vibeSwipePreview) ? 0 : 1,
+                                : (pendingVibe || nukeConfirmMode || (vibeSwipePreview && vibeSwipePreview.progress > 0)) ? 0 : 1,
                             transition: `opacity ${importOverlayAnim === 'closing' ? CONFIG.IMPORT_HEADER_FADE_OUT_DURATION : CONFIG.IMPORT_HEADER_FADE_IN_DURATION}ms ease-out`
                         }}
                     >

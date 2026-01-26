@@ -2030,7 +2030,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                 <div className="flex items-center gap-2 relative z-20">
                     <div className="flex-1 relative overflow-visible" style={{ height: CONFIG.HEADER_TOOLBAR_HEIGHT }}>
                     {/* OVERLAY NOM DU DÉGRADÉ (pendant swipe sur la carte) */}
-                    {cardSwipeOffset !== 0 && !showDeleteConfirm && !dragState && !isSearching && searchOverlayAnim === 'none' && (() => {
+                    {cardSwipeDirection === 'horizontal' && !showDeleteConfirm && !dragState && !isSearching && searchOverlayAnim === 'none' && (() => {
                         const gradientName = getGradientName ? getGradientName(displayGradientIndex) : `Gradient ${displayGradientIndex}`;
                         const progress = Math.min(1, Math.abs(cardSwipeOffset) / 100);
                         return (
