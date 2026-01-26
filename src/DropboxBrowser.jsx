@@ -861,7 +861,7 @@ const DropboxBrowser = ({
                                 }}
                             >
                                 {/* Masque cylindrique 3D sur le header */}
-                                <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                 {/* Barre de progression - se remplit de gauche à droite */}
                                 {scanPhase === 'processing' && totalFilesToProcess > 0 && (
                                     <div
@@ -954,7 +954,7 @@ const DropboxBrowser = ({
                                                             }}
                                                         >
                                                             {/* Masque cylindrique 3D sur les cartes dossiers */}
-                                                            <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                                            <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                                             <span
                                                                 className="flex-1 truncate font-bold text-gray-900 relative z-10"
                                                                 style={{ fontSize: CONFIG.ROW_TITLE_SIZE }}
@@ -1016,7 +1016,7 @@ const DropboxBrowser = ({
                                 <div className={`relative overflow-visible ${is3DMode ? '' : 'rounded-full'} flex-shrink-0`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {closingButton === 'close' && <div className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} dropbox-ignite-red`} style={{ background: '#ef4444', zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }} />}
                                     <button onClick={handleClose} disabled={!!closingButton || scanning} className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`} style={{ background: closingButton === 'close' ? 'transparent' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE, color: closingButton === 'close' ? 'white' : '#9ca3af', borderRadius: is3DMode ? '0.5rem' : undefined }}>
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                         <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
@@ -1024,14 +1024,14 @@ const DropboxBrowser = ({
                                 <div className={`flex-1 relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {closingButton === 'disconnect' && <div className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} dropbox-ignite-red`} style={{ background: '#ef4444', zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }} />}
                                     <button onClick={handleDisconnect} disabled={!!closingButton || scanning} className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center gap-1 overflow-hidden`} style={{ background: closingButton === 'disconnect' ? 'transparent' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE, color: closingButton === 'disconnect' ? 'white' : '#ef4444', borderRadius: is3DMode ? '0.5rem' : undefined }}>
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                         <span className="relative z-10 flex items-center gap-1"><LogOut size={14} /><span>LOGOUT</span></span>
                                     </button>
                                 </div>
                                 {/* Bouton Import - capsule */}
                                 <div className={`flex-1 relative overflow-hidden ${is3DMode ? '' : 'rounded-full'}`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     <button onClick={handleImport} disabled={!canImport || !!closingButton} className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center gap-1 overflow-hidden`} style={{ background: scanPhase === 'counting' ? 'white' : (canImport ? CONFIG.DROPBOX_BLUE : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE), border: scanPhase === 'counting' ? '1px solid rgba(0,0,0,0.05)' : 'none', color: scanPhase === 'counting' ? CONFIG.DROPBOX_BLUE : (canImport ? 'white' : '#9CA3AF'), opacity: canImport || scanning ? 1 : 0.4, boxShadow: canImport && !scanning ? '0 0 15px rgba(0, 97, 254, 0.4)' : 'none', borderRadius: is3DMode ? '0.5rem' : undefined }}>
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={canImport ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                         <span className="relative z-10 flex items-center gap-1">{scanPhase === 'counting' ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}<span>IMPORT</span></span>
                                     </button>
                                 </div>

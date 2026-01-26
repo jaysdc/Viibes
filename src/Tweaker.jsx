@@ -237,7 +237,7 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
                 background: bgGradient || undefined
             }}
         >
-            <CylinderMask is3DMode={is3DMode} intensity={0.6} className={effectiveRoundedClass} style={effectiveRoundedStyle} />
+            <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={effectiveRoundedClass} style={effectiveRoundedStyle} />
             <div
                 className="flex items-center gap-2 text-white font-black tracking-widest uppercase text-lg"
                 style={{
@@ -721,7 +721,7 @@ const Tweaker = ({
                                         }}
                                     >
                                         {/* Masque cylindrique en mode 3D */}
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
                                         {/* Afficher le nom du dégradé et chevrons uniquement si showTitles est true */}
                                         {showTitles && (
                                             <div
@@ -789,7 +789,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
+                    <CylinderMask is3DMode={is3DMode} intensity={undoFeedback ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
                     <Undo2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Undo</span>}
                 </button>
@@ -808,7 +808,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
+                    <CylinderMask is3DMode={is3DMode} intensity={activeMode === 'reorder' ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
@@ -828,7 +828,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
+                    <CylinderMask is3DMode={is3DMode} intensity={activeMode === 'delete' ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
@@ -848,7 +848,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                    <CylinderMask is3DMode={is3DMode} intensity={is3DMode ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                     {is3DMode
                         ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
@@ -870,7 +870,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                    <CylinderMask is3DMode={is3DMode} intensity={showTitles ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                     {showTitles
                         ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />

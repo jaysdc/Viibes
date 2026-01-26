@@ -466,7 +466,7 @@ const SmartImportCard = ({
                 }}
             >
                 {/* Masque cylindrique 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
 
                 {/* Indicateur de swipe - chevrons + pointer en haut centré */}
                 {!isExisting && (
@@ -1180,7 +1180,7 @@ const SmartImport = ({
                             }}
                         >
                             {/* Masque cylindrique 3D sur le header */}
-                            <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                            <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                             {/* Preview gradient dans la capsule du header */}
                             {activeSwipePreview && (
                                 <div
@@ -1189,7 +1189,7 @@ const SmartImport = ({
                                         background: activeSwipePreview.gradient,
                                     }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                    <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                     <div
                                         className="flex items-center gap-2 text-white font-black tracking-widest uppercase relative z-10"
                                         style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: SMARTIMPORT_CONFIG.HEADER_FONT_SIZE }}
@@ -1258,7 +1258,7 @@ const SmartImport = ({
                                         fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                     }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                    <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                     <span className="relative z-10">+{selectedNewCount}</span>
                                 </div>
                                 {/* Badge vibes existantes (✓X) vert */}
@@ -1276,7 +1276,7 @@ const SmartImport = ({
                                             fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                         <Copy size={12} strokeWidth={3} className="relative z-10" />
                                         <span className="relative z-10">{selectedExistingCount}</span>
                                     </div>
@@ -1432,7 +1432,7 @@ const SmartImport = ({
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                         <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
@@ -1458,7 +1458,7 @@ const SmartImport = ({
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                         <span className="relative z-10 flex items-center gap-2"><FlameWhiteVector size={16} />1 VIBE</span>
                                     </button>
                                 </div>
@@ -1484,7 +1484,7 @@ const SmartImport = ({
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                                         <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
@@ -1509,7 +1509,7 @@ const SmartImport = ({
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                         <span className="relative z-10 flex items-center gap-1"><Layers size={14} />FUSION</span>
                                     </button>
                                 </div>
@@ -1534,7 +1534,7 @@ const SmartImport = ({
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                         <span className="relative z-10 flex items-center gap-1"><FlameWhiteVector size={14} />{selectedCount} VIBE{selectedCount > 1 ? 'S' : ''}</span>
                                     </button>
                                 </div>
