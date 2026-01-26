@@ -4413,25 +4413,41 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         }
         return;
       }
-      
+
       const touch = e.touches[0];
       const containerRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
-      const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-      const centerX = containerRect.left + containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
       const centerY = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-      
-      // Calculer l'angle du doigt par rapport au centre de l'arc
-      const dx = touch.clientX - centerX;
-      const dy = touch.clientY - centerY;
-      let angle = Math.atan2(dy, dx); // -π à π
-      
-      // Limiter à l'arc droit (-π/2 à +π/2)
-      angle = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, angle));
-      
-      // Convertir l'angle en index de chanson
-      const progress = (angle + Math.PI / 2) / Math.PI; // 0 à 1
-      const newIndex = Math.round(progress * (queue.length - 1));
-      setScrubIndex(Math.max(0, Math.min(queue.length - 1, newIndex)));
+
+      if (is3DMode) {
+        // MODE 3D: Navigation linéaire verticale
+        const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100;
+        const barTop = centerY - barHeight / 2;
+        const barBottom = centerY + barHeight / 2;
+
+        // Calculer la position relative du doigt sur la barre
+        const relativeY = Math.max(barTop, Math.min(barBottom, touch.clientY));
+        const progress = (relativeY - barTop) / barHeight; // 0 à 1
+
+        const newIndex = Math.round(progress * (queue.length - 1));
+        setScrubIndex(Math.max(0, Math.min(queue.length - 1, newIndex)));
+      } else {
+        // MODE 2D: Navigation sur arc de cercle
+        const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+        const centerX = containerRect.left + containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+
+        // Calculer l'angle du doigt par rapport au centre de l'arc
+        const dx = touch.clientX - centerX;
+        const dy = touch.clientY - centerY;
+        let angle = Math.atan2(dy, dx); // -π à π
+
+        // Limiter à l'arc droit (-π/2 à +π/2)
+        angle = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, angle));
+
+        // Convertir l'angle en index de chanson
+        const progress = (angle + Math.PI / 2) / Math.PI; // 0 à 1
+        const newIndex = Math.round(progress * (queue.length - 1));
+        setScrubIndex(Math.max(0, Math.min(queue.length - 1, newIndex)));
+      }
     };
     
     const handleScrubTouchEnd = () => {
@@ -4490,15 +4506,21 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             }
           }, [selectedIndex, onCenteredIndexChange]);
           const progress = totalSongs > 1 ? selectedIndex / (totalSongs - 1) : 0.5;
-          
-          // Le point parcourt UNIQUEMENT le demi-cercle DROIT (de -90° à +90°)
-          // Angle en radians : -π/2 (haut) à +π/2 (bas)
-          const angle = -Math.PI / 2 + progress * Math.PI;
-          
-          // Coordonnées du point sur le demi-cercle droit
-          // Centre du demi-cercle = bord droit de la capsule moins borderRadius
-          const dotX = borderRadius * Math.cos(angle);
-          const dotY = borderRadius * Math.sin(angle);
+
+          // Coordonnées du point indicateur
+          let dotX, dotY;
+          if (is3DMode) {
+            // 3D: Le point parcourt uniquement le bord VERTICAL droit (exclut les coins arrondis 0.5rem = 8px)
+            const cornerRadius = 8; // 0.5rem
+            const verticalRange = beaconHeightPx - cornerRadius * 2;
+            dotX = 0; // Collé au bord droit
+            dotY = -verticalRange / 2 + progress * verticalRange;
+          } else {
+            // 2D: Le point parcourt le demi-cercle DROIT (de -90° à +90°)
+            const angle = -Math.PI / 2 + progress * Math.PI;
+            dotX = borderRadius * Math.cos(angle);
+            dotY = borderRadius * Math.sin(angle);
+          }
           
           return (
             <>
@@ -4528,7 +4550,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 <div
                   className="absolute pointer-events-none beacon-dot rounded-full"
                   style={{
-                    right: `calc(${horizontalMarginPercent}% + ${borderRadius - dotX - CONFIG.BEACON_PULSE_SIZE / 2}px)`,
+                    right: is3DMode
+                      ? `calc(${horizontalMarginPercent}% - ${CONFIG.BEACON_PULSE_SIZE / 2}px)`
+                      : `calc(${horizontalMarginPercent}% + ${borderRadius - dotX - CONFIG.BEACON_PULSE_SIZE / 2}px)`,
                     top: `calc(50% + ${dotY}px - ${CONFIG.BEACON_PULSE_SIZE / 2}px)`,
                     width: CONFIG.BEACON_PULSE_SIZE,
                     height: CONFIG.BEACON_PULSE_SIZE,
@@ -4538,17 +4562,17 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 />
               )}
 
-              {/* Zone de touch pour déclencher le scrubbing (demi-cercle droit) */}
+              {/* Zone de touch pour déclencher le scrubbing */}
               {canScrub && (
-                <div 
+                <div
                   className="absolute z-25"
-                  style={{ 
+                  style={{
                     right: `${horizontalMarginPercent}%`,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: borderRadius + 20,
+                    width: is3DMode ? 40 : borderRadius + 20,
                     height: beaconHeightPx + 20,
-                    borderRadius: `0 ${borderRadius + 10}px ${borderRadius + 10}px 0`,
+                    borderRadius: is3DMode ? '0 0.5rem 0.5rem 0' : `0 ${borderRadius + 10}px ${borderRadius + 10}px 0`,
                   }}
                   onTouchStart={handleScrubTouchStart}
                   onTouchMove={handleScrubTouchMove}
@@ -4563,208 +4587,391 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         {isScrubbing && effectivePortalRef.current && ReactDOM.createPortal((() => {
           const portalRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
           const containerRect = portalRect;
-
-          // Position finale de l'arc (cible)
-          const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-          const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
-          const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-          const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
-
-          // Position initiale (depuis le beacon) - demi-cercle droit
-          const beaconEl = beaconNeonRef?.current;
-          let initialArcRadius, initialCenterX, initialCenterY, initialThickness;
-
-          if (beaconEl) {
-            const beaconRect = beaconEl.getBoundingClientRect();
-            initialArcRadius = beaconRect.height / 2;
-            initialCenterX = beaconRect.right - initialArcRadius - containerRect.left;
-            initialCenterY = beaconRect.top + initialArcRadius - containerRect.top;
-            initialThickness = 2;
-          } else {
-            // Fallback si pas de beacon ref
-            initialArcRadius = finalArcRadius * 0.1;
-            initialCenterX = containerRect.width * 0.85;
-            initialCenterY = containerRect.height * 0.5;
-            initialThickness = 2;
-          }
-
-          // Interpolation avec easing
-          const t = scrubMorphProgress;
-          const easeOut = t => 1 - Math.pow(1 - t, 3); // Cubic ease-out
-          const progress = easeOut(t);
-
-          // Valeurs interpolées
-          const arcRadius = initialArcRadius + (finalArcRadius - initialArcRadius) * progress;
-          const centerX = initialCenterX + (finalCenterX - initialCenterX) * progress;
-          const centerY = initialCenterY + (finalCenterY - initialCenterY) * progress;
-          const thickness = initialThickness + (finalThickness - initialThickness) * progress;
-
           const totalSongs = queue.length;
-
-          // Position du point sélectionné (cyan)
-          const selectedProgress = totalSongs > 1 ? scrubIndex / (totalSongs - 1) : 0.5;
-          const selectedAngle = -Math.PI / 2 + selectedProgress * Math.PI;
-          const selectedX = centerX + arcRadius * Math.cos(selectedAngle);
-          const selectedY = centerY + arcRadius * Math.sin(selectedAngle);
-
-          // Position du point en lecture (rose)
-          const playingProgress = totalSongs > 1 ? currentIndex / (totalSongs - 1) : 0.5;
-          const playingAngle = -Math.PI / 2 + playingProgress * Math.PI;
-          const playingX = centerX + arcRadius * Math.cos(playingAngle);
-          const playingY = centerY + arcRadius * Math.sin(playingAngle);
-
-          // Position des extrémités (début = haut, fin = bas)
-          const startX = centerX + arcRadius * Math.cos(-Math.PI / 2);
-          const startY = centerY + arcRadius * Math.sin(-Math.PI / 2);
-          const endX = centerX + arcRadius * Math.cos(Math.PI / 2);
-          const endY = centerY + arcRadius * Math.sin(Math.PI / 2);
-
-          const scrubSong = queue[scrubIndex];
 
           // Couleurs depuis CONFIG
           const tubeColor = CONFIG.BEACON_SCRUB_TUBE_COLOR;
           const tubeGlowColor = CONFIG.BEACON_SCRUB_TUBE_GLOW_COLOR;
           const bubbleColor = CONFIG.BEACON_SCRUB_BUBBLE_COLOR;
 
-          return (
-            <div
-              className="absolute inset-0 z-[100] flex items-center justify-center"
-              style={{
-                backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
-              }}
-              onTouchMove={handleScrubTouchMove}
-              onTouchEnd={handleScrubTouchEnd}
-            >
-              {/* Tube rempli avec glow */}
-              <svg
-                className="absolute"
+          const scrubSong = queue[scrubIndex];
+
+          // Interpolation avec easing
+          const t = scrubMorphProgress;
+          const easeOut = t => 1 - Math.pow(1 - t, 3); // Cubic ease-out
+          const morphProgress = easeOut(t);
+
+          if (is3DMode) {
+            // ══════════════════════════════════════════════════════════════
+            // MODE 3D: Barre verticale
+            // ══════════════════════════════════════════════════════════════
+            const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100;
+            const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+            const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+            const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+
+            // Position initiale (depuis le beacon)
+            const beaconEl = beaconNeonRef?.current;
+            let initialBarHeight, initialBarWidth, initialCenterX, initialCenterY;
+
+            if (beaconEl) {
+              const beaconRect = beaconEl.getBoundingClientRect();
+              initialBarHeight = beaconRect.height;
+              initialBarWidth = 2;
+              initialCenterX = beaconRect.right - containerRect.left;
+              initialCenterY = beaconRect.top + beaconRect.height / 2 - containerRect.top;
+            } else {
+              initialBarHeight = finalBarHeight * 0.1;
+              initialBarWidth = 2;
+              initialCenterX = containerRect.width * 0.85;
+              initialCenterY = containerRect.height * 0.5;
+            }
+
+            // Valeurs interpolées
+            const barHeight = initialBarHeight + (finalBarHeight - initialBarHeight) * morphProgress;
+            const barWidth = initialBarWidth + (finalBarWidth - initialBarWidth) * morphProgress;
+            const centerX = initialCenterX + (finalCenterX - initialCenterX) * morphProgress;
+            const centerY = initialCenterY + (finalCenterY - initialCenterY) * morphProgress;
+
+            // Positions linéaires verticales
+            const barTop = centerY - barHeight / 2;
+            const barBottom = centerY + barHeight / 2;
+
+            // Position du point sélectionné
+            const selectedProgress = totalSongs > 1 ? scrubIndex / (totalSongs - 1) : 0.5;
+            const selectedX = centerX;
+            const selectedY = barTop + selectedProgress * barHeight;
+
+            // Position du point en lecture
+            const playingProgress = totalSongs > 1 ? currentIndex / (totalSongs - 1) : 0.5;
+            const playingX = centerX;
+            const playingY = barTop + playingProgress * barHeight;
+
+            // Extrémités
+            const startX = centerX;
+            const startY = barTop;
+            const endX = centerX;
+            const endY = barBottom;
+
+            return (
+              <div
+                className="absolute inset-0 z-[100] flex items-center justify-center"
                 style={{
-                  left: centerX - arcRadius - 20,
-                  top: centerY - arcRadius - 20,
-                  width: arcRadius * 2 + 40,
-                  height: arcRadius * 2 + 40,
+                  backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
                 }}
+                onTouchMove={handleScrubTouchMove}
+                onTouchEnd={handleScrubTouchEnd}
               >
-                <defs>
-                  <filter id="tubeGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="blur"/>
-                    <feMerge>
-                      <feMergeNode in="blur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
-                {/* Tube externe (glow) */}
-                <path
-                  className="scrub-tube-glow"
-                  d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
-                  fill="none"
-                  stroke={tubeGlowColor}
-                  strokeWidth={thickness + CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE}
-                  strokeLinecap="round"
-                  filter="url(#tubeGlow)"
+                {/* Barre verticale avec CylinderMask */}
+                <div
+                  className="absolute overflow-hidden"
+                  style={{
+                    left: centerX - barWidth / 2,
+                    top: barTop,
+                    width: barWidth,
+                    height: barHeight,
+                    borderRadius: '0.5rem',
+                    background: tubeColor,
+                    boxShadow: `0 0 ${CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE}px ${tubeGlowColor}, 0 0 ${CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE * 2}px ${tubeGlowColor}`,
+                  }}
+                >
+                  {/* CylinderMask rotaté -90° (anti-horaire) */}
+                  <CylinderMask
+                    is3DMode={true}
+                    intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON}
+                    style={{
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: 'center center',
+                      width: barHeight,
+                      height: barWidth,
+                      position: 'absolute',
+                      left: (barWidth - barHeight) / 2,
+                      top: (barHeight - barWidth) / 2,
+                    }}
+                  />
+                </div>
+
+                {/* Capsule début "1" */}
+                <div
+                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  style={{
+                    left: startX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    top: startY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    backgroundColor: bubbleColor,
+                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
+                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
+                    boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  }}
+                >
+                  1
+                </div>
+
+                {/* Capsule fin "N" */}
+                <div
+                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  style={{
+                    left: endX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    top: endY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    backgroundColor: bubbleColor,
+                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
+                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
+                    boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  }}
+                >
+                  {totalSongs}
+                </div>
+
+                {/* Point chanson en lecture (rose) */}
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
+                    boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
+                  }}
                 />
-                {/* Tube interne (rempli) */}
-                <path
-                  d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
-                  fill="none"
-                  stroke={tubeColor}
-                  strokeWidth={thickness}
-                  strokeLinecap="round"
+
+                {/* Point sélection (cyan) - le plus gros */}
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
+                    boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
+                  }}
                 />
-              </svg>
 
-              {/* Capsule début "1" */}
-              <div
-                className="absolute flex items-center justify-center rounded-full font-bold"
-                style={{
-                  left: startX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                  top: startY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                  width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                  height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                  backgroundColor: bubbleColor,
-                  color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
-                  fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
-                  boxShadow: `0 0 8px ${tubeGlowColor}`,
-                }}
-              >
-                1
-              </div>
-
-              {/* Capsule fin "N" */}
-              <div
-                className="absolute flex items-center justify-center rounded-full font-bold"
-                style={{
-                  left: endX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                  top: endY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                  width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                  height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                  backgroundColor: bubbleColor,
-                  color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
-                  fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
-                  boxShadow: `0 0 8px ${tubeGlowColor}`,
-                }}
-              >
-                {totalSongs}
-              </div>
-
-              {/* Point chanson en lecture (rose) */}
-              <div
-                className="absolute rounded-full"
-                style={{
-                  left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                  top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                  width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
-                  height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
-                  backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
-                  boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
-                }}
-              />
-
-              {/* Point sélection (cyan) - le plus gros */}
-              <div
-                className="absolute rounded-full"
-                style={{
-                  left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                  top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                  width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
-                  height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
-                  backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
-                  boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
-                }}
-              />
-
-              {/* Texte AU-DESSUS de l'arc : titre, artiste, numéro */}
-              <div
-                className="absolute text-center text-white flex flex-col items-center"
-                style={{
-                  left: '50%',
-                  bottom: containerRect.height - (centerY - arcRadius) + 20 + 32,
-                  transform: 'translateX(-50%)',
-                  maxWidth: '80%',
-                }}
-              >
+                {/* Texte à gauche de la barre */}
                 <div
-                  className="font-black truncate w-full"
-                  style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE + 4 }}
+                  className="absolute text-right text-white flex flex-col items-end"
+                  style={{
+                    right: containerRect.width - centerX + barWidth / 2 + 20,
+                    top: centerY,
+                    transform: 'translateY(-50%)',
+                    maxWidth: '60%',
+                  }}
                 >
-                  {scrubSong?.title || ''}
-                </div>
-                <div
-                  className="text-pink-400 font-medium mt-1 truncate w-full"
-                  style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE - 2 }}
-                >
-                  {scrubSong?.artist || ''}
-                </div>
-                <div
-                  className="text-gray-400 mt-2 font-mono"
-                  style={{ fontSize: CONFIG.BEACON_SCRUB_COUNTER_SIZE }}
-                >
-                  {scrubIndex + 1} / {totalSongs}
+                  <div
+                    className="font-black truncate w-full"
+                    style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE + 4 }}
+                  >
+                    {scrubSong?.title || ''}
+                  </div>
+                  <div
+                    className="text-pink-400 font-medium mt-1 truncate w-full"
+                    style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE - 2 }}
+                  >
+                    {scrubSong?.artist || ''}
+                  </div>
+                  <div
+                    className="text-gray-400 mt-2 font-mono"
+                    style={{ fontSize: CONFIG.BEACON_SCRUB_COUNTER_SIZE }}
+                  >
+                    {scrubIndex + 1} / {totalSongs}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
+            );
+          } else {
+            // ══════════════════════════════════════════════════════════════
+            // MODE 2D: Arc de cercle (code original)
+            // ══════════════════════════════════════════════════════════════
+            const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+            const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+            const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+            const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+
+            // Position initiale (depuis le beacon) - demi-cercle droit
+            const beaconEl = beaconNeonRef?.current;
+            let initialArcRadius, initialCenterX, initialCenterY, initialThickness;
+
+            if (beaconEl) {
+              const beaconRect = beaconEl.getBoundingClientRect();
+              initialArcRadius = beaconRect.height / 2;
+              initialCenterX = beaconRect.right - initialArcRadius - containerRect.left;
+              initialCenterY = beaconRect.top + initialArcRadius - containerRect.top;
+              initialThickness = 2;
+            } else {
+              initialArcRadius = finalArcRadius * 0.1;
+              initialCenterX = containerRect.width * 0.85;
+              initialCenterY = containerRect.height * 0.5;
+              initialThickness = 2;
+            }
+
+            // Valeurs interpolées
+            const arcRadius = initialArcRadius + (finalArcRadius - initialArcRadius) * morphProgress;
+            const centerX = initialCenterX + (finalCenterX - initialCenterX) * morphProgress;
+            const centerY = initialCenterY + (finalCenterY - initialCenterY) * morphProgress;
+            const thickness = initialThickness + (finalThickness - initialThickness) * morphProgress;
+
+            // Position du point sélectionné (cyan)
+            const selectedProgress = totalSongs > 1 ? scrubIndex / (totalSongs - 1) : 0.5;
+            const selectedAngle = -Math.PI / 2 + selectedProgress * Math.PI;
+            const selectedX = centerX + arcRadius * Math.cos(selectedAngle);
+            const selectedY = centerY + arcRadius * Math.sin(selectedAngle);
+
+            // Position du point en lecture (rose)
+            const playingProgress = totalSongs > 1 ? currentIndex / (totalSongs - 1) : 0.5;
+            const playingAngle = -Math.PI / 2 + playingProgress * Math.PI;
+            const playingX = centerX + arcRadius * Math.cos(playingAngle);
+            const playingY = centerY + arcRadius * Math.sin(playingAngle);
+
+            // Position des extrémités (début = haut, fin = bas)
+            const startX = centerX + arcRadius * Math.cos(-Math.PI / 2);
+            const startY = centerY + arcRadius * Math.sin(-Math.PI / 2);
+            const endX = centerX + arcRadius * Math.cos(Math.PI / 2);
+            const endY = centerY + arcRadius * Math.sin(Math.PI / 2);
+
+            return (
+              <div
+                className="absolute inset-0 z-[100] flex items-center justify-center"
+                style={{
+                  backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
+                }}
+                onTouchMove={handleScrubTouchMove}
+                onTouchEnd={handleScrubTouchEnd}
+              >
+                {/* Tube rempli avec glow */}
+                <svg
+                  className="absolute"
+                  style={{
+                    left: centerX - arcRadius - 20,
+                    top: centerY - arcRadius - 20,
+                    width: arcRadius * 2 + 40,
+                    height: arcRadius * 2 + 40,
+                  }}
+                >
+                  <defs>
+                    <filter id="tubeGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="4" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  {/* Tube externe (glow) */}
+                  <path
+                    className="scrub-tube-glow"
+                    d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
+                    fill="none"
+                    stroke={tubeGlowColor}
+                    strokeWidth={thickness + CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE}
+                    strokeLinecap="round"
+                    filter="url(#tubeGlow)"
+                  />
+                  {/* Tube interne (rempli) */}
+                  <path
+                    d={`M ${arcRadius + 20} ${20} A ${arcRadius} ${arcRadius} 0 0 1 ${arcRadius + 20} ${arcRadius * 2 + 20}`}
+                    fill="none"
+                    stroke={tubeColor}
+                    strokeWidth={thickness}
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* Capsule début "1" */}
+                <div
+                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  style={{
+                    left: startX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    top: startY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    backgroundColor: bubbleColor,
+                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
+                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
+                    boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  }}
+                >
+                  1
+                </div>
+
+                {/* Capsule fin "N" */}
+                <div
+                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  style={{
+                    left: endX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    top: endY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    backgroundColor: bubbleColor,
+                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
+                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
+                    boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  }}
+                >
+                  {totalSongs}
+                </div>
+
+                {/* Point chanson en lecture (rose) */}
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
+                    boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
+                  }}
+                />
+
+                {/* Point sélection (cyan) - le plus gros */}
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
+                    boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
+                  }}
+                />
+
+                {/* Texte AU-DESSUS de l'arc : titre, artiste, numéro */}
+                <div
+                  className="absolute text-center text-white flex flex-col items-center"
+                  style={{
+                    left: '50%',
+                    bottom: containerRect.height - (centerY - arcRadius) + 20 + 32,
+                    transform: 'translateX(-50%)',
+                    maxWidth: '80%',
+                  }}
+                >
+                  <div
+                    className="font-black truncate w-full"
+                    style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE + 4 }}
+                  >
+                    {scrubSong?.title || ''}
+                  </div>
+                  <div
+                    className="text-pink-400 font-medium mt-1 truncate w-full"
+                    style={{ fontSize: CONFIG.BEACON_SCRUB_TEXT_SIZE - 2 }}
+                  >
+                    {scrubSong?.artist || ''}
+                  </div>
+                  <div
+                    className="text-gray-400 mt-2 font-mono"
+                    style={{ fontSize: CONFIG.BEACON_SCRUB_COUNTER_SIZE }}
+                  >
+                    {scrubIndex + 1} / {totalSongs}
+                  </div>
+                </div>
+              </div>
+            );
+          }
         })(), effectivePortalRef.current)}
         
         {/* Container scrollable avec mask CSS */}
