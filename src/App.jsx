@@ -2214,6 +2214,7 @@ const generateVibeColors = (seed) => {
 const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false, swipeIndicator = null }) => {
     // État pour l'animation d'enfoncement 3D
     const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
+    const [isPressing, setIsPressing] = useState(false); // true = enfoncement, false = retour
     const blinkTimeoutRef = useRef(null);
 
     // Ref pour stocker le callback (évite les problèmes de closure)
@@ -2223,17 +2224,22 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     useEffect(() => {
         if (isBlinking) {
             // Animation d'enfoncement (3D ou 2D)
+            setIsPressing(true);
             if (is3DMode) setPressProgress(1);
             blinkTimeoutRef.current = setTimeout(() => {
                 if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
-            }, 150); // Animation rapide
+            }, 120); // Timeout: press (80ms) + petit moment enfoncé
         } else {
+            setIsPressing(false);
             setPressProgress(0);
         }
         return () => {
             if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
         };
     }, [isBlinking, is3DMode]);
+
+    // Durées différentes: press rapide (80ms), release lent (180ms)
+    const pressTransition = isPressing ? '0.08s ease-out' : '0.18s ease-out';
 
     // Calculs pour l'effet d'enfoncement 3D
     const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
@@ -2411,7 +2417,7 @@ const cardContent = is3DMode ? (
                           rgba(90,90,90,1)
                       `,
                       opacity: pressProgress,
-                      transition: 'opacity 0.1s ease-out'
+                      transition: `opacity ${pressTransition}`
                   }}
               />
           )}
@@ -2423,7 +2429,7 @@ const cardContent = is3DMode ? (
                   isolation: 'isolate',
                   transformOrigin: 'center bottom',
                   transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
-                  transition: 'transform 0.1s ease-out'
+                  transition: `transform ${pressTransition}`
               }}
           >
               {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
@@ -2434,7 +2440,7 @@ const cardContent = is3DMode ? (
                       className="absolute inset-0 pointer-events-none rounded-xl"
                       style={{
                           backgroundColor: `rgba(0,0,0,${pressDarken})`,
-                          transition: 'background-color 0.1s ease-out'
+                          transition: `background-color ${pressTransition}`
                       }}
                   />
               )}
@@ -2474,7 +2480,7 @@ const cardContent = is3DMode ? (
               style={{
                   transformOrigin: 'center bottom',
                   transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
-                  transition: 'transform 0.1s ease-out'
+                  transition: `transform ${pressTransition}`
               }}
           >
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
@@ -2487,7 +2493,7 @@ const cardContent = is3DMode ? (
                           className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
                           style={{
                               color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)',
-                              transition: 'color 0.15s ease-out'
+                              transition: `color ${pressTransition}`
                           }}
                       >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
@@ -2534,7 +2540,7 @@ const cardContent = is3DMode ? (
                                       style={{
                                           fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
                                           color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white',
-                                          transition: 'color 0.15s ease-out'
+                                          transition: `color ${pressTransition}`
                                       }}
                                   />
                               )}
@@ -2545,7 +2551,7 @@ const cardContent = is3DMode ? (
                           className="text-[10px] font-semibold flex items-center gap-1.5 flex-shrink-0"
                           style={{
                               color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)',
-                              transition: 'color 0.15s ease-out'
+                              transition: `color ${pressTransition}`
                           }}
                       >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
@@ -2570,7 +2576,7 @@ const cardContent = is3DMode ? (
                       className={`flex items-center justify-center ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}
                       style={{
                           color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)'),
-                          transition: 'color 0.15s ease-out'
+                          transition: `color ${pressTransition}`
                       }}
                   >
                       <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
