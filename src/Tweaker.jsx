@@ -782,7 +782,7 @@ const Tweaker = ({
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         borderRadius: is3DMode ? '0.5rem' : undefined,
-                        background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : '#F3F4F6',
+                        background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                         color: undoFeedback ? 'white' : '#9CA3AF',
                         boxShadow: undoFeedback
                             ? '0 0 20px rgba(250, 204, 21, 0.5), 0 0 40px rgba(220, 38, 38, 0.3)'
@@ -801,7 +801,7 @@ const Tweaker = ({
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         borderRadius: is3DMode ? '0.5rem' : undefined,
-                        background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : '#F3F4F6',
+                        background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                         color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
                         boxShadow: activeMode === 'reorder'
                             ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
@@ -821,7 +821,7 @@ const Tweaker = ({
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         borderRadius: is3DMode ? '0.5rem' : undefined,
-                        background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : '#F3F4F6',
+                        background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                         color: activeMode === 'delete' ? 'white' : '#9CA3AF',
                         boxShadow: activeMode === 'delete'
                             ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
@@ -841,7 +841,7 @@ const Tweaker = ({
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         borderRadius: is3DMode ? '0.5rem' : undefined,
-                        background: is3DMode ? '#00FF88' : '#F3F4F6',
+                        background: is3DMode ? '#00FF88' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                         color: is3DMode ? 'white' : '#9CA3AF',
                         boxShadow: is3DMode
                             ? '0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3)'
@@ -863,7 +863,7 @@ const Tweaker = ({
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         borderRadius: is3DMode ? '0.5rem' : undefined,
-                        background: showTitles ? '#00FF88' : '#F3F4F6',
+                        background: showTitles ? '#00FF88' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                         color: showTitles ? 'white' : '#9CA3AF',
                         boxShadow: showTitles
                             ? '0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3)'

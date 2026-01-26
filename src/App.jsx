@@ -511,8 +511,8 @@ const CONFIG = {
     CAPSULE_ARTIST_LINEHEIGHT_DASHBOARD: 1.1,  // Taille ligne artist en mode dashboard (px)
     CAPSULE_GAP_DASHBOARD: 0,           // Écart titre/artiste mode dashboard (px)
     
-    CAPSULE_BG_COLOR: '235, 250, 255',  // Couleur de fond de la capsule titre (RGB) - cyan très clair
-    CAPSULE_BG_OPACITY: 0,            // Opacité du fond (0-1)
+    CAPSULE_BG_COLOR: UNIFIED_CONFIG.CAPSULE_BG_COLOR,  // Couleur de fond (depuis Config.jsx)
+    CAPSULE_BG_OPACITY: UNIFIED_CONFIG.CAPSULE_BG_OPACITY,  // Opacité du fond (depuis Config.jsx)
     CAPSULE_CYLINDER_ENABLED: false,     // Activer le masque d'opacité 3D
     CAPSULE_CYLINDER_INTENSITY: 0.6,    // Intensité du masque (0-1)
 
@@ -3756,8 +3756,8 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
         };
         return (
             <div
-            className={`flex-1 bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200`}
-            style={{ ...searchGlowStyle, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}
+            className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200`}
+            style={{ ...searchGlowStyle, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: UNIFIED_CONFIG.CAPSULE_BG_INACTIVE }}
             >
                 <div className="w-full h-full flex items-center px-4">
                 <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} className="text-gray-400 mr-3" />

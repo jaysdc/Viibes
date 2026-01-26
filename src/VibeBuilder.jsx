@@ -184,8 +184,8 @@ const CONFIG = {
     CAPSULE_CYLINDER_ENABLED: false,
     CAPSULE_CYLINDER_INTENSITY_ON: 1,     // Intensité du masque sur boutons actifs (0 = aucun, 1 = plein)
     CAPSULE_CYLINDER_INTENSITY_OFF: 0.60,  // Intensité du masque sur boutons inactifs (0 = aucun, 1 = plein)
-    CAPSULE_BG_COLOR: '228, 243, 255',    // Couleur de fond de la capsule (RGB)
-    CAPSULE_BG_OPACITY: 0.30,              // Opacité du fond de la capsule (0 = transparent, 1 = opaque)
+    CAPSULE_BG_COLOR: UNIFIED_CONFIG.CAPSULE_BG_COLOR,    // Couleur de fond (depuis Config.jsx)
+    CAPSULE_BG_OPACITY: UNIFIED_CONFIG.CAPSULE_BG_OPACITY, // Opacité du fond (depuis Config.jsx)
 
     // Animation rotation 3D de la capsule (entrée/sortie recherche)
     SEARCH_FADE_IN_DURATION: 275,         // Durée fade in recherche (ms)

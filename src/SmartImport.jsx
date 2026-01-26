@@ -1427,7 +1427,7 @@ const SmartImport = ({
                                         disabled={btnIgniting !== null}
                                         className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`}
                                         style={{
-                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            background: btnIgniting === 'cancel' ? 'transparent' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                                             color: btnIgniting === 'cancel' ? 'white' : '#9ca3af',
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
@@ -1479,7 +1479,7 @@ const SmartImport = ({
                                         disabled={btnIgniting !== null}
                                         className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`}
                                         style={{
-                                            background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
+                                            background: btnIgniting === 'cancel' ? 'transparent' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                                             color: btnIgniting === 'cancel' ? 'white' : '#9ca3af',
                                             borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
