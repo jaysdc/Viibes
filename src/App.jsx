@@ -800,6 +800,7 @@ const CONFIG = {
     HEADER_PADDING_BOTTOM: 1,           // Padding sous le header (rem) = 8px
     HEADER_PADDING_X: 1.5,                // Padding horizontal du header (rem) = 24px
     HEADER_LOGO_SIZE: 108,                // Taille du logo VibesLogo (px CSS) - était 36*3 avec ancien multiplicateur
+    SPLASH_SCREEN_ENABLED: UNIFIED_CONFIG.SPLASH_SCREEN_ENABLED, // Activer le splash screen (depuis Config.jsx)
     SPLASH_LOGO_SIZE: 200,                // Taille du logo dans le splash screen (px CSS)
     SPLASH_FLICKER_DURATION: 1000,        // Durée du flicker néon initial (ms)
     SPLASH_PULSE_DURATION: 1300,          // Durée de la phase pulse avec grésillement (ms)
@@ -5263,6 +5264,11 @@ useEffect(() => {
   if (!splashReady) return; // Attendre que React soit hydraté
   if (playlists === null) return; // Attendre que les données soient chargées
   if (splashPhase !== 'waiting') return; // Ne lancer qu'une fois
+  // Skip splash screen si désactivé dans la config (mode dev)
+  if (!CONFIG.SPLASH_SCREEN_ENABLED) {
+    setSplashPhase('done');
+    return;
+  }
   if (sessionStorage.getItem('vibes_splash_played') === 'true') { // Splash déjà joué cette session (ex: retour OAuth Dropbox)
     setSplashPhase('done');
     return;
@@ -7089,14 +7095,8 @@ const vibeSearchResults = () => {
             return;
         }
 
-        // SI une vibe est déjà chargée (peu importe si elle joue ou non)
-        if (currentSong) {
-          setPendingVibe(vibeId);
-          return;
-      }
-
-      // Lancer l'animation (la vibe sera lancée par onBlinkComplete)
-      setBlinkingVibe(vibeId);
+        // Toujours lancer l'animation d'abord (confirmation viendra après si nécessaire)
+        setBlinkingVibe(vibeId);
     };
 
     const launchVibe = (vibeId) => {
@@ -8513,7 +8513,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 onBlinkComplete={() => {
                                     const vibeToLaunch = blinkingVibe;
                                     setBlinkingVibe(null);
-                                    launchVibe(vibeToLaunch);
+                                    // Si une musique joue, demander confirmation avant de kill
+                                    if (currentSong) {
+                                        setPendingVibe(vibeToLaunch);
+                                    } else {
+                                        launchVibe(vibeToLaunch);
+                                    }
                                 }}
                                 onEditVibe={() => {
                                     setEditingVibeId(vibeId);
