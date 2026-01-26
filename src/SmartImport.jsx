@@ -1425,7 +1425,7 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
-                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm font-bold text-sm flex items-center justify-center overflow-visible`}
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`}
                                         style={{
                                             background: btnIgniting === 'cancel' ? 'transparent' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                                             color: btnIgniting === 'cancel' ? 'white' : '#9ca3af',
@@ -1477,7 +1477,7 @@ const SmartImport = ({
                                     <button
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
-                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm font-bold text-sm flex items-center justify-center overflow-visible`}
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`}
                                         style={{
                                             background: btnIgniting === 'cancel' ? 'transparent' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                                             color: btnIgniting === 'cancel' ? 'white' : '#9ca3af',
