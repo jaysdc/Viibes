@@ -1200,7 +1200,8 @@ const SmartImport = ({
                                     </div>
                                 </div>
                             )}
-                            {/* Nom du dossier avec autoscroll */}
+                            {/* Nom du dossier avec autoscroll - masqué pendant preview dégradé */}
+                            {!activeSwipePreview && (
                             <div className="flex-1 overflow-hidden mr-2 relative z-10">
                                 <div
                                     className="font-bold text-gray-700 whitespace-nowrap"
@@ -1215,8 +1216,9 @@ const SmartImport = ({
                                     {isLongName && <span style={{ paddingLeft: '2rem' }}>{importPreview.rootName}</span>}
                                 </div>
                             </div>
-                            {/* Warning si > seuil */}
-                            {importPreview.totalFiles > SMARTIMPORT_CONFIG.WARNING_THRESHOLD && (
+                            )}
+                            {/* Warning si > seuil - masqué pendant preview dégradé */}
+                            {!activeSwipePreview && importPreview.totalFiles > SMARTIMPORT_CONFIG.WARNING_THRESHOLD && (
                                 <div
                                     className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 relative z-10"
                                     style={{
