@@ -713,7 +713,7 @@ const Tweaker = ({
                                 const gradientName = getGradientName ? getGradientName(vibeSwipePreview.previewIndex) : `Gradient ${vibeSwipePreview.previewIndex}`;
                                 return (
                                     <div
-                                        className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center z-50`}
+                                        className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center z-50 overflow-hidden`}
                                         style={{
                                             borderRadius: is3DMode ? '0.5rem' : undefined,
                                             background: gradientStyle,
@@ -1022,7 +1022,7 @@ const Tweaker = ({
                                 <VibeCardComponent
                                     swipeIndicator={
                                         <div
-                                            className={`absolute ${is3DMode ? 'bottom-1' : 'top-2'} left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none`}
+                                            className="absolute top-2 left-1/2 z-10 flex items-center gap-0.5 text-white/50 pointer-events-none"
                                             style={{ transform: 'translateX(-50%)' }}
                                         >
                                             <ChevronLeft size={10} />

@@ -2434,7 +2434,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 }}
                             >
                             {/* Masque cylindre 3D */}
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-xl" />
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-xl" />
                             {/* Indication swipe - EN HAUT AU CENTRE */}
                             <div
                                 className="absolute flex items-center gap-0.5 text-white/50 z-10"

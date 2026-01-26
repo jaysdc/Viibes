@@ -3832,9 +3832,9 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                 }}
               />
             )}
-            <div 
+            <div
                 className={`w-full h-full rounded-full border border-gray-200 shadow-sm flex items-center overflow-hidden relative`}
-                style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
+                style={{ backgroundColor: is3DMode ? 'transparent' : `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
             >
                 {/* Masque cylindre 3D */}
                 <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full z-10" />
@@ -3999,7 +3999,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         overlayClass = "bg-cyan-500 rounded-full shadow-inner overflow-hidden";
         OverlayContent = (
         <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
             <div
                 className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
             >
@@ -4015,7 +4015,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         overlayClass = "bg-orange-500 rounded-full shadow-inner overflow-hidden";
         OverlayContent = (
         <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
             <div
                 className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
             >
@@ -4453,7 +4453,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   border: `${CONFIG.BEACON_NEON_WIDTH}px solid rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_OPACITY})`,
                   boxShadow: `0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY}), 0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE * 2}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY / 2})`,
                   zIndex: CONFIG.BEACON_NEON_Z,
-                  backgroundColor: is3DMode ? `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` : 'transparent',
+                  backgroundColor: 'transparent',
                 }}
               >
                 {/* Masque cylindre 3D */}
@@ -7954,7 +7954,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         </div>
                     </div>
                     {/* Overlay de preview du dégradé VIBE THESE - par-dessus la barre de recherche */}
-                    {vibeSwipePreview && vibeSwipePreview.progress > 0 && (() => {
+                    {vibeSwipePreview && (() => {
                         const { nextGradient, previewIndex } = vibeSwipePreview;
                         const gradientName = getGradientName(previewIndex);
                         const step = 100 / (nextGradient.length - 1);
@@ -7988,7 +7988,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         style={{
                             gap: CONFIG.HEADER_BUTTONS_GAP,
                             opacity: (showImportMenu || importOverlayAnim !== 'none') ? (importMenuVisible ? 0 : 1)
-                                : (pendingVibe || nukeConfirmMode || (vibeSwipePreview && vibeSwipePreview.progress > 0)) ? 0 : 1,
+                                : (pendingVibe || nukeConfirmMode || vibeSwipePreview) ? 0 : 1,
                             transition: `opacity ${importOverlayAnim === 'closing' ? CONFIG.IMPORT_HEADER_FADE_OUT_DURATION : CONFIG.IMPORT_HEADER_FADE_IN_DURATION}ms ease-out`
                         }}
                     >
