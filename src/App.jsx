@@ -3775,7 +3775,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
 
     // DEFAULT - Sort buttons
     return (
-      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200 relative" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
+      <div className="flex-1 bg-gray-50 rounded-full flex items-center border border-gray-100 shadow-sm animate-in fade-in zoom-in duration-200 relative" style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, overflowX: 'hidden', overflowY: 'visible' }}>
           <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
           <SortButton mode="initialShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={RotateCcw} isFirst={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
           <div className="w-px h-full bg-gray-200"></div>
