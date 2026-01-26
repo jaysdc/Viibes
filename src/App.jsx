@@ -2216,31 +2216,28 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
     const blinkTimeoutRef = useRef(null);
 
+    // Ref pour stocker le callback (évite les problèmes de closure)
+    const onBlinkCompleteRef = useRef(onBlinkComplete);
+    onBlinkCompleteRef.current = onBlinkComplete;
+
     useEffect(() => {
         if (isBlinking) {
-            if (is3DMode) {
-                // Animation d'enfoncement en mode 3D
-                setPressProgress(1);
-                blinkTimeoutRef.current = setTimeout(() => {
-                    if (onBlinkComplete) onBlinkComplete();
-                }, 300);
-            } else {
-                // Mode 2D: juste le callback après délai
-                blinkTimeoutRef.current = setTimeout(() => {
-                    if (onBlinkComplete) onBlinkComplete();
-                }, 300);
-            }
+            // Animation d'enfoncement (3D ou 2D)
+            if (is3DMode) setPressProgress(1);
+            blinkTimeoutRef.current = setTimeout(() => {
+                if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
+            }, 150); // Animation rapide
         } else {
             setPressProgress(0);
         }
         return () => {
             if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
         };
-    }, [isBlinking, is3DMode, onBlinkComplete]);
+    }, [isBlinking, is3DMode]);
 
     // Calculs pour l'effet d'enfoncement 3D
-    const pressScale = 1 - (pressProgress * 0.1); // 1 → 0.90
-    const pressTranslateY = pressProgress * 3; // 0 → 3px (descend légèrement)
+    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
+    const pressTranslateY = pressProgress * 5; // 0 → 5px (descend de 5px)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2414,7 +2411,7 @@ const cardContent = is3DMode ? (
                           rgba(90,90,90,1)
                       `,
                       opacity: pressProgress,
-                      transition: 'opacity 0.15s ease-out'
+                      transition: 'opacity 0.1s ease-out'
                   }}
               />
           )}
@@ -2424,8 +2421,9 @@ const cardContent = is3DMode ? (
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
+                  transformOrigin: 'center bottom',
                   transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
-                  transition: 'transform 0.15s ease-out'
+                  transition: 'transform 0.1s ease-out'
               }}
           >
               {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
@@ -2436,7 +2434,7 @@ const cardContent = is3DMode ? (
                       className="absolute inset-0 pointer-events-none rounded-xl"
                       style={{
                           backgroundColor: `rgba(0,0,0,${pressDarken})`,
-                          transition: 'background-color 0.15s ease-out'
+                          transition: 'background-color 0.1s ease-out'
                       }}
                   />
               )}
@@ -2474,8 +2472,9 @@ const cardContent = is3DMode ? (
           <div
               className="absolute inset-0 flex items-center px-4"
               style={{
+                  transformOrigin: 'center bottom',
                   transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
-                  transition: 'transform 0.15s ease-out'
+                  transition: 'transform 0.1s ease-out'
               }}
           >
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
