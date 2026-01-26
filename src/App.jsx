@@ -2224,20 +2224,20 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     useEffect(() => {
         if (isBlinking) {
-            // Phase 1: Press (80ms)
+            // Phase 1: Press (96ms)
             setIsPressing(true);
             if (is3DMode) setPressProgress(1);
 
-            // Phase 2: Release après 80ms (180ms de transition)
+            // Phase 2: Release après 96ms (216ms de transition)
             pressTimeoutRef.current = setTimeout(() => {
                 setIsPressing(false);
                 setPressProgress(0);
 
-                // Phase 3: Action après release (180ms)
+                // Phase 3: Action après release (216ms)
                 releaseTimeoutRef.current = setTimeout(() => {
                     if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
-                }, 180);
-            }, 80);
+                }, 216);
+            }, 96);
         }
         // Note: pas de else - le parent gère le reset de isBlinking après l'action
         return () => {
@@ -2246,8 +2246,8 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         };
     }, [isBlinking, is3DMode]);
 
-    // Durées différentes: press rapide (80ms), release lent (180ms)
-    const pressTransition = isPressing ? '0.08s ease-out' : '0.18s ease-out';
+    // Durées différentes: press rapide (96ms), release lent (216ms) - +20%
+    const pressTransition = isPressing ? '0.096s ease-out' : '0.216s ease-out';
 
     // Calculs pour l'effet d'enfoncement 3D
     const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
