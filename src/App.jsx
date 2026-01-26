@@ -2240,6 +2240,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     // Calculs pour l'effet d'enfoncement 3D
     const pressScale = 1 - (pressProgress * 0.1); // 1 → 0.90
+    const pressTranslateY = pressProgress * 3; // 0 → 3px (descend légèrement)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2397,13 +2398,33 @@ const cardContent = is3DMode ? (
       >
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
+          {/* Cavité 3D (visible quand le bouton s'enfonce) - taille originale avec parois en trapèze */}
+          {pressProgress > 0 && (
+              <div
+                  className="absolute inset-0 rounded-xl pointer-events-none"
+                  style={{
+                      // Bordure intérieure gris clair
+                      border: '2px solid rgba(200,200,200,0.8)',
+                      // 4 murs en trapèze: haut (clair), bas (sombre), côtés (intermédiaires)
+                      background: `
+                          linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%),
+                          linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%),
+                          linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%),
+                          linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%),
+                          rgba(90,90,90,1)
+                      `,
+                      opacity: pressProgress,
+                      transition: 'opacity 0.15s ease-out'
+                  }}
+              />
+          )}
           {/* Fond dégradé avec effet d'enfoncement 3D */}
           <div
               className="absolute inset-0 shadow-lg overflow-hidden rounded-xl"
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
-                  transform: pressProgress > 0 ? `scale(${pressScale})` : undefined,
+                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                   transition: 'transform 0.15s ease-out'
               }}
           >
@@ -2453,7 +2474,7 @@ const cardContent = is3DMode ? (
           <div
               className="absolute inset-0 flex items-center px-4"
               style={{
-                  transform: pressProgress > 0 ? `scale(${pressScale})` : undefined,
+                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                   transition: 'transform 0.15s ease-out'
               }}
           >
