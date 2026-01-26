@@ -852,7 +852,7 @@ const DropboxBrowser = ({
                             }}
                         >
                             <div
-                                className={`flex items-center ${is3DMode ? '' : 'rounded-full'} px-3 border border-gray-200 w-full relative overflow-hidden`}
+                                className={`flex items-center ${is3DMode ? '' : 'rounded-full'} px-3 ${is3DMode ? '' : 'border border-gray-200'} w-full relative overflow-hidden`}
                                 style={{
                                     background: 'white',
                                     height: UNIFIED_CONFIG.CAPSULE_HEIGHT,

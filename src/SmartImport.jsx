@@ -1171,7 +1171,7 @@ const SmartImport = ({
                             }}
                         >
                         <div
-                            className={`relative flex items-center justify-between ${is3DMode ? '' : 'rounded-full'} px-4 border border-gray-200 w-full overflow-hidden`}
+                            className={`relative flex items-center justify-between ${is3DMode ? '' : 'rounded-full'} px-4 ${is3DMode ? '' : 'border border-gray-200'} w-full overflow-hidden`}
                             style={{
                                 background: 'white',
                                 height: UNIFIED_CONFIG.CAPSULE_HEIGHT,

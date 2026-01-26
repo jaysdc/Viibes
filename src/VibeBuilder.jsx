@@ -2138,7 +2138,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             <div className="w-full h-full flex items-center gap-2 overflow-visible relative">
                                 {/* CAPSULE TRI (4 boutons égaux) */}
                                 <div
-                                    className={`flex-1 h-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center overflow-visible relative`}
+                                    className={`flex-1 h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center overflow-visible relative`}
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
@@ -2162,7 +2162,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                             setSearchOverlayAnim('none');
                                         }, CONFIG.SEARCH_FADE_IN_DURATION);
                                     }}
-                                    className={`h-full aspect-square ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 relative overflow-hidden`}
+                                    className={`h-full aspect-square ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center justify-center text-gray-400 relative overflow-hidden`}
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
@@ -2172,7 +2172,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 {/* OVERLAY BARRE DE RECHERCHE (fade in/out) */}
                                 {(isSearching || searchOverlayAnim !== 'none') && (
                                     <div
-                                        className={`absolute inset-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center`}
+                                        className={`absolute inset-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center`}
                                         style={{
                                             backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
                                             boxShadow: `0 -5px 12px ${CONFIG.SEARCH_BOX_GLOW_COLOR}, 0 5px 12px ${CONFIG.SEARCH_BOX_GLOW_COLOR}`,

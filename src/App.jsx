@@ -3775,7 +3775,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
 
     // DEFAULT - Sort buttons
     return (
-      <div className={`flex-1 bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex items-center border border-gray-100 overflow-visible shadow-sm animate-in fade-in zoom-in duration-200 relative`} style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
+      <div className={`flex-1 bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex items-center ${is3DMode ? '' : 'border border-gray-100'} overflow-visible shadow-sm animate-in fade-in zoom-in duration-200 relative`} style={{ height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
           <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
           <SortButton mode="initialShuffle" currentMode={activeFilter} onClick={setActiveFilter} icon={RotateCcw} isFirst={true} hideGlow={hideGlow} glowOpacity={glowOpacity} transitionDuration={transitionDuration} is3DMode={is3DMode} />
           <div className="w-px h-full bg-gray-200"></div>
@@ -7878,7 +7878,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           {(isLibrarySearching || searchOverlayAnim !== 'none') ? (
                 <div className="w-full relative">
                     <div
-                        className={`w-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center overflow-visible`}
+                        className={`w-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center overflow-visible`}
                         style={{
                             height: CONFIG.HEADER_BUTTONS_HEIGHT,
                             backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
@@ -9207,7 +9207,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setPlayerSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
                         }}
-                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
+                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
                         style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}
                     >
                         <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
@@ -9228,7 +9228,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                         >
                             <div
-                                className={`w-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center overflow-visible`}
+                                className={`w-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center overflow-visible`}
                                   style={{
                                     height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT,
                                     backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
