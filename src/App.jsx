@@ -515,6 +515,8 @@ const CONFIG = {
     CAPSULE_BG_OPACITY: UNIFIED_CONFIG.CAPSULE_BG_OPACITY,  // Opacité du fond (depuis Config.jsx)
     CAPSULE_CYLINDER_ENABLED: false,     // Activer le masque d'opacité 3D
     CAPSULE_CYLINDER_INTENSITY: 0.6,    // Intensité du masque (0-1)
+    CAPSULE_CYLINDER_INTENSITY_ON: 1,   // Intensité masque boutons actifs (comme VibeBuilder)
+    CAPSULE_CYLINDER_INTENSITY_OFF: 0.60, // Intensité masque boutons inactifs (comme VibeBuilder)
 
     // ══════════════════════════════════════════════════════════════════════════
     // ROUE DE SÉLECTION (Liste des chansons)
@@ -2895,7 +2897,7 @@ const ControlBar = ({
                           transition: 'background 0.3s, border 0.3s'
                       }}
                     >
-                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
+                        <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                         {isPlaying ? (
                             <Disc3 size={20} className="text-white animate-spin-slow" />
                         ) : (
