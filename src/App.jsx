@@ -2878,17 +2878,18 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
 const RecenterCapsule = ({ onClick, is3DMode = false }) => (
   <button
       onClick={onClick}
-      className={`bg-gray-50 rounded-full flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden relative ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+      className={`bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden relative ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
       style={{
         height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
         width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
+        borderRadius: is3DMode ? '0.5rem' : undefined,
         border: CONFIG.RECENTER_NEON_ENABLED
             ? `${CONFIG.RECENTER_NEON_WIDTH}px solid ${CONFIG.RECENTER_NEON_COLOR}`
             : '1px solid rgb(229, 231, 235)',
         WebkitTapHighlightColor: 'transparent'
     }}
   >
-      <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+      <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
       <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipBack size={10} fill="currentColor" /></div>
       <div className="w-px h-full bg-gray-200"></div>
       <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
@@ -3414,11 +3415,12 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
     return (
       <div
-          className={`flex-1 rounded-full flex items-center shadow-sm transition-colors duration-300 overflow-hidden relative ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
+          className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center shadow-sm transition-colors duration-300 overflow-hidden relative ${feedbackStyle} ${CONFIG.TIMECAPSULE_GLOW_ENABLED ? 'timecapsule-glow' : ''}`}
           style={{
             height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
             paddingLeft: `${CONFIG.TC_EDGE_PADDING}rem`,
             paddingRight: `${CONFIG.TC_EDGE_PADDING}rem`,
+            borderRadius: is3DMode ? '0.5rem' : undefined,
             ...glowStyle,
             border: CONFIG.TIMECAPSULE_NEON_ENABLED
                 ? `${CONFIG.TIMECAPSULE_NEON_WIDTH}px solid ${CONFIG.TIMECAPSULE_NEON_COLOR}`
@@ -3426,7 +3428,7 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
         }}
       >
             {/* Masque cylindre 3D sur toute la capsule */}
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
 
             {/* Bouton -10s */}
             <SkipButton direction="back" onClick={onSkipBack} />
@@ -3452,23 +3454,25 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
                     const progressPercent = duration > 0 ? (displayTime / duration) * 100 : 0;
                     return (
                         <div
-                            className="absolute inset-0 rounded-full overflow-hidden"
+                            className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} overflow-hidden`}
                             style={{
                                 background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+                                borderRadius: is3DMode ? '0.35rem' : undefined,
                             }}
                         >
                             {/* Masque cylindre inversé pour effet concave */}
-                            <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+                            <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.35rem' } : {}} />
                             {/* Remplissage rose flat */}
                             <div
                                 className="absolute left-0 top-0 bottom-0 overflow-hidden"
                                 style={{
                                     width: `${progressPercent}%`,
                                     background: '#ec4899',
+                                    borderRadius: is3DMode ? '0.35rem 0 0 0.35rem' : undefined,
                                 }}
                             >
-                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-l-full" />
+                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-l-full'} style={is3DMode ? { borderRadius: '0.35rem 0 0 0.35rem' } : {}} />
                             </div>
                             {/* Texte gris (fond clair) - couche de base */}
                             <div
@@ -3882,20 +3886,21 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
         <div className="relative transition-all duration-300 flex flex-col items-center" style={{ height: `${capsuleHeightVh}vh`, width: `${CONFIG.CAPSULE_WIDTH_PERCENT}%` }}>
             {/* Trait néon cyan - animation CSS selon état play/pause */}
             {CONFIG.CAPSULE_NEON_ENABLED && (
-              <div 
-                className={`absolute inset-0 rounded-full pointer-events-none ${isPlaying ? 'capsule-neon-glow-playing' : 'capsule-neon-glow'}`}
-                style={{ 
+              <div
+                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} pointer-events-none ${isPlaying ? 'capsule-neon-glow-playing' : 'capsule-neon-glow'}`}
+                style={{
                   border: `${CONFIG.CAPSULE_NEON_WIDTH}px solid rgba(${CONFIG.CAPSULE_NEON_COLOR}, ${CONFIG.CAPSULE_NEON_OPACITY_MAX})`,
-                  zIndex: 20
+                  zIndex: 20,
+                  borderRadius: is3DMode ? '0.5rem' : undefined
                 }}
               />
             )}
             <div
-                className={`w-full h-full rounded-full border border-gray-200 shadow-sm flex items-center overflow-hidden relative`}
-                style={{ backgroundColor: is3DMode ? 'transparent' : `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
+                className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} border border-gray-200 shadow-sm flex items-center overflow-hidden relative`}
+                style={{ backgroundColor: is3DMode ? 'transparent' : `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, borderRadius: is3DMode ? '0.5rem' : undefined }}
             >
                 {/* Masque cylindre 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full z-10" />
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={`${is3DMode ? '' : 'rounded-full'} z-10`} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
                 <button onClick={(e) => { e.stopPropagation(); playPrev(); }} className="w-12 h-full flex items-center justify-center text-gray-400 border-r border-gray-200" style={{ WebkitTapHighlightColor: 'transparent' }}><SkipBack size={20} fill="currentColor" /></button>
                 
                 {/* Zone centrale - titre centré par rapport à TOUTE la capsule via absolute */}
@@ -4507,7 +4512,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   top: '50%',
                   transform: 'translateY(-50%)',
                   height: `${beaconHeightVh}vh`,
-                  borderRadius: borderRadius,
+                  borderRadius: is3DMode ? '0.5rem' : borderRadius,
                   border: `${CONFIG.BEACON_NEON_WIDTH}px solid rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_OPACITY})`,
                   boxShadow: `0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY}), 0 0 ${CONFIG.BEACON_NEON_GLOW_SIZE * 2}px rgba(${CONFIG.BEACON_NEON_COLOR}, ${CONFIG.BEACON_NEON_GLOW_OPACITY / 2})`,
                   zIndex: CONFIG.BEACON_NEON_Z,
@@ -4515,7 +4520,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 }}
               >
                 {/* Masque cylindre 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full z-10" />
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={`${is3DMode ? '' : 'rounded-full'} z-10`} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
               </div>
 
               {/* PULSE - Point indicateur (EN-DESSOUS de la capsule) */}
@@ -8788,12 +8793,13 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const tcWidth = `calc(100vw - ${paddingRem * 2 + gapRem * 2}rem - ${borderWidth * 2 + playPauseWidth + recenterWidth}px)`;
                         return (
                             <div
-                                className="absolute rounded-full overflow-hidden"
+                                className={`absolute ${is3DMode ? '' : 'rounded-full'} overflow-hidden`}
                                 style={{
                                     left: tcLeft,
                                     width: tcWidth,
                                     top: tcTop,
                                     height: tcHeight,
+                                    borderRadius: is3DMode ? '0.5rem' : undefined,
                                     backgroundColor: '#e5e7eb',
                                     backgroundImage: 'radial-gradient(circle, #9ca3af 1px, transparent 1px)',
                                     backgroundSize: '8px 8px',
@@ -8802,7 +8808,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     pointerEvents: 'none',
                                 }}
                             >
-                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
+                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
                             </div>
                         );
                     })()}
@@ -8846,20 +8852,22 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                     return (
                         <div
-                            className={`absolute z-[100] rounded-full overflow-hidden ${t >= 1 ? 'scrub-overlay-glow' : ''}`}
+                            className={`absolute z-[100] ${is3DMode ? '' : 'rounded-full'} overflow-hidden ${t >= 1 ? 'scrub-overlay-glow' : ''}`}
                             style={{
                                 left: currentLeftPx,
                                 right: currentRightPx,
                                 bottom: currentBottomPx,
                                 height: height,
+                                borderRadius: is3DMode ? '0.5rem' : undefined,
                             }}
                         >
                             {/* Tube identique à TimeCapsule */}
                             <div
-                                className="absolute inset-0 rounded-full overflow-hidden"
+                                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} overflow-hidden`}
                                 style={{
                                     background: '#e5e7eb',
                                     boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+                                    borderRadius: is3DMode ? '0.5rem' : undefined,
                                 }}
                             >
                                 {/* Remplissage rose flat */}
@@ -8868,6 +8876,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     style={{
                                         width: `${scrubProgressPercent}%`,
                                         background: '#ec4899',
+                                        borderRadius: is3DMode ? '0.5rem 0 0 0.5rem' : undefined,
                                     }}
                                 />
                                 {/* Texte gris (fond clair) - couche de base */}
@@ -8901,7 +8910,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     <span>-{formatScrubTime(duration - progress)}</span>
                                 </div>
                             </div>
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
                         </div>
                     );
                 })()}
