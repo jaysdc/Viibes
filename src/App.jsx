@@ -9204,7 +9204,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setPlayerSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
                         }}
-                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
+                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} text-gray-400 hover:bg-gray-100 relative overflow-visible`}
                         style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
                     >
                         <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
