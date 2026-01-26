@@ -2138,9 +2138,10 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             <div className="w-full h-full flex items-center gap-2 overflow-visible relative">
                                 {/* CAPSULE TRI (4 boutons égaux) */}
                                 <div
-                                    className="flex-1 h-full rounded-full border border-gray-100 shadow-sm flex items-center overflow-visible relative"
-                                    style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
+                                    className={`flex-1 h-full ${is3DMode ? '' : 'rounded-full'} border border-gray-100 shadow-sm flex items-center overflow-visible relative`}
+                                    style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
                                     <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
                                     <div className="w-px h-full bg-gray-200"></div>
                                     <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
@@ -2193,7 +2194,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                 borderBottomLeftRadius: is3DMode ? '0.5rem' : undefined
                                             }}
                                         >
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-l-full'} is3DMode={is3DMode} />
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-l-full'} is3DMode={is3DMode} style={is3DMode ? { borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem' } : {}} />
                                             <Search style={{ width: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)`, height: `calc(${UNIFIED_CONFIG.CAPSULE_HEIGHT} * ${UNIFIED_CONFIG.ICON_SIZE_PERCENT} / 100)` }} className="text-gray-400 mr-3" />
                                             <input
                                                 autoFocus
@@ -2227,7 +2228,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                     borderBottomRightRadius: is3DMode ? '0.5rem' : undefined
                                                 }}
                                             />
-                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-r-full'} is3DMode={is3DMode} />
+                                            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-r-full'} is3DMode={is3DMode} style={is3DMode ? { borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem' } : {}} />
                                             <button
                                                 onClick={() => {
                                                     if (searchOverlayAnim !== 'none') return;
