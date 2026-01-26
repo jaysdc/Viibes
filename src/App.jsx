@@ -8339,6 +8339,69 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           </div>
                       );
                   })()}
+
+                  {/* OVERLAY Kill/Nuke - dans le conteneur des boutons avec inset-0 */}
+                  {(pendingVibe || nukeConfirmMode) && (
+                      <div
+                          className="absolute inset-0 z-[66] pointer-events-none"
+                          style={{
+                              opacity: confirmOverlayVisible ? 1 : 0,
+                              transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
+                          }}
+                      >
+                          {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
+                          {!confirmFeedback && (() => {
+                              const isKillMode = pendingVibe !== null;
+                              const bgColor = isKillMode
+                                  ? `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)`
+                                  : CONFIG.IMPORT_NUKE_COLOR;
+                              const glowColor = isKillMode ? '#ec4899' : CONFIG.IMPORT_NUKE_COLOR;
+                              return (
+                                  <div
+                                      className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border-none shadow-lg relative overflow-hidden`}
+                                      style={{
+                                          borderRadius: is3DMode ? '0.5rem' : undefined,
+                                          background: bgColor,
+                                          boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
+                                      }}
+                                  >
+                                      <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
+                                      <div
+                                          className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase z-10"
+                                          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                                      >
+                                          {pendingVibe ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
+                                          <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
+                                      </div>
+                                  </div>
+                              );
+                          })()}
+                          {/* FeedbackOverlay avec animation ignite */}
+                          {confirmFeedback && (() => {
+                              const isKillAction = pendingVibe !== null;
+                              const bgStyle = isKillAction
+                                  ? { background: `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)` }
+                                  : { background: CONFIG.IMPORT_NUKE_COLOR };
+                              const neonColorRgb = isKillAction ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB;
+                              return (
+                                  <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
+                                      <FeedbackOverlay
+                                          feedback={confirmFeedback}
+                                          onAnimationComplete={onConfirmAnimationComplete}
+                                          neonColor={neonColorRgb}
+                                          bgClass=""
+                                          bgStyle={bgStyle}
+                                          borderClass="border-transparent"
+                                          is3DMode={is3DMode}
+                                      >
+                                          {confirmFeedback.type === 'cancel' ? <X size={16} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
+                                          <span className="text-lg">{confirmFeedback.text}</span>
+                                      </FeedbackOverlay>
+                                  </div>
+                              );
+                          })()}
+                      </div>
+                  )}
                 </div>
 
                 {/* Handle - slide depuis le haut */}
@@ -8953,78 +9016,6 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                     }}
                 />
-                {/* OVERLAY Kill/Nuke dans le header - AU DESSUS du blur */}
-                {headerButtonsRef.current && (() => {
-                    const headerRect = headerButtonsRef.current.getBoundingClientRect();
-                    const containerRect = mainContainerRef.current.getBoundingClientRect();
-                    return (
-                        <div
-                            className="absolute z-[66] pointer-events-none"
-                            style={{
-                                top: headerRect.top - containerRect.top,
-                                left: CONFIG.HEADER_PADDING_X + 'rem',
-                                right: CONFIG.HEADER_PADDING_X + 'rem',
-                                height: headerRect.height,
-                                opacity: confirmOverlayVisible ? 1 : 0,
-                                transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
-                            }}
-                        >
-                            {/* Capsule statique - visible tant qu'on n'a pas confirmé */}
-                            {!confirmFeedback && (() => {
-                                // Couleurs pour Kill (Fuchsia Overdose) et Nuke (rouge uni comme bouton NUKE)
-                                const isKillMode = pendingVibe !== null;
-                                const bgColor = isKillMode
-                                    ? `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)`
-                                    : CONFIG.IMPORT_NUKE_COLOR; // Rouge uni #FF0000
-                                const glowColor = isKillMode ? '#ec4899' : CONFIG.IMPORT_NUKE_COLOR;
-                                return (
-                                    <div
-                                        className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border-none shadow-lg relative overflow-hidden`}
-                                        style={{
-                                            borderRadius: is3DMode ? '0.5rem' : undefined,
-                                            background: bgColor,
-                                            boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
-                                        }}
-                                    >
-                                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
-                                        <div
-                                            className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase z-10"
-                                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                                        >
-                                            {pendingVibe ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
-                                            <span>{pendingVibe ? CONFIG.KILL_TEXT : CONFIG.NUKE_TEXT}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                            {/* FeedbackOverlay avec animation ignite - Garde la couleur du bandeau initial */}
-                            {confirmFeedback && (() => {
-                                // Kill = Fuchsia Overdose, Nuke/Cancel = rouge uni comme bouton NUKE
-                                const isKillAction = pendingVibe !== null;
-                                const bgStyle = isKillAction
-                                    ? { background: `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)` }
-                                    : { background: CONFIG.IMPORT_NUKE_COLOR }; // Rouge uni #FF0000
-                                const neonColorRgb = isKillAction ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB; // 255, 0, 0
-                                return (
-                                <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
-                                <FeedbackOverlay
-                                    feedback={confirmFeedback}
-                                    onAnimationComplete={onConfirmAnimationComplete}
-                                    neonColor={neonColorRgb}
-                                    bgClass=""
-                                    bgStyle={bgStyle}
-                                    borderClass="border-transparent"
-                                    is3DMode={is3DMode}
-                                >
-                                    {confirmFeedback.type === 'cancel' ? <X size={16} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
-                                    <span className="text-lg">{confirmFeedback.text}</span>
-                                </FeedbackOverlay>
-                                </div>
-                                );
-                            })()}
-                        </div>
-                    );
-                })()}
                 {/* Le pill par-dessus */}
                 <div
                     className="absolute left-0 right-0 z-[65] flex items-center justify-center pointer-events-none"

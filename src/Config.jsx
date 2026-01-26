@@ -292,6 +292,9 @@ export const SphereMask = ({ intensity = 0.6, className = '', is3DMode = false, 
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export const UNIFIED_CONFIG = {
+    // Splash Screen
+    SPLASH_SCREEN_ENABLED: false,        // Afficher le splash screen au démarrage (false = skip pour dev)
+
     // Orientation Lock (overlay mode paysage)
     ORIENTATION_LOCK_ENABLED: false,     // Afficher l'overlay en mode paysage (true = bloqué, false = autorisé)
 
