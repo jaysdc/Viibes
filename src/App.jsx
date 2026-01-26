@@ -4605,8 +4605,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             // ══════════════════════════════════════════════════════════════
             // MODE 3D: Barre verticale
             // ══════════════════════════════════════════════════════════════
-            const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100;
-            const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
+            const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100 * 1.33;
+            const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS * 1.5;
             const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
             const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
@@ -4691,74 +4691,14 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   />
                 </div>
 
-                {/* Capsule début "1" */}
+                {/* Texte AU-DESSUS du tube, centré */}
                 <div
-                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  className="absolute text-center text-white flex flex-col items-center"
                   style={{
-                    left: startX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                    top: startY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                    backgroundColor: bubbleColor,
-                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
-                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
-                    boxShadow: `0 0 8px ${tubeGlowColor}`,
-                  }}
-                >
-                  1
-                </div>
-
-                {/* Capsule fin "N" */}
-                <div
-                  className="absolute flex items-center justify-center rounded-full font-bold"
-                  style={{
-                    left: endX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                    top: endY - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
-                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
-                    backgroundColor: bubbleColor,
-                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
-                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
-                    boxShadow: `0 0 8px ${tubeGlowColor}`,
-                  }}
-                >
-                  {totalSongs}
-                </div>
-
-                {/* Point chanson en lecture (rose) */}
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                    width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
-                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
-                    backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
-                    boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
-                  }}
-                />
-
-                {/* Point sélection (cyan) - le plus gros */}
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                    width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
-                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
-                    backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
-                    boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
-                  }}
-                />
-
-                {/* Texte à gauche de la barre */}
-                <div
-                  className="absolute text-right text-white flex flex-col items-end"
-                  style={{
-                    right: containerRect.width - centerX + barWidth / 2 + 20,
-                    top: centerY,
-                    transform: 'translateY(-50%)',
-                    maxWidth: '60%',
+                    left: centerX,
+                    bottom: containerRect.height - barTop + 12,
+                    transform: 'translateX(-50%)',
+                    maxWidth: '80%',
                   }}
                 >
                   <div
@@ -4779,6 +4719,94 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   >
                     {scrubIndex + 1} / {totalSongs}
                   </div>
+                </div>
+
+                {/* Capsule début "1" - à l'intérieur du tube */}
+                <div
+                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  style={{
+                    left: startX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    top: barTop + 8,
+                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    backgroundColor: bubbleColor,
+                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
+                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
+                    boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  }}
+                >
+                  1
+                </div>
+
+                {/* Capsule fin "N" - à l'intérieur du tube */}
+                <div
+                  className="absolute flex items-center justify-center rounded-full font-bold"
+                  style={{
+                    left: endX - CONFIG.BEACON_SCRUB_BUBBLE_SIZE / 2,
+                    top: barBottom - CONFIG.BEACON_SCRUB_BUBBLE_SIZE - 8,
+                    width: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    height: CONFIG.BEACON_SCRUB_BUBBLE_SIZE,
+                    backgroundColor: bubbleColor,
+                    color: CONFIG.BEACON_SCRUB_BUBBLE_TEXT_COLOR,
+                    fontSize: CONFIG.BEACON_SCRUB_BUBBLE_FONT_SIZE,
+                    boxShadow: `0 0 8px ${tubeGlowColor}`,
+                  }}
+                >
+                  {totalSongs}
+                </div>
+
+                {/* Point chanson en lecture (gris) avec CylinderMask vertical */}
+                <div
+                  className="absolute rounded-full overflow-hidden"
+                  style={{
+                    left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
+                    boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
+                  }}
+                >
+                  <CylinderMask
+                    is3DMode={true}
+                    intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON}
+                    style={{
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: 'center center',
+                      width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                      height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                    }}
+                  />
+                </div>
+
+                {/* Point sélection (rose) - le plus gros, avec CylinderMask vertical */}
+                <div
+                  className="absolute rounded-full overflow-hidden"
+                  style={{
+                    left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
+                    boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
+                  }}
+                >
+                  <CylinderMask
+                    is3DMode={true}
+                    intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON}
+                    style={{
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: 'center center',
+                      width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                      height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                    }}
+                  />
                 </div>
               </div>
             );
