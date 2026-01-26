@@ -298,6 +298,8 @@ export const UNIFIED_CONFIG = {
     // Capsules
     CAPSULE_HEIGHT: '2.0rem',           // Hauteur unifiée de toutes les capsules
     ICON_SIZE_PERCENT: 50,              // Taille des icônes = 50% de la hauteur capsule
+    CAPSULE_BG_COLOR: '235, 250, 255',  // Couleur de fond des capsules (RGB) - cyan très clair
+    CAPSULE_BG_OPACITY: 0,              // Opacité du fond des capsules (0-1)
 
     // Roue du lecteur - hauteur des éléments (% hauteur écran)
     WHEEL_ITEM_HEIGHT_MAIN_VH: 6.5,     // Taille élément roue lecteur principal
