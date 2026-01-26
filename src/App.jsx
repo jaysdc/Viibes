@@ -8358,7 +8358,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               const glowColor = isKillMode ? '#ec4899' : CONFIG.IMPORT_NUKE_COLOR;
                               return (
                                   <div
-                                      className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border-none shadow-lg relative overflow-hidden`}
+                                      className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border-none shadow-lg overflow-hidden`}
                                       style={{
                                           borderRadius: is3DMode ? '0.5rem' : undefined,
                                           background: bgColor,
