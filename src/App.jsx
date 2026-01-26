@@ -7931,7 +7931,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
           />
           
           {/* 3 boutons capsules OU barre de recherche OU barre d'import */}
-          <div ref={headerButtonsRef} className="flex flex-col items-center">
+          <div className="flex flex-col items-center">
           {(isLibrarySearching || searchOverlayAnim !== 'none') ? (
                 <div className="w-full relative">
                     <div
@@ -8038,7 +8038,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             ) : (
               <>
               {/* Conteneur relatif pour superposer boutons normaux et boutons import */}
-              <div className="relative w-full" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+              <div ref={headerButtonsRef} className="relative w-full" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                   {/* Boutons normaux - fade out quand import ouvert OU overlay feedback actif */}
                   <div
                         className="absolute inset-0 flex items-center"
@@ -8964,7 +8964,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 top: headerRect.top - containerRect.top,
                                 left: CONFIG.HEADER_PADDING_X + 'rem',
                                 right: CONFIG.HEADER_PADDING_X + 'rem',
-                                height: CONFIG.HEADER_BUTTONS_HEIGHT,
+                                height: headerRect.height,
                                 opacity: confirmOverlayVisible ? 1 : 0,
                                 transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                             }}
