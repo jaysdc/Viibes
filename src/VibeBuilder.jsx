@@ -2404,7 +2404,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 onMouseDown={handleCardSwipeStart}
                                 onMouseMove={handleCardSwipeMove}
                                 onMouseUp={handleCardSwipeEnd}
-                                className={`w-full cursor-pointer relative overflow-hidden ${is3DMode ? '' : 'rounded-xl'} ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
+                                className={`w-full cursor-pointer relative overflow-hidden rounded-xl ${isCreatingVibe && !isFadingOut ? 'animate-blink' : ''} ${isFadingOut ? 'animate-fade-out' : ''}`}
                                 style={{
                                     height: vibeCardConfig?.height || '9vh',
                                     background: futureGradient,
@@ -2413,7 +2413,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 }}
                             >
                             {/* Masque cylindre 3D */}
-                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-xl'} />
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-xl" />
                             {/* Indication swipe - EN HAUT AU CENTRE */}
                             <div
                                 className="absolute flex items-center gap-0.5 text-white/50 z-10"
@@ -2431,7 +2431,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             {/* Bordure mobile pendant le swipe (pointillée si dégradé déjà utilisé) */}
                             {cardSwipeOffset !== 0 && (
                                 <div
-                                    className={`absolute inset-0 pointer-events-none ${is3DMode ? '' : 'rounded-[10px]'}`}
+                                    className="absolute inset-0 pointer-events-none rounded-[10px]"
                                     style={{
                                         transform: `translateX(${cardSwipeOffset}px)`,
                                         transition: isCardSwipeCatchingUp ? 'transform 0.12s ease-out' : 'none',

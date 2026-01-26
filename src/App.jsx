@@ -2398,8 +2398,9 @@ const cardContent = is3DMode ? (
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
           {/* Fond dégradé - scaleY uniquement pour effet d'enfoncement vertical */}
+          {/* En mode 3D: même forme que 2D (rounded-xl) mais avec CylinderMask */}
           <div
-              className="absolute inset-0 shadow-lg overflow-hidden"
+              className="absolute inset-0 shadow-lg overflow-hidden rounded-xl"
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
@@ -2411,7 +2412,7 @@ const cardContent = is3DMode ? (
               }}
           >
               {/* Masque cylindre 3D sur le fond */}
-              <CylinderMask is3DMode={true} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} />
+              <CylinderMask is3DMode={true} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
               {/* Overlay de transparence progressif */}
               {unavailableCount > 0 && (() => {
                   const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -2420,14 +2421,14 @@ const cardContent = is3DMode ? (
                   if (availableCount === 0) {
                       return (
                           <div
-                              className="absolute inset-0 pointer-events-none"
+                              className="absolute inset-0 pointer-events-none rounded-xl"
                               style={{ backgroundColor: `rgba(255,255,255,${maxOpacity})` }}
                           />
                       );
                   }
                   return (
                       <div
-                          className="absolute inset-0 pointer-events-none"
+                          className="absolute inset-0 pointer-events-none rounded-xl"
                           style={{
                               background: `linear-gradient(to right,
                                   rgba(255,255,255,0) 0%,
