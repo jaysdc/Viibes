@@ -986,7 +986,7 @@ const Tweaker = ({
                 </div>
             )}
 
-<div className={`flex-1 overflow-y-auto no-scrollbar ${is3DMode ? '' : 'px-6'}`} style={{ paddingBottom: `${TWEAKER_CONFIG.DRAWER_TOP_SPACING}px`, touchAction: 'pan-y' }}>
+<div className="flex-1 overflow-y-auto no-scrollbar px-6" style={{ paddingBottom: `${TWEAKER_CONFIG.DRAWER_TOP_SPACING}px`, touchAction: 'pan-y' }}>
 <div className="flex flex-col" style={{ gap: '1.2vh' }}>
                     {displayVibes.map((vibe) => {
                         const songs = vibe.songs;

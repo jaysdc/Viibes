@@ -2383,7 +2383,7 @@ const cardContent = is3DMode ? (
           }}
           className="w-full cursor-pointer relative overflow-hidden"
           style={{
-              height: `${UNIFIED_CONFIG.PLAYER_CAPSULE_HEIGHT_VH}vh`,
+              height: `${CONFIG.VIBECARD_HEIGHT_VH}vh`,
               transform: hasAnimated
                   ? `translateX(${swipeOffset * 0.8}px)`
                   : `translateX(-${CONFIG.VIBECARD_SLIDE_DISTANCE}px)`,
@@ -8374,7 +8374,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
         {/* LIBRARY */}
         <div
-            className={`flex-1 overflow-y-auto pb-6 no-scrollbar ${is3DMode ? '' : 'px-6'}`}
+            className="flex-1 overflow-y-auto pb-6 no-scrollbar px-6"
             style={{ paddingBottom: `calc(${FOOTER_CONTENT_HEIGHT_CSS} + ${safeAreaBottom}px + ${CONFIG.FOOTER_TOP_SPACING}px)`
           }}
             onTouchStart={(e) => {

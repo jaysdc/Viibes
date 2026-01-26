@@ -2393,8 +2393,8 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                         {/* Future VibeCard - Swipable pour changer couleur */}
                         <div
                             style={{
-                                marginLeft: is3DMode ? 0 : 16,
-                                marginRight: is3DMode ? 0 : 16,
+                                marginLeft: 16,
+                                marginRight: 16,
                             }}
                         >
                         <div
