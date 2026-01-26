@@ -8,7 +8,7 @@ import SmartImport from './SmartImport.jsx';
 import DropboxBrowser from './DropboxBrowser.jsx';
 import { DropboxLogoVector, VibesLogoVector, VibeLogoVector, VibingLogoVector, FlameLogoVector, VibesWave, FlameWhiteVector, VibesLogoVectorOutline, VibesLogoFlames, VibesLogoText, VibesLogoWave } from './Assets.jsx';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted, SphereMask } from './Config.jsx';
+import { UNIFIED_CONFIG, FOOTER_CONTENT_HEIGHT_CSS, getPlayerHeaderHeightPx, getPlayerFooterHeightPx, getBeaconHeightPx, ALL_GRADIENTS, GRADIENT_NAMES, getGradientByIndex, getGradientName, CylinderMask, CylinderMaskInverted } from './Config.jsx';
 
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -2404,7 +2404,7 @@ const cardContent = is3DMode ? (
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
-                  transform: shouldPress ? 'scaleY(0.90)' : 'scaleY(1)',
+                  transform: shouldPress ? 'scale(0.90)' : 'scale(1)',
                   boxShadow: shouldPress
                       ? '0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.15)'
                       : undefined,
@@ -2882,10 +2882,11 @@ const ControlBar = ({
                     <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} />
                     <button
                         onClick={onTogglePlay}
-                        className={`rounded-full flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                          borderRadius: is3DMode ? '0.5rem' : undefined,
                           background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
                           border: isPlaying
                               ? '1px solid rgba(236, 72, 153, 1)'
@@ -2894,7 +2895,7 @@ const ControlBar = ({
                           transition: 'background 0.3s, border 0.3s'
                       }}
                     >
-                        <SphereMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
+                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
                         {isPlaying ? (
                             <Disc3 size={20} className="text-white animate-spin-slow" />
                         ) : (
@@ -2935,9 +2936,17 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
       onClick(mode);
   };
   
+  // En 3D, extrémités rectangulaires avec coins 0.5rem au lieu de rounded-full
   let roundedClass = '';
-  if (isFirst) roundedClass = 'rounded-l-full';
-  if (isLast) roundedClass = 'rounded-r-full';
+  let extremityStyle = {};
+  if (isFirst) {
+      roundedClass = is3DMode ? '' : 'rounded-l-full';
+      if (is3DMode) extremityStyle = { borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem' };
+  }
+  if (isLast) {
+      roundedClass = is3DMode ? '' : 'rounded-r-full';
+      if (is3DMode) extremityStyle = { borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem' };
+  }
   
   // Si isWide, le bouton prend 1.5x plus de place
   const widthClass = isWide ? 'flex-[1.5]' : 'flex-1';
@@ -2954,15 +2963,15 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
   }
   
   return (
-    <div className={`${widthClass} h-full relative overflow-visible ${roundedClass}`}>
+    <div className={`${widthClass} h-full relative overflow-visible ${roundedClass}`} style={extremityStyle}>
         {isActive && (
             isRetriggering ? (
               <div
                   key={animKey}
                   className={`absolute inset-0 ${roundedClass} animate-neon-cyan-to-pink`}
-                  style={{ zIndex: 0 }}
+                  style={{ zIndex: 0, ...extremityStyle }}
               >
-                  <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
+                  <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} style={extremityStyle} />
               </div>
           ) : (
             <NeonGlow
@@ -2977,17 +2986,19 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
             className={`absolute inset-0 ${roundedClass}`}
             style={{
                 background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
-                zIndex: 0
+                zIndex: 0,
+                ...extremityStyle
             }}
             onAnimationEnd={() => setSkipNextIgnite(false)}
             >
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} style={extremityStyle} />
             </NeonGlow>
           )
         )}
         <button
             onClick={handleClick}
             className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-200 ${roundedClass} ${isActive ? 'text-white' : 'bg-transparent text-gray-400 hover:text-gray-600'}`}
+            style={extremityStyle}
         >
             <Icon size={isWide ? 18 : 16} />
         </button>
@@ -3046,10 +3057,12 @@ const ToggleSortButton = ({
         }
     }
     
-    const roundedClass = isFirst ? 'rounded-l-full' : '';
-    
+    // En 3D, extrémités rectangulaires avec coins 0.5rem au lieu de rounded-full
+    const roundedClass = isFirst ? (is3DMode ? '' : 'rounded-l-full') : '';
+    const extremityStyle = isFirst && is3DMode ? { borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem' } : {};
+
     return (
-        <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`}>
+        <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`} style={extremityStyle}>
             {isActive && (
                 <NeonGlow
                     key={animKey}
@@ -3063,15 +3076,17 @@ const ToggleSortButton = ({
                     className={`absolute inset-0 ${roundedClass}`}
                     style={{
                         background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
-                        zIndex: 0
+                        zIndex: 0,
+                        ...extremityStyle
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
+                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} style={extremityStyle} />
                 </NeonGlow>
             )}
             <button
                 onClick={handleClick}
                 className={`relative z-10 w-full h-full flex items-center justify-center transition-all duration-200 ${roundedClass} ${isActive ? 'text-white' : 'bg-transparent text-gray-400 hover:text-gray-600'}`}
+                style={extremityStyle}
             >
                 {type === 'artist' ? (
                     <div className="flex items-center" style={{ gap: '1px' }}>
@@ -3317,16 +3332,17 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 
         return (
             <div
-            className={`flex-1 rounded-full flex items-center justify-center border animate-appear overflow-hidden relative ${animClass}`}
+            className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border animate-appear overflow-hidden relative ${animClass}`}
                 style={{
                     height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                    borderRadius: is3DMode ? '0.5rem' : undefined,
                     '--neon-color': neonColor,
                     backgroundColor: bgColor,
                     borderColor: borderColor,
                     boxShadow: `0 0 25px ${glowColor}, 0 0 50px ${glowColor2}`
                 }}
             >
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                 <div className={`flex items-center gap-2 text-white font-black tracking-widest text-xs ${isAnimating ? 'animate-blink' : ''}`}>
                     {isAnimating && <Icon size={20} strokeWidth={3} />}
                     <span>{isAnimating ? (isKill ? 'KILL!' : 'NUKE!') : text}</span>
@@ -3438,6 +3454,9 @@ const TimeCapsule = ({ currentTime, duration, onSeek, onSkipBack, onSkipForward,
 };
 
 const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bgStyle, borderClass, children, roundedClass = 'rounded-full', is3DMode = false }) => {
+    // En 3D, les overlays deviennent rectangulaires avec coins 0.5rem
+    const effectiveRoundedClass = is3DMode ? '' : roundedClass;
+    const effectiveRoundedStyle = is3DMode ? { borderRadius: '0.5rem' } : {};
     const [phase, setPhase] = useState('fadein'); // fadein, flash, idle, validating, fadeout
     const [textOpacity, setTextOpacity] = useState(0);
     const [glowIntensity, setGlowIntensity] = useState(0);
@@ -3638,10 +3657,10 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
     
     return (
         <div
-        className={`absolute inset-0 z-10 ${roundedClass} flex items-center justify-center border ${bgClass} ${borderClass} overflow-hidden`}
-            style={containerStyle}
+        className={`absolute inset-0 z-10 ${effectiveRoundedClass} flex items-center justify-center border ${bgClass} ${borderClass} overflow-hidden`}
+            style={{ ...containerStyle, ...effectiveRoundedStyle }}
         >
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={roundedClass} />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={effectiveRoundedClass} style={effectiveRoundedStyle} />
             <div
                 className="flex items-center gap-2 text-white font-black tracking-widest"
                 style={{
@@ -7977,10 +7996,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
                         }}
-                          className="flex-1 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden"
-                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent' }}
+                          className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden`}
+                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent', borderRadius: is3DMode ? '0.5rem' : undefined }}
                       >
-                          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                           <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                       </button>
                   
@@ -8004,9 +8023,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className={`relative z-0 w-full h-full rounded-full flex items-center justify-center text-gray-600 overflow-hidden ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
+                              className={`relative z-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center text-gray-600 overflow-hidden ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
+                                  borderRadius: is3DMode ? '0.5rem' : undefined,
                                   // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
                                   background: smoothedScanProgress !== null
                                       ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
@@ -8016,19 +8036,20 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
                               {!scanCompleteFlash && (
                                   <div
-                                      className="absolute rounded-full"
+                                      className={`absolute ${is3DMode ? '' : 'rounded-full'}`}
                                       style={{
                                           top: '1px',
                                           left: '1px',
                                           right: '1px',
                                           bottom: '1px',
+                                          borderRadius: is3DMode ? 'calc(0.5rem - 1px)' : undefined,
                                           background: '#f3f4f6',
                                           transition: 'background 0.15s ease-out'
                                       }}
                                   />
                               )}
                               {/* Masque cylindre 3D - APRES le fond pour être visible */}
-                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full z-10" />
+                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={`${is3DMode ? '' : 'rounded-full'} z-10`} />
                               {/* Crossfade FolderPlus ↔ Radar pendant le scan (cycle 4s) */}
                               <div className="relative z-10" style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }}>
                                   <FolderPlus
@@ -8058,10 +8079,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                           <div
-                              className={`absolute inset-0 rounded-full ${builderBtnIgniting ? 'animate-neon-ignite-pink' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
+                              className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} ${builderBtnIgniting ? 'animate-neon-ignite-pink' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
                               style={{
                                   background: 'white',
                                   zIndex: 0,
+                                  borderRadius: is3DMode ? '0.5rem' : undefined,
                                   transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
                                   transition: 'transform 0.1s ease-out'
                               }}
@@ -8082,13 +8104,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   }
                               }}
                               onTouchCancel={() => { if (is3DMode) setBuilderBtnPressed(false); }}
-                              className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                              className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
                               style={{
+                                  borderRadius: is3DMode ? '0.5rem' : undefined,
                                   transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
                                   transition: 'transform 0.1s ease-out'
                               }}
                           >
-                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
                           </button>
                       </div>
@@ -8110,8 +8133,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     key={`nuke-${importButtonsReady}`}
                                     type="nuke"
                                     ready={importButtonsReady}
-                                    className="absolute inset-0 rounded-full"
-                                    style={{ zIndex: 0 }}
+                                    className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'}`}
+                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    is3DMode={is3DMode}
                                 />
                                 <button
                                     onClick={() => {
@@ -8126,9 +8150,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             handleNukeAll();
                                         }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                                    className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                                     <Radiation style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`
@@ -8142,8 +8167,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     key={`dropbox-${importButtonsReady}`}
                                     type="dropbox"
                                     ready={importButtonsReady}
-                                    className="absolute inset-0 rounded-full"
-                                    style={{ zIndex: 0 }}
+                                    className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'}`}
+                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    is3DMode={is3DMode}
                                 />
                                 <button
                                     ref={dropboxButtonRef}
@@ -8151,9 +8177,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setImportBtnIgniting('dropbox');
                                         handleDropboxAuth();
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                                    className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                                     <DropboxLogoVector
                                         size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.IMPORT_ICON_SIZE_PERCENT / 100 * 16}
                                         fill="#ffffff"
@@ -8167,8 +8194,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     key={`folder-${importButtonsReady}`}
                                     type="folder"
                                     ready={importButtonsReady}
-                                    className="absolute inset-0 rounded-full"
-                                    style={{ zIndex: 0 }}
+                                    className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'}`}
+                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    is3DMode={is3DMode}
                                 />
                                 <button
                                     ref={folderButtonCallbackRef}
@@ -8180,9 +8208,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setImportBtnIgniting('folder');
                                         folderInputRef.current?.click();
                                     }}
-                                    className="relative z-10 w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                                    className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                                     <FolderOpen style={{
                                         width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
                                         height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.IMPORT_ICON_SIZE_PERCENT} / 100)`,
@@ -8200,9 +8229,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                           style={{ zIndex: 50 }}
                       >
                           <div
-                              className="w-full rounded-full flex items-center justify-center gap-2"
+                              className={`w-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2`}
                               style={{
                                   height: CONFIG.HEADER_BUTTONS_HEIGHT,
+                                  borderRadius: is3DMode ? '0.5rem' : undefined,
                                   background: '#0061FE',
                                   boxShadow: '0 0 15px rgba(0, 97, 254, 0.5)'
                               }}
@@ -8222,14 +8252,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       return (
                           <div className="absolute inset-0 flex items-center z-50">
                               <div
-                                  className="w-full rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
+                                  className={`w-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border-none shadow-lg relative overflow-hidden`}
                                   style={{
                                       height: CONFIG.HEADER_BUTTONS_HEIGHT,
+                                      borderRadius: is3DMode ? '0.5rem' : undefined,
                                       background: gradientBg,
                                       boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
                                   }}
                               >
-                                  <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                                  <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
                                   {showTitles && (
                                       <div
                                           className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
@@ -8879,13 +8910,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 const glowColor = isKillMode ? '#ec4899' : CONFIG.IMPORT_NUKE_COLOR;
                                 return (
                                     <div
-                                        className="absolute inset-0 rounded-full flex items-center justify-center border-none shadow-lg relative overflow-hidden"
+                                        className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center border-none shadow-lg relative overflow-hidden`}
                                         style={{
+                                            borderRadius: is3DMode ? '0.5rem' : undefined,
                                             background: bgColor,
                                             boxShadow: `0 0 25px ${glowColor}66, 0 0 50px ${glowColor}33`
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
                                         <div
                                             className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase z-10"
                                             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
@@ -9168,10 +9200,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setPlayerSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
                         }}
-                        className="rounded-full flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden"
-                        style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}
+                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm transition-colors border border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
+                        style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}
                     >
-                        <SphereMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
+                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
                         <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
                     </button>
                     

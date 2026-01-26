@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Flame, Layers, Check, AlertTriangle, Music, CheckCircle2, ChevronLeft, ChevronRight, Pointer, Copy } from 'lucide-react';
 import { FlameWhiteVector } from './Assets.jsx';
-import { UNIFIED_CONFIG, CylinderMask, SphereMask } from './Config.jsx';
+import { UNIFIED_CONFIG, CylinderMask } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    SMARTIMPORT - PARAMÈTRES TWEAKABLES                    ║
@@ -1412,24 +1412,25 @@ const SmartImport = ({
                         {folderCount === 1 ? (
                             /* Cas 1 dossier : 2 boutons - X cercle + Vibe flex */
                             <div className="flex gap-2 items-center">
-                                {/* Bouton Cancel (X) - cercle */}
-                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                {/* Bouton Cancel (X) - cercle → carré en 3D */}
+                                <div className={`relative overflow-visible ${is3DMode ? '' : 'rounded-full'} flex-shrink-0`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {btnIgniting === 'cancel' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-red"
-                                            style={{ background: '#ef4444', zIndex: 0 }}
+                                            className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} smartimport-ignite-red`}
+                                            style={{ background: '#ef4444', zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center overflow-hidden"
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`}
                                         style={{
                                             background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
+                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af',
+                                            borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                                         <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
@@ -1463,24 +1464,25 @@ const SmartImport = ({
                         ) : (
                             /* Cas plusieurs dossiers : 3 boutons - X cercle + Fusion/Vibes flex égaux */
                             <div className="flex gap-2 items-center">
-                                {/* Bouton Cancel (X) - cercle */}
-                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
+                                {/* Bouton Cancel (X) - cercle → carré en 3D */}
+                                <div className={`relative overflow-visible ${is3DMode ? '' : 'rounded-full'} flex-shrink-0`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
                                     {btnIgniting === 'cancel' && (
                                         <div
-                                            className="absolute inset-0 rounded-full smartimport-ignite-red"
-                                            style={{ background: '#ef4444', zIndex: 0 }}
+                                            className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} smartimport-ignite-red`}
+                                            style={{ background: '#ef4444', zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
                                         />
                                     )}
                                     <button
                                         onClick={() => handleButtonClick('cancel')}
                                         disabled={btnIgniting !== null}
-                                        className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center overflow-hidden"
+                                        className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`}
                                         style={{
                                             background: btnIgniting === 'cancel' ? 'transparent' : 'rgba(0,0,0,0.05)',
-                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af'
+                                            color: btnIgniting === 'cancel' ? 'white' : '#9ca3af',
+                                            borderRadius: is3DMode ? '0.5rem' : undefined
                                         }}
                                     >
-                                        <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                                         <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>

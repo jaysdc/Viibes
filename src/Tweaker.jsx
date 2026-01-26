@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Wrench, Trash2, Disc3, Undo2, CheckCircle2, Ghost, ChevronLeft, ChevronRight, BetweenHorizontalEnd, Pointer, Square, Box, Tag, EyeOff } from 'lucide-react';
 import { isSongAvailable } from './utils.js';
-import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask, SphereMask } from './Config.jsx';
+import { UNIFIED_CONFIG, SafeAreaSpacer, FOOTER_CONTENT_HEIGHT_CSS, CylinderMask } from './Config.jsx';
 
 // --- CONFIG ---
 export const TWEAKER_CONFIG = {
@@ -224,15 +224,20 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
         transition: `opacity ${getTransitionDuration()} ease-out, ${glowStyle.transition}`
     };
     
+    // En 3D, les overlays deviennent rectangulaires avec coins 0.5rem
+    const effectiveRoundedClass = is3DMode ? '' : 'rounded-full';
+    const effectiveRoundedStyle = is3DMode ? { borderRadius: '0.5rem' } : {};
+
     return (
         <div
-            className={`absolute inset-0 z-10 rounded-full flex items-center justify-center border ${bgClass || ''} ${borderClass}`}
+            className={`absolute inset-0 z-10 ${effectiveRoundedClass} flex items-center justify-center border ${bgClass || ''} ${borderClass}`}
             style={{
                 ...containerStyle,
+                ...effectiveRoundedStyle,
                 background: bgGradient || undefined
             }}
         >
-            <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={0.6} className={effectiveRoundedClass} style={effectiveRoundedStyle} />
             <div
                 className="flex items-center gap-2 text-white font-black tracking-widest uppercase text-lg"
                 style={{
@@ -708,14 +713,15 @@ const Tweaker = ({
                                 const gradientName = getGradientName ? getGradientName(vibeSwipePreview.previewIndex) : `Gradient ${vibeSwipePreview.previewIndex}`;
                                 return (
                                     <div
-                                        className="absolute inset-0 rounded-full flex items-center justify-center z-50"
+                                        className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center z-50`}
                                         style={{
+                                            borderRadius: is3DMode ? '0.5rem' : undefined,
                                             background: gradientStyle,
                                             boxShadow: `0 0 25px ${gradientColors[Math.floor(gradientColors.length / 2)]}66, 0 0 50px ${gradientColors[Math.floor(gradientColors.length / 2)]}33`
                                         }}
                                     >
                                         {/* Masque cylindrique en mode 3D */}
-                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
                                         {/* Afficher le nom du dégradé et chevrons uniquement si showTitles est true */}
                                         {showTitles && (
                                             <div
@@ -772,9 +778,10 @@ const Tweaker = ({
                 {/* Bouton UNDO - Jaune/Orange */}
                 <button
                     onClick={handleUndo}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
+                    className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
                         background: undoFeedback ? 'linear-gradient(135deg, #facc15 0%, #f97316 50%, #dc2626 100%)' : '#F3F4F6',
                         color: undoFeedback ? 'white' : '#9CA3AF',
                         boxShadow: undoFeedback
@@ -782,7 +789,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
                     <Undo2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Undo</span>}
                 </button>
@@ -790,9 +797,10 @@ const Tweaker = ({
                 {/* Bouton REORDER - Cyan/Magenta */}
                 <button
                     onClick={() => toggleMode('reorder')}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
+                    className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
                         background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
                         boxShadow: activeMode === 'reorder'
@@ -800,7 +808,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
                     <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
                 </button>
@@ -809,9 +817,10 @@ const Tweaker = ({
                 <button
                     ref={deleteButtonRef}
                     onClick={() => toggleMode('delete')}
-                    className="flex-1 rounded-full flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative"
+                    className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
                         background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : '#F3F4F6',
                         color: activeMode === 'delete' ? 'white' : '#9CA3AF',
                         boxShadow: activeMode === 'delete'
@@ -819,18 +828,19 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className="rounded-full" />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} className={is3DMode ? '' : 'rounded-full'} />
                     <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
                 </button>
 
-                {/* Bouton 2D/3D - Rond - Vert néon quand ON */}
+                {/* Bouton 2D/3D - Rond → Carré en 3D - Vert néon quand ON */}
                 <button
                     onClick={() => setIs3DMode(!is3DMode)}
-                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
+                    className={`${is3DMode ? '' : 'rounded-full'} flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative`}
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
                         background: is3DMode ? '#00FF88' : '#F3F4F6',
                         color: is3DMode ? 'white' : '#9CA3AF',
                         boxShadow: is3DMode
@@ -838,20 +848,21 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                     {is3DMode
                         ? <Box style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <Square style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                     }
                 </button>
 
-                {/* Bouton Show/Hide Titles - Rond - Vert néon quand ON */}
+                {/* Bouton Show/Hide Titles - Rond → Carré en 3D - Vert néon quand ON */}
                 <button
                     onClick={() => setShowTitles(!showTitles)}
-                    className="rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative"
+                    className={`${is3DMode ? '' : 'rounded-full'} flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 relative`}
                     style={{
                         height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
                         width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
                         background: showTitles ? '#00FF88' : '#F3F4F6',
                         color: showTitles ? 'white' : '#9CA3AF',
                         boxShadow: showTitles
@@ -859,7 +870,7 @@ const Tweaker = ({
                             : 'inset 0 0 0 1px #E5E7EB'
                     }}
                 >
-                    <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                    <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                     {showTitles
                         ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />

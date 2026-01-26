@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Folder, Music, ChevronLeft, FolderDown, LogOut, Loader2 } from 'lucide-react';
 import { DropboxLogoVector } from './Assets.jsx';
-import { UNIFIED_CONFIG, CylinderMask, SphereMask } from './Config.jsx';
+import { UNIFIED_CONFIG, CylinderMask } from './Config.jsx';
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                    DROPBOX BROWSER - PARAMÈTRES                           ║
@@ -1012,11 +1012,11 @@ const DropboxBrowser = ({
                         {/* Boutons browse */}
                         <div className="relative" style={{ flexShrink: 0, paddingLeft: CONFIG.HORIZONTAL_PADDING, paddingRight: CONFIG.HORIZONTAL_PADDING, paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
                             <div className="flex items-center gap-2" style={{ opacity: scanPhase === 'processing' ? 0 : 1 }}>
-                                {/* Bouton Close (X) - cercle */}
-                                <div className="relative overflow-visible rounded-full flex-shrink-0" style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT }}>
-                                    {closingButton === 'close' && <div className="absolute inset-0 rounded-full dropbox-ignite-red" style={{ background: '#ef4444', zIndex: 0 }} />}
-                                    <button onClick={handleClose} disabled={!!closingButton || scanning} className="relative z-10 w-full h-full rounded-full font-bold text-sm flex items-center justify-center overflow-hidden" style={{ background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'close' ? 'white' : '#9ca3af' }}>
-                                        <SphereMask is3DMode={is3DMode} intensity={0.6} />
+                                {/* Bouton Close (X) - cercle → carré en 3D */}
+                                <div className={`relative overflow-visible ${is3DMode ? '' : 'rounded-full'} flex-shrink-0`} style={{ height: UNIFIED_CONFIG.CAPSULE_HEIGHT, width: UNIFIED_CONFIG.CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined }}>
+                                    {closingButton === 'close' && <div className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} dropbox-ignite-red`} style={{ background: '#ef4444', zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }} />}
+                                    <button onClick={handleClose} disabled={!!closingButton || scanning} className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} font-bold text-sm flex items-center justify-center overflow-hidden`} style={{ background: closingButton === 'close' ? 'transparent' : 'rgba(0,0,0,0.05)', color: closingButton === 'close' ? 'white' : '#9ca3af', borderRadius: is3DMode ? '0.5rem' : undefined }}>
+                                        <CylinderMask is3DMode={is3DMode} intensity={0.6} />
                                         <span className="relative z-10"><X size={18} /></span>
                                     </button>
                                 </div>
