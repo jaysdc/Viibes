@@ -190,12 +190,12 @@ export const CAPSULE_CYLINDER_SLICES = [
 // intensity: 0-1 (force de l'effet)
 // className: classes CSS additionnelles (ex: 'rounded-full' pour les capsules)
 // is3DMode: contrôle l'affichage du masque
-export const CylinderMask = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+export const CylinderMask = ({ intensity = 0.6, className = '', is3DMode = false, style = {} }) => {
     if (!is3DMode || intensity === 0) return null;
     return (
         <div
             className={`absolute inset-0 pointer-events-none z-0 overflow-hidden flex flex-col ${className}`}
-            style={{ transform: 'translateZ(0)' }}
+            style={{ transform: 'translateZ(0)', ...style }}
         >
             {CAPSULE_CYLINDER_SLICES.map((opacity, i) => (
                 <div
@@ -216,14 +216,14 @@ export const CylinderMask = ({ intensity = 0.6, className = '', is3DMode = false
 
 // Composant masque cylindre 3D INVERSÉ (concave) - miroir vertical
 // Crée un effet de creux au lieu d'une bosse
-export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode = false }) => {
+export const CylinderMaskInverted = ({ intensity = 0.6, className = '', is3DMode = false, style = {} }) => {
     if (!is3DMode || intensity === 0) return null;
     // Inverser les slices pour l'effet concave
     const invertedSlices = [...CAPSULE_CYLINDER_SLICES].reverse();
     return (
         <div
             className={`absolute inset-0 pointer-events-none z-0 overflow-hidden flex flex-col ${className}`}
-            style={{ transform: 'translateZ(0)' }}
+            style={{ transform: 'translateZ(0)', ...style }}
         >
             {invertedSlices.map((opacity, i) => (
                 <div
