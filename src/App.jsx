@@ -2882,17 +2882,14 @@ const ControlBar = ({
                     <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} />
                     <button
                         onClick={onTogglePlay}
-                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                        className={`${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-visible ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                         style={{
                           height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                           borderRadius: is3DMode ? '0.5rem' : undefined,
-                          background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
-                          border: isPlaying
-                              ? '1px solid rgba(236, 72, 153, 1)'
-                              : '1px solid rgb(229, 231, 235)',
+                          background: isPlaying ? 'rgba(236, 72, 153, 1)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                           WebkitTapHighlightColor: 'transparent',
-                          transition: 'background 0.3s, border 0.3s'
+                          transition: 'background 0.3s'
                       }}
                     >
                         <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} />
@@ -8003,8 +8000,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 setSearchOverlayAnim('none');
                             }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
                         }}
-                          className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden`}
-                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent', borderRadius: is3DMode ? '0.5rem' : undefined }}
+                          className={`flex-1 ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center justify-center text-gray-600 relative overflow-visible`}
+                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent', borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: UNIFIED_CONFIG.CAPSULE_BG_INACTIVE }}
                       >
                           <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={is3DMode ? '' : 'rounded-full'} />
                           <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
@@ -8030,17 +8027,17 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
-                              className={`relative z-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center text-gray-600 overflow-hidden ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
+                              className={`relative z-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center justify-center text-gray-600 overflow-visible ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
                                   borderRadius: is3DMode ? '0.5rem' : undefined,
                                   // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
                                   background: smoothedScanProgress !== null
                                       ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
-                                      : (scanCompleteFlash ? undefined : '#f3f4f6')
+                                      : (scanCompleteFlash ? undefined : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE)
                               }}
                           >
-                              {/* Fond intérieur gris pour que seule la bordure soit colorée */}
+                              {/* Fond intérieur pour que seule la bordure soit colorée */}
                               {!scanCompleteFlash && (
                                   <div
                                       className={`absolute ${is3DMode ? '' : 'rounded-full'}`}
@@ -8050,7 +8047,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                           right: '1px',
                                           bottom: '1px',
                                           borderRadius: is3DMode ? 'calc(0.5rem - 1px)' : undefined,
-                                          background: '#f3f4f6',
+                                          background: UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
                                           transition: 'background 0.15s ease-out'
                                       }}
                                   />
@@ -8111,7 +8108,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   }
                               }}
                               onTouchCancel={() => { if (is3DMode) setBuilderBtnPressed(false); }}
-                              className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
+                              className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center justify-center overflow-visible`}
                               style={{
                                   borderRadius: is3DMode ? '0.5rem' : undefined,
                                   transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
