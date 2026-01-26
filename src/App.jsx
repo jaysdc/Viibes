@@ -2414,7 +2414,7 @@ const cardContent = is3DMode ? (
               }}
           >
               {/* Masque cylindre 3D sur le fond */}
-              <CylinderMask is3DMode={true} intensity={shouldPress ? CONFIG.CAPSULE_CYLINDER_INTENSITY * 1.3 : CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
+              <CylinderMask is3DMode={true} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-xl" />
               {/* Overlay de transparence progressif */}
               {unavailableCount > 0 && (() => {
                   const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -2562,8 +2562,6 @@ const cardContent = is3DMode ? (
       >
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
-          {/* Masque cylindre 3D */}
-          <CylinderMask is3DMode={false} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-xl" />
           {/* Overlay de transparence progressif (proportionnel aux morceaux indisponibles) */}
           {unavailableCount > 0 && (() => {
               const ratio = (availableCount / (availableCount + unavailableCount)) * 100;
@@ -3662,7 +3660,7 @@ const FeedbackOverlay = ({ feedback, onAnimationComplete, neonColor, bgClass, bg
         className={`absolute inset-0 z-10 ${effectiveRoundedClass} flex items-center justify-center border ${bgClass} ${borderClass} overflow-hidden`}
             style={{ ...containerStyle, ...effectiveRoundedStyle }}
         >
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className={effectiveRoundedClass} style={effectiveRoundedStyle} />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={effectiveRoundedClass} style={effectiveRoundedStyle} />
             <div
                 className="flex items-center gap-2 text-white font-black tracking-widest"
                 style={{
@@ -3839,7 +3837,7 @@ const ControlCapsule = ({ song, isPlaying, togglePlay, playPrev, playNext, queue
                 style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
             >
                 {/* Masque cylindre 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full z-10" />
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full z-10" />
                 <button onClick={(e) => { e.stopPropagation(); playPrev(); }} className="w-12 h-full flex items-center justify-center text-gray-400 border-r border-gray-200" style={{ WebkitTapHighlightColor: 'transparent' }}><SkipBack size={20} fill="currentColor" /></button>
                 
                 {/* Zone centrale - titre centré par rapport à TOUTE la capsule via absolute */}
@@ -4001,7 +3999,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         overlayClass = "bg-cyan-500 rounded-full shadow-inner overflow-hidden";
         OverlayContent = (
         <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
             <div
                 className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
             >
@@ -4017,7 +4015,7 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         overlayClass = "bg-orange-500 rounded-full shadow-inner overflow-hidden";
         OverlayContent = (
         <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
             <div
                 className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
             >
@@ -4459,7 +4457,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 }}
               >
                 {/* Masque cylindre 3D */}
-                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full z-10" />
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full z-10" />
               </div>
 
               {/* PULSE - Point indicateur (EN-DESSOUS de la capsule) */}
@@ -8679,7 +8677,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     pointerEvents: 'none',
                                 }}
                             >
-                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY} className="rounded-full" />
+                                <CylinderMaskInverted is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="rounded-full" />
                             </div>
                         );
                     })()}

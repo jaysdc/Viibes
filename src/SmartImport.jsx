@@ -1258,7 +1258,7 @@ const SmartImport = ({
                                         fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                     }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
+                                    <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                     <span className="relative z-10">+{selectedNewCount}</span>
                                 </div>
                                 {/* Badge vibes existantes (✓X) vert */}
@@ -1276,7 +1276,7 @@ const SmartImport = ({
                                             fontSize: SMARTIMPORT_CONFIG.BADGE_FONT_SIZE
                                         }}
                                     >
-                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
+                                        <CylinderMask is3DMode={is3DMode} intensity={UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                         <Copy size={12} strokeWidth={3} className="relative z-10" />
                                         <span className="relative z-10">{selectedExistingCount}</span>
                                     </div>
