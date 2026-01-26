@@ -8384,7 +8384,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   : { background: CONFIG.IMPORT_NUKE_COLOR };
                               const neonColorRgb = isKillAction ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB;
                               return (
-                                  <div className="absolute inset-0">
+                                  <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
                                       <FeedbackOverlay
                                           feedback={confirmFeedback}
                                           onAnimationComplete={onConfirmAnimationComplete}
