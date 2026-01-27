@@ -4429,14 +4429,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         const tubeRect = scrubTubeRef.current?.getBoundingClientRect();
         if (!tubeRect) return;
 
-        // La bague a une épaisseur, son centre doit correspondre au doigt
-        // selectedRingHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2
-        const ringHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
-        const usableHeight = tubeRect.height - ringHeight;
-        const fingerY = touch.clientY - tubeRect.top;
-
-        // Progress = position du doigt dans la zone utile (même calcul que le rendu)
-        const progress = fingerY / usableHeight;
+        // Progress = position du doigt dans le tube (0 à 1)
+        const progress = (touch.clientY - tubeRect.top) / tubeRect.height;
         const clampedProgress = Math.max(0, Math.min(1, progress));
 
         // Index de chanson
