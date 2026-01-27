@@ -2242,51 +2242,70 @@ const generateVibeColors = (seed) => {
 };
 
 const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false, swipeIndicator = null }) => {
-    // État pour l'animation d'enfoncement 3D
+    // État pour l'animation d'enfoncement 3D (même méthode que play/pause : requestAnimationFrame)
     const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
-    const [isPressing, setIsPressing] = useState(false); // true = enfoncement, false = retour
-    const [showCavity, setShowCavity] = useState(false); // reste true pendant press + release
-    const pressTimeoutRef = useRef(null);
-    const releaseTimeoutRef = useRef(null);
+    const pressPhaseRef = useRef(null); // 'press' | 'release' | null
+    const pressAnimRef = useRef(null);
 
     // Ref pour stocker le callback (évite les problèmes de closure)
     const onBlinkCompleteRef = useRef(onBlinkComplete);
     onBlinkCompleteRef.current = onBlinkComplete;
 
     useEffect(() => {
-        if (isBlinking) {
-            // Phase 1: Press (96ms)
-            setIsPressing(true);
-            if (is3DMode) {
-                setPressProgress(1);
-                setShowCavity(true);
-            }
-
-            // Phase 2: Release après 96ms (216ms de transition)
-            pressTimeoutRef.current = setTimeout(() => {
-                setIsPressing(false);
-                setPressProgress(0);
-
-                // Phase 3: Cavité reste visible pendant la transition CSS (216ms)
-                releaseTimeoutRef.current = setTimeout(() => {
-                    setShowCavity(false);
-                    if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
-                }, 216);
-            }, 96);
+        if (!isBlinking) return;
+        if (!is3DMode) {
+            // En 2D, juste le callback après délai
+            const timer = setTimeout(() => {
+                if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
+            }, 96 + 216);
+            return () => clearTimeout(timer);
         }
-        // Note: pas de else - le parent gère le reset de isBlinking après l'action
+
+        // Phase 1: Press (0 → 1 en 96ms)
+        pressPhaseRef.current = 'press';
+        const pressStart = performance.now();
+
+        const animatePress = (currentTime) => {
+            const elapsed = currentTime - pressStart;
+            const t = Math.min(1, elapsed / 96);
+            const eased = 1 - Math.pow(1 - t, 2);
+            setPressProgress(eased);
+
+            if (t < 1) {
+                pressAnimRef.current = requestAnimationFrame(animatePress);
+            } else {
+                // Phase 2: Release (1 → 0 en 216ms)
+                pressPhaseRef.current = 'release';
+                const releaseStart = performance.now();
+
+                const animateRelease = (currentTime) => {
+                    const elapsed = currentTime - releaseStart;
+                    const t = Math.min(1, elapsed / 216);
+                    const eased = 1 - Math.pow(1 - t, 2);
+                    setPressProgress(1 - eased);
+
+                    if (t < 1) {
+                        pressAnimRef.current = requestAnimationFrame(animateRelease);
+                    } else {
+                        setPressProgress(0);
+                        pressPhaseRef.current = null;
+                        if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
+                    }
+                };
+                pressAnimRef.current = requestAnimationFrame(animateRelease);
+            }
+        };
+        pressAnimRef.current = requestAnimationFrame(animatePress);
+
         return () => {
-            if (pressTimeoutRef.current) clearTimeout(pressTimeoutRef.current);
-            if (releaseTimeoutRef.current) clearTimeout(releaseTimeoutRef.current);
+            if (pressAnimRef.current) cancelAnimationFrame(pressAnimRef.current);
         };
     }, [isBlinking, is3DMode]);
 
-    // Durées différentes: press rapide (96ms), release lent (216ms) - +20%
-    const pressTransition = isPressing ? '0.096s ease-out' : '0.216s ease-out';
-
-    // Calculs pour l'effet d'enfoncement 3D
-    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
-    const pressTranslateY = pressProgress * 1; // 0 → 1px (descend de 1px)
+    // Proportions identiques au play/pause : scale 0.775, translateY proportionnel
+    const cardHeightPx = window.innerHeight * CONFIG.VIBECARD_HEIGHT_VH / 100;
+    const pressScale = 1 - (pressProgress * 0.225); // 1 → 0.775
+    const pressTranslateY = pressProgress * (cardHeightPx * 0.0375); // proportionnel au play/pause (1.5px/40px)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2444,14 +2463,12 @@ const cardContent = is3DMode ? (
       >
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
-          {/* Cavité 3D (visible pendant toute l'animation press+release) */}
-          {showCavity && (
+          {/* Cavité 3D (visible quand le bouton s'enfonce) */}
+          {pressProgress > 0 && (
               <div
                   className="absolute inset-0 rounded-xl pointer-events-none"
                   style={{
-                      // Bordure intérieure gris clair
                       border: '2px solid rgba(200,200,200,0.8)',
-                      // 4 murs en trapèze: haut (clair), bas (sombre), côtés (intermédiaires)
                       background: `
                           linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%),
                           linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%),
@@ -2460,7 +2477,6 @@ const cardContent = is3DMode ? (
                           rgba(90,90,90,1)
                       `,
                       opacity: pressProgress,
-                      transition: `opacity ${pressTransition}`
                   }}
               />
           )}
@@ -2472,7 +2488,6 @@ const cardContent = is3DMode ? (
                   isolation: 'isolate',
                   transformOrigin: 'center center',
                   transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
-                  transition: `transform ${pressTransition}`
               }}
           >
               {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
@@ -2481,10 +2496,7 @@ const cardContent = is3DMode ? (
               {pressProgress > 0 && (
                   <div
                       className="absolute inset-0 pointer-events-none rounded-xl"
-                      style={{
-                          backgroundColor: `rgba(0,0,0,${pressDarken})`,
-                          transition: `background-color ${pressTransition}`
-                      }}
+                      style={{ backgroundColor: `rgba(0,0,0,${pressDarken})` }}
                   />
               )}
               {/* Overlay de transparence progressif */}
@@ -2523,7 +2535,6 @@ const cardContent = is3DMode ? (
               style={{
                   transformOrigin: 'center center',
                   transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
-                  transition: `transform ${pressTransition}`
               }}
           >
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
@@ -2535,8 +2546,7 @@ const cardContent = is3DMode ? (
                       <span
                           className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
                           style={{
-                              color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)',
-                              transition: `color ${pressTransition}`
+                              color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)'
                           }}
                       >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
@@ -2582,8 +2592,7 @@ const cardContent = is3DMode ? (
                                       className="font-black leading-tight"
                                       style={{
                                           fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                                          color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white',
-                                          transition: `color ${pressTransition}`
+                                          color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white'
                                       }}
                                   />
                               )}
@@ -2593,8 +2602,7 @@ const cardContent = is3DMode ? (
                       <span
                           className="text-[10px] font-semibold flex items-center gap-1.5 flex-shrink-0"
                           style={{
-                              color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)',
-                              transition: `color ${pressTransition}`
+                              color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)'
                           }}
                       >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
@@ -2618,8 +2626,7 @@ const cardContent = is3DMode ? (
                   <div
                       className={`flex items-center justify-center ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}
                       style={{
-                          color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)'),
-                          transition: `color ${pressTransition}`
+                          color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)')
                       }}
                   >
                       <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
@@ -5472,7 +5479,7 @@ const handlePlayerTouchEnd = () => {
     }); // Toggle global pour afficher/masquer les titres des vibes
     const [is3DMode, setIs3DMode] = useState(() => {
         const saved = localStorage.getItem('vibes_3d_mode');
-        return saved !== null ? JSON.parse(saved) : false;
+        return saved !== null ? JSON.parse(saved) : true;
     }); // Toggle global pour activer/désactiver les masques d'opacité 3D
     const [vibeSwipePreview, setVibeSwipePreview] = useState(null); // { direction, progress, nextGradient }
     const [blinkingVibe, setBlinkingVibe] = useState(null); // Nom de la vibe en cours d'animation
