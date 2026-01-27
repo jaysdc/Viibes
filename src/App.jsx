@@ -2939,8 +2939,8 @@ const ControlBar = ({
         requestAnimationFrame(animate);
     }, [isPlaying, is3DMode]);
 
-    // Bouton 40px: enfoncé = 5px du haut, 2px du bas → hauteur 33px → scale 0.825, translateY 1.5px
-    const pressScale = 1 - (pressProgress * 0.175); // 1 → 0.825
+    // Bouton 40px: enfoncé = 7px du haut, 4px du bas → hauteur 29px → scale 0.725, translateY 1.5px
+    const pressScale = 1 - (pressProgress * 0.275); // 1 → 0.725
     const pressTranslateY = pressProgress * 1.5; // 0 → 1.5px
     const pressTransition = pressProgress > 0.5 ? '0.096s ease-out' : '0.216s ease-out';
 
@@ -3015,11 +3015,7 @@ const ControlBar = ({
                           }}
                         >
                             <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
-                            {isPlaying ? (
-                                <Disc3 size={20} className="text-white animate-spin-slow" />
-                            ) : (
-                                <Pause size={14} className="text-gray-400" />
-                            )}
+                            <Disc3 size={20} className={`${isPlaying ? 'text-white animate-spin-slow' : 'text-gray-400'}`} />
                         </button>
                     </div>
                 </>
