@@ -2244,63 +2244,44 @@ const generateVibeColors = (seed) => {
 const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, onClick, isExpired, colorIndex, onColorChange, onSwipeProgress, isBlinking, onBlinkComplete, onNameEdit, isEditingName, editedName, onEditedNameChange, onConfirmNameChange, onEditVibe, animationIndex = 0, animationKey = 0, animationDelay = 0, showTitles = true, is3DMode = false, swipeIndicator = null }) => {
     // État pour l'animation d'enfoncement 3D
     const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
-    const pressAnimRef = useRef(null);
+    const [isPressing, setIsPressing] = useState(false); // true = enfoncement, false = retour
+    const pressTimeoutRef = useRef(null);
+    const releaseTimeoutRef = useRef(null);
 
     // Ref pour stocker le callback (évite les problèmes de closure)
     const onBlinkCompleteRef = useRef(onBlinkComplete);
     onBlinkCompleteRef.current = onBlinkComplete;
 
     useEffect(() => {
-        if (!isBlinking || !is3DMode) {
-            if (isBlinking && !is3DMode) {
-                // En 2D, pas d'animation 3D, juste le callback après délai
-                const timer = setTimeout(() => {
+        if (isBlinking) {
+            // Phase 1: Press (96ms)
+            setIsPressing(true);
+            if (is3DMode) setPressProgress(1);
+
+            // Phase 2: Release après 96ms (216ms de transition)
+            pressTimeoutRef.current = setTimeout(() => {
+                setIsPressing(false);
+                setPressProgress(0);
+
+                // Phase 3: Action après release (216ms)
+                releaseTimeoutRef.current = setTimeout(() => {
                     if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
-                }, 96 + 216);
-                return () => clearTimeout(timer);
-            }
-            return;
+                }, 216);
+            }, 96);
         }
-
-        // Animation aller-retour complète via requestAnimationFrame
-        const pressDuration = 96;
-        const releaseDuration = 216;
-        const startTime = performance.now();
-
-        const animate = (currentTime) => {
-            const elapsed = currentTime - startTime;
-
-            if (elapsed < pressDuration) {
-                // Phase 1: Press (0 → 1)
-                const t = Math.min(1, elapsed / pressDuration);
-                const eased = 1 - Math.pow(1 - t, 2);
-                setPressProgress(eased);
-                pressAnimRef.current = requestAnimationFrame(animate);
-            } else {
-                // Phase 2: Release (1 → 0)
-                const releaseElapsed = elapsed - pressDuration;
-                const t = Math.min(1, releaseElapsed / releaseDuration);
-                const eased = 1 - Math.pow(1 - t, 2);
-                setPressProgress(1 - eased);
-
-                if (t < 1) {
-                    pressAnimRef.current = requestAnimationFrame(animate);
-                } else {
-                    setPressProgress(0);
-                    if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
-                }
-            }
-        };
-
-        pressAnimRef.current = requestAnimationFrame(animate);
+        // Note: pas de else - le parent gère le reset de isBlinking après l'action
         return () => {
-            if (pressAnimRef.current) cancelAnimationFrame(pressAnimRef.current);
+            if (pressTimeoutRef.current) clearTimeout(pressTimeoutRef.current);
+            if (releaseTimeoutRef.current) clearTimeout(releaseTimeoutRef.current);
         };
     }, [isBlinking, is3DMode]);
 
-    // Calculs pour l'effet d'enfoncement 3D — proportionnel au play/pause (40px → scale 0.775, translateY 1.5px)
-    const pressScale = 1 - (pressProgress * 0.225); // 1 → 0.775
-    const pressTranslateYVh = pressProgress * (CONFIG.VIBECARD_HEIGHT_VH * 0.0375); // proportionnel: 0 → ~0.394vh
+    // Durées différentes: press rapide (96ms), release lent (216ms) - +20%
+    const pressTransition = isPressing ? '0.096s ease-out' : '0.216s ease-out';
+
+    // Calculs pour l'effet d'enfoncement 3D
+    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
+    const pressTranslateY = pressProgress * 5; // 0 → 5px (descend de 5px)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2473,7 +2454,8 @@ const cardContent = is3DMode ? (
                           linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%),
                           rgba(90,90,90,1)
                       `,
-                      opacity: pressProgress
+                      opacity: pressProgress,
+                      transition: `opacity ${pressTransition}`
                   }}
               />
           )}
@@ -2484,7 +2466,8 @@ const cardContent = is3DMode ? (
                   background: baseGradient,
                   isolation: 'isolate',
                   transformOrigin: 'center bottom',
-                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateYVh}vh)` : undefined,
+                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                  transition: `transform ${pressTransition}`
               }}
           >
               {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
@@ -2495,6 +2478,7 @@ const cardContent = is3DMode ? (
                       className="absolute inset-0 pointer-events-none rounded-xl"
                       style={{
                           backgroundColor: `rgba(0,0,0,${pressDarken})`,
+                          transition: `background-color ${pressTransition}`
                       }}
                   />
               )}
@@ -2533,7 +2517,8 @@ const cardContent = is3DMode ? (
               className="absolute inset-0 flex items-center px-4"
               style={{
                   transformOrigin: 'center bottom',
-                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateYVh}vh)` : undefined,
+                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                  transition: `transform ${pressTransition}`
               }}
           >
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
@@ -2545,7 +2530,8 @@ const cardContent = is3DMode ? (
                       <span
                           className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
                           style={{
-                              color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)'
+                              color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)',
+                              transition: `color ${pressTransition}`
                           }}
                       >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
@@ -2591,7 +2577,8 @@ const cardContent = is3DMode ? (
                                       className="font-black leading-tight"
                                       style={{
                                           fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                                          color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white'
+                                          color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white',
+                                          transition: `color ${pressTransition}`
                                       }}
                                   />
                               )}
@@ -2601,7 +2588,8 @@ const cardContent = is3DMode ? (
                       <span
                           className="text-[10px] font-semibold flex items-center gap-1.5 flex-shrink-0"
                           style={{
-                              color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)'
+                              color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)',
+                              transition: `color ${pressTransition}`
                           }}
                       >
                           <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
@@ -2625,7 +2613,8 @@ const cardContent = is3DMode ? (
                   <div
                       className={`flex items-center justify-center ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}
                       style={{
-                          color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)')
+                          color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)'),
+                          transition: `color ${pressTransition}`
                       }}
                   >
                       <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
@@ -2957,6 +2946,21 @@ const ControlBar = ({
     const [pressProgress, setPressProgress] = useState(is3DMode ? (isPlaying ? 0 : 1) : 0);
     const targetProgress = is3DMode ? (isPlaying ? 0 : 1) : 0;
 
+    // État visuel différé : en 3D, quand on passe de play → pause, on garde l'apparence "playing"
+    // jusqu'à ce que le bouton soit complètement enfoncé (pressProgress = 1)
+    const [visualPlaying, setVisualPlaying] = useState(isPlaying);
+    useEffect(() => {
+        if (!is3DMode) {
+            setVisualPlaying(isPlaying);
+            return;
+        }
+        if (isPlaying) {
+            // Play → on allume immédiatement (le bouton remonte en même temps)
+            setVisualPlaying(true);
+        }
+        // Pause → on attend la fin de l'enfoncement (géré dans l'animation ci-dessous)
+    }, [isPlaying, is3DMode]);
+
     // Animation ignite quand on relance la lecture
     const [playIgniteKey, setPlayIgniteKey] = useState(0);
     const prevPlayingRef = useRef(isPlaying);
@@ -2982,6 +2986,9 @@ const ControlBar = ({
 
             if (t < 1) {
                 requestAnimationFrame(animate);
+            } else if (targetProgress === 1) {
+                // Enfoncement terminé → on éteint visuellement le bouton
+                setVisualPlaying(false);
             }
         };
 
@@ -3050,32 +3057,32 @@ const ControlBar = ({
                         {/* Bouton play/pause avec enfoncement */}
                         <button
                             onClick={onTogglePlay}
-                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative ${is3DMode ? 'overflow-hidden' : 'overflow-visible'} ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative ${is3DMode ? 'overflow-hidden' : 'overflow-visible'} ${visualPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                             style={{
                               borderRadius: is3DMode ? '0.5rem' : undefined,
-                              background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
-                              border: isPlaying
+                              background: visualPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
+                              border: visualPlaying
                                   ? '1px solid rgba(236, 72, 153, 1)'
                                   : '1px solid rgb(229, 231, 235)',
                               WebkitTapHighlightColor: 'transparent',
-                              transition: 'background 0.3s, border 0.3s',
+                              transition: is3DMode ? 'none' : 'background 0.3s, border 0.3s',
                               transformOrigin: 'center center',
                               transform: is3DMode && pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                           }}
                         >
                             {/* Overlay ignite quand on relance la lecture */}
-                            {isPlaying && playIgniteKey > 0 && (
+                            {visualPlaying && playIgniteKey > 0 && (
                                 <div
                                     key={playIgniteKey}
                                     className={`absolute inset-0 animate-neon-ignite-pink ${is3DMode ? '' : 'rounded-full'}`}
                                     style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none', background: 'rgba(236, 72, 153, 1)' }}
                                 />
                             )}
-                            <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
-                            <Disc3 size={20} className={`animate-spin-slow ${isPlaying ? 'text-white' : 'text-gray-400'}`} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }} />
+                            <CylinderMask is3DMode={is3DMode} intensity={visualPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
+                            <Disc3 size={20} className={`animate-spin-slow ${visualPlaying ? 'text-white' : 'text-gray-400'}`} style={{ animationPlayState: visualPlaying ? 'running' : 'paused' }} />
                         </button>
                         {/* Élément glow 3D : par-dessus tout, projette la lumière, scale avec le bouton */}
-                        {is3DMode && isPlaying && playIgniteKey > 0 && (
+                        {is3DMode && visualPlaying && playIgniteKey > 0 && (
                             <div
                                 key={`glow-${playIgniteKey}`}
                                 className="absolute inset-0 pointer-events-none animate-neon-ignite-pink"
