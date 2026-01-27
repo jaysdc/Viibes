@@ -4416,6 +4416,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         return;
       }
 
+      // Attendre que l'animation morph soit finie
+      if (scrubMorphProgress < 1) return;
+
       const touch = e.touches[0];
       const containerRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
       const centerY = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
