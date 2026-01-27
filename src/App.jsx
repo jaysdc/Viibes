@@ -3084,9 +3084,9 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
   
   return (
     <div className={`${widthClass} h-full relative overflow-visible ${roundedClass}`} style={extremityStyle}>
-        {/* Masque cylindre pour boutons OFF - 3D uniquement */}
-        {!isActive && is3DMode && (
-            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} style={extremityStyle} />
+        {/* Masque cylindre pour boutons OFF (sans NeonGlow) */}
+        {!isActive && (
+            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} is3DMode={is3DMode} style={extremityStyle} />
         )}
         {isActive && (
             isRetriggering ? (
@@ -3116,9 +3116,9 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
             />
           )
         )}
-        {/* Masque cylindre pour boutons ON (par-dessus le NeonGlow) - 3D uniquement */}
-        {isActive && is3DMode && (
-            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={roundedClass} style={extremityStyle} />
+        {/* Masque cylindre pour boutons ON (par-dessus le NeonGlow) */}
+        {isActive && (
+            <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={roundedClass} is3DMode={is3DMode} style={extremityStyle} />
         )}
         <button
             onClick={handleClick}
@@ -3188,9 +3188,9 @@ const ToggleSortButton = ({
 
     return (
         <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`} style={extremityStyle}>
-            {/* Masque cylindre pour boutons OFF - 3D uniquement */}
-            {!isActive && is3DMode && (
-                <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} style={extremityStyle} />
+            {/* Masque cylindre pour boutons OFF (sans NeonGlow) */}
+            {!isActive && (
+                <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} is3DMode={is3DMode} style={extremityStyle} />
             )}
             {isActive && (
                 <NeonGlow
@@ -3210,9 +3210,9 @@ const ToggleSortButton = ({
                     }}
                 />
             )}
-            {/* Masque cylindre pour boutons ON (par-dessus le NeonGlow) - 3D uniquement */}
-            {isActive && is3DMode && (
-                <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={roundedClass} style={extremityStyle} />
+            {/* Masque cylindre pour boutons ON (par-dessus le NeonGlow) */}
+            {isActive && (
+                <CylinderMask intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={roundedClass} is3DMode={is3DMode} style={extremityStyle} />
             )}
             <button
                 onClick={handleClick}
