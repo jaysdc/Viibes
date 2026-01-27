@@ -2286,7 +2286,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     // Calculs pour l'effet d'enfoncement 3D
     const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
-    const pressTranslateY = pressProgress * 5; // 0 → 5px (descend de 5px)
+    const pressTranslateY = pressProgress * 1; // 0 → 1px (descend de 1px)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2470,7 +2470,7 @@ const cardContent = is3DMode ? (
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
-                  transformOrigin: 'center bottom',
+                  transformOrigin: 'center center',
                   transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                   transition: `transform ${pressTransition}`
               }}
@@ -2521,7 +2521,7 @@ const cardContent = is3DMode ? (
           <div
               className="absolute inset-0 flex items-center px-4"
               style={{
-                  transformOrigin: 'center bottom',
+                  transformOrigin: 'center center',
                   transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                   transition: `transform ${pressTransition}`
               }}
