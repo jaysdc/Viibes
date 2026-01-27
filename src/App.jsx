@@ -4421,21 +4421,18 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       if (scrubMorphProgress < 1) return;
 
       const touch = e.touches[0];
-      const containerRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
-      const centerY = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+      // Coordonnées viewport directes - indépendant de tout parent
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
 
       if (is3DMode) {
-        // MODE 3D: Recalculer les coordonnées du tube comme dans le rendu
-        // pour éviter les décalages liés aux transformations CSS ou safe areas
-        const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
-        const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
-        const barTop = finalCenterY - barHeight / 2;
-        
-        // Position du tube dans le viewport
-        const tubeTopViewport = containerRect.top + barTop;
+        // MODE 3D: Tube vertical centré
+        const barHeight = screenHeight * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
+        const centerY = screenHeight * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+        const barTop = centerY - barHeight / 2;
         
         // Progress = position du doigt dans le tube (0 à 1)
-        const progress = (touch.clientY - tubeTopViewport) / barHeight;
+        const progress = (touch.clientY - barTop) / barHeight;
         const clampedProgress = Math.max(0, Math.min(1, progress));
 
         // Index de chanson
@@ -4443,8 +4440,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         setScrubIndex(newIndex);
       } else {
         // MODE 2D: Navigation sur arc de cercle
-        const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-        const centerX = containerRect.left + containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+        const arcRadius = (screenHeight * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+        const centerX = screenWidth * CONFIG.BEACON_SCRUB_ARC_X / 100;
+        const centerY = screenHeight * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
         // Calculer l'angle du doigt par rapport au centre de l'arc
         const dx = touch.clientX - centerX;
@@ -4595,9 +4593,10 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         })()}
         
         {/* OVERLAY SCRUBBING - avec animation morph */}
-        {isScrubbing && effectivePortalRef.current && ReactDOM.createPortal((() => {
-          const portalRect = effectivePortalRef.current?.getBoundingClientRect() || { left: 0, top: 0, width: 300, height: 500 };
-          const containerRect = portalRect;
+        {isScrubbing && ReactDOM.createPortal((() => {
+          // Coordonnées viewport directes - indépendant de tout parent
+          const screenWidth = window.innerWidth;
+          const screenHeight = window.innerHeight;
           const totalSongs = queue.length;
 
           // Couleurs depuis CONFIG
@@ -4616,12 +4615,12 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             // ══════════════════════════════════════════════════════════════
             // MODE 3D: Barre verticale
             // ══════════════════════════════════════════════════════════════
-            const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
+            const finalBarHeight = screenHeight * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
             const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS_3D;
-            const finalCenterX = containerRect.width / 2;
-            const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+            const finalCenterX = screenWidth / 2;
+            const finalCenterY = screenHeight * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
-            // Position initiale (depuis le beacon)
+            // Position initiale (depuis le beacon) - coordonnées viewport directes
             const beaconEl = beaconNeonRef?.current;
             let initialBarHeight, initialBarWidth, initialCenterX, initialCenterY;
 
@@ -4629,13 +4628,13 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               const beaconRect = beaconEl.getBoundingClientRect();
               initialBarHeight = beaconRect.height;
               initialBarWidth = 2;
-              initialCenterX = beaconRect.right - containerRect.left;
-              initialCenterY = beaconRect.top + beaconRect.height / 2 - containerRect.top;
+              initialCenterX = beaconRect.right;
+              initialCenterY = beaconRect.top + beaconRect.height / 2;
             } else {
               initialBarHeight = finalBarHeight * 0.1;
               initialBarWidth = 2;
-              initialCenterX = containerRect.width * 0.85;
-              initialCenterY = containerRect.height * 0.5;
+              initialCenterX = screenWidth * 0.85;
+              initialCenterY = screenHeight * 0.5;
             }
 
             // Valeurs interpolées
@@ -4672,7 +4671,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
 
             return (
               <div
-                className="absolute inset-0 z-[100] flex items-center justify-center"
+                className="fixed inset-0 z-[9999] flex items-center justify-center"
                 style={{
                   backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
                 }}
@@ -4807,27 +4806,27 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             );
           } else {
             // ══════════════════════════════════════════════════════════════
-            // MODE 2D: Arc de cercle (code original)
+            // MODE 2D: Arc de cercle
             // ══════════════════════════════════════════════════════════════
-            const finalArcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
-            const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
-            const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+            const finalArcRadius = (screenHeight * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
+            const finalCenterX = screenWidth * CONFIG.BEACON_SCRUB_ARC_X / 100;
+            const finalCenterY = screenHeight * CONFIG.BEACON_SCRUB_ARC_Y / 100;
             const finalThickness = CONFIG.BEACON_SCRUB_ARC_THICKNESS;
 
-            // Position initiale (depuis le beacon) - demi-cercle droit
+            // Position initiale (depuis le beacon) - coordonnées viewport directes
             const beaconEl = beaconNeonRef?.current;
             let initialArcRadius, initialCenterX, initialCenterY, initialThickness;
 
             if (beaconEl) {
               const beaconRect = beaconEl.getBoundingClientRect();
               initialArcRadius = beaconRect.height / 2;
-              initialCenterX = beaconRect.right - initialArcRadius - containerRect.left;
-              initialCenterY = beaconRect.top + initialArcRadius - containerRect.top;
+              initialCenterX = beaconRect.right - initialArcRadius;
+              initialCenterY = beaconRect.top + initialArcRadius;
               initialThickness = 2;
             } else {
               initialArcRadius = finalArcRadius * 0.1;
-              initialCenterX = containerRect.width * 0.85;
-              initialCenterY = containerRect.height * 0.5;
+              initialCenterX = screenWidth * 0.85;
+              initialCenterY = screenHeight * 0.5;
               initialThickness = 2;
             }
 
@@ -4857,7 +4856,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
 
             return (
               <div
-                className="absolute inset-0 z-[100] flex items-center justify-center"
+                className="fixed inset-0 z-[9999] flex items-center justify-center"
                 style={{
                   backgroundColor: `rgba(0, 0, 0, ${CONFIG.BEACON_SCRUB_OVERLAY_OPACITY})`,
                 }}
@@ -4995,7 +4994,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               </div>
             );
           }
-        })(), effectivePortalRef.current)}
+        })(), document.body)}
         
         {/* Container scrollable avec mask CSS */}
         <div 
