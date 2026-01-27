@@ -2286,7 +2286,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     // Calculs pour l'effet d'enfoncement 3D
     const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
-    const pressTranslateY = pressProgress * 2; // 0 → 2px (descend de 5-3=2px, 3px d'espace en bas)
+    const pressTranslateY = pressProgress * -3; // 0 → -3px (monte de 3px pour laisser la cavité visible en bas)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
