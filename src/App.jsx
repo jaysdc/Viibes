@@ -2302,9 +2302,9 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         };
     }, [isBlinking, is3DMode]);
 
-    // Scale 0.92 depuis le centre, léger déplacement vers le bas
+    // Scale 0.92 depuis le centre, pas de décalage
     const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92
-    const pressTranslateY = pressProgress * 2; // 0 → 2px vers le bas
+    const pressTranslateY = 0; // plein centre
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2481,12 +2481,12 @@ const cardContent = is3DMode ? (
           )}
           {/* Fond dégradé avec effet d'enfoncement 3D */}
           <div
-              className="absolute inset-0 shadow-lg overflow-hidden rounded-xl"
+              className="absolute inset-0 overflow-hidden rounded-xl"
               style={{
                   background: baseGradient,
                   isolation: 'isolate',
                   transformOrigin: 'center center',
-                  transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
+                  transform: `scale(${pressScale})`,
               }}
           >
               {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
@@ -2533,7 +2533,7 @@ const cardContent = is3DMode ? (
               className="absolute inset-0 flex items-center px-4"
               style={{
                   transformOrigin: 'center center',
-                  transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
+                  transform: `scale(${pressScale})`,
               }}
           >
               {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
