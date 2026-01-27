@@ -4744,7 +4744,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   className="absolute text-center text-white flex flex-col items-center"
                   style={{
                     left: centerX,
-                    bottom: containerRect.height - barTop + 20 + 32,
+                    bottom: screenHeight - barTop + 20 + 32,
                     transform: 'translateX(-50%)',
                     maxWidth: '80%',
                   }}
@@ -4967,7 +4967,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   className="absolute text-center text-white flex flex-col items-center"
                   style={{
                     left: '50%',
-                    bottom: containerRect.height - (centerY - arcRadius) + 20 + 32,
+                    bottom: screenHeight - (centerY - arcRadius) + 20 + 32,
                     transform: 'translateX(-50%)',
                     maxWidth: '80%',
                   }}
