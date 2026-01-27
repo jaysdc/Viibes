@@ -2245,6 +2245,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
     // État pour l'animation d'enfoncement 3D
     const [pressProgress, setPressProgress] = useState(0); // 0 = normal, 1 = enfoncé
     const [isPressing, setIsPressing] = useState(false); // true = enfoncement, false = retour
+    const [showCavity, setShowCavity] = useState(false); // true = cavité visible pendant toute l'animation
     const pressTimeoutRef = useRef(null);
     const releaseTimeoutRef = useRef(null);
 
@@ -2256,15 +2257,19 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         if (isBlinking) {
             // Phase 1: Press (96ms)
             setIsPressing(true);
-            if (is3DMode) setPressProgress(1);
+            if (is3DMode) {
+                setPressProgress(1);
+                setShowCavity(true);
+            }
 
             // Phase 2: Release après 96ms (216ms de transition)
             pressTimeoutRef.current = setTimeout(() => {
                 setIsPressing(false);
                 setPressProgress(0);
 
-                // Phase 3: Action après release (216ms)
+                // Phase 3: Action après release (216ms) — cavité disparaît quand la carte recouvre
                 releaseTimeoutRef.current = setTimeout(() => {
+                    setShowCavity(false);
                     if (onBlinkCompleteRef.current) onBlinkCompleteRef.current();
                 }, 216);
             }, 96);
@@ -2281,7 +2286,7 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
 
     // Calculs pour l'effet d'enfoncement 3D
     const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92 (scale ajusté)
-    const pressTranslateY = pressProgress * 5; // 0 → 5px (descend de 5px)
+    const pressTranslateY = pressProgress * 2; // 0 → 2px (descend de 5-3=2px, 3px d'espace en bas)
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2439,8 +2444,8 @@ const cardContent = is3DMode ? (
       >
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
-          {/* Cavité 3D (visible quand le bouton s'enfonce) - taille originale avec parois en trapèze */}
-          {pressProgress > 0 && (
+          {/* Cavité 3D (visible pendant toute l'animation press+release) */}
+          {showCavity && (
               <div
                   className="absolute inset-0 rounded-xl pointer-events-none"
                   style={{
@@ -2454,8 +2459,6 @@ const cardContent = is3DMode ? (
                           linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%),
                           rgba(90,90,90,1)
                       `,
-                      opacity: pressProgress,
-                      transition: `opacity ${pressTransition}`
                   }}
               />
           )}
