@@ -4420,19 +4420,19 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
 
       if (is3DMode) {
         // MODE 3D: Navigation linéaire verticale
+        // EXACTEMENT les mêmes calculs que le rendu
         const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100 * 1.33;
         const barTop = centerY - barHeight / 2;
-        const barBottom = centerY + barHeight / 2;
+        const selectedRingHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
+        const usableHeight = barHeight - selectedRingHeight;
 
-        // Zone utile pour les bagues (exclut les demi-hauteurs des bagues aux extrémités)
-        const ringHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
-        const usableTop = barTop + ringHeight / 2;
-        const usableBottom = barBottom - ringHeight / 2;
-        const usableHeight = usableBottom - usableTop;
+        // Position du doigt relative au haut du tube (en coordonnées écran)
+        const tubeTopScreen = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100 - barHeight / 2;
+        const fingerRelativeToTube = touch.clientY - tubeTopScreen;
 
-        // Calculer la position relative du doigt sur la zone utile
-        const relativeY = Math.max(usableTop, Math.min(usableBottom, touch.clientY));
-        const progress = (relativeY - usableTop) / usableHeight; // 0 à 1
+        // Clamper et calculer le progress (0 à 1)
+        const clampedY = Math.max(0, Math.min(usableHeight, fingerRelativeToTube));
+        const progress = clampedY / usableHeight;
 
         const newIndex = Math.round(progress * (queue.length - 1));
         setScrubIndex(Math.max(0, Math.min(queue.length - 1, newIndex)));
@@ -4700,6 +4700,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                       top: playingRingTop,
                       width: barWidth,
                       height: playingRingHeight,
+                      borderRadius: '0.35rem',
                       backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
                     }}
                   />
@@ -4712,6 +4713,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                       top: selectedRingTop,
                       width: barWidth,
                       height: selectedRingHeight,
+                      borderRadius: '0.35rem',
                       backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
                     }}
                   />
