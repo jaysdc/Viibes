@@ -4662,7 +4662,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                 onTouchMove={handleScrubTouchMove}
                 onTouchEnd={handleScrubTouchEnd}
               >
-                {/* Barre verticale avec CylinderMask */}
+                {/* Conteneur tube + bagues avec UN SEUL CylinderMask */}
                 <div
                   className="absolute overflow-hidden"
                   style={{
@@ -4671,11 +4671,40 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     width: barWidth,
                     height: barHeight,
                     borderRadius: '0.5rem',
-                    background: tubeColor,
                     boxShadow: `0 0 ${CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE}px ${tubeGlowColor}, 0 0 ${CONFIG.BEACON_SCRUB_TUBE_GLOW_SIZE * 2}px ${tubeGlowColor}`,
                   }}
                 >
-                  {/* CylinderMask rotaté -90° (anti-horaire) */}
+                  {/* Fond du tube */}
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: tubeColor }}
+                  />
+
+                  {/* Bague chanson en lecture (gris) */}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: 0,
+                      top: playingY - barTop - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 4,
+                      width: barWidth,
+                      height: CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                      backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
+                    }}
+                  />
+
+                  {/* Bague sélection (rose) */}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: 0,
+                      top: selectedY - barTop - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 4,
+                      width: barWidth,
+                      height: CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                      backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
+                    }}
+                  />
+
+                  {/* CylinderMask UNIQUE sur l'ensemble */}
                   <CylinderMask
                     is3DMode={true}
                     intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON}
@@ -4753,62 +4782,6 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   }}
                 >
                   {totalSongs}
-                </div>
-
-                {/* Bague chanson en lecture (gris) avec CylinderMask vertical */}
-                <div
-                  className="absolute overflow-hidden"
-                  style={{
-                    left: playingX - barWidth / 2,
-                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 4,
-                    width: barWidth,
-                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                    borderRadius: '0.5rem',
-                    backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
-                    boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
-                  }}
-                >
-                  <CylinderMask
-                    is3DMode={true}
-                    intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON}
-                    style={{
-                      transform: 'rotate(-90deg)',
-                      transformOrigin: 'center center',
-                      width: CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                      height: barWidth,
-                      position: 'absolute',
-                      left: (barWidth - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2) / 2,
-                      top: (CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2 - barWidth) / 2,
-                    }}
-                  />
-                </div>
-
-                {/* Bague sélection (rose) - plus épaisse, avec CylinderMask vertical */}
-                <div
-                  className="absolute overflow-hidden"
-                  style={{
-                    left: selectedX - barWidth / 2,
-                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 4,
-                    width: barWidth,
-                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                    borderRadius: '0.5rem',
-                    backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
-                    boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
-                  }}
-                >
-                  <CylinderMask
-                    is3DMode={true}
-                    intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON}
-                    style={{
-                      transform: 'rotate(-90deg)',
-                      transformOrigin: 'center center',
-                      width: CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                      height: barWidth,
-                      position: 'absolute',
-                      left: (barWidth - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2) / 2,
-                      top: (CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2 - barWidth) / 2,
-                    }}
-                  />
                 </div>
               </div>
             );
