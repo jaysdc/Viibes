@@ -1575,6 +1575,20 @@ const styles = `
   }
   .animate-neon-ignite-pink { animation: neon-ignite-pink 0.4s ease-out forwards; }
 
+  @keyframes neon-gresille-pink {
+    0% { opacity: 0; box-shadow: none; }
+    8% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.8); }
+    16% { opacity: 0.05; box-shadow: none; }
+    28% { opacity: 0.9; box-shadow: 0 0 10px rgba(236, 72, 153, 0.6); }
+    36% { opacity: 0; box-shadow: none; }
+    48% { opacity: 0.7; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); }
+    54% { opacity: 0.05; box-shadow: none; }
+    68% { opacity: 1; box-shadow: 0 0 14px rgba(236, 72, 153, 0.9); }
+    78% { opacity: 0.75; box-shadow: 0 0 10px rgba(236, 72, 153, 0.6); }
+    100% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.7); }
+  }
+  .animate-neon-gresille-pink { animation: neon-gresille-pink 0.6s ease-out forwards; }
+
   @keyframes neon-ignite-orange {
     0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(255, 107, 0, 0.2), 0 4px 8px rgba(255, 107, 0, 0.2); }
     15% { opacity: 1; box-shadow: 0 -7px 15px rgba(255, 107, 0, 0.8), 0 7px 15px rgba(255, 107, 0, 0.8); }
@@ -3024,11 +3038,11 @@ const ControlBar = ({
                               transform: is3DMode && pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                           }}
                         >
-                            {/* Overlay ignite quand on relance la lecture */}
+                            {/* Overlay ignite (2D) ou grésille (3D) quand on relance la lecture */}
                             {isPlaying && playIgniteKey > 0 && (
                                 <div
                                     key={playIgniteKey}
-                                    className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} animate-neon-ignite-pink`}
+                                    className={`absolute inset-0 ${is3DMode ? 'animate-neon-gresille-pink' : 'rounded-full animate-neon-ignite-pink'}`}
                                     style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none' }}
                                 />
                             )}
