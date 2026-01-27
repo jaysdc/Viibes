@@ -4607,7 +4607,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             // ══════════════════════════════════════════════════════════════
             const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100 * 1.33;
             const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS * 1.5;
-            const finalCenterX = containerRect.width * CONFIG.BEACON_SCRUB_ARC_X / 100;
+            const finalCenterX = containerRect.width / 2;
             const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
             // Position initiale (depuis le beacon)
@@ -4755,14 +4755,15 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                   {totalSongs}
                 </div>
 
-                {/* Point chanson en lecture (gris) avec CylinderMask vertical */}
+                {/* Bague chanson en lecture (gris) avec CylinderMask vertical */}
                 <div
-                  className="absolute rounded-full overflow-hidden"
+                  className="absolute overflow-hidden"
                   style={{
-                    left: playingX - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
-                    width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
-                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                    left: playingX - barWidth / 2,
+                    top: playingY - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 4,
+                    width: barWidth,
+                    height: CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                    borderRadius: '0.5rem',
                     backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
                     boxShadow: `0 0 10px ${CONFIG.BEACON_SCRUB_PLAYING_GLOW}`,
                   }}
@@ -4773,23 +4774,24 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     style={{
                       transform: 'rotate(-90deg)',
                       transformOrigin: 'center center',
-                      width: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
-                      height: CONFIG.BEACON_SCRUB_PLAYING_SIZE,
+                      width: CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                      height: barWidth,
                       position: 'absolute',
-                      left: 0,
-                      top: 0,
+                      left: (barWidth - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2) / 2,
+                      top: (CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2 - barWidth) / 2,
                     }}
                   />
                 </div>
 
-                {/* Point sélection (rose) - le plus gros, avec CylinderMask vertical */}
+                {/* Bague sélection (rose) - plus épaisse, avec CylinderMask vertical */}
                 <div
-                  className="absolute rounded-full overflow-hidden"
+                  className="absolute overflow-hidden"
                   style={{
-                    left: selectedX - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
-                    width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
-                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                    left: selectedX - barWidth / 2,
+                    top: selectedY - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 4,
+                    width: barWidth,
+                    height: CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                    borderRadius: '0.5rem',
                     backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
                     boxShadow: `0 0 12px ${CONFIG.BEACON_SCRUB_SELECTED_GLOW}`,
                   }}
@@ -4800,11 +4802,11 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     style={{
                       transform: 'rotate(-90deg)',
                       transformOrigin: 'center center',
-                      width: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
-                      height: CONFIG.BEACON_SCRUB_SELECTED_SIZE,
+                      width: CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                      height: barWidth,
                       position: 'absolute',
-                      left: 0,
-                      top: 0,
+                      left: (barWidth - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2) / 2,
+                      top: (CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2 - barWidth) / 2,
                     }}
                   />
                 </div>
