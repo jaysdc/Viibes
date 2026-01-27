@@ -2471,7 +2471,7 @@ const cardContent = is3DMode ? (
                   background: baseGradient,
                   isolation: 'isolate',
                   transformOrigin: 'center center',
-                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                  transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
                   transition: `transform ${pressTransition}`
               }}
           >
@@ -2522,7 +2522,7 @@ const cardContent = is3DMode ? (
               className="absolute inset-0 flex items-center px-4"
               style={{
                   transformOrigin: 'center center',
-                  transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                  transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
                   transition: `transform ${pressTransition}`
               }}
           >
