@@ -2914,11 +2914,12 @@ const ControlBar = ({
   // 3D mode
   is3DMode = false
 }) => {
-    // Animation toggle play/pause : 0 = sorti (playing), 1 = enfoncé (paused)
-    const [pressProgress, setPressProgress] = useState(isPlaying ? 0 : 1);
-    const targetProgress = isPlaying ? 0 : 1;
+    // Animation toggle play/pause : 0 = sorti (playing), 1 = enfoncé (paused) - 3D uniquement
+    const [pressProgress, setPressProgress] = useState(is3DMode ? (isPlaying ? 0 : 1) : 0);
+    const targetProgress = is3DMode ? (isPlaying ? 0 : 1) : 0;
 
     useEffect(() => {
+        if (!is3DMode) { setPressProgress(0); return; }
         const duration = pressProgress < targetProgress ? 96 : 216; // press rapide, release lent
         const startTime = performance.now();
         const startProgress = pressProgress;
@@ -2936,10 +2937,11 @@ const ControlBar = ({
         };
 
         requestAnimationFrame(animate);
-    }, [isPlaying]);
+    }, [isPlaying, is3DMode]);
 
-    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92
-    const pressTranslateY = pressProgress * 5; // 0 → 5px
+    // Bouton 40px: enfoncé = 5px du haut, 2px du bas → hauteur 33px → scale 0.825, translateY 1.5px
+    const pressScale = 1 - (pressProgress * 0.175); // 1 → 0.825
+    const pressTranslateY = pressProgress * 1.5; // 0 → 1.5px
     const pressTransition = pressProgress > 0.5 ? '0.096s ease-out' : '0.216s ease-out';
 
     return (
@@ -2977,8 +2979,8 @@ const ControlBar = ({
                             width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
                         }}
                     >
-                        {/* Cavité 3D (visible quand le bouton s'enfonce) */}
-                        {pressProgress > 0 && (
+                        {/* Cavité 3D (visible quand le bouton s'enfonce) - 3D uniquement */}
+                        {is3DMode && pressProgress > 0 && (
                             <div
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
@@ -3008,8 +3010,8 @@ const ControlBar = ({
                                   : '1px solid rgb(229, 231, 235)',
                               WebkitTapHighlightColor: 'transparent',
                               transition: 'background 0.3s, border 0.3s',
-                              transformOrigin: 'center bottom',
-                              transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                              transformOrigin: 'center center',
+                              transform: is3DMode && pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                           }}
                         >
                             <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
@@ -3082,6 +3084,10 @@ const SortButton = ({ icon: Icon, mode, currentMode, onClick, isFirst, isLast, i
   
   return (
     <div className={`${widthClass} h-full relative overflow-visible ${roundedClass}`} style={extremityStyle}>
+        {/* Masque cylindre pour boutons OFF (sans NeonGlow) */}
+        {!isActive && (
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} style={extremityStyle} />
+        )}
         {isActive && (
             isRetriggering ? (
               <div
@@ -3181,6 +3187,10 @@ const ToggleSortButton = ({
 
     return (
         <div className={`flex-1 h-full relative overflow-visible ${roundedClass}`} style={extremityStyle}>
+            {/* Masque cylindre pour boutons OFF (sans NeonGlow) */}
+            {!isActive && (
+                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={roundedClass} style={extremityStyle} />
+            )}
             {isActive && (
                 <NeonGlow
                     key={animKey}
