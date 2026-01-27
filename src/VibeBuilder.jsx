@@ -2141,7 +2141,6 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     className={`flex-1 h-full ${is3DMode ? '' : 'rounded-full'} ${is3DMode ? '' : 'border border-gray-100'} shadow-sm flex items-center overflow-visible relative`}
                                     style={{ backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, borderRadius: is3DMode ? '0.5rem' : undefined }}
                                 >
-                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
                                     <ToggleSortBtn type="title" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} isFirst={true} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
                                     <div className="w-px h-full bg-gray-200"></div>
                                     <ToggleSortBtn type="artist" sortMode={sortMode} setSortMode={setSortMode} sortDirection={sortDirection} setSortDirection={setSortDirection} hideGlow={isSearching || searchOverlayAnim !== 'none' || dragState || cardSwipeOffset !== 0} is3DMode={is3DMode} />
