@@ -2302,8 +2302,8 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         };
     }, [isBlinking, is3DMode]);
 
-    // Scale 0.92 depuis le centre, pas de décalage
-    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92
+    // Scale 0.5 depuis le centre (test)
+    const pressScale = 1 - (pressProgress * 0.5); // 1 → 0.5 (test)
     const pressTranslateY = 0; // plein centre
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
