@@ -4647,17 +4647,13 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             const selectedRingHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
             const playingRingHeight = CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2;
 
-            // Zone utile pour les bagues (restent à l'intérieur du tube)
-            const usableHeightSelected = barHeight - selectedRingHeight;
-            const usableHeightPlaying = barHeight - playingRingHeight;
-
-            // Position de la bague sélection (top relatif au tube)
+            // Position de la bague sélection (centrée sur progress * barHeight)
             const selectedProgress = totalSongs > 1 ? scrubIndex / (totalSongs - 1) : 0.5;
-            const selectedRingTop = selectedProgress * usableHeightSelected;
+            const selectedRingTop = selectedProgress * barHeight - selectedRingHeight / 2;
 
-            // Position de la bague lecture (top relatif au tube)
+            // Position de la bague lecture (centrée sur progress * barHeight)
             const playingProgress = totalSongs > 1 ? currentIndex / (totalSongs - 1) : 0.5;
-            const playingRingTop = playingProgress * usableHeightPlaying;
+            const playingRingTop = playingProgress * barHeight - playingRingHeight / 2;
 
             // Extrémités (pour les bulles 1/N)
             const startX = centerX;
