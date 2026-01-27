@@ -2302,10 +2302,9 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         };
     }, [isBlinking, is3DMode]);
 
-    // Proportions identiques au play/pause : scale 0.775, translateY proportionnel
-    const cardHeightPx = window.innerHeight * CONFIG.VIBECARD_HEIGHT_VH / 100;
-    const pressScale = 1 - (pressProgress * 0.225); // 1 → 0.775
-    const pressTranslateY = pressProgress * (cardHeightPx * 0.0375); // proportionnel au play/pause (1.5px/40px)
+    // Scale 0.92 depuis le centre, léger déplacement vers le bas
+    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92
+    const pressTranslateY = pressProgress * 2; // 0 → 2px vers le bas
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
