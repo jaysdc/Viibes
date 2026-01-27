@@ -4425,12 +4425,17 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       const centerY = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
       if (is3DMode) {
-        // MODE 3D: Position RÉELLE du tube via ref
-        const tubeRect = scrubTubeRef.current?.getBoundingClientRect();
-        if (!tubeRect) return;
-
+        // MODE 3D: Recalculer les coordonnées du tube comme dans le rendu
+        // pour éviter les décalages liés aux transformations CSS ou safe areas
+        const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
+        const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
+        const barTop = finalCenterY - barHeight / 2;
+        
+        // Position du tube dans le viewport
+        const tubeTopViewport = containerRect.top + barTop;
+        
         // Progress = position du doigt dans le tube (0 à 1)
-        const progress = (touch.clientY - tubeRect.top) / tubeRect.height;
+        const progress = (touch.clientY - tubeTopViewport) / barHeight;
         const clampedProgress = Math.max(0, Math.min(1, progress));
 
         // Index de chanson
