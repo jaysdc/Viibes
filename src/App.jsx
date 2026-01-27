@@ -4234,6 +4234,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
     const longPressTimerRef = useRef(null);
     const scrubStartYRef = useRef(0);
     const scrubCenterYRef = useRef(0);
+    const scrubTubeRef = useRef(null);
     
     // Scroll instantané vers initialIndex au montage (sans animation)
     const hasInitialized = useRef(false);
@@ -4424,12 +4425,12 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       const centerY = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
       if (is3DMode) {
-        // MODE 3D: Position du tube (fixe, déterminée par CONFIG)
-        const tubeHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
-        const tubeTop = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100 - tubeHeight / 2;
+        // MODE 3D: Position RÉELLE du tube via ref
+        const tubeRect = scrubTubeRef.current?.getBoundingClientRect();
+        if (!tubeRect) return;
 
         // Progress = position du doigt dans le tube (0 à 1)
-        const progress = (touch.clientY - tubeTop) / tubeHeight;
+        const progress = (touch.clientY - tubeRect.top) / tubeRect.height;
         const clampedProgress = Math.max(0, Math.min(1, progress));
 
         // Index de chanson
@@ -4675,6 +4676,7 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
               >
                 {/* Conteneur tube + bagues avec UN SEUL CylinderMask */}
                 <div
+                  ref={scrubTubeRef}
                   className="absolute overflow-hidden"
                   style={{
                     left: centerX - barWidth / 2,
