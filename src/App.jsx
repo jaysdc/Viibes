@@ -2949,20 +2949,11 @@ const ControlBar = ({
     const [pressProgress, setPressProgress] = useState(is3DMode ? (isPlaying ? 0 : 1) : 0);
     const targetProgress = is3DMode ? (isPlaying ? 0 : 1) : 0;
 
-    // État visuel différé : en 3D, quand on passe de play → pause, on garde l'apparence "playing"
-    // jusqu'à ce que le bouton soit complètement enfoncé (pressProgress = 1)
+    // État visuel : en 3D, le bouton s'éteint immédiatement au début de l'enfoncement
     const [visualPlaying, setVisualPlaying] = useState(isPlaying);
     useEffect(() => {
-        if (!is3DMode) {
-            setVisualPlaying(isPlaying);
-            return;
-        }
-        if (isPlaying) {
-            // Play → on allume immédiatement (le bouton remonte en même temps)
-            setVisualPlaying(true);
-        }
-        // Pause → on attend la fin de l'enfoncement (géré dans l'animation ci-dessous)
-    }, [isPlaying, is3DMode]);
+        setVisualPlaying(isPlaying);
+    }, [isPlaying]);
 
     // Animation ignite quand on relance la lecture
     const [playIgniteKey, setPlayIgniteKey] = useState(0);
@@ -2989,9 +2980,6 @@ const ControlBar = ({
 
             if (t < 1) {
                 requestAnimationFrame(animate);
-            } else if (targetProgress === 1) {
-                // Enfoncement terminé → on éteint visuellement le bouton
-                setVisualPlaying(false);
             }
         };
 
