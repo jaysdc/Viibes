@@ -3015,7 +3015,7 @@ const ControlBar = ({
                           }}
                         >
                             <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
-                            <Disc3 size={20} className={`${isPlaying ? 'text-white animate-spin-slow' : 'text-gray-400'}`} />
+                            <Disc3 size={20} className={`animate-spin-slow ${isPlaying ? 'text-white' : 'text-gray-400'}`} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }} />
                         </button>
                     </div>
                 </>
