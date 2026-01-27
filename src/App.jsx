@@ -2489,6 +2489,106 @@ const cardContent = is3DMode ? (
                   transform: `scale(${pressScale})`,
               }}
           >
+              {/* Contenu - sous le masque cylindre 3D */}
+              <div
+                  className="absolute inset-0 flex items-center px-4"
+              >
+                  {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
+                  {/* En mode no-tag: compteurs en bas du cylindre */}
+                  {!showTitles ? (
+                      // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets (50% opacité)
+                      <>
+                          <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
+                          <span
+                              className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
+                              style={{
+                                  color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)'
+                              }}
+                          >
+                              <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                              {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
+                          </span>
+                      </>
+                  ) : (
+                      // Mode 3D + avec tags: layout normal horizontal
+                      <div className="flex-1 flex items-center gap-2 relative z-10 min-w-0">
+                          {(vibeName || isEditingName) && (
+                              <div
+                                  className="overflow-hidden flex-shrink min-w-0"
+                                  style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem` }}
+                                  onClick={(e) => {
+                                      if (onNameEdit && !isEditingName) {
+                                          e.stopPropagation();
+                                          onNameEdit();
+                                      }
+                                  }}
+                              >
+                                  {isEditingName ? (
+                                      <input
+                                          type="text"
+                                          value={editedName}
+                                          onChange={(e) => onEditedNameChange(e.target.value)}
+                                          onBlur={onConfirmNameChange}
+                                          onKeyDown={(e) => {
+                                              if (e.key === 'Enter') onConfirmNameChange();
+                                              if (e.key === 'Escape') onConfirmNameChange();
+                                          }}
+                                          onClick={(e) => e.stopPropagation()}
+                                          autoFocus
+                                          className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
+                                          style={{
+                                              fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                                              lineHeight: 1.25,
+                                              width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`
+                                          }}
+                                      />
+                                  ) : (
+                                      <MarqueeText
+                                          text={vibeName || ''}
+                                          className="font-black leading-tight"
+                                          style={{
+                                              fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
+                                              color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white'
+                                          }}
+                                      />
+                                  )}
+                              </div>
+                          )}
+                          {/* Compteurs */}
+                          <span
+                              className="text-[10px] font-semibold flex items-center gap-1.5 flex-shrink-0"
+                              style={{
+                                  color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)'
+                              }}
+                          >
+                              <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
+                              {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
+                          </span>
+                      </div>
+                  )}
+
+                  {/* Icône - alignée à droite, centrée verticalement */}
+                  {/* En mode 3D: icône directement sans cercle */}
+                  <div
+                      className="flex-shrink-0 ml-2"
+                      onClick={(e) => {
+                          e.stopPropagation();
+                          if (onEditVibe) {
+                              onEditVibe();
+                          }
+                      }}
+                  >
+                      {/* Mode 3D: icône directement sans cercle (opacité selon showTitles) */}
+                      <div
+                          className={`flex items-center justify-center ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}
+                          style={{
+                              color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)')
+                          }}
+                      >
+                          <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                      </div>
+                  </div>
+              </div>
               {/* Masque cylindre 3D sur le fond - intensité diminue quand enfoncé */}
               <CylinderMask is3DMode={true} intensity={pressProgress > 0 ? pressIntensity : CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-xl" />
               {/* Overlay d'assombrissement quand enfoncé */}
@@ -2527,110 +2627,6 @@ const cardContent = is3DMode ? (
                       />
                   );
               })()}
-          </div>
-          {/* Contenu - avec effet d'enfoncement 3D */}
-          <div
-              className="absolute inset-0 flex items-center px-4"
-              style={{
-                  transformOrigin: 'center center',
-                  transform: `scale(${pressScale})`,
-              }}
-          >
-              {/* Titre et compteurs - alignés à gauche, centrés verticalement */}
-              {/* En mode no-tag: compteurs en bas du cylindre */}
-              {!showTitles ? (
-                  // Mode 3D + no tag: compteurs dans le coin bas-gauche absolu, discrets (50% opacité)
-                  <>
-                      <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
-                      <span
-                          className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
-                          style={{
-                              color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)'
-                          }}
-                      >
-                          <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                          {unavailableCount > 0 && <span className="flex items-center gap-0.5"><Ghost size={10} />{unavailableCount}</span>}
-                      </span>
-                  </>
-              ) : (
-                  // Mode 3D + avec tags: layout normal horizontal
-                  <div className="flex-1 flex items-center gap-2 relative z-10 min-w-0">
-                      {(vibeName || isEditingName) && (
-                          <div
-                              className="overflow-hidden flex-shrink min-w-0"
-                              style={{ maxWidth: `${CONFIG.VIBECARD_CAPSULE_NAME_MAX_WIDTH}rem` }}
-                              onClick={(e) => {
-                                  if (onNameEdit && !isEditingName) {
-                                      e.stopPropagation();
-                                      onNameEdit();
-                                  }
-                              }}
-                          >
-                              {isEditingName ? (
-                                  <input
-                                      type="text"
-                                      value={editedName}
-                                      onChange={(e) => onEditedNameChange(e.target.value)}
-                                      onBlur={onConfirmNameChange}
-                                      onKeyDown={(e) => {
-                                          if (e.key === 'Enter') onConfirmNameChange();
-                                          if (e.key === 'Escape') onConfirmNameChange();
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      autoFocus
-                                      className="font-black text-white bg-transparent border-none outline-none whitespace-nowrap"
-                                      style={{
-                                          fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                                          lineHeight: 1.25,
-                                          width: `${Math.max(editedName.length, 1) * 0.65 + 0.5}rem`
-                                      }}
-                                  />
-                              ) : (
-                                  <MarqueeText
-                                      text={vibeName || ''}
-                                      className="font-black leading-tight"
-                                      style={{
-                                          fontSize: `${CONFIG.VIBECARD_CAPSULE_FONT_SIZE}rem`,
-                                          color: pressProgress > 0 ? 'rgb(200,200,200)' : 'white'
-                                      }}
-                                  />
-                              )}
-                          </div>
-                      )}
-                      {/* Compteurs */}
-                      <span
-                          className="text-[10px] font-semibold flex items-center gap-1.5 flex-shrink-0"
-                          style={{
-                              color: pressProgress > 0 ? 'rgba(200,200,200,0.9)' : 'rgba(255,255,255,0.9)'
-                          }}
-                      >
-                          <span className="flex items-center gap-0.5"><Check size={10} strokeWidth={3} />{availableCount}</span>
-                          {unavailableCount > 0 && <span className="flex items-center gap-0.5 opacity-60"><Ghost size={10} />{unavailableCount}</span>}
-                      </span>
-                  </div>
-              )}
-
-              {/* Icône - alignée à droite, centrée verticalement */}
-              {/* En mode 3D: icône directement sans cercle */}
-              <div
-                  className="flex-shrink-0 ml-2"
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      if (onEditVibe) {
-                          onEditVibe();
-                      }
-                  }}
-              >
-                  {/* Mode 3D: icône directement sans cercle (opacité selon showTitles) */}
-                  <div
-                      className={`flex items-center justify-center ${onEditVibe ? 'cursor-pointer active:text-white/70' : ''}`}
-                      style={{
-                          color: pressProgress > 0 ? 'rgb(200,200,200)' : (showTitles ? 'white' : 'rgba(255,255,255,0.5)')
-                      }}
-                  >
-                      <IconComponent style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                  </div>
-              </div>
           </div>
       </div>
 ) : (
