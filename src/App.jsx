@@ -1575,19 +1575,33 @@ const styles = `
   }
   .animate-neon-ignite-pink { animation: neon-ignite-pink 0.4s ease-out forwards; }
 
-  @keyframes neon-gresille-pink {
-    0% { opacity: 0; box-shadow: none; }
-    8% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.8); }
-    16% { opacity: 0.05; box-shadow: none; }
-    28% { opacity: 0.9; box-shadow: 0 0 10px rgba(236, 72, 153, 0.6); }
-    36% { opacity: 0; box-shadow: none; }
-    48% { opacity: 0.7; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); }
-    54% { opacity: 0.05; box-shadow: none; }
-    68% { opacity: 1; box-shadow: 0 0 14px rgba(236, 72, 153, 0.9); }
-    78% { opacity: 0.75; box-shadow: 0 0 10px rgba(236, 72, 153, 0.6); }
-    100% { opacity: 1; box-shadow: 0 0 12px rgba(236, 72, 153, 0.7); }
+  @keyframes neon-gresille-bg-pink {
+    0% { background-color: #fafafa; }
+    8% { background-color: rgba(236, 72, 153, 1); }
+    16% { background-color: #fafafa; }
+    28% { background-color: rgba(236, 72, 153, 0.9); }
+    36% { background-color: #fafafa; }
+    48% { background-color: rgba(236, 72, 153, 0.7); }
+    54% { background-color: #fafafa; }
+    68% { background-color: rgba(236, 72, 153, 1); }
+    78% { background-color: rgba(236, 72, 153, 0.85); }
+    100% { background-color: rgba(236, 72, 153, 1); }
   }
-  .animate-neon-gresille-pink { animation: neon-gresille-pink 0.6s ease-out forwards; }
+  .animate-neon-gresille-bg-pink { animation: neon-gresille-bg-pink 0.6s ease-out forwards; }
+
+  @keyframes neon-gresille-glow-pink {
+    0% { box-shadow: none; }
+    8% { box-shadow: 0 0 12px rgba(236, 72, 153, 0.8); }
+    16% { box-shadow: none; }
+    28% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.6); }
+    36% { box-shadow: none; }
+    48% { box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); }
+    54% { box-shadow: none; }
+    68% { box-shadow: 0 0 14px rgba(236, 72, 153, 0.9); }
+    78% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.6); }
+    100% { box-shadow: 0 0 12px rgba(236, 72, 153, 0.7); }
+  }
+  .animate-neon-gresille-glow-pink { animation: neon-gresille-glow-pink 0.6s ease-out forwards; }
 
   @keyframes neon-ignite-orange {
     0% { opacity: 0.3; box-shadow: 0 -4px 8px rgba(255, 107, 0, 0.2), 0 4px 8px rgba(255, 107, 0, 0.2); }
@@ -3025,7 +3039,7 @@ const ControlBar = ({
                         {/* Bouton play/pause avec enfoncement */}
                         <button
                             onClick={onTogglePlay}
-                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative overflow-visible ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative ${is3DMode ? 'overflow-hidden' : 'overflow-visible'} ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                             style={{
                               borderRadius: is3DMode ? '0.5rem' : undefined,
                               background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
@@ -3038,17 +3052,30 @@ const ControlBar = ({
                               transform: is3DMode && pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                           }}
                         >
-                            {/* Overlay ignite (2D) ou grésille (3D) quand on relance la lecture */}
+                            {/* Overlay ignite (2D) ou grésille fond (3D) quand on relance la lecture */}
                             {isPlaying && playIgniteKey > 0 && (
                                 <div
                                     key={playIgniteKey}
-                                    className={`absolute inset-0 ${is3DMode ? 'animate-neon-gresille-pink' : 'rounded-full animate-neon-ignite-pink'}`}
+                                    className={`absolute inset-0 ${is3DMode ? 'animate-neon-gresille-bg-pink' : 'rounded-full animate-neon-ignite-pink'}`}
                                     style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none', background: 'rgba(236, 72, 153, 1)' }}
                                 />
                             )}
                             <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                             <Disc3 size={20} className={`animate-spin-slow ${isPlaying ? 'text-white' : 'text-gray-400'}`} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }} />
                         </button>
+                        {/* Élément glow 3D : par-dessus tout, projette la lumière, scale avec le bouton */}
+                        {is3DMode && isPlaying && playIgniteKey > 0 && (
+                            <div
+                                key={`glow-${playIgniteKey}`}
+                                className="absolute inset-0 pointer-events-none animate-neon-gresille-glow-pink"
+                                style={{
+                                    borderRadius: '0.5rem',
+                                    zIndex: 20,
+                                    transformOrigin: 'center center',
+                                    transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                                }}
+                            />
+                        )}
                     </div>
                 </>
             )}
