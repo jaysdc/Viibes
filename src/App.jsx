@@ -3052,11 +3052,11 @@ const ControlBar = ({
                               transform: is3DMode && pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                           }}
                         >
-                            {/* Overlay ignite (2D) ou grésille fond (3D) quand on relance la lecture */}
+                            {/* Overlay ignite quand on relance la lecture */}
                             {isPlaying && playIgniteKey > 0 && (
                                 <div
                                     key={playIgniteKey}
-                                    className={`absolute inset-0 ${is3DMode ? 'animate-neon-gresille-bg-pink' : 'rounded-full animate-neon-ignite-pink'}`}
+                                    className={`absolute inset-0 animate-neon-ignite-pink ${is3DMode ? '' : 'rounded-full'}`}
                                     style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none', background: 'rgba(236, 72, 153, 1)' }}
                                 />
                             )}
@@ -3067,7 +3067,7 @@ const ControlBar = ({
                         {is3DMode && isPlaying && playIgniteKey > 0 && (
                             <div
                                 key={`glow-${playIgniteKey}`}
-                                className="absolute inset-0 pointer-events-none animate-neon-gresille-glow-pink"
+                                className="absolute inset-0 pointer-events-none animate-neon-ignite-pink"
                                 style={{
                                     borderRadius: '0.5rem',
                                     zIndex: 20,
