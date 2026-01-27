@@ -651,10 +651,12 @@ const CONFIG = {
     // ══════════════════════════════════════════════════════════════════════════
     BEACON_SCRUB_MIN_SONGS: 21,           // Nombre minimum de chansons pour activer le scrubbing
     BEACON_SCRUB_LONG_PRESS_DELAY: 300,   // Durée appui long pour activer (ms)
-    BEACON_SCRUB_ARC_SIZE: 40,            // Taille de l'arc zoomé (% de la hauteur écran)
-    BEACON_SCRUB_ARC_X: 30,               // Position X du centre de l'arc (% écran, 50 = centré)
-    BEACON_SCRUB_ARC_Y: 58,               // Position Y du centre de l'arc (% écran, 50 = centré)
-    BEACON_SCRUB_ARC_THICKNESS: 24,        // Épaisseur de l'arc zoomé (px)
+    BEACON_SCRUB_ARC_SIZE: 40,            // Taille de l'arc 2D (% hauteur écran)
+    BEACON_SCRUB_ARC_SIZE_3D: 53,         // Taille du tube 3D (% hauteur écran)
+    BEACON_SCRUB_ARC_X: 30,               // Position X du centre (% écran, 50 = centré)
+    BEACON_SCRUB_ARC_Y: 58,               // Position Y du centre (% écran, 50 = centré)
+    BEACON_SCRUB_ARC_THICKNESS: 24,       // Épaisseur arc 2D (px)
+    BEACON_SCRUB_ARC_THICKNESS_3D: 36,    // Épaisseur tube 3D (px)
     BEACON_SCRUB_TUBE_COLOR: 'rgba(85, 226, 226, 1)',  // Couleur du tube rempli
     BEACON_SCRUB_TUBE_GLOW_COLOR: 'rgba(85, 226, 226, 0.5)',  // Couleur du glow du tube
     BEACON_SCRUB_TUBE_GLOW_SIZE: 8,                            // Taille du glow autour du tube (px)
@@ -4419,23 +4421,17 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
       const centerY = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
       if (is3DMode) {
-        // MODE 3D: Navigation linéaire verticale
-        // EXACTEMENT les mêmes calculs que le rendu
-        const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100 * 1.33;
-        const barTop = centerY - barHeight / 2;
-        const selectedRingHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
-        const usableHeight = barHeight - selectedRingHeight;
+        // MODE 3D: Position du tube (fixe, déterminée par CONFIG)
+        const tubeHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
+        const tubeTop = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100 - tubeHeight / 2;
 
-        // Position du doigt relative au haut du tube (en coordonnées écran)
-        const tubeTopScreen = containerRect.top + containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100 - barHeight / 2;
-        const fingerRelativeToTube = touch.clientY - tubeTopScreen;
+        // Progress = position du doigt dans le tube (0 à 1)
+        const progress = (touch.clientY - tubeTop) / tubeHeight;
+        const clampedProgress = Math.max(0, Math.min(1, progress));
 
-        // Clamper et calculer le progress (0 à 1)
-        const clampedY = Math.max(0, Math.min(usableHeight, fingerRelativeToTube));
-        const progress = clampedY / usableHeight;
-
-        const newIndex = Math.round(progress * (queue.length - 1));
-        setScrubIndex(Math.max(0, Math.min(queue.length - 1, newIndex)));
+        // Index de chanson
+        const newIndex = Math.round(clampedProgress * (queue.length - 1));
+        setScrubIndex(newIndex);
       } else {
         // MODE 2D: Navigation sur arc de cercle
         const arcRadius = (containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100) / 2;
@@ -4611,8 +4607,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             // ══════════════════════════════════════════════════════════════
             // MODE 3D: Barre verticale
             // ══════════════════════════════════════════════════════════════
-            const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100 * 1.33;
-            const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS * 1.5;
+            const finalBarHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE_3D / 100;
+            const finalBarWidth = CONFIG.BEACON_SCRUB_ARC_THICKNESS_3D;
             const finalCenterX = containerRect.width / 2;
             const finalCenterY = containerRect.height * CONFIG.BEACON_SCRUB_ARC_Y / 100;
 
