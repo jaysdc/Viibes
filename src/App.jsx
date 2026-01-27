@@ -4185,11 +4185,13 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         opacity: 1
     } : {};
 
+    const swipeRoundedClass = is3DMode ? 'rounded-xl' : 'rounded-full';
+
     if (offset > 0 || exitAnimation === 'right') {
-        overlayClass = "bg-cyan-500 rounded-full shadow-inner overflow-hidden";
+        overlayClass = `bg-cyan-500 ${swipeRoundedClass} shadow-inner overflow-hidden`;
         OverlayContent = (
         <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={swipeRoundedClass} />
             <div
                 className="absolute inset-0 flex items-center justify-start px-6 gap-3 text-white font-black text-sm tracking-widest"
             >
@@ -4202,10 +4204,10 @@ const SwipeableSongRow = ({ song, index, isVisualCenter, queueLength, onClick, o
         </>
         );
     } else if (offset < 0 || exitAnimation === 'left') {
-        overlayClass = "bg-orange-500 rounded-full shadow-inner overflow-hidden";
+        overlayClass = `bg-orange-500 ${swipeRoundedClass} shadow-inner overflow-hidden`;
         OverlayContent = (
         <>
-            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className="rounded-full" />
+            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={swipeRoundedClass} />
             <div
                 className="absolute inset-0 flex items-center justify-end px-6 gap-3 text-white font-black text-sm tracking-widest"
             >
