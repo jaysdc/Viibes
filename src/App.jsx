@@ -3025,7 +3025,7 @@ const ControlBar = ({
                         {/* Bouton play/pause avec enfoncement */}
                         <button
                             onClick={onTogglePlay}
-                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative overflow-visible ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
                             style={{
                               borderRadius: is3DMode ? '0.5rem' : undefined,
                               background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
@@ -3043,7 +3043,7 @@ const ControlBar = ({
                                 <div
                                     key={playIgniteKey}
                                     className={`absolute inset-0 ${is3DMode ? 'animate-neon-gresille-pink' : 'rounded-full animate-neon-ignite-pink'}`}
-                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none' }}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none', background: 'rgba(236, 72, 153, 1)' }}
                                 />
                             )}
                             <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
