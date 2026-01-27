@@ -4420,13 +4420,19 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
 
       if (is3DMode) {
         // MODE 3D: Navigation linéaire verticale
-        const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100;
+        const barHeight = containerRect.height * CONFIG.BEACON_SCRUB_ARC_SIZE / 100 * 1.33;
         const barTop = centerY - barHeight / 2;
         const barBottom = centerY + barHeight / 2;
 
-        // Calculer la position relative du doigt sur la barre
-        const relativeY = Math.max(barTop, Math.min(barBottom, touch.clientY));
-        const progress = (relativeY - barTop) / barHeight; // 0 à 1
+        // Zone utile pour les bagues (exclut les demi-hauteurs des bagues aux extrémités)
+        const ringHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
+        const usableTop = barTop + ringHeight / 2;
+        const usableBottom = barBottom - ringHeight / 2;
+        const usableHeight = usableBottom - usableTop;
+
+        // Calculer la position relative du doigt sur la zone utile
+        const relativeY = Math.max(usableTop, Math.min(usableBottom, touch.clientY));
+        const progress = (relativeY - usableTop) / usableHeight; // 0 à 1
 
         const newIndex = Math.round(progress * (queue.length - 1));
         setScrubIndex(Math.max(0, Math.min(queue.length - 1, newIndex)));
@@ -4637,17 +4643,23 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
             const barTop = centerY - barHeight / 2;
             const barBottom = centerY + barHeight / 2;
 
-            // Position du point sélectionné
+            // Hauteurs des bagues
+            const selectedRingHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
+            const playingRingHeight = CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2;
+
+            // Zone utile pour les bagues (restent à l'intérieur du tube)
+            const usableHeightSelected = barHeight - selectedRingHeight;
+            const usableHeightPlaying = barHeight - playingRingHeight;
+
+            // Position de la bague sélection (top relatif au tube)
             const selectedProgress = totalSongs > 1 ? scrubIndex / (totalSongs - 1) : 0.5;
-            const selectedX = centerX;
-            const selectedY = barTop + selectedProgress * barHeight;
+            const selectedRingTop = selectedProgress * usableHeightSelected;
 
-            // Position du point en lecture
+            // Position de la bague lecture (top relatif au tube)
             const playingProgress = totalSongs > 1 ? currentIndex / (totalSongs - 1) : 0.5;
-            const playingX = centerX;
-            const playingY = barTop + playingProgress * barHeight;
+            const playingRingTop = playingProgress * usableHeightPlaying;
 
-            // Extrémités
+            // Extrémités (pour les bulles 1/N)
             const startX = centerX;
             const startY = barTop;
             const endX = centerX;
@@ -4685,9 +4697,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     className="absolute"
                     style={{
                       left: 0,
-                      top: playingY - barTop - CONFIG.BEACON_SCRUB_PLAYING_SIZE / 4,
+                      top: playingRingTop,
                       width: barWidth,
-                      height: CONFIG.BEACON_SCRUB_PLAYING_SIZE / 2,
+                      height: playingRingHeight,
                       backgroundColor: CONFIG.BEACON_SCRUB_PLAYING_COLOR,
                     }}
                   />
@@ -4697,9 +4709,9 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
                     className="absolute"
                     style={{
                       left: 0,
-                      top: selectedY - barTop - CONFIG.BEACON_SCRUB_SELECTED_SIZE / 4,
+                      top: selectedRingTop,
                       width: barWidth,
-                      height: CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2,
+                      height: selectedRingHeight,
                       backgroundColor: CONFIG.BEACON_SCRUB_SELECTED_COLOR,
                     }}
                   />
