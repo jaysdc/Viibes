@@ -2918,6 +2918,16 @@ const ControlBar = ({
     const [pressProgress, setPressProgress] = useState(is3DMode ? (isPlaying ? 0 : 1) : 0);
     const targetProgress = is3DMode ? (isPlaying ? 0 : 1) : 0;
 
+    // Animation ignite quand on relance la lecture
+    const [playIgniteKey, setPlayIgniteKey] = useState(0);
+    const prevPlayingRef = useRef(isPlaying);
+    useEffect(() => {
+        if (isPlaying && !prevPlayingRef.current) {
+            setPlayIgniteKey(k => k + 1);
+        }
+        prevPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+
     useEffect(() => {
         if (!is3DMode) { setPressProgress(0); return; }
         const duration = pressProgress < targetProgress ? 96 : 216; // press rapide, release lent
@@ -2939,8 +2949,8 @@ const ControlBar = ({
         requestAnimationFrame(animate);
     }, [isPlaying, is3DMode]);
 
-    // Bouton 40px: enfoncé = 7px du haut, 4px du bas → hauteur 29px → scale 0.725, translateY 1.5px
-    const pressScale = 1 - (pressProgress * 0.275); // 1 → 0.725
+    // Bouton 40px: enfoncé = 6px du haut, 3px du bas → hauteur 31px → scale 0.775, translateY 1.5px
+    const pressScale = 1 - (pressProgress * 0.225); // 1 → 0.775
     const pressTranslateY = pressProgress * 1.5; // 0 → 1.5px
     const pressTransition = pressProgress > 0.5 ? '0.096s ease-out' : '0.216s ease-out';
 
@@ -3014,6 +3024,14 @@ const ControlBar = ({
                               transform: is3DMode && pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
                           }}
                         >
+                            {/* Overlay ignite quand on relance la lecture */}
+                            {isPlaying && playIgniteKey > 0 && (
+                                <div
+                                    key={playIgniteKey}
+                                    className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} animate-neon-ignite-pink`}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined, pointerEvents: 'none' }}
+                                />
+                            )}
                             <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                             <Disc3 size={20} className={`animate-spin-slow ${isPlaying ? 'text-white' : 'text-gray-400'}`} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }} />
                         </button>
