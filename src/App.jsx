@@ -4429,13 +4429,8 @@ const SongWheel = ({ queue, currentSong, onSongSelect, isPlaying, togglePlay, pl
         const tubeRect = scrubTubeRef.current?.getBoundingClientRect();
         if (!tubeRect) return;
 
-        // Même calcul que le rendu : usableHeight = tubeHeight - ringHeight
-        const ringHeight = CONFIG.BEACON_SCRUB_SELECTED_SIZE / 2;
-        const usableHeight = tubeRect.height - ringHeight;
-
-        // Progress = position du doigt dans la zone utile
-        const fingerY = touch.clientY - tubeRect.top;
-        const progress = fingerY / usableHeight;
+        // Progress = position du doigt dans le tube (0 à 1)
+        const progress = (touch.clientY - tubeRect.top) / tubeRect.height;
         const clampedProgress = Math.max(0, Math.min(1, progress));
 
         // Index de chanson
