@@ -2914,6 +2914,34 @@ const ControlBar = ({
   // 3D mode
   is3DMode = false
 }) => {
+    // Animation toggle play/pause : 0 = sorti (playing), 1 = enfoncé (paused)
+    const [pressProgress, setPressProgress] = useState(isPlaying ? 0 : 1);
+    const targetProgress = isPlaying ? 0 : 1;
+
+    useEffect(() => {
+        const duration = pressProgress < targetProgress ? 96 : 216; // press rapide, release lent
+        const startTime = performance.now();
+        const startProgress = pressProgress;
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const t = Math.min(1, elapsed / duration);
+            const eased = 1 - Math.pow(1 - t, 2);
+            const newProgress = startProgress + (targetProgress - startProgress) * eased;
+            setPressProgress(newProgress);
+
+            if (t < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }, [isPlaying]);
+
+    const pressScale = 1 - (pressProgress * 0.08); // 1 → 0.92
+    const pressTranslateY = pressProgress * 5; // 0 → 5px
+    const pressTransition = pressProgress > 0.5 ? '0.096s ease-out' : '0.216s ease-out';
+
     return (
         <div
             className="absolute left-0 right-0 flex items-start"
@@ -2941,28 +2969,57 @@ const ControlBar = ({
             {!vibeSwipePreview && (
                 <>
                     <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} />
-                    <button
-                        onClick={onTogglePlay}
-                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                    {/* Wrapper taille originale pour la cavité 3D */}
+                    <div
+                        className="flex-shrink-0 relative"
                         style={{
-                          height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                          width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-                          borderRadius: is3DMode ? '0.5rem' : undefined,
-                          background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
-                          border: isPlaying
-                              ? '1px solid rgba(236, 72, 153, 1)'
-                              : '1px solid rgb(229, 231, 235)',
-                          WebkitTapHighlightColor: 'transparent',
-                          transition: 'background 0.3s, border 0.3s'
-                      }}
+                            height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                            width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
+                        }}
                     >
-                        <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
-                        {isPlaying ? (
-                            <Disc3 size={20} className="text-white animate-spin-slow" />
-                        ) : (
-                            <Pause size={14} className="text-gray-400" />
+                        {/* Cavité 3D (visible quand le bouton s'enfonce) */}
+                        {pressProgress > 0 && (
+                            <div
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                    borderRadius: is3DMode ? '0.5rem' : '9999px',
+                                    border: '2px solid rgba(200,200,200,0.8)',
+                                    background: `
+                                        linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%),
+                                        linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%),
+                                        linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%),
+                                        linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%),
+                                        rgba(90,90,90,1)
+                                    `,
+                                    opacity: pressProgress,
+                                    transition: `opacity ${pressTransition}`
+                                }}
+                            />
                         )}
-                    </button>
+                        {/* Bouton play/pause avec enfoncement */}
+                        <button
+                            onClick={onTogglePlay}
+                            className={`${is3DMode ? '' : 'rounded-full'} w-full h-full flex items-center justify-center shadow-sm relative overflow-hidden ${isPlaying && CONFIG.PLAYPAUSE_GLOW_ENABLED ? 'playpause-glow' : ''}`}
+                            style={{
+                              borderRadius: is3DMode ? '0.5rem' : undefined,
+                              background: isPlaying ? 'rgba(236, 72, 153, 1)' : '#fafafa',
+                              border: isPlaying
+                                  ? '1px solid rgba(236, 72, 153, 1)'
+                                  : '1px solid rgb(229, 231, 235)',
+                              WebkitTapHighlightColor: 'transparent',
+                              transition: 'background 0.3s, border 0.3s',
+                              transformOrigin: 'center bottom',
+                              transform: pressProgress > 0 ? `scale(${pressScale}) translateY(${pressTranslateY}px)` : undefined,
+                          }}
+                        >
+                            <CylinderMask is3DMode={is3DMode} intensity={isPlaying ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
+                            {isPlaying ? (
+                                <Disc3 size={20} className="text-white animate-spin-slow" />
+                            ) : (
+                                <Pause size={14} className="text-gray-400" />
+                            )}
+                        </button>
+                    </div>
                 </>
             )}
         </div>
