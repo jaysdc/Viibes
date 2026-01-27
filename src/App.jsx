@@ -2500,7 +2500,7 @@ const cardContent = is3DMode ? (
                       <>
                           <div className="flex-1" /> {/* Spacer pour maintenir le layout */}
                           <span
-                              className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5 z-10"
+                              className="absolute bottom-1 left-4 text-[10px] font-semibold flex items-center gap-1.5"
                               style={{
                                   color: pressProgress > 0 ? 'rgba(200,200,200,0.7)' : 'rgba(255,255,255,0.5)'
                               }}
@@ -2511,7 +2511,7 @@ const cardContent = is3DMode ? (
                       </>
                   ) : (
                       // Mode 3D + avec tags: layout normal horizontal
-                      <div className="flex-1 flex items-center gap-2 relative z-10 min-w-0">
+                      <div className="flex-1 flex items-center gap-2 relative min-w-0">
                           {(vibeName || isEditingName) && (
                               <div
                                   className="overflow-hidden flex-shrink min-w-0"
