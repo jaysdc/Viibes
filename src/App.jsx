@@ -9397,9 +9397,10 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             // Taille max de la bulle quand elle pulse (= pillHeight)
             const maxBubbleSize = pillHeight;
 
-            // Zone de déplacement du curseur - bloqué quand la TAILLE MAX touche le bord
-            // La bulle peut grossir jusqu'à pillHeight, donc son centre doit rester à pillHeight/2 du bord
-            const maxSlide = (pillWidth / 2) - (maxBubbleSize / 2);
+            // Zone de déplacement du curseur
+            // 3D : la bague doit être affleurante au bord du tube → maxSlide = pillWidth/2 - cursorSize/2
+            // 2D : la bulle pulse jusqu'à pillHeight → son centre doit rester à pillHeight/2 du bord
+            const maxSlide = is3DMode ? (pillWidth / 2) - (cursorSize / 2) : (pillWidth / 2) - (maxBubbleSize / 2);
             const clampedX = Math.max(-maxSlide, Math.min(maxSlide, confirmSwipeX));
             const slideProgress = clampedX / maxSlide; // -1 (cancel) to +1 (confirm)
 
@@ -9513,7 +9514,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                         >
                             <X
-                                size={iconSize}
+                                size={iconSize * 0.7}
                                 className="text-gray-400"
                                 strokeWidth={2.5}
                             />
@@ -9526,7 +9527,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 width: cursorSize,
                                 height: is3DMode ? pillHeight : cursorSize,
                                 top: is3DMode ? 0 : undefined,
-                                borderRadius: is3DMode ? '0.5rem' : '50%',
+                                borderRadius: is3DMode ? '0.75rem' : '50%',
                                 left: `calc(50% - ${cursorSize / 2}px + ${isAtLeftThreshold ? -maxSlide : isAtRightThreshold ? maxSlide : clampedX}px)`,
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out',
                             }}
@@ -9547,15 +9548,15 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             ? 'rgba(0, 255, 136, 0.9)'
                                             : 'rgba(255, 255, 255, 0.15)',
                                     border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
-                                    borderRadius: is3DMode ? '0.5rem' : '50%',
+                                    borderRadius: is3DMode ? '0.75rem' : '50%',
                                     transition: 'background-color 150ms ease-out',
                                 }}
                             >
                                 {isAtLeftThreshold && (
-                                    <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                    <X size={iconSize} className="text-white absolute z-10" strokeWidth={2.5} />
                                 )}
                                 {isAtRightThreshold && (
-                                    <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                    <Check size={iconSize} className="text-white absolute z-10" strokeWidth={2.5} />
                                 )}
                             </div>
                             {/* Masque cylindre 3D — fixe, ne pulse pas */}
@@ -9589,7 +9590,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                         >
                             <Check
-                                size={iconSize}
+                                size={iconSize * 0.7}
                                 className="text-gray-400"
                                 strokeWidth={2.5}
                             />

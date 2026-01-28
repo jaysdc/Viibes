@@ -1740,7 +1740,9 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                 const pillPadding = (pillHeight - cursorSize) / 2;
                 const pulseScaleMax = pillHeight / cursorSize;
                 const maxBubbleSize = pillHeight;
-                const maxSlide = (pillWidth / 2) - (maxBubbleSize / 2);
+                // 3D : bague affleurante au bord du tube → maxSlide = pillWidth/2 - cursorSize/2
+                // 2D : bulle pulse jusqu'à pillHeight → centre reste à pillHeight/2 du bord
+                const maxSlide = is3DMode ? (pillWidth / 2) - (cursorSize / 2) : (pillWidth / 2) - (maxBubbleSize / 2);
                 const clampedX = Math.max(-maxSlide, Math.min(maxSlide, previewSwipeX));
                 const slideProgress = maxSlide > 0 ? clampedX / maxSlide : 0;
 
@@ -1879,7 +1881,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             }}
                         >
                             <ListPlus
-                                size={iconSize}
+                                size={iconSize * 0.7}
                                 className={hasActiveQueue ? "text-cyan-400" : "text-gray-400"}
                                 strokeWidth={2.5}
                             />
@@ -1915,7 +1917,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             }}
                         >
                             <X
-                                size={iconSize}
+                                size={iconSize * 0.7}
                                 className="text-red-400"
                                 strokeWidth={2.5}
                             />
@@ -1928,7 +1930,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 width: cursorSize,
                                 height: is3DMode ? pillHeight : cursorSize,
                                 top: is3DMode ? 0 : undefined,
-                                borderRadius: is3DMode ? '0.5rem' : '50%',
+                                borderRadius: is3DMode ? '0.75rem' : '50%',
                                 left: `calc(50% - ${cursorSize / 2}px + ${isAtLeftThreshold ? -maxSlide : isAtRightThreshold ? maxSlide : (isAtCenter && previewHasDragged) ? 0 : clampedX}px)`,
                                 transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out',
                                 pointerEvents: (!previewHasDragged && isAtCenter) ? 'none' : 'auto',
@@ -1952,18 +1954,18 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                                 ? 'rgba(0, 255, 136, 0.9)'
                                                 : 'rgba(255, 255, 255, 0.15)',
                                     border: (isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
-                                    borderRadius: is3DMode ? '0.5rem' : '50%',
+                                    borderRadius: is3DMode ? '0.75rem' : '50%',
                                     transition: 'background-color 150ms ease-out',
                                 }}
                             >
                                 {isAtCenter && previewHasDragged && (
-                                    <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                    <X size={iconSize} className="text-white absolute z-10" strokeWidth={2.5} />
                                 )}
                                 {isAtLeftThreshold && (
-                                    <ListPlus size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                    <ListPlus size={iconSize} className="text-white absolute z-10" strokeWidth={2.5} />
                                 )}
                                 {isAtRightThreshold && (
-                                    <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                    <Check size={iconSize} className="text-white absolute z-10" strokeWidth={2.5} />
                                 )}
                             </div>
                             {/* Masque cylindre 3D — fixe, ne pulse pas */}
@@ -1996,7 +1998,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             }}
                         >
                             <Check
-                                size={iconSize}
+                                size={iconSize * 0.7}
                                 className="text-green-400"
                                 strokeWidth={2.5}
                             />
