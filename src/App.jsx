@@ -8721,6 +8721,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   transform: is3DMode && builderBtnPressProgress > 0
                                       ? `scale(${builderPressScale}) translateY(${builderPressTranslateY}px)`
                                       : undefined,
+                                  boxShadow: (vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'none' : undefined
                               }}
                           />
                       </div>
