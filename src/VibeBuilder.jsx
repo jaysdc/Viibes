@@ -2275,7 +2275,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                     onClick={handleAddAll}
                                     className={`w-full ${CONFIG.ADDALL_HEIGHT} text-white font-black flex items-center justify-center gap-2 transition-transform ${CONFIG.ADDALL_FONT_SIZE} ${is3DMode ? '' : 'rounded-full'} relative overflow-hidden`}
                                     style={{
-                                        backgroundColor: futurePrimaryColor,
+                                        background: futureGradient,
                                         boxShadow: `0 0 12px ${futurePrimaryColor}66, 0 0 24px ${futurePrimaryColor}33`,
                                         borderRadius: is3DMode ? '0.5rem' : undefined
                                     }}

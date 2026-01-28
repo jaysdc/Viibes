@@ -9032,7 +9032,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     vibeTheseSwipeDirectionRef.current = null;
                                     setVibeSwipePreview(null);
                                 }}
-                                className={`w-full h-8 font-black flex items-center justify-center gap-2 text-base text-white relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`}
+                                className={`w-full h-8 font-black flex items-center justify-center gap-2 text-base text-white relative overflow-hidden ${is3DMode ? '' : 'rounded-full'}`}
                                 style={{
                                     background: gradient,
                                     boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`,
@@ -9884,7 +9884,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                             onTouchStart={() => triggerBtnPress('playerSearch')}
                             className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
-                            style={{ borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: is3DMode ? `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)` : `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, ...getBtnPressStyle('playerSearch') }}
+                            style={{ borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: is3DMode ? '#f3f4f6' : `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, ...getBtnPressStyle('playerSearch') }}
                         >
                             <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                             <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
