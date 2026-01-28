@@ -9417,11 +9417,11 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                 >
                     {/* Le pill glassmorphism */}
                     <div
-                        className="relative flex items-center justify-between pointer-events-auto"
+                        className={`relative flex items-center justify-between pointer-events-auto ${is3DMode ? 'overflow-hidden' : ''}`}
                         style={{
                             width: pillWidth,
                             height: pillHeight,
-                            borderRadius: pillHeight / 2,
+                            borderRadius: is3DMode ? '0.75rem' : pillHeight / 2,
                             backgroundColor: CONFIG.CONFIRM_PILL_BG_COLOR,
                             backdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
                             WebkitBackdropFilter: `blur(${CONFIG.CONFIRM_PILL_BLUR}px)`,
@@ -9466,6 +9466,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             setConfirmSwipeStart(null);
                         }}
                     >
+                        {/* Masque cylindre 3D sur le tube */}
+                        {is3DMode && <CylinderMask is3DMode={true} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />}
                         {/* X icon à gauche - cachée quand la bulle la recouvre */}
                         <div
                             className="flex items-center justify-center cursor-pointer"
@@ -9496,7 +9498,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             />
                         </div>
 
-                        {/* Curseur central draggable */}
+                        {/* Curseur central draggable — bague à coins arrondis en 3D, bulle circulaire en 2D */}
                         <div
                             className={`absolute flex items-center justify-center overflow-hidden ${
                                 confirmFeedback
@@ -9507,8 +9509,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 '--pulse-scale-min': 1,
                                 '--pulse-scale-max': pulseScaleMax,
                                 width: cursorSize,
-                                height: cursorSize,
-                                borderRadius: '50%',
+                                height: is3DMode ? pillHeight : cursorSize,
+                                top: is3DMode ? -pillPadding : undefined,
+                                borderRadius: is3DMode ? '0.5rem' : '50%',
                                 backgroundColor: isAtLeftThreshold
                                     ? 'rgba(244, 63, 94, 0.9)'  // Rouge/Lava
                                     : isAtRightThreshold
@@ -9519,6 +9522,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
                             }}
                         >
+                            {/* Masque cylindre 3D sur la bague — ON si colorée, OFF sinon */}
+                            {is3DMode && <CylinderMask is3DMode={true} intensity={(isAtLeftThreshold || isAtRightThreshold) ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />}
                             {/* Icône X quand au seuil gauche */}
                             {isAtLeftThreshold && (
                                 <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
