@@ -8473,15 +8473,16 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 key={searchCloseBtnAnimKey}
                                 colorName="pink"
                                 glowRGB={CONFIG.SEARCH_LIBRARY_GLOW_COLOR}
-                                enabled={true}
+                                enabled={!(vibeSwipePreview && vibeSwipePreview.progress > 0)}
                                 igniteOnMount={searchCloseBtnAnimKey > 0}
-                                flickerEnabled={searchOverlayAnim !== 'closing'}
+                                flickerEnabled={searchOverlayAnim !== 'closing' && !(vibeSwipePreview && vibeSwipePreview.progress > 0)}
                                 className={`absolute inset-0 ${is3DMode ? '' : 'rounded-r-full'}`}
                                 style={{
                                     background: `rgba(${CONFIG.SORTBTN_COLOR}, 1)`,
                                     zIndex: 0,
                                     borderTopRightRadius: is3DMode ? '0.5rem' : undefined,
-                                    borderBottomRightRadius: is3DMode ? '0.5rem' : undefined
+                                    borderBottomRightRadius: is3DMode ? '0.5rem' : undefined,
+                                    opacity: (vibeSwipePreview && vibeSwipePreview.progress > 0) ? 0 : 1
                                 }}
                             />
                             <button
@@ -8722,7 +8723,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   transform: is3DMode && builderBtnPressProgress > 0
                                       ? `scale(${builderPressScale}) translateY(${builderPressTranslateY}px)`
                                       : undefined,
-                                  opacity: (vibeSwipePreview && vibeSwipePreview.progress > 0) ? 0 : 1
+                                  opacity: (vibeSwipePreview && vibeSwipePreview.progress > 0) || isLibrarySearching ? 0 : 1,
+                                  visibility: (vibeSwipePreview && vibeSwipePreview.progress > 0) || isLibrarySearching ? 'hidden' : 'visible'
                               }}
                           />
                       </div>
