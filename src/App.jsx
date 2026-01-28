@@ -8721,7 +8721,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   transform: is3DMode && builderBtnPressProgress > 0
                                       ? `scale(${builderPressScale}) translateY(${builderPressTranslateY}px)`
                                       : undefined,
-                                  boxShadow: (vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'none' : undefined
+                                  opacity: (vibeSwipePreview && vibeSwipePreview.progress > 0) ? 0 : 1
                               }}
                           />
                       </div>
@@ -8891,7 +8891,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                       boxShadow: `0 0 25px ${nextGradient[Math.floor(nextGradient.length / 2)]}66, 0 0 50px ${nextGradient[Math.floor(nextGradient.length / 2)]}33`
                                   }}
                               >
-                                  <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
+                                  <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} style={{ zIndex: 1 }} />
                                   {showTitles && (
                                       <div
                                           className="flex items-center gap-2 text-white font-black tracking-widest text-lg uppercase"
