@@ -5406,7 +5406,54 @@ const handlePlayerTouchEnd = () => {
     const [showBuilder, setShowBuilder] = useState(false);
     const [editingVibeId, setEditingVibeId] = useState(null); // null = création, vibeId = édition
     const [builderBtnIgniting, setBuilderBtnIgniting] = useState(false);
-    const [builderBtnPressed, setBuilderBtnPressed] = useState(false);
+    const [builderBtnPressProgress, setBuilderBtnPressProgress] = useState(0);
+    const builderBtnProgressRef = useRef(0);
+    const builderBtnAnimRef = useRef(null);
+
+    // Animation d'enfoncement 3D du bouton VibeBuilder (séquence unique press→release)
+    const triggerBuilderBtnPress = () => {
+        if (!is3DMode) return;
+        if (builderBtnAnimRef.current) cancelAnimationFrame(builderBtnAnimRef.current);
+
+        const startProgress = builderBtnProgressRef.current;
+        const pressStart = performance.now();
+        const pressDuration = 96;
+        const releaseDuration = 216;
+
+        const animatePress = (now) => {
+            const elapsed = now - pressStart;
+            const t = Math.min(1, elapsed / pressDuration);
+            const eased = 1 - Math.pow(1 - t, 2);
+            const val = startProgress + (1 - startProgress) * eased;
+            builderBtnProgressRef.current = val;
+            setBuilderBtnPressProgress(val);
+            if (t < 1) {
+                builderBtnAnimRef.current = requestAnimationFrame(animatePress);
+            } else {
+                // Enchaîner immédiatement la phase release
+                const releaseStart = now;
+                const animateRelease = (now2) => {
+                    const elapsed2 = now2 - releaseStart;
+                    const t2 = Math.min(1, elapsed2 / releaseDuration);
+                    const eased2 = 1 - Math.pow(1 - t2, 2);
+                    const val2 = 1 - eased2;
+                    builderBtnProgressRef.current = val2;
+                    setBuilderBtnPressProgress(val2);
+                    if (t2 < 1) {
+                        builderBtnAnimRef.current = requestAnimationFrame(animateRelease);
+                    } else {
+                        builderBtnAnimRef.current = null;
+                    }
+                };
+                builderBtnAnimRef.current = requestAnimationFrame(animateRelease);
+            }
+        };
+        builderBtnAnimRef.current = requestAnimationFrame(animatePress);
+    };
+
+    const builderPressScale = 1 - (builderBtnPressProgress * 0.225);
+    const builderPressTranslateY = builderBtnPressProgress * 1.5;
+
     const [isPlayerSearching, setIsPlayerSearching] = useState(false);
     const [playerSearchQuery, setPlayerSearchQuery] = useState('');
     const [isLibrarySearching, setIsLibrarySearching] = useState(false);
@@ -8526,16 +8573,36 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                       {/* Bouton Créer Vibe */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
-                          <div
-                              className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} ${builderBtnIgniting ? 'animate-neon-ignite-pink' : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'animate-neon-pink-soft' : '')}`}
-                              style={{
-                                  background: 'white',
-                                  zIndex: 0,
-                                  borderRadius: is3DMode ? '0.5rem' : undefined,
-                                  transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
-                                  transition: 'transform 0.1s ease-out'
-                              }}
-                          />
+                          {/* Couche 1 — Bordure cavité (3D, fixe) */}
+                          {is3DMode && builderBtnPressProgress > 0 && (
+                              <div
+                                  className="absolute inset-0 pointer-events-none"
+                                  style={{
+                                      borderRadius: '0.5rem',
+                                      border: '2px solid rgba(200,200,200,0.8)',
+                                      opacity: builderBtnPressProgress,
+                                  }}
+                              />
+                          )}
+                          {/* Couche 2 — Fond cavité (3D, fixe) */}
+                          {is3DMode && builderBtnPressProgress > 0 && (
+                              <div
+                                  className="absolute pointer-events-none"
+                                  style={{
+                                      top: 2, right: 2, bottom: 2, left: 2,
+                                      borderRadius: 'calc(0.5rem - 2px)',
+                                      background: `
+                                          linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%),
+                                          linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%),
+                                          linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%),
+                                          linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%),
+                                          rgba(90,90,90,1)
+                                      `,
+                                      opacity: builderBtnPressProgress,
+                                  }}
+                              />
+                          )}
+                          {/* Couche 3 — Contenu bouton (se transforme avec l'enfoncement) */}
                           <button
                               onClick={() => {
                                   if (showImportMenu) return;
@@ -8543,25 +8610,40 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   setShowBuilder(true);
                                   setTimeout(() => setBuilderBtnIgniting(false), CONFIG.IMPORT_IGNITE_DURATION);
                               }}
-                              onTouchStart={() => { /* Pas d'enfoncement immédiat */ }}
-                              onTouchEnd={() => {
-                                  // Animation d'enfoncement au relâchement
-                                  if (is3DMode) {
-                                      setBuilderBtnPressed(true);
-                                      setTimeout(() => setBuilderBtnPressed(false), 150);
-                                  }
-                              }}
-                              onTouchCancel={() => { if (is3DMode) setBuilderBtnPressed(false); }}
+                              onTouchStart={() => { triggerBuilderBtnPress(); }}
+                              onTouchEnd={() => {}}
+                              onTouchCancel={() => {}}
                               className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
                               style={{
+                                  background: 'white',
                                   borderRadius: is3DMode ? '0.5rem' : undefined,
-                                  transform: is3DMode && builderBtnPressed ? 'scale(0.90)' : 'scale(1)',
-                                  transition: 'transform 0.1s ease-out'
+                                  transformOrigin: 'center center',
+                                  transform: is3DMode && builderBtnPressProgress > 0
+                                      ? `scale(${builderPressScale}) translateY(${builderPressTranslateY}px)`
+                                      : undefined,
                               }}
                           >
                               <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
                               <VibesWave size={parseFloat(CONFIG.HEADER_BUTTONS_HEIGHT) * CONFIG.UNIFIED_ICON_SIZE_PERCENT / 100 * 16 * 2} />
                           </button>
+                          {/* Couche 4 — Glow (suit l'enfoncement du bouton) */}
+                          <div
+                              className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} pointer-events-none ${
+                                  builderBtnIgniting
+                                      ? 'animate-neon-ignite-pink'
+                                      : (!showImportMenu && importOverlayAnim === 'none' && !pendingVibe && !nukeConfirmMode && !(vibeSwipePreview && vibeSwipePreview.progress > 0)
+                                          ? 'animate-neon-pink-soft'
+                                          : '')
+                              }`}
+                              style={{
+                                  borderRadius: is3DMode ? '0.5rem' : undefined,
+                                  zIndex: 20,
+                                  transformOrigin: 'center center',
+                                  transform: is3DMode && builderBtnPressProgress > 0
+                                      ? `scale(${builderPressScale}) translateY(${builderPressTranslateY}px)`
+                                      : undefined,
+                              }}
+                          />
                       </div>
                   </div>
 
