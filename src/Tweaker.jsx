@@ -271,10 +271,7 @@ const Tweaker = ({
     showTitles = true,
     setShowTitles = () => {},
     is3DMode = false,
-    setIs3DMode = () => {},
-    triggerBtnPress = () => {},
-    getBtnPressProgress = () => 0,
-    getBtnPressStyle = () => ({})
+    setIs3DMode = () => {}
 }) => {
     // Animation d'ouverture
     const [isVisible, setIsVisible] = useState(false);
@@ -798,61 +795,43 @@ const Tweaker = ({
                 </button>
 
                 {/* Bouton REORDER - Cyan/Magenta */}
-                <div className="flex-1 relative" style={{ height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT }}>
-                    {is3DMode && getBtnPressProgress('reorder') > 0 && (
-                        <>
-                            <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('reorder') }} />
-                            <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('reorder') }} />
-                        </>
-                    )}
-                    <button
-                        onClick={() => toggleMode('reorder')}
-                        onTouchStart={() => triggerBtnPress('reorder')}
-                        className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
-                        style={{
-                            borderRadius: is3DMode ? '0.5rem' : undefined,
-                            background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
-                            color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
-                            boxShadow: activeMode === 'reorder'
-                                ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
-                                : 'inset 0 0 0 1px #E5E7EB',
-                            ...getBtnPressStyle('reorder')
-                        }}
-                    >
-                        <CylinderMask is3DMode={is3DMode} intensity={activeMode === 'reorder' ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
-                        <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
-                        {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
-                    </button>
-                </div>
+                <button
+                    onClick={() => toggleMode('reorder')}
+                    className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
+                    style={{
+                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
+                        background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
+                        color: activeMode === 'reorder' ? 'white' : '#9CA3AF',
+                        boxShadow: activeMode === 'reorder'
+                            ? '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
+                            : 'inset 0 0 0 1px #E5E7EB'
+                    }}
+                >
+                    <CylinderMask is3DMode={is3DMode} intensity={activeMode === 'reorder' ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
+                    <BetweenHorizontalEnd style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                    {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Reorder</span>}
+                </button>
 
                 {/* Bouton DELETE - Rouge/Rose */}
-                <div className="flex-1 relative" style={{ height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT }}>
-                    {is3DMode && getBtnPressProgress('delete') > 0 && (
-                        <>
-                            <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('delete') }} />
-                            <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('delete') }} />
-                        </>
-                    )}
-                    <button
-                        ref={deleteButtonRef}
-                        onClick={() => toggleMode('delete')}
-                        onTouchStart={() => triggerBtnPress('delete')}
-                        className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
-                        style={{
-                            borderRadius: is3DMode ? '0.5rem' : undefined,
-                            background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
-                            color: activeMode === 'delete' ? 'white' : '#9CA3AF',
-                            boxShadow: activeMode === 'delete'
-                                ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
-                                : 'inset 0 0 0 1px #E5E7EB',
-                            ...getBtnPressStyle('delete')
-                        }}
-                    >
-                        <CylinderMask is3DMode={is3DMode} intensity={activeMode === 'delete' ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
-                        <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
-                        {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
-                    </button>
-                </div>
+                <button
+                    ref={deleteButtonRef}
+                    onClick={() => toggleMode('delete')}
+                    className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
+                    style={{
+                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
+                        background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
+                        color: activeMode === 'delete' ? 'white' : '#9CA3AF',
+                        boxShadow: activeMode === 'delete'
+                            ? '0 0 20px rgba(255, 7, 58, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)'
+                            : 'inset 0 0 0 1px #E5E7EB'
+                    }}
+                >
+                    <CylinderMask is3DMode={is3DMode} intensity={activeMode === 'delete' ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
+                    <Trash2 style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
+                    {TWEAKER_CONFIG.HEADER_BTN_SHOW_TEXT && <span>Delete</span>}
+                </button>
 
                 {/* Bouton 2D/3D - Rond → Carré en 3D - Vert néon quand ON */}
                 <button
@@ -877,34 +856,26 @@ const Tweaker = ({
                 </button>
 
                 {/* Bouton Show/Hide Titles - Rond → Carré en 3D - Vert néon quand ON */}
-                <div className="relative flex-shrink-0" style={{ height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT, width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT }}>
-                    {is3DMode && getBtnPressProgress('tag') > 0 && (
-                        <>
-                            <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('tag') }} />
-                            <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('tag') }} />
-                        </>
-                    )}
-                    <button
-                        onClick={() => setShowTitles(!showTitles)}
-                        onTouchStart={() => triggerBtnPress('tag')}
-                        className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center transition-all duration-300 overflow-hidden relative`}
-                        style={{
-                            borderRadius: is3DMode ? '0.5rem' : undefined,
-                            background: showTitles ? '#00FF88' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
-                            color: showTitles ? 'white' : '#9CA3AF',
-                            boxShadow: showTitles
-                                ? '0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3)'
-                                : 'inset 0 0 0 1px #E5E7EB',
-                            ...getBtnPressStyle('tag')
-                        }}
-                    >
+                <button
+                    onClick={() => setShowTitles(!showTitles)}
+                    className={`flex-shrink-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center transition-all duration-300 overflow-hidden relative`}
+                    style={{
+                        height: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        width: TWEAKER_CONFIG.HEADER_BTN_HEIGHT,
+                        borderRadius: is3DMode ? '0.5rem' : undefined,
+                        background: showTitles ? '#00FF88' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
+                        color: showTitles ? 'white' : '#9CA3AF',
+                        boxShadow: showTitles
+                            ? '0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3)'
+                            : 'inset 0 0 0 1px #E5E7EB'
+                    }}
+                >
                         <CylinderMask is3DMode={is3DMode} intensity={showTitles ? UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : UNIFIED_CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                         {showTitles
                             ? <Tag style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                             : <EyeOff style={{ width: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)`, height: `calc(${TWEAKER_CONFIG.HEADER_BTN_HEIGHT} * ${TWEAKER_CONFIG.HEADER_BTN_ICON_SIZE} / 100)` }} />
                         }
-                    </button>
-                </div>
+                </button>
                         </div>
                     </div>
                 </div>
