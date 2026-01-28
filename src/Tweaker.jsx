@@ -230,7 +230,7 @@ const TweakerFeedbackOverlay = ({ isActive, onAnimationComplete, neonColor, bgCl
 
     return (
         <div
-            className={`absolute inset-0 z-10 ${effectiveRoundedClass} flex items-center justify-center border ${bgClass || ''} ${borderClass}`}
+            className={`absolute inset-0 z-20 ${effectiveRoundedClass} flex items-center justify-center border ${bgClass || ''} ${borderClass}`}
             style={{
                 ...containerStyle,
                 ...effectiveRoundedStyle,
@@ -808,7 +808,7 @@ const Tweaker = ({
                     <button
                         onClick={() => toggleMode('reorder')}
                         onTouchStart={() => triggerBtnPress('reorder')}
-                        className={`z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
+                        className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
                         style={{
                             borderRadius: is3DMode ? '0.5rem' : undefined,
                             background: activeMode === 'reorder' ? 'linear-gradient(135deg, #00D4FF 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
@@ -837,7 +837,7 @@ const Tweaker = ({
                         ref={deleteButtonRef}
                         onClick={() => toggleMode('delete')}
                         onTouchStart={() => triggerBtnPress('delete')}
-                        className={`z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
+                        className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-300 overflow-hidden relative`}
                         style={{
                             borderRadius: is3DMode ? '0.5rem' : undefined,
                             background: activeMode === 'delete' ? 'linear-gradient(135deg, #FF073A 0%, #FF00FF 100%)' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
@@ -887,7 +887,7 @@ const Tweaker = ({
                     <button
                         onClick={() => setShowTitles(!showTitles)}
                         onTouchStart={() => triggerBtnPress('tag')}
-                        className={`z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center transition-all duration-300 overflow-hidden relative`}
+                        className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center transition-all duration-300 overflow-hidden relative`}
                         style={{
                             borderRadius: is3DMode ? '0.5rem' : undefined,
                             background: showTitles ? '#00FF88' : UNIFIED_CONFIG.CAPSULE_BG_INACTIVE,
