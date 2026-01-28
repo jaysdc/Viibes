@@ -1921,47 +1921,53 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             />
                         </div>
 
-                        {/* Curseur transparent draggable — bague à coins arrondis en 3D, bulle circulaire en 2D */}
+                        {/* Curseur transparent draggable — wrapper fixe + contenu animé + masque statique */}
                         <div
-                            className={`absolute flex items-center justify-center overflow-hidden ${
-                                previewFeedback
-                                    ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : previewFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : '')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : (isAtCenter && previewHasDragged) ? 'animate-pulse-pill-red' : '')
-                            }`}
+                            className="absolute overflow-hidden"
                             style={{
-                                '--pulse-scale-min': 1,
-                                '--pulse-scale-max': pulseScaleMax,
                                 width: cursorSize,
                                 height: is3DMode ? pillHeight : cursorSize,
                                 top: is3DMode ? 0 : undefined,
                                 borderRadius: is3DMode ? '0.5rem' : '50%',
-                                backgroundColor: previewFeedback?.type === 'cancel' || (isAtCenter && previewHasDragged)
-                                    ? 'rgba(244, 63, 94, 0.9)'  // Rouge
-                                    : isAtLeftThreshold
-                                        ? 'rgba(6, 182, 212, 0.9)'  // Cyan
-                                        : isAtRightThreshold
-                                            ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                            : 'rgba(255, 255, 255, 0.15)',  // Transparent
-                                border: (isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${isAtLeftThreshold ? -maxSlide : isAtRightThreshold ? maxSlide : (isAtCenter && previewHasDragged) ? 0 : clampedX}px)`,
-                                transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
+                                transition: previewSwipeStart !== null ? 'none' : 'left 200ms ease-out',
                                 pointerEvents: (!previewHasDragged && isAtCenter) ? 'none' : 'auto',
                             }}
                         >
-                            {/* Masque cylindre 3D sur la bague — ON si colorée, OFF sinon */}
-                            {is3DMode && <CylinderMask is3DMode={true} intensity={(isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />}
-                            {/* Icône X quand au centre ET qu'on a dragué */}
-                            {isAtCenter && previewHasDragged && (
-                                <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
-                            )}
-                            {/* Icône ListPlus quand au seuil gauche */}
-                            {isAtLeftThreshold && (
-                                <ListPlus size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
-                            )}
-                            {/* Icône Check quand au seuil droite */}
-                            {isAtRightThreshold && (
-                                <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
-                            )}
+                            {/* Contenu animé (pulse/ignite) — le masque 3D reste au-dessus, fixe */}
+                            <div
+                                className={`w-full h-full flex items-center justify-center ${
+                                    previewFeedback
+                                        ? (previewFeedback.type === 'add' ? 'animate-ignite-pill-green' : previewFeedback.type === 'queue' ? 'animate-ignite-pill-cyan' : previewFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : '')
+                                        : (isAtLeftThreshold ? 'animate-pulse-pill-cyan' : isAtRightThreshold ? 'animate-pulse-pill-green' : (isAtCenter && previewHasDragged) ? 'animate-pulse-pill-red' : '')
+                                }`}
+                                style={{
+                                    '--pulse-scale-min': 1,
+                                    '--pulse-scale-max': pulseScaleMax,
+                                    backgroundColor: previewFeedback?.type === 'cancel' || (isAtCenter && previewHasDragged)
+                                        ? 'rgba(244, 63, 94, 0.9)'
+                                        : isAtLeftThreshold
+                                            ? 'rgba(6, 182, 212, 0.9)'
+                                            : isAtRightThreshold
+                                                ? 'rgba(0, 255, 136, 0.9)'
+                                                : 'rgba(255, 255, 255, 0.15)',
+                                    border: (isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                    borderRadius: is3DMode ? '0.5rem' : '50%',
+                                    transition: 'background-color 150ms ease-out',
+                                }}
+                            >
+                                {isAtCenter && previewHasDragged && (
+                                    <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                )}
+                                {isAtLeftThreshold && (
+                                    <ListPlus size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                )}
+                                {isAtRightThreshold && (
+                                    <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                )}
+                            </div>
+                            {/* Masque cylindre 3D — fixe, ne pulse pas */}
+                            {is3DMode && <CylinderMask is3DMode={true} intensity={(isAtLeftThreshold || isAtRightThreshold || (isAtCenter && previewHasDragged)) ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="pointer-events-none" />}
                         </div>
 
                         {/* Icône droite - Check (vert) */}

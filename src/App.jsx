@@ -9519,40 +9519,47 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             />
                         </div>
 
-                        {/* Curseur central draggable — bague à coins arrondis en 3D, bulle circulaire en 2D */}
+                        {/* Curseur central draggable — wrapper fixe + contenu animé + masque statique */}
                         <div
-                            className={`absolute flex items-center justify-center overflow-hidden ${
-                                confirmFeedback
-                                    ? (confirmFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : 'animate-ignite-pill-green')
-                                    : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
-                            }`}
+                            className="absolute overflow-hidden"
                             style={{
-                                '--pulse-scale-min': 1,
-                                '--pulse-scale-max': pulseScaleMax,
                                 width: cursorSize,
                                 height: is3DMode ? pillHeight : cursorSize,
                                 top: is3DMode ? 0 : undefined,
                                 borderRadius: is3DMode ? '0.5rem' : '50%',
-                                backgroundColor: isAtLeftThreshold
-                                    ? 'rgba(244, 63, 94, 0.9)'  // Rouge/Lava
-                                    : isAtRightThreshold
-                                        ? 'rgba(0, 255, 136, 0.9)'  // Vert néon
-                                        : 'rgba(255, 255, 255, 0.15)',  // Transparent
-                                border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
                                 left: `calc(50% - ${cursorSize / 2}px + ${isAtLeftThreshold ? -maxSlide : isAtRightThreshold ? maxSlide : clampedX}px)`,
-                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out, background-color 150ms ease-out',
+                                transition: confirmSwipeStart !== null ? 'none' : 'left 200ms ease-out',
                             }}
                         >
-                            {/* Masque cylindre 3D sur la bague — ON si colorée, OFF sinon */}
-                            {is3DMode && <CylinderMask is3DMode={true} intensity={(isAtLeftThreshold || isAtRightThreshold) ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />}
-                            {/* Icône X quand au seuil gauche */}
-                            {isAtLeftThreshold && (
-                                <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
-                            )}
-                            {/* Icône Check quand au seuil droite */}
-                            {isAtRightThreshold && (
-                                <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
-                            )}
+                            {/* Contenu animé (pulse/ignite) — le masque 3D reste au-dessus, fixe */}
+                            <div
+                                className={`w-full h-full flex items-center justify-center ${
+                                    confirmFeedback
+                                        ? (confirmFeedback.type === 'cancel' ? 'animate-ignite-pill-red' : 'animate-ignite-pill-green')
+                                        : (isAtLeftThreshold ? 'animate-pulse-pill-red' : isAtRightThreshold ? 'animate-pulse-pill-green' : '')
+                                }`}
+                                style={{
+                                    '--pulse-scale-min': 1,
+                                    '--pulse-scale-max': pulseScaleMax,
+                                    backgroundColor: isAtLeftThreshold
+                                        ? 'rgba(244, 63, 94, 0.9)'
+                                        : isAtRightThreshold
+                                            ? 'rgba(0, 255, 136, 0.9)'
+                                            : 'rgba(255, 255, 255, 0.15)',
+                                    border: (isAtLeftThreshold || isAtRightThreshold) ? 'none' : '2px solid rgba(255, 255, 255, 0.3)',
+                                    borderRadius: is3DMode ? '0.5rem' : '50%',
+                                    transition: 'background-color 150ms ease-out',
+                                }}
+                            >
+                                {isAtLeftThreshold && (
+                                    <X size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                )}
+                                {isAtRightThreshold && (
+                                    <Check size={iconSize * 0.7} className="text-white absolute z-10" strokeWidth={2.5} />
+                                )}
+                            </div>
+                            {/* Masque cylindre 3D — fixe, ne pulse pas */}
+                            {is3DMode && <CylinderMask is3DMode={true} intensity={(isAtLeftThreshold || isAtRightThreshold) ? CONFIG.CAPSULE_CYLINDER_INTENSITY_ON : CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className="pointer-events-none" />}
                         </div>
 
                         {/* Check icon à droite - cachée quand la bulle la recouvre */}
