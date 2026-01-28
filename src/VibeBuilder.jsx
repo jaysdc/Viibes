@@ -2271,14 +2271,16 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                     <div className="w-full animate-in fade-in slide-in-from-top-2" style={{ paddingTop: CONFIG.ADDALL_PADDING_TOP }}>
                         {(() => {
                             return (
-                                <button 
-                                    onClick={handleAddAll} 
-                                    className={`w-full ${CONFIG.ADDALL_HEIGHT} text-white rounded-full font-black flex items-center justify-center gap-2 transition-transform ${CONFIG.ADDALL_FONT_SIZE}`}
+                                <button
+                                    onClick={handleAddAll}
+                                    className={`w-full ${CONFIG.ADDALL_HEIGHT} text-white font-black flex items-center justify-center gap-2 transition-transform ${CONFIG.ADDALL_FONT_SIZE} ${is3DMode ? '' : 'rounded-full'} relative overflow-hidden`}
                                     style={{
                                         backgroundColor: futurePrimaryColor,
-                                        boxShadow: `0 0 12px ${futurePrimaryColor}66, 0 0 24px ${futurePrimaryColor}33`
+                                        boxShadow: `0 0 12px ${futurePrimaryColor}66, 0 0 24px ${futurePrimaryColor}33`,
+                                        borderRadius: is3DMode ? '0.5rem' : undefined
                                     }}
                                 >
+                                    {is3DMode && <CylinderMask intensity="on" />}
                                     <div className={`flex items-center gap-2 ${isAnimatingAddAll ? 'animate-blink' : ''}`}>
                                         <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>ADD ALL</span>
                                         <span className="font-normal opacity-70 text-xs" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>({displaySongs.length} <Music2 size={10} className="inline -mt-0.5" />)</span>

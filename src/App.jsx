@@ -2922,30 +2922,38 @@ const ScrollingText = ({ text, isCenter, className, style }) => {
     </button>
 );
 
-const RecenterCapsule = ({ onClick, is3DMode = false }) => (
-  <button
-      onClick={onClick}
-      className={`bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-between px-1 shadow-sm overflow-hidden relative ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
-      style={{
-        height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT,
-        width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6,
-        borderRadius: is3DMode ? '0.5rem' : undefined,
-        border: CONFIG.RECENTER_NEON_ENABLED
-            ? `${CONFIG.RECENTER_NEON_WIDTH}px solid ${CONFIG.RECENTER_NEON_COLOR}`
-            : '1px solid rgb(229, 231, 235)',
-        WebkitTapHighlightColor: 'transparent'
-    }}
-  >
-      <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
-      <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipBack size={10} fill="currentColor" /></div>
-      <div className="w-px h-full bg-gray-200"></div>
-      <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
-          <div className="w-4 h-0.5 bg-gray-800 rounded-full"></div>
-          <div className="w-3 h-0.5 bg-pink-400 rounded-full"></div>
-      </div>
-      <div className="w-px h-full bg-gray-200"></div>
-      <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipForward size={10} fill="currentColor" /></div>
-  </button>
+const RecenterCapsule = ({ onClick, is3DMode = false, triggerBtnPress = () => {}, getBtnPressProgress = () => 0, getBtnPressStyle = () => ({}) }) => (
+  <div className="relative flex-shrink-0" style={{ height: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT, width: UNIFIED_CONFIG.FOOTER_BTN_HEIGHT * 1.6 }}>
+      {is3DMode && getBtnPressProgress('recenter') > 0 && (
+          <>
+              <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('recenter') }} />
+              <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('recenter') }} />
+          </>
+      )}
+      <button
+          onClick={onClick}
+          onTouchStart={() => triggerBtnPress('recenter')}
+          className={`w-full h-full bg-gray-50 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-between px-1 shadow-sm overflow-hidden relative ${CONFIG.RECENTER_GLOW_ENABLED ? 'recenter-glow' : ''}`}
+          style={{
+            borderRadius: is3DMode ? '0.5rem' : undefined,
+            border: CONFIG.RECENTER_NEON_ENABLED
+                ? `${CONFIG.RECENTER_NEON_WIDTH}px solid ${CONFIG.RECENTER_NEON_COLOR}`
+                : '1px solid rgb(229, 231, 235)',
+            WebkitTapHighlightColor: 'transparent',
+            ...getBtnPressStyle('recenter')
+        }}
+      >
+          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} style={is3DMode ? { borderRadius: '0.5rem' } : {}} />
+          <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipBack size={10} fill="currentColor" /></div>
+          <div className="w-px h-full bg-gray-200"></div>
+          <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
+              <div className="w-4 h-0.5 bg-gray-800 rounded-full"></div>
+              <div className="w-3 h-0.5 bg-pink-400 rounded-full"></div>
+          </div>
+          <div className="w-px h-full bg-gray-200"></div>
+          <div className="w-4 h-full flex justify-center items-center text-gray-400"><SkipForward size={10} fill="currentColor" /></div>
+      </button>
+  </div>
 );
 
 // Barre de contrôle unifiée (TimeCapsule + RecenterCapsule + PlayPause)
@@ -2957,7 +2965,9 @@ const ControlBar = ({
   // PlayPause props
   isPlaying, onTogglePlay,
   // 3D mode
-  is3DMode = false
+  is3DMode = false,
+  // Button press props (for recenter)
+  triggerBtnPress = () => {}, getBtnPressProgress = () => 0, getBtnPressStyle = () => ({})
 }) => {
     // Animation toggle play/pause : 0 = sorti (playing), 1 = enfoncé (paused) - 3D uniquement
     const [pressProgress, setPressProgress] = useState(is3DMode ? (isPlaying ? 0 : 1) : 0);
@@ -3031,7 +3041,7 @@ const ControlBar = ({
             />
             {!vibeSwipePreview && (
                 <>
-                    <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} />
+                    <RecenterCapsule onClick={onRecenter} is3DMode={is3DMode} triggerBtnPress={triggerBtnPress} getBtnPressProgress={getBtnPressProgress} getBtnPressStyle={getBtnPressStyle} />
                     {/* Wrapper taille originale pour la cavité 3D */}
                     <div
                         className="flex-shrink-0 relative"
@@ -8561,6 +8571,12 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                       {/* Bouton Import */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+                          {is3DMode && getBtnPressProgress('import') > 0 && (
+                              <>
+                                  <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('import') }} />
+                                  <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('import') }} />
+                              </>
+                          )}
                           <button
                               data-import-btn
                               onClick={() => {
@@ -8579,6 +8595,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     });
                                 });
                             }}
+                              onTouchStart={() => triggerBtnPress('import')}
                               className={`relative z-0 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center text-gray-600 overflow-hidden ${scanCompleteFlash ? 'animate-neon-ignite-cyan' : ''}`}
                               style={{
                                   WebkitTapHighlightColor: 'transparent',
@@ -8586,7 +8603,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   // Bordure progressive cyan pendant le scan avec fade de 20deg pour adoucir le bord
                                   background: smoothedScanProgress !== null
                                       ? `conic-gradient(from 0deg, cyan 0deg, cyan ${Math.max(0, smoothedScanProgress * 3.6 - 20)}deg, transparent ${smoothedScanProgress * 3.6}deg)`
-                                      : (scanCompleteFlash ? undefined : '#f3f4f6')
+                                      : (scanCompleteFlash ? undefined : '#f3f4f6'),
+                                  ...getBtnPressStyle('import')
                               }}
                           >
                               {/* Fond intérieur gris pour que seule la bordure soit colorée */}
@@ -8720,12 +8738,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         >
                             {/* Bouton NUKE */}
                             <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+                                {is3DMode && getBtnPressProgress('nuke') > 0 && (
+                                    <>
+                                        <div className="absolute inset-0 pointer-events-none z-20" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('nuke') }} />
+                                        <div className="absolute pointer-events-none z-20" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('nuke') }} />
+                                    </>
+                                )}
                                 <ImportButton
                                     key={`nuke-${importButtonsReady}`}
                                     type="nuke"
                                     ready={importButtonsReady}
                                     className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'}`}
-                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('nuke') }}
                                     is3DMode={is3DMode}
                                 />
                                 <button
@@ -8741,8 +8765,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                             handleNukeAll();
                                         }, CONFIG.IMPORT_HEADER_FADE_OUT_DURATION);
                                     }}
+                                    onTouchStart={() => triggerBtnPress('nuke')}
                                     className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
-                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('nuke') }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
                                     <Radiation style={{
@@ -8754,12 +8779,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                             {/* Bouton DROPBOX */}
                             <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+                                {is3DMode && getBtnPressProgress('dropbox') > 0 && (
+                                    <>
+                                        <div className="absolute inset-0 pointer-events-none z-20" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('dropbox') }} />
+                                        <div className="absolute pointer-events-none z-20" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('dropbox') }} />
+                                    </>
+                                )}
                                 <ImportButton
                                     key={`dropbox-${importButtonsReady}`}
                                     type="dropbox"
                                     ready={importButtonsReady}
                                     className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'}`}
-                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('dropbox') }}
                                     is3DMode={is3DMode}
                                 />
                                 <button
@@ -8768,8 +8799,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setImportBtnIgniting('dropbox');
                                         handleDropboxAuth();
                                     }}
+                                    onTouchStart={() => triggerBtnPress('dropbox')}
                                     className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
-                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('dropbox') }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
                                     <DropboxLogoVector
@@ -8781,12 +8813,18 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
                             {/* Bouton FOLDER */}
                             <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+                                {is3DMode && getBtnPressProgress('folder') > 0 && (
+                                    <>
+                                        <div className="absolute inset-0 pointer-events-none z-20" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('folder') }} />
+                                        <div className="absolute pointer-events-none z-20" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('folder') }} />
+                                    </>
+                                )}
                                 <ImportButton
                                     key={`folder-${importButtonsReady}`}
                                     type="folder"
                                     ready={importButtonsReady}
                                     className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'}`}
-                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    style={{ zIndex: 0, borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('folder') }}
                                     is3DMode={is3DMode}
                                 />
                                 <button
@@ -8799,8 +8837,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                         setImportBtnIgniting('folder');
                                         folderInputRef.current?.click();
                                     }}
+                                    onTouchStart={() => triggerBtnPress('folder')}
                                     className={`relative z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center overflow-hidden`}
-                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined }}
+                                    style={{ borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('folder') }}
                                 >
                                     <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
                                     <FolderOpen style={{
@@ -8993,20 +9032,24 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     vibeTheseSwipeDirectionRef.current = null;
                                     setVibeSwipePreview(null);
                                 }}
-                                className="w-full h-8 rounded-full font-black flex items-center justify-center gap-2 text-base text-white relative overflow-visible"
+                                className={`w-full h-8 font-black flex items-center justify-center gap-2 text-base text-white relative overflow-visible ${is3DMode ? '' : 'rounded-full'}`}
                                 style={{
                                     background: gradient,
-                                    boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`
+                                    boxShadow: `0 4px 15px ${gradientColors[0]}66, 0 0 20px ${gradientColors[Math.floor(gradientColors.length / 2)]}44`,
+                                    borderRadius: is3DMode ? '0.5rem' : undefined
                                 }}
                             >
+                                {/* CylinderMask pour mode 3D */}
+                                {is3DMode && <CylinderMask intensity="on" />}
                                 {/* Bordure overlay - pointillée si dégradé dupliqué, suit exactement le doigt */}
                                 <div
-                                    className="absolute rounded-full pointer-events-none"
+                                    className={`absolute pointer-events-none ${is3DMode ? '' : 'rounded-full'}`}
                                     style={{
                                         top: -2,
                                         left: -2,
                                         right: -2,
                                         bottom: -2,
+                                        borderRadius: is3DMode ? 'calc(0.5rem + 2px)' : undefined,
                                         border: isDuplicateGradient
                                             ? '2px dashed rgba(255,255,255,0.7)'
                                             : '2px solid rgba(255,255,255,0.4)',
@@ -9222,6 +9265,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             setShowTitles={setShowTitles}
             is3DMode={is3DMode}
             setIs3DMode={setIs3DMode}
+            triggerBtnPress={triggerBtnPress}
+            getBtnPressProgress={getBtnPressProgress}
+            getBtnPressStyle={getBtnPressStyle}
         />
         )}
 
@@ -9321,6 +9367,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         isPlaying={isPlaying}
                         onTogglePlay={togglePlayWithFade}
                         is3DMode={is3DMode}
+                        triggerBtnPress={triggerBtnPress}
+                        getBtnPressProgress={getBtnPressProgress}
+                        getBtnPressStyle={getBtnPressStyle}
                      />
 
                     {/* DOTTED OVERLAY sur TimeCapsule pendant le scrub */}
