@@ -8761,30 +8761,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                   </div>
                               );
                           })()}
-                          {/* FeedbackOverlay avec animation ignite */}
-                          {confirmFeedback && (() => {
-                              const isKillAction = pendingVibe !== null;
-                              const bgStyle = isKillAction
-                                  ? { background: `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)` }
-                                  : { background: CONFIG.IMPORT_NUKE_COLOR };
-                              const neonColorRgb = isKillAction ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB;
-                              return (
-                                  <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
-                                      <FeedbackOverlay
-                                          feedback={confirmFeedback}
-                                          onAnimationComplete={onConfirmAnimationComplete}
-                                          neonColor={neonColorRgb}
-                                          bgClass=""
-                                          bgStyle={bgStyle}
-                                          borderClass="border-transparent"
-                                          is3DMode={is3DMode}
-                                      >
-                                          {confirmFeedback.type === 'cancel' ? <X size={16} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
-                                          <span className="text-lg">{confirmFeedback.text}</span>
-                                      </FeedbackOverlay>
-                                  </div>
-                              );
-                          })()}
+                          {/* FeedbackOverlay animé rendu hors du header (voir après FIN HEADER) */}
                       </div>
                   )}
                 </div>
@@ -8914,6 +8891,50 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
 
             </div>
         {/* FIN HEADER */}
+
+        {/* ANIMATED FEEDBACK BANNER Kill/Nuke - rendu hors du header pour éviter le rognage */}
+        {(pendingVibe || nukeConfirmMode) && confirmFeedback && (() => {
+            const btnEl = headerButtonsRef.current;
+            const mainEl = mainContainerRef.current;
+            if (!btnEl || !mainEl) return null;
+            const btnRect = btnEl.getBoundingClientRect();
+            const mainRect = mainEl.getBoundingClientRect();
+            const isKillAction = pendingVibe !== null;
+            const bgStyle = isKillAction
+                ? { background: `linear-gradient(135deg, #ec4899 0%, #ff07a3 100%)` }
+                : { background: CONFIG.IMPORT_NUKE_COLOR };
+            const neonColorRgb = isKillAction ? '236, 72, 153' : CONFIG.IMPORT_NUKE_GLOW_RGB;
+            return (
+                <div
+                    className="pointer-events-none"
+                    style={{
+                        position: 'absolute',
+                        top: btnRect.top - mainRect.top,
+                        left: btnRect.left - mainRect.left,
+                        width: btnRect.width,
+                        height: btnRect.height,
+                        zIndex: 100,
+                        opacity: confirmOverlayVisible ? 1 : 0,
+                        transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
+                    }}
+                >
+                    <div className="absolute inset-0" style={{ transform: 'scale(1.1)', transformOrigin: 'center' }}>
+                        <FeedbackOverlay
+                            feedback={confirmFeedback}
+                            onAnimationComplete={onConfirmAnimationComplete}
+                            neonColor={neonColorRgb}
+                            bgClass=""
+                            bgStyle={bgStyle}
+                            borderClass="border-transparent"
+                            is3DMode={is3DMode}
+                        >
+                            {confirmFeedback.type === 'cancel' ? <X size={16} strokeWidth={3} /> : confirmFeedback.type === 'kill' ? <Skull size={16} strokeWidth={3} /> : <Radiation size={16} strokeWidth={3} />}
+                            <span className="text-lg">{confirmFeedback.text}</span>
+                        </FeedbackOverlay>
+                    </div>
+                </div>
+            );
+        })()}
 
         {/* LIBRARY */}
         <div
