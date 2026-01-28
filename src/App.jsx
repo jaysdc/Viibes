@@ -8432,7 +8432,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         style={{
                             height: CONFIG.HEADER_BUTTONS_HEIGHT,
                             backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)`,
-                            boxShadow: `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`,
+                            boxShadow: (vibeSwipePreview && vibeSwipePreview.progress > 0) ? 'none' : `0 -${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY}), 0 ${CONFIG.SEARCH_LIBRARY_GLOW_VERTICAL}px ${CONFIG.SEARCH_LIBRARY_GLOW_BLUR}px rgba(${CONFIG.SEARCH_LIBRARY_GLOW_COLOR}, ${CONFIG.SEARCH_LIBRARY_GLOW_OPACITY})`,
                             borderRadius: is3DMode ? '0.5rem' : undefined,
                             animation: searchOverlayAnim === 'opening'
                                 ? `search-fade-in ${CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION}ms ease-out forwards`
