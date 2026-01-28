@@ -8740,8 +8740,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                                 {is3DMode && getBtnPressProgress('nuke') > 0 && (
                                     <>
-                                        <div className="absolute inset-0 pointer-events-none z-20" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('nuke') }} />
-                                        <div className="absolute pointer-events-none z-20" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('nuke') }} />
+                                        <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('nuke') }} />
+                                        <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('nuke') }} />
                                     </>
                                 )}
                                 <ImportButton
@@ -8781,8 +8781,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                                 {is3DMode && getBtnPressProgress('dropbox') > 0 && (
                                     <>
-                                        <div className="absolute inset-0 pointer-events-none z-20" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('dropbox') }} />
-                                        <div className="absolute pointer-events-none z-20" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('dropbox') }} />
+                                        <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('dropbox') }} />
+                                        <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('dropbox') }} />
                                     </>
                                 )}
                                 <ImportButton
@@ -8815,8 +8815,8 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
                                 {is3DMode && getBtnPressProgress('folder') > 0 && (
                                     <>
-                                        <div className="absolute inset-0 pointer-events-none z-20" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('folder') }} />
-                                        <div className="absolute pointer-events-none z-20" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('folder') }} />
+                                        <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('folder') }} />
+                                        <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('folder') }} />
                                     </>
                                 )}
                                 <ImportButton
@@ -9865,22 +9865,31 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         transitionDuration={playerSearchOverlayAnim === 'opening' ? CONFIG.SEARCH_PLAYER_FADE_IN_DURATION : (playerSearchOverlayAnim === 'closing' ? CONFIG.SEARCH_PLAYER_FADE_OUT_DURATION : 0)}
                         is3DMode={is3DMode}
                     />
-                    <button
-                        onClick={() => {
-                            if (playerSearchOverlayAnim !== 'none') return;
-                            setPlayerSearchCloseBtnAnimKey(0);
-                            setPlayerSearchOverlayAnim('opening');
-                            setTimeout(() => {
-                                setIsPlayerSearching(true);
-                                setPlayerSearchOverlayAnim('none');
-                            }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
-                        }}
-                        className={`${is3DMode ? '' : 'rounded-full'} flex-shrink-0 flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
-                        style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})` }}
-                    >
-                        <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
-                        <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                    </button>
+                    <div className="relative flex-shrink-0" style={{ width: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT, height: CONFIG.PLAYER_SORT_CAPSULE_HEIGHT }}>
+                        {is3DMode && getBtnPressProgress('playerSearch') > 0 && (
+                            <>
+                                <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('playerSearch') }} />
+                                <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('playerSearch') }} />
+                            </>
+                        )}
+                        <button
+                            onClick={() => {
+                                if (playerSearchOverlayAnim !== 'none') return;
+                                setPlayerSearchCloseBtnAnimKey(0);
+                                setPlayerSearchOverlayAnim('opening');
+                                setTimeout(() => {
+                                    setIsPlayerSearching(true);
+                                    setPlayerSearchOverlayAnim('none');
+                                }, CONFIG.SEARCH_PLAYER_FADE_IN_DURATION);
+                            }}
+                            onTouchStart={() => triggerBtnPress('playerSearch')}
+                            className={`z-10 w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
+                            style={{ borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, ...getBtnPressStyle('playerSearch') }}
+                        >
+                            <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
+                            <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                        </button>
+                    </div>
 
                     {/* PLAYER SEARCH OVERLAY */}
                     {(isPlayerSearching || playerSearchOverlayAnim !== 'none') && (
