@@ -1801,7 +1801,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                             backgroundColor: CONFIG.PREVIEW_PILL_BG_COLOR,
                             backdropFilter: `blur(${CONFIG.PREVIEW_PILL_BLUR}px)`,
                             WebkitBackdropFilter: `blur(${CONFIG.PREVIEW_PILL_BLUR}px)`,
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            border: is3DMode ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                             padding: pillPadding,
                         }}
