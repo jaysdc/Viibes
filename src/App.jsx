@@ -9531,7 +9531,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 '--pulse-scale-max': pulseScaleMax,
                                 width: cursorSize,
                                 height: is3DMode ? pillHeight : cursorSize,
-                                top: is3DMode ? -pillPadding : undefined,
+                                top: is3DMode ? 0 : undefined,
                                 borderRadius: is3DMode ? '0.5rem' : '50%',
                                 backgroundColor: isAtLeftThreshold
                                     ? 'rgba(244, 63, 94, 0.9)'  // Rouge/Lava

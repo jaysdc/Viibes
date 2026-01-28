@@ -1933,7 +1933,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                 '--pulse-scale-max': pulseScaleMax,
                                 width: cursorSize,
                                 height: is3DMode ? pillHeight : cursorSize,
-                                top: is3DMode ? -pillPadding : undefined,
+                                top: is3DMode ? 0 : undefined,
                                 borderRadius: is3DMode ? '0.5rem' : '50%',
                                 backgroundColor: previewFeedback?.type === 'cancel' || (isAtCenter && previewHasDragged)
                                     ? 'rgba(244, 63, 94, 0.9)'  // Rouge
