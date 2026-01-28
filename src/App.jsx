@@ -9022,13 +9022,9 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                     if (e.currentTarget) vibeTheseBtnWidthRef.current = e.currentTarget.offsetWidth;
                                 }}
                                 onTouchEnd={() => {
-                                    // Changer la couleur si swipe horizontal significatif (seuil > 30px comme VibeBuilder)
-                                    if (vibeTheseSwipeDirectionRef.current === 'horizontal' && Math.abs(vibeTheseSwipeOffset) > 30) {
-                                        const maxSwipeDistance = vibeTheseBtnWidthRef.current * CONFIG.COLOR_SWIPE_PERCENT / 100;
-                                        const direction = vibeTheseSwipeOffset > 0 ? -1 : 1;
-                                        const colorsTraversed = Math.max(1, Math.floor((Math.abs(vibeTheseSwipeOffset) / maxSwipeDistance) * 20));
-                                        const newIndex = vibeTheseGradientIndex + (direction * colorsTraversed);
-                                        setVibeTheseGradientIndex(((newIndex % 20) + 20) % 20);
+                                    // Appliquer le dégradé preview si un swipe horizontal significatif a eu lieu
+                                    if (vibeTheseSwipeDirectionRef.current === 'horizontal' && Math.abs(vibeTheseSwipeOffset) > 30 && vibeThesePreviewIndex !== null) {
+                                        setVibeTheseGradientIndex(vibeThesePreviewIndex);
                                     }
                                     setVibeTheseSwipeOffset(0);
                                     setVibeThesePreviewIndex(null);
