@@ -5454,6 +5454,58 @@ const handlePlayerTouchEnd = () => {
     const builderPressScale = 1 - (builderBtnPressProgress * 0.225);
     const builderPressTranslateY = builderBtnPressProgress * -0.5;
 
+    // Système générique d'enfoncement 3D pour tous les boutons (sans glow)
+    const [btnPressProgress, setBtnPressProgress] = useState({});
+    const btnPressRefs = useRef({});
+    const btnAnimRefs = useRef({});
+
+    const triggerBtnPress = (key) => {
+        if (!is3DMode) return;
+        if (btnAnimRefs.current[key]) cancelAnimationFrame(btnAnimRefs.current[key]);
+        const startProgress = btnPressRefs.current[key] || 0;
+        const pressStart = performance.now();
+        const pressDuration = 96;
+        const releaseDuration = 216;
+        const animatePress = (now) => {
+            const elapsed = now - pressStart;
+            const t = Math.min(1, elapsed / pressDuration);
+            const eased = 1 - Math.pow(1 - t, 2);
+            const val = startProgress + (1 - startProgress) * eased;
+            btnPressRefs.current[key] = val;
+            setBtnPressProgress(prev => ({ ...prev, [key]: val }));
+            if (t < 1) {
+                btnAnimRefs.current[key] = requestAnimationFrame(animatePress);
+            } else {
+                const releaseStart = now;
+                const animateRelease = (now2) => {
+                    const elapsed2 = now2 - releaseStart;
+                    const t2 = Math.min(1, elapsed2 / releaseDuration);
+                    const eased2 = 1 - Math.pow(1 - t2, 2);
+                    const val2 = 1 - eased2;
+                    btnPressRefs.current[key] = val2;
+                    setBtnPressProgress(prev => ({ ...prev, [key]: val2 }));
+                    if (t2 < 1) {
+                        btnAnimRefs.current[key] = requestAnimationFrame(animateRelease);
+                    } else {
+                        btnAnimRefs.current[key] = null;
+                    }
+                };
+                btnAnimRefs.current[key] = requestAnimationFrame(animateRelease);
+            }
+        };
+        btnAnimRefs.current[key] = requestAnimationFrame(animatePress);
+    };
+
+    const getBtnPressStyle = (key) => {
+        const progress = btnPressProgress[key] || 0;
+        if (!is3DMode || progress === 0) return {};
+        const scale = 1 - (progress * 0.225);
+        const translateY = progress * -0.5;
+        return { transformOrigin: 'center center', transform: `scale(${scale}) translateY(${translateY}px)` };
+    };
+
+    const getBtnPressProgress = (key) => btnPressProgress[key] || 0;
+
     const [isPlayerSearching, setIsPlayerSearching] = useState(false);
     const [playerSearchQuery, setPlayerSearchQuery] = useState('');
     const [isLibrarySearching, setIsLibrarySearching] = useState(false);
@@ -8481,22 +8533,31 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         }}
                     >
                       {/* Bouton Recherche */}
-                      <button
-                          onClick={() => {
-                            if (searchOverlayAnim !== 'none' || showImportMenu) return;
-                            setSearchCloseBtnAnimKey(0);
-                            setSearchOverlayAnim('opening');
-                            setTimeout(() => {
-                                setIsLibrarySearching(true);
-                                setSearchOverlayAnim('none');
-                            }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
-                        }}
-                          className={`flex-1 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden`}
-                          style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent', borderRadius: is3DMode ? '0.5rem' : undefined }}
-                      >
-                          <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
-                          <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
-                      </button>
+                      <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
+                          {is3DMode && getBtnPressProgress('search') > 0 && (
+                              <>
+                                  <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '0.5rem', border: '2px solid rgba(200,200,200,0.8)', opacity: getBtnPressProgress('search') }} />
+                                  <div className="absolute pointer-events-none" style={{ top: 2, right: 2, bottom: 2, left: 2, borderRadius: 'calc(0.5rem - 2px)', background: 'linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%), linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%), linear-gradient(to right, rgba(120,120,120,0.7) 0%, transparent 25%), linear-gradient(to left, rgba(120,120,120,0.7) 0%, transparent 25%), rgba(90,90,90,1)', opacity: getBtnPressProgress('search') }} />
+                              </>
+                          )}
+                          <button
+                              onClick={() => {
+                                if (searchOverlayAnim !== 'none' || showImportMenu) return;
+                                setSearchCloseBtnAnimKey(0);
+                                setSearchOverlayAnim('opening');
+                                setTimeout(() => {
+                                    setIsLibrarySearching(true);
+                                    setSearchOverlayAnim('none');
+                                }, CONFIG.SEARCH_LIBRARY_FADE_IN_DURATION);
+                            }}
+                              onTouchStart={() => triggerBtnPress('search')}
+                              className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center bg-gray-100 text-gray-600 relative overflow-hidden`}
+                              style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT, WebkitTapHighlightColor: 'transparent', borderRadius: is3DMode ? '0.5rem' : undefined, ...getBtnPressStyle('search') }}
+                          >
+                              <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} className={is3DMode ? '' : 'rounded-full'} />
+                              <Search style={{ width: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.HEADER_BUTTONS_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />
+                          </button>
+                      </div>
 
                       {/* Bouton Import */}
                       <div className="flex-1 relative" style={{ height: CONFIG.HEADER_BUTTONS_HEIGHT }}>
