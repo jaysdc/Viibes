@@ -2302,9 +2302,9 @@ const VibeCard = ({ vibeId, vibeName, availableCount, unavailableCount, isVibe, 
         };
     }, [isBlinking, is3DMode]);
 
-    // Scale 0.5 depuis le centre (test)
-    const pressScale = 1 - (pressProgress * 0.5); // 1 → 0.5 (test)
-    const pressTranslateY = 0; // plein centre
+    // Scale 0.80 depuis le centre, léger décalage vers le bas
+    const pressScale = 1 - (pressProgress * 0.2); // 1 → 0.80
+    const pressTranslateY = pressProgress * 2; // 0 → 2px vers le bas
     const pressIntensity = CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - (pressProgress * (CONFIG.CAPSULE_CYLINDER_INTENSITY_ON - CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF)); // 1 → 0.60
     const pressDarken = pressProgress * 0.15; // 0 → 0.15 (assombrissement)
     const gradientColors = getGradientByIndex(colorIndex !== undefined ? colorIndex : getInitialGradientIndex(vibeId));
@@ -2462,12 +2462,22 @@ const cardContent = is3DMode ? (
       >
           {/* Indicateur de swipe (si fourni) - scrolle avec la carte */}
           {swipeIndicator}
-          {/* Cavité 3D (visible quand le bouton s'enfonce) */}
+          {/* Bordure unie 3D (visible quand le bouton s'enfonce) */}
           {pressProgress > 0 && (
               <div
                   className="absolute inset-0 rounded-xl pointer-events-none"
                   style={{
                       border: '2px solid rgba(200,200,200,0.8)',
+                      opacity: pressProgress,
+                  }}
+              />
+          )}
+          {/* Cavité 3D à l'intérieur de la bordure */}
+          {pressProgress > 0 && (
+              <div
+                  className="absolute rounded-lg pointer-events-none"
+                  style={{
+                      top: 2, right: 2, bottom: 2, left: 2,
                       background: `
                           linear-gradient(to bottom, rgba(180,180,180,0.9) 0%, transparent 35%),
                           linear-gradient(to top, rgba(60,60,60,0.9) 0%, transparent 35%),
@@ -2486,7 +2496,7 @@ const cardContent = is3DMode ? (
                   background: baseGradient,
                   isolation: 'isolate',
                   transformOrigin: 'center center',
-                  transform: `scale(${pressScale})`,
+                  transform: `scale(${pressScale}) translateY(${pressTranslateY}px)`,
               }}
           >
               {/* Contenu - sous le masque cylindre 3D */}
@@ -8278,6 +8288,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
             className="bg-white border-b border-gray-200 safe-area-top relative"
             style={{
                 zIndex: CONFIG.HEADER_Z_INDEX,
+                overflow: 'visible',
                 paddingTop: `calc(env(safe-area-inset-top, 0px) + ${UNIFIED_CONFIG.TITLE_MARGIN_TOP})`,
                 paddingBottom: `${CONFIG.HEADER_PADDING_BOTTOM}rem`,
                 paddingLeft: `${CONFIG.HEADER_PADDING_X}rem`,
@@ -8718,6 +8729,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                       <div
                           className="absolute inset-0 z-[66] pointer-events-none"
                           style={{
+                              overflow: 'visible',
                               opacity: confirmOverlayVisible ? 1 : 0,
                               transition: `opacity ${CONFIG.CONFIRM_FADE_DURATION}ms ease-out`,
                           }}
