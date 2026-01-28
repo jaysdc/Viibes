@@ -9040,7 +9040,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                                 }}
                             >
                                 {/* CylinderMask pour mode 3D */}
-                                {is3DMode && <CylinderMask intensity="on" />}
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                 {/* Bordure overlay - pointillée si dégradé dupliqué, suit exactement le doigt */}
                                 <div
                                     className={`absolute pointer-events-none ${is3DMode ? '' : 'rounded-full'}`}
@@ -9884,7 +9884,7 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                             }}
                             onTouchStart={() => triggerBtnPress('playerSearch')}
                             className={`w-full h-full ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center shadow-sm transition-colors ${is3DMode ? '' : 'border border-gray-100'} text-gray-400 hover:bg-gray-100 relative overflow-hidden`}
-                            style={{ borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, ...getBtnPressStyle('playerSearch') }}
+                            style={{ borderRadius: is3DMode ? '0.5rem' : undefined, backgroundColor: is3DMode ? `rgba(${CONFIG.CAPSULE_BG_COLOR}, 1)` : `rgba(${CONFIG.CAPSULE_BG_COLOR}, ${CONFIG.CAPSULE_BG_OPACITY})`, ...getBtnPressStyle('playerSearch') }}
                         >
                             <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_OFF} />
                             <Search style={{ width: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)`, height: `calc(${CONFIG.PLAYER_SORT_CAPSULE_HEIGHT} * ${CONFIG.UNIFIED_ICON_SIZE_PERCENT} / 100)` }} />

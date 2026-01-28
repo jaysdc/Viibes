@@ -2280,7 +2280,7 @@ const VibeBuilder = ({ allGlobalSongs = [], onClose, onSaveVibe, onDeleteVibe, o
                                         borderRadius: is3DMode ? '0.5rem' : undefined
                                     }}
                                 >
-                                    {is3DMode && <CylinderMask intensity="on" />}
+                                    <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} />
                                     <div className={`flex items-center gap-2 ${isAnimatingAddAll ? 'animate-blink' : ''}`}>
                                         <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>ADD ALL</span>
                                         <span className="font-normal opacity-70 text-xs" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>({displaySongs.length} <Music2 size={10} className="inline -mt-0.5" />)</span>
