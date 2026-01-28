@@ -5452,7 +5452,7 @@ const handlePlayerTouchEnd = () => {
     };
 
     const builderPressScale = 1 - (builderBtnPressProgress * 0.225);
-    const builderPressTranslateY = builderBtnPressProgress * 1.5;
+    const builderPressTranslateY = builderBtnPressProgress * -2.5;
 
     const [isPlayerSearching, setIsPlayerSearching] = useState(false);
     const [playerSearchQuery, setPlayerSearchQuery] = useState('');
