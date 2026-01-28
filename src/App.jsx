@@ -8511,13 +8511,14 @@ const getDropboxTemporaryLink = async (dropboxPath, retryCount = 0) => {
                         const gradientStyle = `linear-gradient(135deg, ${nextGradient.map((c, i) => `${c} ${Math.round(i * step)}%`).join(', ')})`;
                         return (
                             <div
-                                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center z-50 pointer-events-none`}
+                                className={`absolute inset-0 ${is3DMode ? '' : 'rounded-full'} flex items-center justify-center z-50 pointer-events-none overflow-hidden`}
                                 style={{
                                     background: gradientStyle,
                                     boxShadow: `0 4px 15px ${nextGradient[0]}66`,
                                     borderRadius: is3DMode ? '0.5rem' : undefined
                                 }}
                             >
+                                <CylinderMask is3DMode={is3DMode} intensity={CONFIG.CAPSULE_CYLINDER_INTENSITY_ON} className={is3DMode ? '' : 'rounded-full'} />
                                 <div className="flex items-center gap-2 text-white font-black tracking-widest text-sm uppercase"
                                     style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                     <ChevronLeft size={14} />
